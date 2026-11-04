@@ -35,13 +35,13 @@ export type Penya = {
 
 export const edicion = {
   anyo: 2026,
-  titulo: { es: "Fiestas de l'Alfàs del Pi", va: "Festes de l'Alfàs del Pi" },
+  titulo: { es: "Fiestas del Jubileo y del Santísimo Cristo del Buen Acierto", va: "Festes de l'Alfàs del Pi" },
   subtitulo: {
-    es: "Contenido de ejemplo · fechas pendientes de confirmar",
+    es: "L' ALFÀS DEL PI",
     va: "Contingut d'exemple · dates pendents de confirmar",
   },
-  fechaInicio: "2026-11-05",
-  fechaFin: "2026-11-08",
+  fechaInicio: "2026-11-07",
+  fechaFin: "2026-11-10",
   ejemplo: true,
 };
 
