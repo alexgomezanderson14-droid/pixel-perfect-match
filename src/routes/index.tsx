@@ -77,7 +77,7 @@ function Home() {
           <h1 className="rise text-5xl font-bold leading-[0.95] text-on-image sm:text-7xl md:text-8xl">{t(edicion.titulo)} <span className="text-pink">{edicion.anyo}</span></h1>
           <p className="rise mt-4 max-w-xl text-lg text-on-image/85">{t(edicion.subtitulo)}</p>
           <div className="rise mt-8 flex flex-wrap gap-3">
-            <div className="glass-dark rounded-2xl px-5 py-3 text-sm capitalize">{fmtDia(edicion.fechaInicio, lang)} → {fmtDia(edicion.fechaFin, lang)}</div>
+            <div className="glass-dark rounded-2xl px-5 py-3 text-sm first-letter:uppercase">{fmtDia(edicion.fechaInicio, lang)} → {fmtDia(edicion.fechaFin, lang)}</div>
             <a href="#programa" className="rounded-full bg-pink px-6 py-3 font-bold text-brown transition hover:-translate-y-0.5">{t(ui.nav.programa)}</a>
             <a href="#mapa" className="glass-dark rounded-full px-6 py-3 font-bold">{t(ui.nav.mapa)}</a>
           </div>
@@ -123,7 +123,7 @@ function Home() {
           <SectionTitle>{t(ui.nav.programa)}</SectionTitle>
           <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
             {dias.map((d) => (
-              <Chip key={d} active={dia === d} onClick={() => setDia(d)}><span className="capitalize">{fmtDia(d, lang)}</span></Chip>
+              <Chip key={d} active={dia === d} onClick={() => setDia(d)}><span className="inline-block first-letter:uppercase">{fmtDia(d, lang)}</span></Chip>
             ))}
           </div>
           <div className="space-y-3">
@@ -148,7 +148,7 @@ function Home() {
               <article key={a.id} className="glass group rounded-3xl p-6 transition hover:-translate-y-1">
                 <div className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-wide">
                   <span className={`rounded-full px-3 py-1 text-on-image ${catBg[a.tipo]}`}>{t(ui.categorias[a.tipo])}</span>
-                  <span className="capitalize text-muted-foreground">{fmtDia(a.dia, lang)} · {a.hora}</span>
+                  <span className="first-letter:uppercase text-muted-foreground">{fmtDia(a.dia, lang)} · {a.hora}</span>
                 </div>
                 <h3 className="text-2xl font-bold">{t(a.titulo)}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{t(a.descripcion)}</p>
