@@ -57,8 +57,8 @@ export const lugares: Lugar[] = [
 ];
 
 export const actos: Acto[] = [
-  { id: "a1", dia: "2026-11-05", hora: "19:00", tipo: "evento", lugarId: "plaza", titulo: { es: "Pregón (ejemplo)", va: "Pregó (exemple)" }, descripcion: { es: "Acto inaugural de ejemplo.", va: "Acte inaugural d'exemple." } },
-  { id: "a2", dia: "2026-11-05", hora: "23:30", tipo: "actuacion", lugarId: "escenario", titulo: { es: "Concierto de apertura (ejemplo)", va: "Concert d'obertura (exemple)" }, descripcion: { es: "Actuación de ejemplo.", va: "Actuació d'exemple." } },
+  { id: "a1", dia: "2026-11-05", hora: "21:00", tipo: "evento", lugarId: "plaza", titulo: { es: "Nit de Albaes", va: "Pregó (exemple)" }, descripcion: { es: "Salida desde calle Murcia, recorrido por las casas de las Damas y de la Reina. En acabar les Albaes, nuestra Reina Infantil Sofía Giménez dará una pequeña fiesta en su casa hasta comenzar la Nit de la Maleta.", va: "Acte inaugural d'exemple." } },
+  { id: "a2", dia: "2026-11-05", hora: "00:30", tipo: "actuacion", lugarId: "escenario", titulo: { es: "Nit de la Maleta", va: "Concert d'obertura (exemple)" }, descripcion: { es: "Visita a las peñas acompañados por la Xirimita y el Tablaet. Inicio desde la calle Balde, 17.", va: "Actuació d'exemple." } },
   { id: "a3", dia: "2026-11-06", hora: "12:00", tipo: "evento", lugarId: "iglesia", titulo: { es: "Pasacalle (ejemplo)", va: "Cercavila (exemple)" }, descripcion: { es: "Recorrido por el centro.", va: "Recorregut pel centre." } },
   { id: "a4", dia: "2026-11-06", hora: "22:00", tipo: "actuacion", lugarId: "escenario", titulo: { es: "Orquesta (ejemplo)", va: "Orquestra (exemple)" }, descripcion: { es: "Actuación de ejemplo.", va: "Actuació d'exemple." } },
   { id: "a5", dia: "2026-11-07", hora: "18:00", tipo: "evento", lugarId: "plaza", titulo: { es: "Desfile de peñas (ejemplo)", va: "Desfilada de penyes (exemple)" }, descripcion: { es: "Desfile de ejemplo.", va: "Desfilada d'exemple." } },
