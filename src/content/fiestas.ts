@@ -91,5 +91,5 @@ export const ui = {
   emergencias: { es: "Emergencias", va: "Emergències" },
   contacto: { es: "Contacto de la organización", va: "Contacte de l'organització" },
   pendiente: { es: "Pendiente de añadir", va: "Pendent d'afegir" },
-  ejemplo: { es: "Contenido de ejemplo", va: "Contingut d'exemple" },
+  ejemplo: { es: "Del 07 al 10 de Noviembre de 2026", va: "Contingut d'exemple" },
 };
