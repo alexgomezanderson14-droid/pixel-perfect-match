@@ -36,7 +36,37 @@ create policy "Public can view festival images"
 drop policy if exists "Public can upload festival images" on storage.objects;
 create policy "Public can upload festival images"
   on storage.objects for insert to anon, authenticated
-  with check (bucket_id = 'penyes');
+  with check (
+    bucket_id = 'penyes'
+    and (
+      name ~ '^[0-9a-f-]{36}[.](jpg|png|webp)
+
+drop policy if exists "Admin can update festival images" on storage.objects;
+create policy "Admin can update festival images"
+  on storage.objects for update to authenticated
+  using (bucket_id = 'penyes' and (auth.jwt()->>'email') = 'gomezandersonalex@gmail.com')
+  with check (bucket_id = 'penyes' and (auth.jwt()->>'email') = 'gomezandersonalex@gmail.com');
+
+drop policy if exists "Admin can delete festival images" on storage.objects;
+create policy "Admin can delete festival images"
+  on storage.objects for delete to authenticated
+  using (bucket_id = 'penyes' and (auth.jwt()->>'email') = 'gomezandersonalex@gmail.com');
+
+      or name ~ '^site/hero-[0-9a-f-]{36}[.](jpg|png|webp)
+
+drop policy if exists "Admin can update festival images" on storage.objects;
+create policy "Admin can update festival images"
+  on storage.objects for update to authenticated
+  using (bucket_id = 'penyes' and (auth.jwt()->>'email') = 'gomezandersonalex@gmail.com')
+  with check (bucket_id = 'penyes' and (auth.jwt()->>'email') = 'gomezandersonalex@gmail.com');
+
+drop policy if exists "Admin can delete festival images" on storage.objects;
+create policy "Admin can delete festival images"
+  on storage.objects for delete to authenticated
+  using (bucket_id = 'penyes' and (auth.jwt()->>'email') = 'gomezandersonalex@gmail.com');
+
+    )
+  );
 
 drop policy if exists "Admin can update festival images" on storage.objects;
 create policy "Admin can update festival images"
