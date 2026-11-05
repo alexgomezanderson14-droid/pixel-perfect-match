@@ -37,7 +37,7 @@ function mapSearchUrl(place: string) { return "https://www.google.com/maps/searc
 function instagramUrl(value?: string | null) {
   if (!value?.trim()) return null;
   const raw = value.trim().replace(/^@/, "");
-  return raw.startsWith("http") ? raw : "https://www.instagram.com/" + raw.replace(/^\\//, "");
+  return raw.startsWith("http") ? raw : "https://www.instagram.com/" + raw;
 }
 
 async function shareWebsite() {
@@ -104,7 +104,12 @@ function Home() {
       supabase.from("eventos").select("*").eq("publicado",true).order("dia").order("hora"),
       supabase.from("site_content").select("clave,valor"),
     ]);
-    setActos(actosData?.length ? actosData : [...programaOficial2026]);
+    const filas = actosData ?? [];
+    const oficiales = programaOficial2026.map((oficial) =>
+      filas.find((fila) => fila.dia === oficial.dia && fila.hora === oficial.hora && fila.titulo === oficial.titulo) ?? oficial,
+    );
+    const extras = filas.filter((fila) => !programaOficial2026.some((oficial) => fila.dia === oficial.dia && fila.hora === oficial.hora && fila.titulo === oficial.titulo));
+    setActos([...oficiales, ...extras]);
     setEventos(eventosData ?? []);
     const content = Object.fromEntries((contentData ?? []).map((x:any)=>[x.clave,x.valor]));
     setSiteContent(content);
