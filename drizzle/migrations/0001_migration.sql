@@ -1,0 +1,2 @@
+CREATE POLICY "Fotos penyes lectura" ON storage.objects FOR SELECT TO anon, authenticated USING (bucket_id = 'penyes');
+CREATE POLICY "Fotos penyes subida" ON storage.objects FOR INSERT TO anon, authenticated WITH CHECK (bucket_id = 'penyes' AND lower(storage.extension(name)) IN ('jpg','jpeg','png','webp'));
