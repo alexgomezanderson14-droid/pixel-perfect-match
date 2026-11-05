@@ -2,10 +2,12 @@ import { createFileRoute, ClientOnly } from "@tanstack/react-router";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import hero from "@/assets/hero-fiestas.jpg";
 import { edicion, lugares as lugaresFijos, ui, type Categoria, type Lugar } from "@/content/fiestas";
+import { programaOficial2026 } from "@/content/programa-oficial-2026";
 import { supabase } from "@/integrations/supabase/client";
 
 const FestMap = lazy(() => import("@/components/FestMap"));
 const AddPenyaForm = lazy(() => import("@/components/AddPenyaForm"));
+const AddPenyaEventForm = lazy(() => import("@/components/AddPenyaEventForm"));
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,7 +32,74 @@ function fmtDia(d: string) {
   return new Date(d + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
 }
 
-type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number; lng: number; foto: string; tipo_musica: string; acepta_visitas: boolean; informacion: string };
+function mapSearchUrl(place: string) { return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(place + ", Alfaz del Pi, Alicante"); }
+
+function instagramUrl(value?: string | null) {
+  if (!value?.trim()) return null;
+  const raw = value.trim().replace(/^@/, "");
+  return raw.startsWith("http") ? raw : "https://www.instagram.com/" + raw;
+}
+
+async function shareWebsite() {
+  const url = window.location.href;
+  try {
+    await navigator.clipboard.writeText(url);
+    window.alert("Enlace de la web copiado. ¡Ya puedes compartirlo!");
+  } catch {
+    if (navigator.share) await navigator.share({ title: "Fiestas de l'Alfàs del Pi 2026", text: "Consulta el programa, el mapa y las peñas de las fiestas.", url });
+    else window.prompt("Copia el enlace de la web:", url);
+  }
+}
+
+async function sharePenyaCard(p: PenyaDb) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1080; canvas.height = 1350;
+  const c = canvas.getContext("2d");
+  if (!c) throw new Error("No se pudo crear la imagen.");
+  c.fillStyle = "#f4eee5"; c.fillRect(0, 0, 1080, 1350);
+  c.fillStyle = "#49352f"; c.fillRect(0, 0, 1080, 270);
+  c.fillStyle = "#e6b6c7"; c.font = "bold 30px Arial"; c.fillText("FIESTAS L'ALFÀS DEL PI · 2026", 76, 92);
+  c.fillStyle = "#ffffff"; c.font = "bold 66px Arial";
+  const words = p.nombre.split(" "); let line = ""; let y = 190;
+  for (const word of words) { const test = line ? line + " " + word : word; if (c.measureText(test).width > 900) { c.fillText(line, 76, y); line = word; y += 78; } else line = test; }
+  if (line) c.fillText(line, 76, y);
+  let mapDrawn = false;
+  try {
+    const mapUrl = "https://staticmap.openstreetmap.de/staticmap.php?center=" + p.lat + "," + p.lng + "&zoom=16&size=960x650&markers=" + p.lat + "," + p.lng + ",red-pushpin";
+    const response = await fetch(mapUrl);
+    if (!response.ok) throw new Error("No se pudo cargar el mapa.");
+    const mapBlob = await response.blob();
+    const mapObjectUrl = URL.createObjectURL(mapBlob);
+    const mapImage = new Image();
+    await new Promise<void>((resolve, reject) => { mapImage.onload = () => resolve(); mapImage.onerror = () => reject(new Error("Mapa no disponible.")); mapImage.src = mapObjectUrl; });
+    c.drawImage(mapImage, 60, 330, 960, 650);
+    URL.revokeObjectURL(mapObjectUrl);
+    mapDrawn = true;
+  } catch { mapDrawn = false; }
+  if (!mapDrawn) {
+    c.fillStyle = "#d9e3d8"; c.fillRect(60, 330, 960, 650);
+    c.strokeStyle = "#ffffff"; c.lineWidth = 28; c.lineCap = "round";
+    for (let i = 0; i < 5; i++) { c.beginPath(); c.moveTo(90, 410 + i * 115); c.bezierCurveTo(360, 330 + i * 110, 620, 620 + i * 70, 990, 390 + i * 100); c.stroke(); }
+    c.strokeStyle = "#c5d0c3"; c.lineWidth = 5;
+    for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(110 + i * 240, 350); c.lineTo(160 + i * 210, 950); c.stroke(); }
+    c.fillStyle = "#b45c79"; c.beginPath(); c.arc(540, 650, 44, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#49352f"; c.font = "bold 30px Arial"; c.fillText("UBICACIÓN EN EL MAPA", 340, 840);
+  }
+  c.font = "bold 36px Arial"; c.fillText("EN L'ALFÀS DEL PI", 76, 1060);
+  c.font = "30px Arial"; c.fillStyle = "#655650";
+  c.fillText((p.direccion || "Consulta nuestra ubicación en el mapa de las fiestas").slice(0, 48), 76, 1115);
+  c.fillStyle = "#49352f"; c.fillRect(60, 1180, 960, 2);
+  c.font = "bold 28px Arial"; c.fillText("DESCUBRE LAS PEÑAS · PROGRAMA · MAPA", 76, 1245);
+  c.font = "24px Arial"; c.fillStyle = "#806e65"; c.fillText(window.location.host, 76, 1295);
+  const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((b) => b ? resolve(b) : reject(new Error("No se pudo generar el PNG.")), "image/png"));
+  const file = new File([blob], "penya-" + p.nombre.toLowerCase().replace(/[^a-z0-9]+/g, "-") + ".png", { type: "image/png" });
+  const url = window.location.origin + "/#penya-" + p.id;
+  if (navigator.canShare?.({ files: [file] }) && navigator.share) await navigator.share({ files: [file], title: p.nombre, text: "Conoce " + p.nombre + " en las fiestas de l'Alfàs del Pi: " + url });
+  else { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = file.name; a.click(); URL.revokeObjectURL(a.href); await navigator.clipboard?.writeText(url); window.alert("Imagen descargada y enlace de la peña copiado."); }
+}
+
+
+type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number; lng: number; foto: string; tipo_musica: string; acepta_visitas: boolean; informacion: string; instagram?: string | null; email?: string | null };
 
 function Home() {
   const [q, setQ] = useState("");
@@ -43,18 +112,24 @@ function Home() {
   const [heroImage, setHeroImage] = useState("");
   const [form, setForm] = useState(false);
   const [selectedPenya, setSelectedPenya] = useState<PenyaDb | null>(null);
+  const [eventFormPenya, setEventFormPenya] = useState<PenyaDb | null>(null);
   const dias = useMemo(() => [...new Set(actos.map((a) => a.dia))].sort(), [actos]);
   const [dia, setDia] = useState<string | undefined>();
   useEffect(() => { if (dias.length && !dia) setDia(dias[0]); }, [dias, dia]);
 
   const cargar = useCallback(async () => {
     const [{ data }, { data: actosData }, { data: eventosData }, { data: contentData }] = await Promise.all([
-      supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,acepta_visitas,informacion").eq("estado","aprobada").order("nombre"),
+      supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,acepta_visitas,informacion,instagram,email").eq("estado","aprobada").order("nombre"),
       supabase.from("actos").select("*").eq("publicado",true).order("dia").order("hora"),
       supabase.from("eventos").select("*").eq("publicado",true).order("dia").order("hora"),
       supabase.from("site_content").select("clave,valor"),
     ]);
-    setActos(actosData ?? []);
+    const filas = actosData ?? [];
+    const oficiales = programaOficial2026.map((oficial) =>
+      filas.find((fila) => fila.dia === oficial.dia && fila.hora === oficial.hora && fila.titulo === oficial.titulo) ?? oficial,
+    );
+    const extras = filas.filter((fila) => !programaOficial2026.some((oficial) => fila.dia === oficial.dia && fila.hora === oficial.hora && fila.titulo === oficial.titulo));
+    setActos([...oficiales, ...extras]);
     setEventos(eventosData ?? []);
     const content = Object.fromEntries((contentData ?? []).map((x:any)=>[x.clave,x.valor]));
     setSiteContent(content);
@@ -74,7 +149,8 @@ function Home() {
     ...lugaresFijos,
     ...penyes.map((p) => ({ id: p.id, categoria: "penya" as const, nombre: p.nombre, descripcion: p.direccion ?? "", lat: p.lat, lng: p.lng, foto: p.foto })),
     ...actos.filter((a) => a.lat != null && a.lng != null).map((a) => ({ id: "acto-" + a.id, categoria: a.tipo as Categoria, nombre: a.titulo, descripcion: a.lugar || a.descripcion || "", lat: Number(a.lat), lng: Number(a.lng) })),
-  ], [penyes, actos]);
+    ...eventos.filter((e) => e.lat != null && e.lng != null).map((e) => ({ id: "evento-" + e.id, categoria: "evento" as const, nombre: e.titulo, descripcion: e.lugar || e.descripcion || "", lat: Number(e.lat), lng: Number(e.lng) })),
+  ], [penyes, actos, eventos]);
 
   const visibles = todos.filter((l) => (!cat || l.categoria === cat) && l.nombre.toLowerCase().includes(q.toLowerCase()));
 
@@ -108,6 +184,7 @@ function Home() {
             <div className="glass-dark rounded-2xl px-5 py-3 text-sm">¡VIVE LAS FIESTAS!</div>
             <a href="#programa" className="rounded-full bg-pink px-6 py-3 font-bold text-brown transition hover:-translate-y-0.5">{ui.nav.programa}</a>
             <a href="#mapa" className="glass-dark rounded-full px-6 py-3 font-bold">{ui.nav.mapa}</a>
+            <button onClick={() => void shareWebsite()} className="glass-dark rounded-full px-6 py-3 font-bold">↗ Compartir web</button>
           </div>
         </div>
       </section>
@@ -170,7 +247,7 @@ function Home() {
                         {a.descripcion && <p className="mt-1 text-sm text-muted-foreground">{a.descripcion}</p>}
                         {a.lugar && <p className="mt-2 text-sm text-muted-foreground">📍 {a.lugar}</p>}
                       </div>
-                      {a.lat != null && a.lng != null && <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa</button>}
+                      {a.lat != null && a.lng != null ? <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa</button> : a.lugar && !a.lugar.startsWith("Con ") && !a.lugar.startsWith("Días ") ? <a href={mapSearchUrl(a.lugar)} target="_blank" rel="noreferrer" className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa</a> : null}
                     </article>)}
                   </section>;
                 })}
@@ -183,7 +260,7 @@ function Home() {
         <section id="eventos" className="scroll-mt-24">
           <SectionTitle>Eventos</SectionTitle>
           {!eventos.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">Próximamente publicaremos los eventos de las peñas y actividades especiales.</div> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {eventos.map((e) => <article key={e.id} className="glass rounded-3xl p-5"><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{fmtDia(e.dia)}{e.hora ? " · "+e.hora : ""}</p><h3 className="mt-2 text-2xl font-bold">{e.titulo}</h3>{e.descripcion && <p className="mt-2 text-sm text-muted-foreground">{e.descripcion}</p>}{e.lugar && <p className="mt-3 text-sm">📍 {e.lugar}</p>}{e.penya_id && <p className="mt-2 text-xs font-bold text-primary">{penyes.find(p=>p.id===e.penya_id)?.nombre || "Evento de peña"}</p>}</article>)}
+            {eventos.map((e) => <article key={e.id} className="glass rounded-3xl p-5"><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{fmtDia(e.dia)}{e.hora ? " · "+e.hora : ""}</p><h3 className="mt-2 text-2xl font-bold">{e.titulo}</h3>{e.descripcion && <p className="mt-2 text-sm text-muted-foreground">{e.descripcion}</p>}{e.lugar && <p className="mt-3 text-sm">📍 {e.lugar}</p>}{e.penya_id && <p className="mt-2 text-xs font-bold text-primary">{penyes.find(p=>p.id===e.penya_id)?.nombre || "Evento de peña"}</p>}{e.lat != null && e.lng != null ? <button onClick={() => goMap("evento-" + e.id)} className="glass-btn mt-3 px-4 py-2 text-sm font-bold">Ver ubicación en el mapa</button> : e.lugar ? <a href={mapSearchUrl(e.lugar)} target="_blank" rel="noreferrer" className="glass-btn mt-3 inline-block px-4 py-2 text-sm font-bold">Ver ubicación en el mapa</a> : null}</article>)}
           </div>}
         </section>
         <section id="penyes" className="scroll-mt-24">
@@ -196,7 +273,7 @@ function Home() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {penyes.map((p) => (
-                <article key={p.id} className="glass overflow-hidden rounded-3xl">
+                <article id={"penya-" + p.id} key={p.id} className="glass overflow-hidden rounded-3xl">
                   {p.foto && <img src={p.foto} alt={p.nombre} loading="lazy" className="h-44 w-full object-cover" />}
                   <div className="p-6">
                     <h3 className="text-2xl font-bold">{p.nombre}</h3>
@@ -205,7 +282,8 @@ function Home() {
                     <p className="mt-1 text-sm"><strong>Visitas:</strong> {p.acepta_visitas ? "Sí, acepta visitas" : "No acepta visitas"}</p>
                     {p.informacion && <p className="mt-2 text-sm text-muted-foreground">{p.informacion}</p>}
                     {eventos.filter(e=>e.penya_id===p.id).map(e=><p key={e.id} className="mt-2 text-sm"><strong>Evento:</strong> {e.titulo} · {fmtDia(e.dia)}</p>)}
-                    <div className="mt-4 flex flex-wrap gap-2"><button onClick={() => setSelectedPenya(p)} className="rounded-full bg-pink px-4 py-2 text-sm font-bold text-brown">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-4 py-2 text-sm font-bold">📍 {ui.verMapa}</button></div>
+                    <div className="mt-4 flex flex-wrap gap-2"><button onClick={() => setSelectedPenya(p)} className="rounded-full bg-pink px-4 py-2 text-sm font-bold text-brown">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-4 py-2 text-sm font-bold">📍 {ui.verMapa}</button><button onClick={() => void sharePenyaCard(p)} className="glass-btn px-4 py-2 text-sm font-bold">↗ Compartir peña</button><button onClick={() => setEventFormPenya(p)} className="glass-btn px-4 py-2 text-sm font-bold">+ Añadir evento</button></div>
+                    <div className="mt-3 flex flex-wrap gap-3 text-sm">{instagramUrl(p.instagram) && <a className="font-semibold text-primary underline" href={instagramUrl(p.instagram)!} target="_blank" rel="noreferrer">Instagram</a>}{p.email && <a className="font-semibold text-primary underline" href={"mailto:" + p.email}>Correo</a>}</div>
                   </div>
                 </article>
               ))}
@@ -236,10 +314,14 @@ function Home() {
               <div className="mt-6"><h3 className="text-xl font-bold">Eventos y actividades</h3>
                 {eventos.filter((e) => e.penya_id === selectedPenya.id).length ? <div className="mt-3 space-y-3">{eventos.filter((e) => e.penya_id === selectedPenya.id).map((e) => <article key={e.id} className="rounded-2xl bg-glass p-4"><p className="text-xs font-bold uppercase text-muted-foreground">{fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p><h4 className="mt-1 font-bold">{e.titulo}</h4>{e.descripcion && <p className="mt-1 text-sm text-muted-foreground">{e.descripcion}</p>}{e.lugar && <p className="mt-2 text-sm">📍 {e.lugar}</p>}</article>)}</div> : <p className="mt-2 text-sm text-muted-foreground">Esta peña todavía no tiene eventos publicados.</p>}
               </div>
-              <button onClick={() => { const id = selectedPenya.id; setSelectedPenya(null); goMap(id); }} className="mt-6 rounded-full bg-pink px-5 py-3 text-sm font-bold text-brown">📍 Ver ubicación en el mapa</button>
+              <div className="mt-6 flex flex-wrap gap-2">{instagramUrl(selectedPenya.instagram) && <a className="glass-btn rounded-full px-4 py-2 text-sm font-bold" href={instagramUrl(selectedPenya.instagram)!} target="_blank" rel="noreferrer">Instagram</a>}{selectedPenya.email && <a className="glass-btn rounded-full px-4 py-2 text-sm font-bold" href={"mailto:" + selectedPenya.email}>Correo</a>}<button onClick={() => void sharePenyaCard(selectedPenya)} className="glass-btn rounded-full px-4 py-2 text-sm font-bold">↗ Compartir ficha</button><button onClick={() => setEventFormPenya(selectedPenya)} className="glass-btn rounded-full px-4 py-2 text-sm font-bold">+ Añadir evento</button><button onClick={() => { const id = selectedPenya.id; setSelectedPenya(null); goMap(id); }} className="rounded-full bg-pink px-5 py-3 text-sm font-bold text-brown">📍 Ver ubicación en el mapa</button></div>
             </div>
           </section>
         </div>
+      )}
+
+      {eventFormPenya && (
+        <ClientOnly><Suspense fallback={null}><AddPenyaEventForm penyaId={eventFormPenya.id} penyaName={eventFormPenya.nombre} onClose={() => setEventFormPenya(null)} onSaved={() => { setEventFormPenya(null); void cargar(); window.alert("¡Evento enviado! Aparecerá en la web cuando sea aprobado."); }} /></Suspense></ClientOnly>
       )}
 
       {form && (
