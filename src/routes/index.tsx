@@ -156,18 +156,25 @@ function Home() {
                   <Chip key={d} active={dia === d} onClick={() => setDia(d)}><span className="inline-block first-letter:uppercase">{fmtDia(d)}</span></Chip>
                 ))}
               </div>
-              <div className="space-y-3">
-                {actos.filter((a) => a.dia === dia).map((a) => (
-                  <div key={a.id} className="glass flex flex-col gap-3 rounded-3xl p-5 sm:flex-row sm:items-center">
-                    <div className="font-display text-3xl font-bold text-primary sm:w-28">{a.hora}</div>
-                    <div className="flex-1">
-                      <span className={`mb-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-bold uppercase text-on-image ${catBg[a.tipo]}`}>{ui.categorias[a.tipo]}</span>
-                      <h3 className="text-xl font-bold">{a.titulo}</h3>
-                      <p className="text-sm text-muted-foreground">{a.descripcion}</p>
-                    </div>
-                    {(a.lat != null && a.lng != null) ? <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">📍 Ver en el mapa</button> : a.lugar && <span className="text-sm text-muted-foreground">📍 {a.lugar}</span>}
-                  </div>
-                ))}
+              <div className="space-y-8">
+                {(["actuacion", "evento"] as const).map((tipo) => {
+                  const lista = actos.filter((a) => a.dia === dia && a.tipo === tipo);
+                  if (!lista.length) return null;
+                  return <section key={tipo} className="space-y-3">
+                    <div className="flex items-center gap-3"><h3 className="text-2xl font-bold text-primary">{tipo === "actuacion" ? "Actuaciones" : "Otros actos y actividades"}</h3><span className="h-px flex-1 bg-primary/15" /></div>
+                    {lista.map((a) => <article key={a.id} className="glass flex flex-col gap-3 rounded-3xl p-5 sm:flex-row sm:items-center">
+                      <div className="font-display text-3xl font-bold text-primary sm:w-28">{a.hora || "—"}</div>
+                      <div className="flex-1">
+                        <span className={`mb-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-bold uppercase text-on-image ${catBg[a.tipo]}`}>{tipo === "actuacion" ? "Actuación" : "Actividad"}</span>
+                        <h4 className="text-xl font-bold">{a.titulo}</h4>
+                        {a.descripcion && <p className="mt-1 text-sm text-muted-foreground">{a.descripcion}</p>}
+                        {a.lugar && <p className="mt-2 text-sm text-muted-foreground">📍 {a.lugar}</p>}
+                      </div>
+                      {a.lat != null && a.lng != null && <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa</button>}
+                    </article>)}
+                  </section>;
+                })}
+                {!actos.some((a) => a.dia === dia) && <p className="glass rounded-2xl p-5 text-muted-foreground">No hay actos publicados para este día.</p>}
               </div>
             </>
           )}
