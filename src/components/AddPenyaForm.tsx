@@ -9,11 +9,16 @@ const TIPOS = ["image/jpeg", "image/png", "image/webp"];
 const schema = z.object({
   nombre: z.string().trim().min(2, "El nombre debe tener al menos 2 caracteres").max(80, "Máximo 80 caracteres"),
   direccion: z.string().trim().max(200, "Máximo 200 caracteres"),
+  tipo_musica: z.string().trim().max(80),
+  informacion: z.string().trim().max(1000),
 });
 
 export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const [nombre, setNombre] = useState("");
   const [direccion, setDireccion] = useState("");
+  const [tipoMusica, setTipoMusica] = useState("Variada");
+  const [aceptaVisitas, setAceptaVisitas] = useState(false);
+  const [informacion, setInformacion] = useState("");
   const [pos, setPos] = useState<{ lat: number; lng: number } | null>(null);
   const [foto, setFoto] = useState<File | null>(null);
   const [error, setError] = useState("");
@@ -35,7 +40,7 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
   const enviar = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const v = schema.safeParse({ nombre, direccion });
+    const v = schema.safeParse({ nombre, direccion, tipo_musica: tipoMusica, informacion });
     if (!v.success) return setError(v.error.issues[0]?.message ?? "Revisa los datos.");
     if (!pos) return setError("Indica la ubicación: busca la dirección o toca en el mapa.");
     if (!foto) return setError("Añade una fotografía de la peña.");
@@ -55,6 +60,10 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
       lat: pos.lat,
       lng: pos.lng,
       foto_url: path,
+      tipo_musica: v.data.tipo_musica,
+      acepta_visitas: aceptaVisitas,
+      informacion: v.data.informacion,
+      estado: "pendiente",
     });
     setBusy(false);
     if (insErr) return setError("No se pudo guardar la peña. Revisa que la ubicación esté en l'Alfàs del Pi.");
@@ -88,11 +97,18 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
           </div>
         </div>
         <label className="block space-y-1 text-sm font-bold">
+          <span>Tipo de música</span>
+          <select value={tipoMusica} onChange={(e) => setTipoMusica(e.target.value)} className="w-full rounded-full border border-input bg-glass px-4 py-2.5 font-normal"><option>Variada</option><option>Reggaetón</option><option>Pop / comercial</option><option>Rock</option><option>Electrónica</option><option>Remember</option><option>Otra</option></select>
+        </label>
+        <label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" checked={aceptaVisitas} onChange={(e) => setAceptaVisitas(e.target.checked)} /> ¿Aceptáis visitas durante las fiestas?</label>
+        <label className="block space-y-1 text-sm font-bold"><span>Información sobre la peña</span><textarea value={informacion} onChange={(e) => setInformacion(e.target.value)} maxLength={1000} rows={3} placeholder="Contad qué ambiente tenéis, qué ofrecéis…" className="w-full rounded-2xl border border-input bg-glass px-4 py-2.5 font-normal" /></label>
+        <label className="block space-y-1 text-sm font-bold">
           <span>Fotografía * (JPG, PNG o WEBP, máx. 5 MB)</span>
           <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setFoto(e.target.files?.[0] ?? null)} className="w-full text-sm font-normal" />
         </label>
         {error && <p className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
-        <button disabled={busy} className="w-full rounded-full bg-pink px-6 py-3 font-bold text-brown disabled:opacity-60">{busy ? "Guardando…" : "Guardar peña"}</button>
+        <p className="text-xs text-muted-foreground">La peña aparecerá en la web cuando la administración apruebe la solicitud.</p>
+        <button disabled={busy} className="w-full rounded-full bg-pink px-6 py-3 font-bold text-brown disabled:opacity-60">{busy ? "Enviando…" : "Enviar solicitud"}</button>
       </form>
     </div>
   );
