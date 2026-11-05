@@ -134,7 +134,7 @@ function Home() {
       const fila = filas.find((item) => item.dia === oficial.dia && item.hora === oficial.hora && item.titulo === oficial.titulo);
       return fila ? { ...fila, ...oficial, id: fila.id } : oficial;
     });
-    const extras = filas.filter((fila) => !programaOficial2026.some((oficial) => fila.dia === oficial.dia && fila.hora === oficial.hora && fila.titulo === oficial.titulo));
+    const extras = filas.filter((fila) => !/autobús lanzadera/i.test(fila.titulo || "") && !programaOficial2026.some((oficial) => fila.dia === oficial.dia && fila.hora === oficial.hora && fila.titulo === oficial.titulo));
     setActos([...oficiales, ...extras]);
     setEventos(eventosData ?? []);
     const content = Object.fromEntries((contentData ?? []).map((x:any)=>[x.clave,x.valor]));
