@@ -73,6 +73,7 @@ function Home() {
   const todos: Lugar[] = useMemo(() => [
     ...lugaresFijos,
     ...penyes.map((p) => ({ id: p.id, categoria: "penya" as const, nombre: p.nombre, descripcion: p.direccion ?? "", lat: p.lat, lng: p.lng, foto: p.foto })),
+    ...actos.filter((a) => a.lat != null && a.lng != null).map((a) => ({ id: "acto-" + a.id, categoria: a.tipo as Categoria, nombre: a.titulo, descripcion: a.lugar || a.descripcion || "", lat: Number(a.lat), lng: Number(a.lng) })),
   ], [penyes]);
 
   const visibles = todos.filter((l) => (!cat || l.categoria === cat) && l.nombre.toLowerCase().includes(q.toLowerCase()));
@@ -87,7 +88,7 @@ function Home() {
   };
 
   return (
-    <div className="page-bg min-h-screen">
+    <div className="page-bg min-h-screen" style={{ "--pink": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--secondary": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--accent": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--ring": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--cat-penya": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--background": siteContent.theme_background || "oklch(0.95 0.015 75)" } as React.CSSProperties}>
       <header className="fixed inset-x-0 top-4 z-[1000] flex justify-center px-4">
         <nav className="glass flex items-center gap-1 rounded-full p-1.5 text-sm">
           {(Object.keys(ui.nav) as (keyof typeof ui.nav)[]).map((k) => (
@@ -164,7 +165,7 @@ function Home() {
                       <h3 className="text-xl font-bold">{a.titulo}</h3>
                       <p className="text-sm text-muted-foreground">{a.descripcion}</p>
                     </div>
-                    {a.lugarId && <button onClick={() => goMap(a.lugarId)} className="glass-btn px-4 py-2 text-sm font-bold">📍 {ui.verMapa}</button>}
+                    {(a.lat != null && a.lng != null) ? <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">📍 Ver en el mapa</button> : a.lugar && <span className="text-sm text-muted-foreground">📍 {a.lugar}</span>}
                   </div>
                 ))}
               </div>
