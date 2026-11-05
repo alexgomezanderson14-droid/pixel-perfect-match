@@ -119,4 +119,8 @@ create policy "Public can upload festival images"
     )
   );
 
+-- Use the Cristo procession photo bundled with the web as the default cover.
+-- The administrator can still upload a different cover later from /admin.
+delete from public.site_content where clave = 'hero_image_path';
+
 notify pgrst, 'reload schema';
