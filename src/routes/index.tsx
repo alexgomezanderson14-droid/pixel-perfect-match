@@ -1,7 +1,7 @@
 import { createFileRoute, ClientOnly } from "@tanstack/react-router";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import hero from "@/assets/hero-fiestas.jpg";
-import { actos, edicion, lugares as lugaresFijos, ui, type Categoria, type Lugar } from "@/content/fiestas";
+import { edicion, lugares as lugaresFijos, ui, type Categoria, type Lugar } from "@/content/fiestas";
 import { supabase } from "@/integrations/supabase/client";
 
 const FestMap = lazy(() => import("@/components/FestMap"));
@@ -30,19 +30,31 @@ function fmtDia(d: string) {
   return new Date(d + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
 }
 
-type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number; lng: number; foto: string };
+type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number; lng: number; foto: string; tipo_musica: string; acepta_visitas: boolean; informacion: string };
 
 function Home() {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<Categoria | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
   const [penyes, setPenyes] = useState<PenyaDb[]>([]);
+  const [actos, setActos] = useState<any[]>([]);
+  const [eventos, setEventos] = useState<any[]>([]);
+  const [siteContent, setSiteContent] = useState<Record<string,string>>({});
   const [form, setForm] = useState(false);
-  const dias = useMemo(() => [...new Set(actos.map((a) => a.dia))].sort(), []);
-  const [dia, setDia] = useState(dias[0]);
+  const dias = useMemo(() => [...new Set(actos.map((a) => a.dia))].sort(), [actos]);
+  const [dia, setDia] = useState<string | undefined>();
+  useEffect(() => { if (dias.length && !dia) setDia(dias[0]); }, [dias, dia]);
 
   const cargar = useCallback(async () => {
-    const { data } = await supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url").order("nombre");
+    const [{ data }, { data: actosData }, { data: eventosData }, { data: contentData }] = await Promise.all([
+      supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,acepta_visitas,informacion").eq("estado","aprobada").order("nombre"),
+      supabase.from("actos").select("*").eq("publicado",true).order("dia").order("hora"),
+      supabase.from("eventos").select("*").eq("publicado",true).order("dia").order("hora"),
+      supabase.from("site_content").select("clave,valor"),
+    ]);
+    setActos(actosData ?? []);
+    setEventos(eventosData ?? []);
+    setSiteContent(Object.fromEntries((contentData ?? []).map((x:any)=>[x.clave,x.valor])));
     if (!data) return;
     const { data: urls } = data.length
       ? await supabase.storage.from("penyes").createSignedUrls(data.map((p) => p.foto_url), 60 * 60 * 24 * 7)
@@ -81,9 +93,9 @@ function Home() {
         <img src={hero} alt="Fiestas en las calles de l'Alfàs del Pi" width={1920} height={1088} className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-brown/90 via-brown/20 to-transparent" />
         <div className="relative mx-auto w-full max-w-6xl px-5 pb-16">
-          <span className="glass-dark mb-4 inline-block rounded-full px-3 py-1 text-xs">{edicion.fechas}</span>
-          <h1 className="rise text-5xl font-bold leading-[0.95] text-on-image sm:text-7xl md:text-8xl">{edicion.titulo} <span className="text-pink">{edicion.anyo}</span></h1>
-          <p className="rise mt-4 max-w-xl text-lg text-on-image/85">{edicion.subtitulo}</p>
+          <span className="glass-dark mb-4 inline-block rounded-full px-3 py-1 text-xs">{siteContent.hero_fechas || edicion.fechas}</span>
+          <h1 className="rise text-5xl font-bold leading-[0.95] text-on-image sm:text-7xl md:text-8xl">{siteContent.hero_titulo || edicion.titulo} <span className="text-pink">{edicion.anyo}</span></h1>
+          <p className="rise mt-4 max-w-xl text-lg text-on-image/85">{siteContent.hero_subtitulo || edicion.subtitulo}</p>
           <div className="rise mt-8 flex flex-wrap gap-3">
             <div className="glass-dark rounded-2xl px-5 py-3 text-sm">¡VIVE LAS FIESTAS!</div>
             <a href="#programa" className="rounded-full bg-pink px-6 py-3 font-bold text-brown transition hover:-translate-y-0.5">{ui.nav.programa}</a>
@@ -153,6 +165,12 @@ function Home() {
           )}
         </section>
 
+        <section id="eventos" className="scroll-mt-24">
+          <SectionTitle>Eventos</SectionTitle>
+          {!eventos.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">Próximamente publicaremos los eventos de las peñas y actividades especiales.</div> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {eventos.map((e) => <article key={e.id} className="glass rounded-3xl p-5"><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{fmtDia(e.dia)}{e.hora ? " · "+e.hora : ""}</p><h3 className="mt-2 text-2xl font-bold">{e.titulo}</h3>{e.descripcion && <p className="mt-2 text-sm text-muted-foreground">{e.descripcion}</p>}{e.lugar && <p className="mt-3 text-sm">📍 {e.lugar}</p>}{e.penya_id && <p className="mt-2 text-xs font-bold text-primary">{penyes.find(p=>p.id===e.penya_id)?.nombre || "Evento de peña"}</p>}</article>)}
+          </div>}
+        </section>
         <section id="penyes" className="scroll-mt-24">
           <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
             <h2 className="text-4xl font-bold text-primary sm:text-5xl">{ui.nav.penyes}</h2>
@@ -168,6 +186,10 @@ function Home() {
                   <div className="p-6">
                     <h3 className="text-2xl font-bold">{p.nombre}</h3>
                     {p.direccion && <p className="mt-1 text-sm text-muted-foreground">{p.direccion}</p>}
+                    <p className="mt-3 text-sm"><strong>Música:</strong> {p.tipo_musica || "Variada"}</p>
+                    <p className="mt-1 text-sm"><strong>Visitas:</strong> {p.acepta_visitas ? "Sí, acepta visitas" : "No acepta visitas"}</p>
+                    {p.informacion && <p className="mt-2 text-sm text-muted-foreground">{p.informacion}</p>}
+                    {eventos.filter(e=>e.penya_id===p.id).map(e=><p key={e.id} className="mt-2 text-sm"><strong>Evento:</strong> {e.titulo} · {fmtDia(e.dia)}</p>)}
                     <button onClick={() => goMap(p.id)} className="glass-btn mt-4 px-4 py-2 text-sm font-bold">📍 {ui.verMapa}</button>
                   </div>
                 </article>
