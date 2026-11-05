@@ -362,7 +362,6 @@ function Home() {
                     <h3 className="text-2xl font-bold">{p.nombre}</h3>
                     {p.direccion && <p className="mt-1 text-sm text-muted-foreground">{p.direccion}</p>}
                     <p className="mt-3 text-sm"><strong>Música:</strong> {p.tipo_musica || "Variada"}</p>
-                    <p className="mt-1 text-sm"><strong>Visitas:</strong> {p.acepta_visitas ? "Sí, acepta visitas" : "No acepta visitas"}</p>
                     {p.informacion && <p className="mt-2 text-sm text-muted-foreground">{p.informacion}</p>}
                     {eventosActivos.filter(e=>e.penya_id===p.id).map(e=><p key={e.id} className="mt-2 text-sm"><strong>Evento:</strong> {e.titulo} · {fmtDia(e.dia)}</p>)}
                     <div className="mt-4 flex flex-wrap gap-2"><button onClick={() => setSelectedPenya(p)} className="rounded-full bg-pink px-4 py-2 text-sm font-bold text-brown">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-4 py-2 text-sm font-bold">📍 {ui.verMapa}</button><button onClick={() => void sharePenyaCard(p)} className="glass-btn px-4 py-2 text-sm font-bold">↗ Compartir peña</button><button onClick={() => setEventFormPenya(p)} className="glass-btn px-4 py-2 text-sm font-bold">{p.tiene_evento ? "Editar evento" : "+ Añadir evento"}</button></div>
@@ -408,7 +407,6 @@ function Home() {
               {selectedPenya.direccion && <p className="mt-3 text-sm">📍 {selectedPenya.direccion}</p>}
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl bg-glass p-4"><p className="text-xs font-bold uppercase text-muted-foreground">Música</p><p className="mt-1 font-semibold">{selectedPenya.tipo_musica || "Variada"}</p></div>
-                <div className="rounded-2xl bg-glass p-4"><p className="text-xs font-bold uppercase text-muted-foreground">Visitas</p><p className="mt-1 font-semibold">{selectedPenya.acepta_visitas ? "Sí, acepta visitas" : "No acepta visitas"}</p></div>
               </div>
               {selectedPenya.informacion && <div className="mt-5"><h3 className="font-bold">Sobre la peña</h3><p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">{selectedPenya.informacion}</p></div>}
               <div className="mt-6"><h3 className="text-xl font-bold">Eventos y actividades</h3>
