@@ -153,14 +153,14 @@ function Home() {
 
   const cargar = useCallback(async () => {
     const [penyaResult, { data: actosData }, { data: eventosData }, { data: contentData }] = await Promise.all([
-      supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,acepta_visitas,informacion,instagram,email").eq("estado","aprobada").order("nombre"),
+      supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,informacion,instagram,email").eq("estado","aprobada").order("nombre"),
       supabase.from("actos").select("*").eq("publicado",true).order("dia").order("hora"),
       supabase.from("eventos").select("*").eq("publicado",true).order("dia").order("hora"),
       supabase.from("site_content").select("clave,valor"),
     ]);
     let data: any[] | null = penyaResult.data as any[] | null;
     if (penyaResult.error) {
-      const legacyPenyes = await supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,acepta_visitas,informacion").eq("estado","aprobada").order("nombre");
+      const legacyPenyes = await supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,informacion").eq("estado","aprobada").order("nombre");
       data = legacyPenyes.data?.map((p) => ({ ...p, instagram: "", email: null })) ?? null;
     }
     const filas = actosData ?? [];
