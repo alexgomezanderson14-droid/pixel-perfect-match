@@ -19,6 +19,10 @@ export default function AddPenyaEventForm({ penyaId, penyaName, onClose, onSaved
   const enviar = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    if (pos && (pos.lat < 38.4 || pos.lat > 38.8 || pos.lng < -0.3 || pos.lng > 0.1)) {
+      setError("La ubicación seleccionada parece estar fuera de l’Alfàs del Pi.");
+      return;
+    }
     if (!titulo.trim() || !dia || !hora.trim() || !lugar.trim()) {
       setError("Indica el nombre, fecha, hora y lugar del evento.");
       return;
