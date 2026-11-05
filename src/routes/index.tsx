@@ -40,6 +40,7 @@ function Home() {
   const [actos, setActos] = useState<any[]>([]);
   const [eventos, setEventos] = useState<any[]>([]);
   const [siteContent, setSiteContent] = useState<Record<string,string>>({});
+  const [heroImage, setHeroImage] = useState("");
   const [form, setForm] = useState(false);
   const dias = useMemo(() => [...new Set(actos.map((a) => a.dia))].sort(), [actos]);
   const [dia, setDia] = useState<string | undefined>();
@@ -54,7 +55,12 @@ function Home() {
     ]);
     setActos(actosData ?? []);
     setEventos(eventosData ?? []);
-    setSiteContent(Object.fromEntries((contentData ?? []).map((x:any)=>[x.clave,x.valor])));
+    const content = Object.fromEntries((contentData ?? []).map((x:any)=>[x.clave,x.valor]));
+    setSiteContent(content);
+    if (content.hero_image_path) {
+      const { data: imageData } = await supabase.storage.from("penyes").createSignedUrl(content.hero_image_path, 604800);
+      setHeroImage(imageData?.signedUrl ?? "");
+    }
     if (!data) return;
     const { data: urls } = data.length
       ? await supabase.storage.from("penyes").createSignedUrls(data.map((p) => p.foto_url), 60 * 60 * 24 * 7)
@@ -90,7 +96,7 @@ function Home() {
       </header>
 
       <section className="relative flex min-h-[92vh] items-end overflow-hidden">
-        <img src={hero} alt="Fiestas en las calles de l'Alfàs del Pi" width={1920} height={1088} className="absolute inset-0 h-full w-full object-cover" />
+        <img src={heroImage || hero} alt="Fiestas en las calles de l'Alfàs del Pi" width={1920} height={1088} className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-brown/90 via-brown/20 to-transparent" />
         <div className="relative mx-auto w-full max-w-6xl px-5 pb-16">
           <span className="glass-dark mb-4 inline-block rounded-full px-3 py-1 text-xs">{siteContent.hero_fechas || edicion.fechas}</span>
@@ -200,7 +206,7 @@ function Home() {
 
         <section id="info" className="scroll-mt-24">
           <SectionTitle>{ui.nav.info}</SectionTitle>
-          <div className="glass max-w-sm rounded-3xl p-6"><h3 className="text-xl font-bold">{ui.emergencias}</h3><p className="mt-2 font-display text-4xl font-bold text-primary">112</p></div>
+          <div className="glass max-w-sm rounded-3xl p-6"><h3 className="text-xl font-bold">{siteContent.info_titulo || ui.emergencias}</h3><p className="mt-2 font-display text-4xl font-bold text-primary">{siteContent.info_telefono || "112"}</p></div>
         </section>
       </main>
 
