@@ -1,6 +1,6 @@
 // Programa oficial 2026 transcrito del PDF municipal facilitado.
 // Se usa como respaldo visual si Supabase todavía no ha recibido la migración de datos.
-export const programaOficial2026 = [
+const programaCompleto2026 = [
   {
     "id": "oficial-1",
     "dia": "2026-10-31",
@@ -658,4 +658,7 @@ export const programaOficial2026 = [
     "tipo": "actuacion",
     "lugar": "Avenida de la Constitución"
   }
-] as const;
+ ] as const;
+
+export const informacionBus2026 = programaCompleto2026.filter((acto) => acto.id.startsWith("oficial-bus-"));
+export const programaOficial2026 = programaCompleto2026.filter((acto) => !acto.id.startsWith("oficial-bus-"));
