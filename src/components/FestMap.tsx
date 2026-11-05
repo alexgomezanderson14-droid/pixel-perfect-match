@@ -51,7 +51,7 @@ export default function FestMap({
     lugares.forEach((l) => {
       const img = l.foto ? `<img src="${esc(l.foto)}" alt="" style="width:180px;height:110px;object-fit:cover;border-radius:10px;margin-bottom:6px"/>` : "";
       const markerHtml = l.categoria === "penya" && l.foto
-        ? `<div class="fest-pin fest-pin-penya fest-pin-photo"><img src="${esc(l.foto)}" alt="" /></div>`
+        ? `<div class="fest-pin fest-pin-penya fest-pin-photo" style="width:50px;height:50px;box-sizing:border-box;overflow:hidden;border-radius:50%;border:3px solid #fff;background:#e6b6c7;box-shadow:0 2px 8px rgba(0,0,0,.35);padding:0;display:block;"><img src="${esc(l.foto)}" alt="" loading="lazy" referrerpolicy="no-referrer" style="display:block;width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;border:0;border-radius:50%;margin:0;padding:0;" /></div>`
         : `<div class="fest-pin fest-pin-${l.categoria}">${icons[l.categoria]}</div>`;
       const popupHtml = `${img}<strong>${esc(l.nombre)}</strong>${l.descripcion ? `<br/><span>${esc(l.descripcion)}</span>` : ""}${l.categoria === "penya" ? `<br/><button type="button" data-penya-id="${esc(l.id)}" class="fest-popup-detail">Ver ficha de la peña</button>` : ""}`;
       const m = L.marker([l.lat, l.lng], {
