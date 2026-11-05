@@ -32,6 +32,13 @@ function fmtDia(d: string) {
   return new Date(d + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
 }
 
+function eventoSigueActivo(item: { dia?: string; hora?: string }, now = Date.now()) {
+  if (!item.dia) return true;
+  const hora = String(item.hora || "").match(/(?:^|\\D)([01]\\d|2[0-3]):([0-5]\\d)/);
+  const fechaLimite = new Date(`${String(item.dia).slice(0, 10)}T${hora ? hora[1] + ":" + hora[2] : "23:59"}:00`).getTime();
+  return Number.isNaN(fechaLimite) || fechaLimite >= now;
+}
+
 function instagramUrl(value?: string | null) {
   if (!value?.trim()) return null;
   const raw = value.trim().replace(/^@/, "");
@@ -40,12 +47,23 @@ function instagramUrl(value?: string | null) {
 
 async function shareWebsite() {
   const url = window.location.href;
+  const title = "Fiestas de l'Alfàs del Pi 2026";
+  const text = "Consulta el programa, el mapa y las peñas de las fiestas.";
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, text, url });
+      localStorage.setItem("fiestas-share-reminder-last", String(Date.now()));
+      return;
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+    }
+  }
   try {
     await navigator.clipboard.writeText(url);
+    localStorage.setItem("fiestas-share-reminder-last", String(Date.now()));
     window.alert("Enlace de la web copiado. ¡Ya puedes compartirlo!");
   } catch {
-    if (navigator.share) await navigator.share({ title: "Fiestas de l'Alfàs del Pi 2026", text: "Consulta el programa, el mapa y las peñas de las fiestas.", url });
-    else window.prompt("Copia el enlace de la web:", url);
+    window.prompt("Copia el enlace de la web:", url);
   }
 }
 
@@ -109,11 +127,28 @@ function Home() {
   const [siteContent, setSiteContent] = useState<Record<string,string>>({});
   const [heroImage, setHeroImage] = useState("");
   const [form, setForm] = useState(false);
+  const [shareReminder, setShareReminder] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
   const [selectedPenya, setSelectedPenya] = useState<PenyaDb | null>(null);
   const [eventFormPenya, setEventFormPenya] = useState<PenyaDb | null>(null);
   const dias = useMemo(() => [...new Set(actos.map((a) => a.dia))].sort(), [actos]);
   const [dia, setDia] = useState<string | undefined>();
+  const eventosActivos = useMemo(() => eventos.filter((e) => eventoSigueActivo(e, now)), [eventos, now]);
   useEffect(() => { if (dias.length && !dia) setDia(dias[0]); }, [dias, dia]);
+  useEffect(() => {
+    const tick = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(tick);
+  }, []);
+  useEffect(() => {
+    const key = "fiestas-share-reminder-last";
+    const shouldShow = () => {
+      const last = Number(localStorage.getItem(key) || 0);
+      if (Date.now() - last >= 30 * 60 * 1000) setShareReminder(true);
+    };
+    const first = window.setTimeout(shouldShow, 90_000);
+    const repeat = window.setInterval(shouldShow, 30 * 60 * 1000);
+    return () => { window.clearTimeout(first); window.clearInterval(repeat); };
+  }, []);
 
   const cargar = useCallback(async () => {
     const [penyaResult, { data: actosData }, { data: eventosData }, { data: contentData }] = await Promise.all([
@@ -140,14 +175,14 @@ function Home() {
     const content = Object.fromEntries((contentData ?? []).map((x:any)=>[x.clave,x.valor]));
     setSiteContent(content);
     if (content.hero_image_path) {
-      const { data: imageData } = await supabase.storage.from("penyes").createSignedUrl(content.hero_image_path, 604800);
-      setHeroImage(imageData?.signedUrl ?? "");
+      const { data: imageData } = supabase.storage.from("penyes").getPublicUrl(content.hero_image_path);
+      setHeroImage(imageData.publicUrl);
+    } else {
+      setHeroImage("");
     }
     if (!data) return;
-    const { data: urls } = data.length
-      ? await supabase.storage.from("penyes").createSignedUrls(data.map((p) => p.foto_url), 60 * 60 * 24 * 7)
-      : { data: [] };
-    setPenyes(data.map((p, i) => ({ ...p, foto: urls?.[i]?.signedUrl ?? "" })));
+    const urls = data.map((p) => supabase.storage.from("penyes").getPublicUrl(p.foto_url).data.publicUrl);
+    setPenyes(data.map((p, i) => ({ ...p, foto: urls[i] ?? "" })));
   }, []);
   useEffect(() => { cargar(); }, [cargar]);
 
@@ -155,8 +190,8 @@ function Home() {
     ...lugaresFijos,
     ...penyes.map((p) => ({ id: p.id, categoria: "penya" as const, nombre: p.nombre, descripcion: p.direccion ?? "", lat: p.lat, lng: p.lng, foto: p.foto })),
     ...actos.filter((a) => a.lat != null && a.lng != null).map((a) => ({ id: "acto-" + a.id, categoria: a.tipo as Categoria, nombre: a.titulo, descripcion: a.lugar || a.descripcion || "", lat: Number(a.lat), lng: Number(a.lng) })),
-    ...eventos.filter((e) => e.lat != null && e.lng != null).map((e) => ({ id: "evento-" + e.id, categoria: "evento" as const, nombre: e.titulo, descripcion: e.lugar || e.descripcion || "", lat: Number(e.lat), lng: Number(e.lng) })),
-  ], [penyes, actos, eventos]);
+    ...eventosActivos.filter((e) => e.lat != null && e.lng != null).map((e) => ({ id: "evento-" + e.id, categoria: "evento" as const, nombre: e.titulo, descripcion: e.lugar || e.descripcion || "", lat: Number(e.lat), lng: Number(e.lng) })),
+  ], [penyes, actos, eventosActivos]);
 
   const visibles = todos.filter((l) => (!cat || l.categoria === cat) && l.nombre.toLowerCase().includes(q.toLowerCase()));
 
@@ -277,6 +312,7 @@ function Home() {
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {actos.filter((a) => {
+              if (!eventoSigueActivo(a, now)) return false;
               const t = String(a.titulo || "").toLocaleLowerCase("es");
               const excluido = /despertà|desperta|despertada|nit de albaes|nit d'albaes|nit de les albaes|albaes/.test(t);
               return !excluido && (a.tipo === "actuacion" || /tardeo|mañaneo|mananeo|nocheo/.test(t));
@@ -306,7 +342,7 @@ function Home() {
           </div>
           <div className="mt-10 space-y-3">
             <h3 className="text-2xl font-bold text-primary">Otros eventos de las peñas</h3>
-            {!eventos.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">Todavía no hay eventos de peñas publicados.</div> : <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">{eventos.map((e) => <details key={e.id} className="glass group min-w-0 overflow-hidden rounded-3xl border border-border/60 shadow-sm"><summary className="cursor-pointer list-none"><div className="relative aspect-square overflow-hidden bg-gradient-to-br from-[#f4e8e9] via-[#ead9df] to-[#e9e3d7]">{(e.imagen_url || e.imagen || e.foto_url || e.foto) ? <img src={e.imagen_url || e.imagen || e.foto_url || e.foto} alt={e.titulo} loading="lazy" className="absolute inset-0 h-full w-full object-cover"/> : <div className="absolute inset-0 flex items-center justify-center p-5 text-center"><span className="font-display text-3xl font-bold text-[#765563]">{e.titulo}</span></div>}<div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#49352f]/80 to-transparent p-4 pt-14"><h3 className="text-xl font-bold text-white">{e.titulo}</h3><p className="mt-2 text-xs font-semibold text-white/90">Ver detalles <span className="inline-block transition group-open:rotate-180">⌄</span></p></div></div></summary><div className="space-y-3 border-t border-border/50 p-4">{e.descripcion && <p className="text-sm leading-relaxed text-muted-foreground">{e.descripcion}</p>}<p className="text-sm"><strong>Fecha:</strong> {fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p>{e.lugar && <p className="text-sm"><strong>Lugar:</strong> {e.lugar}</p>}{e.penya_id && <p className="text-xs font-bold text-primary">{penyes.find(p=>p.id===e.penya_id)?.nombre || "Evento de peña"}</p>}{e.lat != null && e.lng != null && <button onClick={() => goMap("evento-" + e.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver ubicación en el mapa</button>}</div></details>)}</div>}
+            {!eventosActivos.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">Todavía no hay eventos de peñas publicados.</div> : <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">{eventosActivos.map((e) => <details key={e.id} className="glass group min-w-0 overflow-hidden rounded-3xl border border-border/60 shadow-sm"><summary className="cursor-pointer list-none"><div className="relative aspect-square overflow-hidden bg-gradient-to-br from-[#f4e8e9] via-[#ead9df] to-[#e9e3d7]">{(e.imagen_url || e.imagen || e.foto_url || e.foto) ? <img src={e.imagen_url || e.imagen || e.foto_url || e.foto} alt={e.titulo} loading="lazy" className="absolute inset-0 h-full w-full object-cover"/> : <div className="absolute inset-0 flex items-center justify-center p-5 text-center"><span className="font-display text-3xl font-bold text-[#765563]">{e.titulo}</span></div>}<div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#49352f]/80 to-transparent p-4 pt-14"><h3 className="text-xl font-bold text-white">{e.titulo}</h3><p className="mt-2 text-xs font-semibold text-white/90">Ver detalles <span className="inline-block transition group-open:rotate-180">⌄</span></p></div></div></summary><div className="space-y-3 border-t border-border/50 p-4">{e.descripcion && <p className="text-sm leading-relaxed text-muted-foreground">{e.descripcion}</p>}<p className="text-sm"><strong>Fecha:</strong> {fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p>{e.lugar && <p className="text-sm"><strong>Lugar:</strong> {e.lugar}</p>}{e.penya_id && <p className="text-xs font-bold text-primary">{penyes.find(p=>p.id===e.penya_id)?.nombre || "Evento de peña"}</p>}{e.lat != null && e.lng != null && <button onClick={() => goMap("evento-" + e.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver ubicación en el mapa</button>}</div></details>)}</div>}
           </div>
         </section>
         <section id="penyes" className="scroll-mt-24">
@@ -327,7 +363,7 @@ function Home() {
                     <p className="mt-3 text-sm"><strong>Música:</strong> {p.tipo_musica || "Variada"}</p>
                     <p className="mt-1 text-sm"><strong>Visitas:</strong> {p.acepta_visitas ? "Sí, acepta visitas" : "No acepta visitas"}</p>
                     {p.informacion && <p className="mt-2 text-sm text-muted-foreground">{p.informacion}</p>}
-                    {eventos.filter(e=>e.penya_id===p.id).map(e=><p key={e.id} className="mt-2 text-sm"><strong>Evento:</strong> {e.titulo} · {fmtDia(e.dia)}</p>)}
+                    {eventosActivos.filter(e=>e.penya_id===p.id).map(e=><p key={e.id} className="mt-2 text-sm"><strong>Evento:</strong> {e.titulo} · {fmtDia(e.dia)}</p>)}
                     <div className="mt-4 flex flex-wrap gap-2"><button onClick={() => setSelectedPenya(p)} className="rounded-full bg-pink px-4 py-2 text-sm font-bold text-brown">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-4 py-2 text-sm font-bold">📍 {ui.verMapa}</button><button onClick={() => void sharePenyaCard(p)} className="glass-btn px-4 py-2 text-sm font-bold">↗ Compartir peña</button><button onClick={() => setEventFormPenya(p)} className="glass-btn px-4 py-2 text-sm font-bold">+ Añadir evento</button></div>
                     <div className="mt-3 flex flex-wrap gap-3 text-sm">{instagramUrl(p.instagram) && <a className="font-semibold text-primary underline" href={instagramUrl(p.instagram)!} target="_blank" rel="noreferrer">↗ Instagram</a>}{p.email && <a className="font-semibold text-primary underline" href={"mailto:" + p.email}>Correo</a>}</div>
                   </div>
@@ -352,7 +388,15 @@ function Home() {
         </section>
       </main>
 
-      <footer className="pb-10 text-center text-sm text-muted-foreground">{edicion.titulo} · {edicion.anyo}</footer>
+      <footer className="space-y-4 px-5 pb-10 text-center text-sm text-muted-foreground">
+        <p>{edicion.titulo} · {edicion.anyo}</p>
+        <button onClick={() => void shareWebsite()} className="glass-btn rounded-full px-6 py-3 font-bold text-primary">↗ Compartir la web</button>
+      </footer>
+      {shareReminder && <aside role="status" className="fixed inset-x-4 bottom-4 z-[1800] mx-auto flex max-w-xl items-center gap-3 rounded-2xl border border-border bg-background p-4 shadow-2xl">
+        <div className="min-w-0 flex-1"><p className="font-bold text-primary">¿Compartimos las fiestas?</p><p className="text-sm text-muted-foreground">Pasa la web a tus amigos para que nadie se pierda el programa ni los eventos.</p></div>
+        <button onClick={() => { setShareReminder(false); localStorage.setItem("fiestas-share-reminder-last", String(Date.now())); }} className="shrink-0 rounded-full px-3 py-2 text-sm">Ahora no</button>
+        <button onClick={() => { setShareReminder(false); void shareWebsite(); }} className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">Compartir</button>
+      </aside>
 
       {selectedPenya && (
         <div className="fixed inset-0 z-[1900] flex items-end justify-center bg-brown/70 p-3 sm:items-center" onClick={() => setSelectedPenya(null)}>
