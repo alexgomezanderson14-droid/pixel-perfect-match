@@ -32,6 +32,8 @@ function fmtDia(d: string) {
   return new Date(d + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
 }
 
+function mapSearchUrl(place: string) { return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(place + ", Alfaz del Pi, Alicante"); }
+
 function instagramUrl(value?: string | null) {
   if (!value?.trim()) return null;
   const raw = value.trim().replace(/^@/, "");
@@ -220,7 +222,7 @@ function Home() {
                         {a.descripcion && <p className="mt-1 text-sm text-muted-foreground">{a.descripcion}</p>}
                         {a.lugar && <p className="mt-2 text-sm text-muted-foreground">📍 {a.lugar}</p>}
                       </div>
-                      {a.lat != null && a.lng != null && <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa</button>}
+                      {a.lat != null && a.lng != null ? <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa</button> : a.lugar && !a.lugar.startsWith("Con ") && !a.lugar.startsWith("Días ") ? <a href={mapSearchUrl(a.lugar)} target="_blank" rel="noreferrer" className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa</a> : null}
                     </article>)}
                   </section>;
                 })}
@@ -233,7 +235,7 @@ function Home() {
         <section id="eventos" className="scroll-mt-24">
           <SectionTitle>Eventos</SectionTitle>
           {!eventos.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">Próximamente publicaremos los eventos de las peñas y actividades especiales.</div> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {eventos.map((e) => <article key={e.id} className="glass rounded-3xl p-5"><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{fmtDia(e.dia)}{e.hora ? " · "+e.hora : ""}</p><h3 className="mt-2 text-2xl font-bold">{e.titulo}</h3>{e.descripcion && <p className="mt-2 text-sm text-muted-foreground">{e.descripcion}</p>}{e.lugar && <p className="mt-3 text-sm">📍 {e.lugar}</p>}{e.penya_id && <p className="mt-2 text-xs font-bold text-primary">{penyes.find(p=>p.id===e.penya_id)?.nombre || "Evento de peña"}</p>}{e.lat != null && e.lng != null && <button onClick={() => goMap("evento-" + e.id)} className="glass-btn mt-3 px-4 py-2 text-sm font-bold">Ver ubicación en el mapa</button>}</article>)}
+            {eventos.map((e) => <article key={e.id} className="glass rounded-3xl p-5"><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{fmtDia(e.dia)}{e.hora ? " · "+e.hora : ""}</p><h3 className="mt-2 text-2xl font-bold">{e.titulo}</h3>{e.descripcion && <p className="mt-2 text-sm text-muted-foreground">{e.descripcion}</p>}{e.lugar && <p className="mt-3 text-sm">📍 {e.lugar}</p>}{e.penya_id && <p className="mt-2 text-xs font-bold text-primary">{penyes.find(p=>p.id===e.penya_id)?.nombre || "Evento de peña"}</p>}{e.lat != null && e.lng != null ? <button onClick={() => goMap("evento-" + e.id)} className="glass-btn mt-3 px-4 py-2 text-sm font-bold">Ver ubicación en el mapa</button> : e.lugar ? <a href={mapSearchUrl(e.lugar)} target="_blank" rel="noreferrer" className="glass-btn mt-3 inline-block px-4 py-2 text-sm font-bold">Ver ubicación en el mapa</a> : null}</article>)}
           </div>}
         </section>
         <section id="penyes" className="scroll-mt-24">
