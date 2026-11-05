@@ -118,12 +118,17 @@ function Home() {
   useEffect(() => { if (dias.length && !dia) setDia(dias[0]); }, [dias, dia]);
 
   const cargar = useCallback(async () => {
-    const [{ data }, { data: actosData }, { data: eventosData }, { data: contentData }] = await Promise.all([
+    const [penyaResult, { data: actosData }, { data: eventosData }, { data: contentData }] = await Promise.all([
       supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,acepta_visitas,informacion,instagram,email").eq("estado","aprobada").order("nombre"),
       supabase.from("actos").select("*").eq("publicado",true).order("dia").order("hora"),
       supabase.from("eventos").select("*").eq("publicado",true).order("dia").order("hora"),
       supabase.from("site_content").select("clave,valor"),
     ]);
+    let data: any[] | null = penyaResult.data as any[] | null;
+    if (penyaResult.error) {
+      const legacyPenyes = await supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,acepta_visitas,informacion").eq("estado","aprobada").order("nombre");
+      data = legacyPenyes.data?.map((p) => ({ ...p, instagram: "", email: null })) ?? null;
+    }
     const filas = actosData ?? [];
     const oficiales = programaOficial2026.map((oficial) =>
       filas.find((fila) => fila.dia === oficial.dia && fila.hora === oficial.hora && fila.titulo === oficial.titulo) ?? oficial,
