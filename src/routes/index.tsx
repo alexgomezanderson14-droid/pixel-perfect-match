@@ -116,7 +116,7 @@ async function sharePenyaCard(p: PenyaDb) {
 }
 
 
-type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number; lng: number; foto: string; tipo_musica: string; tiene_evento?: boolean; informacion: string; instagram?: string | null; email?: string | null };
+type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number; lng: number; foto: string; tipo_musica: string; tiene_evento?: boolean; informacion: string; instagram?: string | null };
 
 function Home() {
   const [q, setQ] = useState("");
