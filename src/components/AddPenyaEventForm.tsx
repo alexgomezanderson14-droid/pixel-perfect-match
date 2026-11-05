@@ -22,61 +22,64 @@ export default function AddPenyaEventForm({ penyaId, penyaName, onClose, onSaved
   const enviar = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (organizaEvento === "si") {
+      if (!titulo.trim() || !dia || !hora.trim() || !lugar.trim() || !imagen) {
+        setError("Indica el nombre, fecha, hora, lugar y una imagen del evento.");
+        return;
+      }
+      if (!IMAGE_TYPES.includes(imagen.type)) {
+        setError("La imagen debe ser JPG, PNG o WEBP.");
+        return;
+      }
+      if (imagen.size > 5 * 1024 * 1024) {
+        setError("La imagen no puede superar los 5 MB.");
+        return;
+      }
+      if (pos && (pos.lat < 38.4 || pos.lat > 38.8 || pos.lng < -0.3 || pos.lng > 0.1)) {
+        setError("La ubicación seleccionada parece estar fuera de l’Alfàs del Pi.");
+        return;
+      }
+    }
+
     setBusy(true);
+    try {
+      if (organizaEvento === "no") {
+        const { error: updateError } = await supabase.from("penyes").update({ tiene_evento: false }).eq("id", penyaId);
+        if (updateError) throw new Error("No se pudo guardar la respuesta: " + updateError.message);
+        onSaved(false);
+        return;
+      }
 
-    if (organizaEvento === "no") {
-      const { error: updateError } = await supabase.from("penyes").update({ tiene_evento: false }).eq("id", penyaId);
-      setBusy(false);
-      if (updateError) return setError("No se pudo guardar la respuesta: " + updateError.message);
-      onSaved(false);
-      return;
-    }
+      const ext = imagen!.type === "image/png" ? "png" : imagen!.type === "image/webp" ? "webp" : "jpg";
+      const imagePath = "eventos/" + crypto.randomUUID() + "." + ext;
+      const upload = await supabase.storage.from("penyes").upload(imagePath, imagen!, { contentType: imagen!.type });
+      if (upload.error) throw new Error("No se pudo subir la imagen: " + upload.error.message);
 
-    if (!titulo.trim() || !dia || !hora.trim() || !lugar.trim() || !imagen) {
-      setBusy(false);
-      return setError("Indica el nombre, fecha, hora, lugar y una imagen del evento.");
-    }
-    if (!IMAGE_TYPES.includes(imagen.type)) {
-      setBusy(false);
-      return setError("La imagen debe ser JPG, PNG o WEBP.");
-    }
-    if (imagen.size > 5 * 1024 * 1024) {
-      setBusy(false);
-      return setError("La imagen no puede superar los 5 MB.");
-    }
-    if (pos && (pos.lat < 38.4 || pos.lat > 38.8 || pos.lng < -0.3 || pos.lng > 0.1)) {
-      setBusy(false);
-      return setError("La ubicación seleccionada parece estar fuera de l’Alfàs del Pi.");
-    }
+      const imageUrl = supabase.storage.from("penyes").getPublicUrl(imagePath).data.publicUrl;
+      const { error: insertError } = await supabase.from("eventos").insert({
+        penya_id: penyaId,
+        titulo: titulo.trim(),
+        descripcion: descripcion.trim(),
+        dia,
+        hora: hora.trim(),
+        lugar: lugar.trim(),
+        imagen_url: imageUrl,
+        lat: pos?.lat ?? null,
+        lng: pos?.lng ?? null,
+        publicado: false,
+      });
+      if (insertError) throw new Error("No se ha podido enviar el evento: " + insertError.message);
 
-    const ext = imagen.type === "image/png" ? "png" : imagen.type === "image/webp" ? "webp" : "jpg";
-    const imagePath = "eventos/" + crypto.randomUUID() + "." + ext;
-    const upload = await supabase.storage.from("penyes").upload(imagePath, imagen, { contentType: imagen.type });
-    if (upload.error) {
+      // The event itself is the source of truth; this flag is only a convenience for the card.
+      // Do not report failure after a successful insert if this optional update is denied.
+      await supabase.from("penyes").update({ tiene_evento: true }).eq("id", penyaId);
+      onSaved(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo guardar el evento. Inténtalo de nuevo.");
+    } finally {
       setBusy(false);
-      return setError("No se pudo subir la imagen: " + upload.error.message);
     }
-    const imageUrl = supabase.storage.from("penyes").getPublicUrl(imagePath).data.publicUrl;
-    const { error: insertError } = await supabase.from("eventos").insert({
-      penya_id: penyaId,
-      titulo: titulo.trim(),
-      descripcion: descripcion.trim(),
-      dia,
-      hora: hora.trim(),
-      lugar: lugar.trim(),
-      imagen_url: imageUrl,
-      lat: pos?.lat ?? null,
-      lng: pos?.lng ?? null,
-      publicado: false,
-    });
-    if (insertError) {
-      setBusy(false);
-      return setError("No se ha podido enviar el evento: " + insertError.message);
-    }
-    const { error: updateError } = await supabase.from("penyes").update({ tiene_evento: true }).eq("id", penyaId);
-    setBusy(false);
-    if (updateError) return setError("El evento se ha enviado, pero no se pudo actualizar el estado de la peña: " + updateError.message);
-    onSaved(true);
   };
 
   return (
