@@ -182,14 +182,14 @@ function Home() {
       setHeroImage("");
     }
     if (!data) return;
-    const urls = data.map((p) => supabase.storage.from("penyes").getPublicUrl(p.foto_url).data.publicUrl);
+    const urls = data.map((p) => p.foto_url ? supabase.storage.from("penyes").getPublicUrl(p.foto_url).data.publicUrl : "");
     setPenyes(data.map((p, i) => ({ ...p, foto: urls[i] ?? "" })));
   }, []);
   useEffect(() => { cargar(); }, [cargar]);
 
   const todos: Lugar[] = useMemo(() => [
     ...lugaresFijos,
-    ...penyes.map((p) => ({ id: p.id, categoria: "penya" as const, nombre: p.nombre, descripcion: p.direccion ?? "", lat: p.lat, lng: p.lng, foto: p.foto })),
+    ...penyes.filter((p) => p.lat != null && p.lng != null).map((p) => ({ id: p.id, categoria: "penya" as const, nombre: p.nombre, descripcion: p.direccion ?? "", lat: p.lat, lng: p.lng, foto: p.foto })),
     ...actos.filter((a) => a.lat != null && a.lng != null).map((a) => ({ id: "acto-" + a.id, categoria: a.tipo as Categoria, nombre: a.titulo, descripcion: a.lugar || a.descripcion || "", lat: Number(a.lat), lng: Number(a.lng) })),
     ...eventosActivos.filter((e) => e.lat != null && e.lng != null).map((e) => ({ id: "evento-" + e.id, categoria: "evento" as const, nombre: e.titulo, descripcion: e.lugar || e.descripcion || "", lat: Number(e.lat), lng: Number(e.lng) })),
   ], [penyes, actos, eventosActivos]);
