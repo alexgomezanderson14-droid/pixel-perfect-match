@@ -10,7 +10,6 @@ const schema = z.object({
   nombre: z.string().trim().min(2, "El nombre debe tener al menos 2 caracteres").max(80, "Máximo 80 caracteres"),
   direccion: z.string().trim().max(200, "Máximo 200 caracteres"),
   tipo_musica: z.string().trim().max(80),
-  informacion: z.string().trim().max(1000),
   instagram: z.string().trim().max(100),
 });
 
@@ -18,7 +17,6 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
   const [nombre, setNombre] = useState("");
   const [direccion, setDireccion] = useState("");
   const [tipoMusica, setTipoMusica] = useState("Variada");
-  const [informacion, setInformacion] = useState("");
   const [instagram, setInstagram] = useState("");
   const [pos, setPos] = useState<{ lat: number; lng: number } | null>(null);
   const [foto, setFoto] = useState<File | null>(null);
@@ -66,7 +64,7 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
   const enviar = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const v = schema.safeParse({ nombre, direccion, tipo_musica: tipoMusica, informacion, instagram });
+    const v = schema.safeParse({ nombre, direccion, tipo_musica: tipoMusica, instagram });
     if (!v.success) return setError(v.error.issues[0]?.message ?? "Revisa los datos.");
     if (pos && (pos.lat < 38.4 || pos.lat > 38.8 || pos.lng < -0.3 || pos.lng > 0.1)) {
       return setError("La ubicación seleccionada parece estar fuera de l’Alfàs del Pi. Acércate al municipio en el mapa y vuelve a marcarla.");
@@ -92,7 +90,6 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
         lng: pos?.lng ?? null,
         foto_url: fotoPath,
         tipo_musica: v.data.tipo_musica || "Variada",
-        informacion: v.data.informacion,
         instagram: v.data.instagram.replace(/^@/, ""),
       });
       if (insertError) throw new Error("No se pudo guardar la peña en la base de datos: " + insertError.message);
@@ -135,7 +132,6 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
           <select value={tipoMusica} onChange={(e) => setTipoMusica(e.target.value)} className="w-full rounded-full border border-input bg-glass px-4 py-2.5 font-normal"><option>Variada</option><option>Reggaetón</option><option>Pop / comercial</option><option>Rock</option><option>Electrónica</option><option>Remember</option><option>Otra</option></select>
         </label>
         <label className="block space-y-1 text-sm font-bold"><span>Instagram (opcional)</span><input value={instagram} onChange={(e) => setInstagram(e.target.value)} maxLength={100} placeholder="@nombredepenya" className="w-full rounded-full border border-input bg-glass px-4 py-2.5 font-normal" /></label>
-        <label className="block space-y-1 text-sm font-bold"><span>Información sobre la peña</span><textarea value={informacion} onChange={(e) => setInformacion(e.target.value)} maxLength={1000} rows={3} placeholder="Contad qué ambiente tenéis, qué ofrecéis…" className="w-full rounded-2xl border border-input bg-glass px-4 py-2.5 font-normal" /></label>
         <label className="block space-y-1 text-sm font-bold">
           <span>Fotografía (opcional · JPG, PNG o WEBP, máx. 5 MB)</span>
           <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setFoto(e.target.files?.[0] ?? null)} className="w-full text-sm font-normal" />
