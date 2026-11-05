@@ -130,9 +130,12 @@ function Home() {
       data = legacyPenyes.data?.map((p) => ({ ...p, instagram: "", email: null })) ?? null;
     }
     const filas = actosData ?? [];
-    const oficiales = programaOficial2026.map((oficial) =>
-      filas.find((fila) => fila.dia === oficial.dia && fila.hora === oficial.hora && fila.titulo === oficial.titulo) ?? oficial,
-    );
+    // El programa oficial del PDF es la fuente principal. La base de datos aporta
+    // identificadores y actos añadidos, pero no debe sobrescribir el contenido oficial.
+    const oficiales = programaOficial2026.map((oficial) => {
+      const fila = filas.find((item) => item.dia === oficial.dia && item.hora === oficial.hora && item.titulo === oficial.titulo);
+      return fila ? { ...fila, ...oficial, id: fila.id } : oficial;
+    });
     const extras = filas.filter((fila) => !programaOficial2026.some((oficial) => fila.dia === oficial.dia && fila.hora === oficial.hora && fila.titulo === oficial.titulo));
     setActos([...oficiales, ...extras]);
     setEventos(eventosData ?? []);
@@ -238,23 +241,29 @@ function Home() {
                   <Chip key={d} active={dia === d} onClick={() => setDia(d)}><span className="inline-block first-letter:uppercase">{fmtDia(d)}</span></Chip>
                 ))}
               </div>
-              <div className="space-y-8">
-                {(["actuacion", "evento"] as const).map((tipo) => {
-                  const lista = actos.filter((a) => a.dia === dia && a.tipo === tipo).sort((a, b) => { const minutes = (h: string) => { const [hh, mm] = (h || "00:00").split(":").map(Number); const value = hh * 60 + (mm || 0); return value < 5 * 60 ? value + 24 * 60 : value; }; return minutes(a.hora) - minutes(b.hora); });
-                  if (!lista.length) return null;
-                  return <section key={tipo} className="space-y-3">
-                    <div className="flex items-center gap-3"><h3 className="text-2xl font-bold text-primary">{tipo === "actuacion" ? "Actuaciones" : "Otros actos y actividades"}</h3><span className="h-px flex-1 bg-primary/15" /></div>
-                    {lista.map((a) => <article key={a.id} className="glass flex flex-col gap-3 rounded-3xl p-5 sm:flex-row sm:items-center">
-                      <div className="font-display text-3xl font-bold text-primary sm:w-28">{a.hora || "—"}</div>
-                      <div className="flex-1">
-                        <span className={`mb-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-bold uppercase text-on-image ${catBg[a.tipo]}`}>{tipo === "actuacion" ? "Actuación" : "Actividad"}</span>
-                        <h4 className="text-xl font-bold">{a.titulo}</h4>
-                        {a.descripcion && <p className="mt-1 text-sm text-muted-foreground">{a.descripcion}</p>}
-                        {a.lugar && <p className="mt-2 text-sm text-muted-foreground">📍 {a.lugar}</p>}
-                      </div>
-                      {a.lat != null && a.lng != null ? <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa</button> : a.lugar && !a.lugar.startsWith("Con ") && !a.lugar.startsWith("Días ") ? <a href={mapSearchUrl(a.lugar)} target="_blank" rel="noreferrer" className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa</a> : null}
-                    </article>)}
-                  </section>;
+              <div className="space-y-3">
+                {[...actos.filter((a) => a.dia === dia)].sort((a, b) => {
+                  const minutes = (h: string) => { const match = (h || "00:00").match(/^(\\d{1,2}):(\\d{2})/); if (!match) return 0; const value = Number(match[1]) * 60 + Number(match[2]); return value < 5 * 60 ? value + 24 * 60 : value; };
+                  return minutes(a.hora) - minutes(b.hora);
+                }).map((a) => {
+                  const title = String(a.titulo || "").toLocaleLowerCase("es");
+                  const festaCarrer = /tardeo|mañaneo|mananeo|nocheo/.test(title);
+                  const esActuacion = !festaCarrer && a.tipo === "actuacion";
+                  const etiqueta = festaCarrer ? "Festa al carrer" : esActuacion ? "Actuación" :
+                    /albaes|maleta|despertà|desperta|pasacalles|visita de los mayorales/.test(title) ? "Tradición" :
+                    /misa|trisagio|jubileo|santísimo|procesión|ofrenda/.test(title) ? "Acto religioso" :
+                    /infantil|niño|niños|familiar|chocolatada/.test(title) ? "Actividad familiar" :
+                    /autobús|bus lanzadera/.test(title) ? "Transporte" : "Actividad";
+                  return <article key={a.id} className="glass flex flex-col gap-3 rounded-3xl p-5 sm:flex-row sm:items-center">
+                    <div className="font-display text-3xl font-bold text-primary sm:w-28">{a.hora || "—"}</div>
+                    <div className="flex-1">
+                      <span className={`mb-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-bold uppercase text-on-image ${esActuacion ? catBg.actuacion : festaCarrer ? "bg-pink" : catBg.evento}`}>{etiqueta}</span>
+                      <h4 className="text-xl font-bold">{a.titulo}</h4>
+                      {a.descripcion && <p className="mt-1 text-sm text-muted-foreground">{a.descripcion}</p>}
+                      {a.lugar && <p className="mt-2 text-sm text-muted-foreground">📍 {a.lugar}</p>}
+                    </div>
+                    {a.lat != null && a.lng != null ? <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa</button> : null}
+                  </article>;
                 })}
                 {!actos.some((a) => a.dia === dia) && <p className="glass rounded-2xl p-5 text-muted-foreground">No hay actos publicados para este día.</p>}
               </div>
@@ -288,7 +297,7 @@ function Home() {
                     {p.informacion && <p className="mt-2 text-sm text-muted-foreground">{p.informacion}</p>}
                     {eventos.filter(e=>e.penya_id===p.id).map(e=><p key={e.id} className="mt-2 text-sm"><strong>Evento:</strong> {e.titulo} · {fmtDia(e.dia)}</p>)}
                     <div className="mt-4 flex flex-wrap gap-2"><button onClick={() => setSelectedPenya(p)} className="rounded-full bg-pink px-4 py-2 text-sm font-bold text-brown">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-4 py-2 text-sm font-bold">📍 {ui.verMapa}</button><button onClick={() => void sharePenyaCard(p)} className="glass-btn px-4 py-2 text-sm font-bold">↗ Compartir peña</button><button onClick={() => setEventFormPenya(p)} className="glass-btn px-4 py-2 text-sm font-bold">+ Añadir evento</button></div>
-                    <div className="mt-3 flex flex-wrap gap-3 text-sm">{instagramUrl(p.instagram) && <a className="font-semibold text-primary underline" href={instagramUrl(p.instagram)!} target="_blank" rel="noreferrer">Instagram</a>}{p.email && <a className="font-semibold text-primary underline" href={"mailto:" + p.email}>Correo</a>}</div>
+                    <div className="mt-3 flex flex-wrap gap-3 text-sm">{instagramUrl(p.instagram) && <a className="font-semibold text-primary underline" href={instagramUrl(p.instagram)!} target="_blank" rel="noreferrer">↗ Instagram</a>}{p.email && <a className="font-semibold text-primary underline" href={"mailto:" + p.email}>Correo</a>}</div>
                   </div>
                 </article>
               ))}
