@@ -57,7 +57,7 @@ export default function FestMap({
       m.addTo(layer.current!);
       markers.current[l.id] = m;
     });
-  }, [lugares]);
+  }, [lugares, onPenyaClick]);
 
   useEffect(() => {
     if (!map.current) return;
