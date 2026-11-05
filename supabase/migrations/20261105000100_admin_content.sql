@@ -1,4 +1,14 @@
 -- Admin, peña moderation and festival content schema. Run in Supabase SQL Editor.
+-- The original project did not include a migration creating this table, so create its base structure first.
+create table if not exists public.penyes (
+  id uuid primary key default gen_random_uuid(),
+  nombre text not null,
+  direccion text,
+  lat double precision not null,
+  lng double precision not null,
+  foto_url text not null,
+  created_at timestamptz not null default now()
+);
 alter table public.penyes add column if not exists tipo_musica text not null default 'Variada', add column if not exists acepta_visitas boolean not null default false, add column if not exists informacion text not null default '', add column if not exists estado text not null default 'aprobada';
 alter table public.penyes drop constraint if exists penyes_estado_check;
 alter table public.penyes add constraint penyes_estado_check check (estado in ('pendiente','aprobada','rechazada'));
