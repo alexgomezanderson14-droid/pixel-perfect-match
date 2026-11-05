@@ -42,6 +42,7 @@ function Home() {
   const [siteContent, setSiteContent] = useState<Record<string,string>>({});
   const [heroImage, setHeroImage] = useState("");
   const [form, setForm] = useState(false);
+  const [selectedPenya, setSelectedPenya] = useState<PenyaDb | null>(null);
   const dias = useMemo(() => [...new Set(actos.map((a) => a.dia))].sort(), [actos]);
   const [dia, setDia] = useState<string | undefined>();
   useEffect(() => { if (dias.length && !dia) setDia(dias[0]); }, [dias, dia]);
@@ -136,7 +137,7 @@ function Home() {
             <div className="h-[460px] overflow-hidden rounded-[1.5rem] md:h-[540px]">
               <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
                 <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}>
-                  <FestMap lugares={visibles} focusId={focus} />
+                  <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => setSelectedPenya(penyes.find((p) => p.id === id) ?? null)} />
                 </Suspense>
               </ClientOnly>
             </div>
@@ -196,7 +197,7 @@ function Home() {
                     <p className="mt-1 text-sm"><strong>Visitas:</strong> {p.acepta_visitas ? "Sí, acepta visitas" : "No acepta visitas"}</p>
                     {p.informacion && <p className="mt-2 text-sm text-muted-foreground">{p.informacion}</p>}
                     {eventos.filter(e=>e.penya_id===p.id).map(e=><p key={e.id} className="mt-2 text-sm"><strong>Evento:</strong> {e.titulo} · {fmtDia(e.dia)}</p>)}
-                    <button onClick={() => goMap(p.id)} className="glass-btn mt-4 px-4 py-2 text-sm font-bold">📍 {ui.verMapa}</button>
+                    <div className="mt-4 flex flex-wrap gap-2"><button onClick={() => setSelectedPenya(p)} className="rounded-full bg-pink px-4 py-2 text-sm font-bold text-brown">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-4 py-2 text-sm font-bold">📍 {ui.verMapa}</button></div>
                   </div>
                 </article>
               ))}
@@ -211,6 +212,27 @@ function Home() {
       </main>
 
       <footer className="pb-10 text-center text-sm text-muted-foreground">{edicion.titulo} · {edicion.anyo}</footer>
+
+      {selectedPenya && (
+        <div className="fixed inset-0 z-[1900] flex items-end justify-center bg-brown/70 p-3 sm:items-center" onClick={() => setSelectedPenya(null)}>
+          <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className="glass max-h-[92vh] w-full max-w-2xl overflow-auto rounded-[2rem] bg-background">
+            {selectedPenya.foto && <img src={selectedPenya.foto} alt={selectedPenya.nombre} className="h-56 w-full object-cover sm:h-72" />}
+            <div className="p-6 sm:p-8">
+              <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Peña participante</p><h2 className="mt-1 text-3xl font-bold text-primary sm:text-4xl">{selectedPenya.nombre}</h2></div><button onClick={() => setSelectedPenya(null)} aria-label="Cerrar" className="glass-btn h-10 w-10 shrink-0 rounded-full">✕</button></div>
+              {selectedPenya.direccion && <p className="mt-3 text-sm">📍 {selectedPenya.direccion}</p>}
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl bg-glass p-4"><p className="text-xs font-bold uppercase text-muted-foreground">Música</p><p className="mt-1 font-semibold">{selectedPenya.tipo_musica || "Variada"}</p></div>
+                <div className="rounded-2xl bg-glass p-4"><p className="text-xs font-bold uppercase text-muted-foreground">Visitas</p><p className="mt-1 font-semibold">{selectedPenya.acepta_visitas ? "Sí, acepta visitas" : "No acepta visitas"}</p></div>
+              </div>
+              {selectedPenya.informacion && <div className="mt-5"><h3 className="font-bold">Sobre la peña</h3><p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">{selectedPenya.informacion}</p></div>}
+              <div className="mt-6"><h3 className="text-xl font-bold">Eventos y actividades</h3>
+                {eventos.filter((e) => e.penya_id === selectedPenya.id).length ? <div className="mt-3 space-y-3">{eventos.filter((e) => e.penya_id === selectedPenya.id).map((e) => <article key={e.id} className="rounded-2xl bg-glass p-4"><p className="text-xs font-bold uppercase text-muted-foreground">{fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p><h4 className="mt-1 font-bold">{e.titulo}</h4>{e.descripcion && <p className="mt-1 text-sm text-muted-foreground">{e.descripcion}</p>}{e.lugar && <p className="mt-2 text-sm">📍 {e.lugar}</p>}</article>)}</div> : <p className="mt-2 text-sm text-muted-foreground">Esta peña todavía no tiene eventos publicados.</p>}
+              </div>
+              <button onClick={() => { const id = selectedPenya.id; setSelectedPenya(null); goMap(id); }} className="mt-6 rounded-full bg-pink px-5 py-3 text-sm font-bold text-brown">📍 Ver ubicación en el mapa</button>
+            </div>
+          </section>
+        </div>
+      )}
 
       {form && (
         <ClientOnly>
