@@ -19,7 +19,6 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
   const [nombre, setNombre] = useState("");
   const [direccion, setDireccion] = useState("");
   const [tipoMusica, setTipoMusica] = useState("Variada");
-  const [aceptaVisitas, setAceptaVisitas] = useState(false);
   const [informacion, setInformacion] = useState("");
   const [instagram, setInstagram] = useState("");
   const [email, setEmail] = useState("");
@@ -91,7 +90,6 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
       lng: pos.lng,
       foto_url: path,
       tipo_musica: v.data.tipo_musica,
-      acepta_visitas: Boolean(aceptaVisitas),
       informacion: v.data.informacion,
       instagram: v.data.instagram.replace(/^@/, ""),
       email: v.data.email || null,
@@ -132,7 +130,6 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
           <span>Tipo de música</span>
           <select value={tipoMusica} onChange={(e) => setTipoMusica(e.target.value)} className="w-full rounded-full border border-input bg-glass px-4 py-2.5 font-normal"><option>Variada</option><option>Reggaetón</option><option>Pop / comercial</option><option>Rock</option><option>Electrónica</option><option>Remember</option><option>Otra</option></select>
         </label>
-        <label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" checked={aceptaVisitas} onChange={(e) => setAceptaVisitas(Boolean(e.target.checked))} /> ¿Aceptáis visitas durante las fiestas?</label>
         <label className="block space-y-1 text-sm font-bold"><span>Instagram (opcional)</span><input value={instagram} onChange={(e) => setInstagram(e.target.value)} maxLength={100} placeholder="@nombredepenya" className="w-full rounded-full border border-input bg-glass px-4 py-2.5 font-normal" /></label>
         <label className="block space-y-1 text-sm font-bold"><span>Correo electrónico de contacto (opcional)</span><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={254} placeholder="contacto@penya.com" className="w-full rounded-full border border-input bg-glass px-4 py-2.5 font-normal" /></label>
         <label className="block space-y-1 text-sm font-bold"><span>Información sobre la peña</span><textarea value={informacion} onChange={(e) => setInformacion(e.target.value)} maxLength={1000} rows={3} placeholder="Contad qué ambiente tenéis, qué ofrecéis…" className="w-full rounded-2xl border border-input bg-glass px-4 py-2.5 font-normal" /></label>
