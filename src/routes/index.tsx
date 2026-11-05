@@ -49,20 +49,21 @@ async function shareWebsite() {
   const url = window.location.href;
   const title = "Fiestas de l'Alfàs del Pi 2026";
   const text = "Consulta el programa, el mapa y las peñas de las fiestas.";
-  if (navigator.share) {
-    try {
-      await navigator.share({ title, text, url });
-      localStorage.setItem("fiestas-share-reminder-last", String(Date.now()));
-      return;
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") return;
-    }
-  }
   try {
     await navigator.clipboard.writeText(url);
     localStorage.setItem("fiestas-share-reminder-last", String(Date.now()));
     window.alert("Enlace de la web copiado. ¡Ya puedes compartirlo!");
+    return;
   } catch {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+        localStorage.setItem("fiestas-share-reminder-last", String(Date.now()));
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      }
+    }
     window.prompt("Copia el enlace de la web:", url);
   }
 }
