@@ -92,7 +92,7 @@ export const programaOficial2026 = [
     "lugar": "Inicio en calle Balde, 17"
   },
   {
-    "id": "oficial-11",
+    "id": "oficial-bus-6",
     "dia": "2026-11-06",
     "hora": "01:00–04:00",
     "titulo": "Autobús lanzadera (salidas cada hora)",
@@ -101,7 +101,7 @@ export const programaOficial2026 = [
     "lugar": "Salida desde el parking La Bolleta (frente a Gaudí). Paradas: Parque Escandinavia, San Rafael, Tossalet, avenida Sant Pere (Albir Garden) y Consum Albir. Regreso al parking La Bolleta."
   },
   {
-    "id": "oficial-12",
+    "id": "oficial-bus-7",
     "dia": "2026-11-07",
     "hora": "01:00–04:00",
     "titulo": "Autobús lanzadera (salidas cada hora)",
@@ -110,7 +110,7 @@ export const programaOficial2026 = [
     "lugar": "Salida desde el parking La Bolleta (frente a Gaudí). Paradas: Parque Escandinavia, San Rafael, Tossalet, avenida Sant Pere (Albir Garden) y Consum Albir. Regreso al parking La Bolleta."
   },
   {
-    "id": "oficial-13",
+    "id": "oficial-bus-8",
     "dia": "2026-11-08",
     "hora": "01:00–04:00",
     "titulo": "Autobús lanzadera (salidas cada hora)",
@@ -119,7 +119,7 @@ export const programaOficial2026 = [
     "lugar": "Salida desde el parking La Bolleta (frente a Gaudí). Paradas: Parque Escandinavia, San Rafael, Tossalet, avenida Sant Pere (Albir Garden) y Consum Albir. Regreso al parking La Bolleta."
   },
   {
-    "id": "oficial-14",
+    "id": "oficial-bus-9",
     "dia": "2026-11-09",
     "hora": "01:00–04:00",
     "titulo": "Autobús lanzadera (salidas cada hora)",
