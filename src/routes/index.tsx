@@ -32,8 +32,6 @@ function fmtDia(d: string) {
   return new Date(d + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
 }
 
-function mapSearchUrl(place: string) { return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(place + ", Alfaz del Pi, Alicante"); }
-
 function instagramUrl(value?: string | null) {
   if (!value?.trim()) return null;
   const raw = value.trim().replace(/^@/, "");
@@ -136,7 +134,7 @@ function Home() {
       const fila = filas.find((item) => item.dia === oficial.dia && item.hora === oficial.hora && item.titulo === oficial.titulo);
       return fila ? { ...fila, ...oficial, id: fila.id } : oficial;
     });
-    const extras = filas.filter((fila) => !programaOficial2026.some((oficial) => fila.dia === oficial.dia && fila.hora === oficial.hora && fila.titulo === oficial.titulo));
+    const extras = filas.filter((fila) => !/autobús lanzadera/i.test(fila.titulo || "") && !programaOficial2026.some((oficial) => fila.dia === oficial.dia && fila.hora === oficial.hora && fila.titulo === oficial.titulo));
     setActos([...oficiales, ...extras]);
     setEventos(eventosData ?? []);
     const content = Object.fromEntries((contentData ?? []).map((x:any)=>[x.clave,x.valor]));
@@ -273,9 +271,29 @@ function Home() {
 
         <section id="eventos" className="scroll-mt-24">
           <SectionTitle>Eventos</SectionTitle>
-          {!eventos.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">Próximamente publicaremos los eventos de las peñas y actividades especiales.</div> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {eventos.map((e) => <article key={e.id} className="glass rounded-3xl p-5"><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{fmtDia(e.dia)}{e.hora ? " · "+e.hora : ""}</p><h3 className="mt-2 text-2xl font-bold">{e.titulo}</h3>{e.descripcion && <p className="mt-2 text-sm text-muted-foreground">{e.descripcion}</p>}{e.lugar && <p className="mt-3 text-sm">📍 {e.lugar}</p>}{e.penya_id && <p className="mt-2 text-xs font-bold text-primary">{penyes.find(p=>p.id===e.penya_id)?.nombre || "Evento de peña"}</p>}{e.lat != null && e.lng != null ? <button onClick={() => goMap("evento-" + e.id)} className="glass-btn mt-3 px-4 py-2 text-sm font-bold">Ver ubicación en el mapa</button> : e.lugar ? <a href={mapSearchUrl(e.lugar)} target="_blank" rel="noreferrer" className="glass-btn mt-3 inline-block px-4 py-2 text-sm font-bold">Ver ubicación en el mapa</a> : null}</article>)}
-          </div>}
+          <div className="mb-6 space-y-3">
+            <h3 className="text-2xl font-bold text-primary">Actuaciones y festes al carrer</h3>
+            <p className="text-sm text-muted-foreground">Consulta los detalles de cada actuación, tardeo, mañaneo y nocheo sin salir de la web.</p>
+            {actos.filter((a) => { const t = String(a.titulo || "").toLocaleLowerCase("es"); return a.tipo === "actuacion" || /tardeo|mañaneo|mananeo|nocheo/.test(t); }).sort((a,b) => a.dia.localeCompare(b.dia) || a.hora.localeCompare(b.hora)).map((a) => {
+              const t = String(a.titulo || "").toLocaleLowerCase("es"); const festaCarrer = /tardeo|mañaneo|mananeo|nocheo/.test(t); const portada = a.imagen_url || a.imagen || "";
+              return <details key={a.id} className="glass group overflow-hidden rounded-3xl">
+                <summary className="cursor-pointer list-none">
+                  <div className="relative flex min-h-40 items-end overflow-hidden bg-gradient-to-br from-[#49352f] via-[#805568] to-[#d7a6b7] p-5">
+                    {portada && <img src={portada} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-55"/>}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 to-transparent"/>
+                    <div className="relative z-10 w-full text-on-image">
+                      <div className="mb-2 flex flex-wrap gap-2"><span className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold uppercase">{festaCarrer ? "Festa al carrer" : "Actuación"}</span><span className="rounded-full bg-white/20 px-3 py-1 text-xs">{fmtDia(a.dia)} · {a.hora}</span></div>
+                      <h3 className="text-2xl font-bold">{a.titulo}</h3><p className="mt-2 text-sm font-semibold">Ver más información <span className="inline-block transition group-open:rotate-180">⌄</span></p>
+                    </div>
+                  </div>
+                </summary>
+                <div className="space-y-3 p-5">{a.descripcion && <p className="text-sm leading-relaxed">{a.descripcion}</p>}<p className="text-sm"><strong>Fecha:</strong> {fmtDia(a.dia)}</p>{a.hora && <p className="text-sm"><strong>Hora:</strong> {a.hora}</p>}{a.lugar && <p className="text-sm"><strong>Lugar:</strong> {a.lugar}</p>}{a.lat != null && a.lng != null && <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa de la web</button>}</div>
+              </details>;
+            })}
+          </div>
+          <div className="space-y-3"><h3 className="text-2xl font-bold text-primary">Otros eventos de las peñas</h3>
+            {!eventos.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">Todavía no hay eventos de peñas publicados.</div> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{eventos.map((e) => <article key={e.id} className="glass rounded-3xl p-5"><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{fmtDia(e.dia)}{e.hora ? " · "+e.hora : ""}</p><h3 className="mt-2 text-2xl font-bold">{e.titulo}</h3>{e.descripcion && <p className="mt-2 text-sm text-muted-foreground">{e.descripcion}</p>}{e.lugar && <p className="mt-3 text-sm">📍 {e.lugar}</p>}{e.penya_id && <p className="mt-2 text-xs font-bold text-primary">{penyes.find(p=>p.id===e.penya_id)?.nombre || "Evento de peña"}</p>}{e.lat != null && e.lng != null && <button onClick={() => goMap("evento-" + e.id)} className="glass-btn mt-3 px-4 py-2 text-sm font-bold">Ver ubicación en el mapa</button>}</article>)}</div>}
+          </div>
         </section>
         <section id="penyes" className="scroll-mt-24">
           <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -307,7 +325,16 @@ function Home() {
 
         <section id="info" className="scroll-mt-24">
           <SectionTitle>{ui.nav.info}</SectionTitle>
-          <div className="glass max-w-sm rounded-3xl p-6"><h3 className="text-xl font-bold">{siteContent.info_titulo || ui.emergencias}</h3><p className="mt-2 font-display text-4xl font-bold text-primary">{siteContent.info_telefono || "112"}</p></div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="glass rounded-3xl p-6"><h3 className="text-xl font-bold">{siteContent.info_titulo || ui.emergencias}</h3><p className="mt-2 font-display text-4xl font-bold text-primary">{siteContent.info_telefono || "112"}</p></div>
+            <article className="glass rounded-3xl p-6 md:col-span-2">
+              <div className="mb-3 flex items-center gap-3"><span className="text-3xl">🚌</span><div><h3 className="text-2xl font-bold text-primary">Autobús lanzadera</h3><p className="text-sm text-muted-foreground">Información práctica de transporte durante las fiestas</p></div></div>
+              <p className="font-semibold">Del 6 al 9 de noviembre · de 01:00 a 04:00 h</p>
+              <p className="mt-2 text-sm">Salidas cada hora desde el parking de La Bolleta (frente a Gaudí).</p>
+              <p className="mt-2 text-sm"><strong>Paradas:</strong> Parque Escandinavia, San Rafael, Tossalet, avenida Sant Pere (Albir Garden) y Consum Albir.</p>
+              <p className="mt-2 text-sm">El recorrido de regreso finaliza en el parking de La Bolleta.</p>
+            </article>
+          </div>
         </section>
       </main>
 
