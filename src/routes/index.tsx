@@ -146,7 +146,7 @@ function Home() {
       if (Date.now() - last >= 30 * 60 * 1000) setShareReminder(true);
     };
     const first = window.setTimeout(shouldShow, 90_000);
-    const repeat = window.setInterval(shouldShow, 30 * 60 * 1000);
+    const repeat = window.setInterval(shouldShow, 5 * 60 * 1000);
     return () => { window.clearTimeout(first); window.clearInterval(repeat); };
   }, []);
 
@@ -411,7 +411,7 @@ function Home() {
               </div>
               {selectedPenya.informacion && <div className="mt-5"><h3 className="font-bold">Sobre la peña</h3><p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">{selectedPenya.informacion}</p></div>}
               <div className="mt-6"><h3 className="text-xl font-bold">Eventos y actividades</h3>
-                {eventos.filter((e) => e.penya_id === selectedPenya.id).length ? <div className="mt-3 space-y-3">{eventos.filter((e) => e.penya_id === selectedPenya.id).map((e) => <article key={e.id} className="rounded-2xl bg-glass p-4"><p className="text-xs font-bold uppercase text-muted-foreground">{fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p><h4 className="mt-1 font-bold">{e.titulo}</h4>{e.descripcion && <p className="mt-1 text-sm text-muted-foreground">{e.descripcion}</p>}{e.lugar && <p className="mt-2 text-sm">📍 {e.lugar}</p>}</article>)}</div> : <p className="mt-2 text-sm text-muted-foreground">Esta peña todavía no tiene eventos publicados.</p>}
+                {eventosActivos.filter((e) => e.penya_id === selectedPenya.id).length ? <div className="mt-3 space-y-3">{eventosActivos.filter((e) => e.penya_id === selectedPenya.id).map((e) => <article key={e.id} className="rounded-2xl bg-glass p-4"><p className="text-xs font-bold uppercase text-muted-foreground">{fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p><h4 className="mt-1 font-bold">{e.titulo}</h4>{e.descripcion && <p className="mt-1 text-sm text-muted-foreground">{e.descripcion}</p>}{e.lugar && <p className="mt-2 text-sm">📍 {e.lugar}</p>}</article>)}</div> : <p className="mt-2 text-sm text-muted-foreground">Esta peña todavía no tiene eventos publicados.</p>}
               </div>
               <div className="mt-6 flex flex-wrap gap-2">{instagramUrl(selectedPenya.instagram) && <a className="glass-btn rounded-full px-4 py-2 text-sm font-bold" href={instagramUrl(selectedPenya.instagram)!} target="_blank" rel="noreferrer">Instagram</a>}{selectedPenya.email && <a className="glass-btn rounded-full px-4 py-2 text-sm font-bold" href={"mailto:" + selectedPenya.email}>Correo</a>}<button onClick={() => void sharePenyaCard(selectedPenya)} className="glass-btn rounded-full px-4 py-2 text-sm font-bold">↗ Compartir ficha</button><button onClick={() => setEventFormPenya(selectedPenya)} className="glass-btn rounded-full px-4 py-2 text-sm font-bold">+ Añadir evento</button><button onClick={() => { const id = selectedPenya.id; setSelectedPenya(null); goMap(id); }} className="rounded-full bg-pink px-5 py-3 text-sm font-bold text-brown">📍 Ver ubicación en el mapa</button></div>
             </div>
