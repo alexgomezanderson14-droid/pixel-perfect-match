@@ -11,6 +11,14 @@ alter table public.penyes
   add column if not exists tiene_evento boolean not null default false,
   add column if not exists estado text not null default 'aprobada';
 
+-- The registration form allows location and photo to be omitted.
+-- The original table marked these fields NOT NULL, which rejected valid submissions.
+alter table public.penyes
+  alter column direccion drop not null,
+  alter column lat drop not null,
+  alter column lng drop not null,
+  alter column foto_url drop not null;
+
 alter table public.penyes
   alter column tipo_musica set default 'Variada',
   alter column instagram set default '',
