@@ -30,14 +30,39 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
 
   const buscar = async () => {
     setError("");
-    if (!direccion.trim()) return setError("Escribe una dirección para buscarla.");
-    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(direccion + ", L'Alfàs del Pi, Alicante")}`;
+    if (!direccion.trim()) return setError("Escribe una calle o dirección para buscarla.");
+    setBusy(true);
     try {
-      const r = await fetch(url).then((x) => x.json());
-      if (!r[0]) return setError("No encontramos esa dirección. Marca la ubicación en el mapa.");
-      setPos({ lat: parseFloat(r[0].lat), lng: parseFloat(r[0].lon) });
+      const queries = [
+        direccion.trim() + ", l'Alfàs del Pi, Alicante, España",
+        direccion.trim() + ", Alfaz del Pi, Alicante, España",
+      ];
+      let found: { lat: string; lon: string } | undefined;
+      for (const query of queries) {
+        const params = new URLSearchParams({
+          format: "jsonv2",
+          limit: "1",
+          countrycodes: "es",
+          q: query,
+          viewbox: "-0.16,38.62,-0.06,38.54",
+          bounded: "1",
+        });
+        const response = await fetch("https://nominatim.openstreetmap.org/search?" + params.toString(), {
+          headers: { Accept: "application/json" },
+        });
+        if (!response.ok) continue;
+        const results = await response.json();
+        if (results?.[0]) { found = results[0]; break; }
+      }
+      if (!found) {
+        setError("No hemos podido localizar esa calle automáticamente. Acércate al mapa y marca el punto exacto; también puedes dejar la dirección escrita.");
+        return;
+      }
+      setPos({ lat: Number(found.lat), lng: Number(found.lon) });
     } catch {
-      setError("No se pudo buscar la dirección. Marca la ubicación en el mapa.");
+      setError("No se pudo consultar el buscador de calles. Marca el punto directamente en el mapa.");
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -66,7 +91,7 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
       lng: pos.lng,
       foto_url: path,
       tipo_musica: v.data.tipo_musica,
-      acepta_visitas: aceptaVisitas,
+      acepta_visitas: Boolean(aceptaVisitas),
       informacion: v.data.informacion,
       instagram: v.data.instagram.replace(/^@/, ""),
       email: v.data.email || null,
@@ -92,9 +117,9 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
           <span>Ubicación *</span>
           <div className="flex gap-2">
             <input value={direccion} onChange={(e) => setDireccion(e.target.value)} maxLength={200} placeholder="Dirección (ej. Calle Mayor, 5)" className="min-w-0 flex-1 rounded-full border border-input bg-glass px-4 py-2.5 font-normal outline-none focus:ring-2 focus:ring-ring" />
-            <button type="button" onClick={buscar} className="glass-btn shrink-0 px-4 py-2">Buscar</button>
+            <button type="button" onClick={buscar} disabled={busy} className="glass-btn shrink-0 px-4 py-2">{busy ? "Buscando…" : "Buscar"}</button>
           </div>
-          <p className="font-normal text-muted-foreground">O toca el mapa para marcar la posición.</p>
+          <p className="font-normal text-muted-foreground">Escribe la calle y pulsa Buscar, o toca directamente el mapa para marcar la posición. Si el buscador no reconoce una calle, puedes marcarla manualmente.</p>
           <div className="h-56 overflow-hidden rounded-2xl">
             <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
               <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}>
@@ -107,7 +132,7 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
           <span>Tipo de música</span>
           <select value={tipoMusica} onChange={(e) => setTipoMusica(e.target.value)} className="w-full rounded-full border border-input bg-glass px-4 py-2.5 font-normal"><option>Variada</option><option>Reggaetón</option><option>Pop / comercial</option><option>Rock</option><option>Electrónica</option><option>Remember</option><option>Otra</option></select>
         </label>
-        <label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" checked={aceptaVisitas} onChange={(e) => setAceptaVisitas(e.target.checked)} /> ¿Aceptáis visitas durante las fiestas?</label>
+        <label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" checked={aceptaVisitas} onChange={(e) => setAceptaVisitas(Boolean(e.target.checked))} /> ¿Aceptáis visitas durante las fiestas?</label>
         <label className="block space-y-1 text-sm font-bold"><span>Instagram (opcional)</span><input value={instagram} onChange={(e) => setInstagram(e.target.value)} maxLength={100} placeholder="@nombredepenya" className="w-full rounded-full border border-input bg-glass px-4 py-2.5 font-normal" /></label>
         <label className="block space-y-1 text-sm font-bold"><span>Correo electrónico de contacto (opcional)</span><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={254} placeholder="contacto@penya.com" className="w-full rounded-full border border-input bg-glass px-4 py-2.5 font-normal" /></label>
         <label className="block space-y-1 text-sm font-bold"><span>Información sobre la peña</span><textarea value={informacion} onChange={(e) => setInformacion(e.target.value)} maxLength={1000} rows={3} placeholder="Contad qué ambiente tenéis, qué ofrecéis…" className="w-full rounded-2xl border border-input bg-glass px-4 py-2.5 font-normal" /></label>
