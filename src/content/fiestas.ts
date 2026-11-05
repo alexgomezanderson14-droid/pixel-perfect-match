@@ -37,7 +37,7 @@ export const lugares: Lugar[] = [];
 export const actos: Acto[] = [];
 
 export const ui = {
-  nav: { mapa: "Mapa", programa: "Programa", penyes: "Peñas", info: "Información" },
+  nav: { mapa: "Mapa", programa: "Programa", eventos: "Eventos", penyes: "Peñas", info: "Información" },
   verMapa: "Ver en el mapa",
   buscar: "Buscar lugar…",
   todos: "Todos",
