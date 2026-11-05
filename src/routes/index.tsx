@@ -271,28 +271,42 @@ function Home() {
 
         <section id="eventos" className="scroll-mt-24">
           <SectionTitle>Eventos</SectionTitle>
-          <div className="mb-6 space-y-3">
+          <div className="mb-6 space-y-2">
             <h3 className="text-2xl font-bold text-primary">Actuaciones y festes al carrer</h3>
-            <p className="text-sm text-muted-foreground">Consulta los detalles de cada actuación, tardeo, mañaneo y nocheo sin salir de la web.</p>
-            {actos.filter((a) => { const t = String(a.titulo || "").toLocaleLowerCase("es"); return a.tipo === "actuacion" || /tardeo|mañaneo|mananeo|nocheo/.test(t); }).sort((a,b) => a.dia.localeCompare(b.dia) || a.hora.localeCompare(b.hora)).map((a) => {
-              const t = String(a.titulo || "").toLocaleLowerCase("es"); const festaCarrer = /tardeo|mañaneo|mananeo|nocheo/.test(t); const portada = a.imagen_url || a.imagen || "";
-              return <details key={a.id} className="glass group overflow-hidden rounded-3xl">
+            <p className="text-sm text-muted-foreground">Pulsa en cada evento para consultar su descripción, fecha y lugar.</p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {actos.filter((a) => {
+              const t = String(a.titulo || "").toLocaleLowerCase("es");
+              const excluido = /despertà|desperta|despertada|nit de albaes|nit d'albaes|nit de les albaes|albaes/.test(t);
+              return !excluido && (a.tipo === "actuacion" || /tardeo|mañaneo|mananeo|nocheo/.test(t));
+            }).sort((a,b) => a.dia.localeCompare(b.dia) || (a.hora || "").localeCompare(b.hora || "")).map((a) => {
+              const t = String(a.titulo || "").toLocaleLowerCase("es");
+              const festaCarrer = /tardeo|mañaneo|mananeo|nocheo/.test(t);
+              const portada = a.imagen_url || a.imagen || a.foto_url || a.foto || "";
+              return <details key={a.id} className="glass group min-w-0 overflow-hidden rounded-3xl border border-border/60 shadow-sm">
                 <summary className="cursor-pointer list-none">
-                  <div className="relative flex min-h-40 items-end overflow-hidden bg-gradient-to-br from-[#49352f] via-[#805568] to-[#d7a6b7] p-5">
-                    {portada && <img src={portada} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-55"/>}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 to-transparent"/>
-                    <div className="relative z-10 w-full text-on-image">
-                      <div className="mb-2 flex flex-wrap gap-2"><span className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold uppercase">{festaCarrer ? "Festa al carrer" : "Actuación"}</span><span className="rounded-full bg-white/20 px-3 py-1 text-xs">{fmtDia(a.dia)} · {a.hora}</span></div>
-                      <h3 className="text-2xl font-bold">{a.titulo}</h3><p className="mt-2 text-sm font-semibold">Ver más información <span className="inline-block transition group-open:rotate-180">⌄</span></p>
+                  <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-[#f4e8e9] via-[#ead9df] to-[#e9e3d7]">
+                    {portada ? <img src={portada} alt={a.titulo} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"/> : <div className="absolute inset-0 flex items-center justify-center p-5 text-center"><span className="font-display text-3xl font-bold leading-tight text-[#765563]">{a.titulo}</span></div>}
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#49352f]/80 to-transparent p-4 pt-14">
+                      <span className="mb-2 inline-block rounded-full bg-white/85 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#765563]">{festaCarrer ? "Festa al carrer" : "Actuación"}</span>
+                      <h3 className="line-clamp-2 text-lg font-bold leading-tight text-white sm:text-xl">{a.titulo}</h3>
+                      <p className="mt-2 text-xs font-semibold text-white/90">Ver detalles <span className="inline-block transition group-open:rotate-180">⌄</span></p>
                     </div>
                   </div>
                 </summary>
-                <div className="space-y-3 p-5">{a.descripcion && <p className="text-sm leading-relaxed">{a.descripcion}</p>}<p className="text-sm"><strong>Fecha:</strong> {fmtDia(a.dia)}</p>{a.hora && <p className="text-sm"><strong>Hora:</strong> {a.hora}</p>}{a.lugar && <p className="text-sm"><strong>Lugar:</strong> {a.lugar}</p>}{a.lat != null && a.lng != null && <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa de la web</button>}</div>
+                <div className="space-y-3 border-t border-border/50 p-4">
+                  {a.descripcion && <p className="text-sm leading-relaxed text-muted-foreground">{a.descripcion}</p>}
+                  <p className="text-sm"><strong>Fecha:</strong> {fmtDia(a.dia)}{a.hora ? " · " + a.hora : ""}</p>
+                  {a.lugar && <p className="text-sm"><strong>Lugar:</strong> {a.lugar}</p>}
+                  {a.lat != null && a.lng != null && <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa de la web</button>}
+                </div>
               </details>;
             })}
           </div>
-          <div className="space-y-3"><h3 className="text-2xl font-bold text-primary">Otros eventos de las peñas</h3>
-            {!eventos.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">Todavía no hay eventos de peñas publicados.</div> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{eventos.map((e) => <article key={e.id} className="glass rounded-3xl p-5"><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{fmtDia(e.dia)}{e.hora ? " · "+e.hora : ""}</p><h3 className="mt-2 text-2xl font-bold">{e.titulo}</h3>{e.descripcion && <p className="mt-2 text-sm text-muted-foreground">{e.descripcion}</p>}{e.lugar && <p className="mt-3 text-sm">📍 {e.lugar}</p>}{e.penya_id && <p className="mt-2 text-xs font-bold text-primary">{penyes.find(p=>p.id===e.penya_id)?.nombre || "Evento de peña"}</p>}{e.lat != null && e.lng != null && <button onClick={() => goMap("evento-" + e.id)} className="glass-btn mt-3 px-4 py-2 text-sm font-bold">Ver ubicación en el mapa</button>}</article>)}</div>}
+          <div className="mt-10 space-y-3">
+            <h3 className="text-2xl font-bold text-primary">Otros eventos de las peñas</h3>
+            {!eventos.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">Todavía no hay eventos de peñas publicados.</div> : <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">{eventos.map((e) => <details key={e.id} className="glass group min-w-0 overflow-hidden rounded-3xl border border-border/60 shadow-sm"><summary className="cursor-pointer list-none"><div className="relative aspect-square overflow-hidden bg-gradient-to-br from-[#f4e8e9] via-[#ead9df] to-[#e9e3d7]">{(e.imagen_url || e.imagen || e.foto_url || e.foto) ? <img src={e.imagen_url || e.imagen || e.foto_url || e.foto} alt={e.titulo} loading="lazy" className="absolute inset-0 h-full w-full object-cover"/> : <div className="absolute inset-0 flex items-center justify-center p-5 text-center"><span className="font-display text-3xl font-bold text-[#765563]">{e.titulo}</span></div>}<div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#49352f]/80 to-transparent p-4 pt-14"><h3 className="text-xl font-bold text-white">{e.titulo}</h3><p className="mt-2 text-xs font-semibold text-white/90">Ver detalles <span className="inline-block transition group-open:rotate-180">⌄</span></p></div></div></summary><div className="space-y-3 border-t border-border/50 p-4">{e.descripcion && <p className="text-sm leading-relaxed text-muted-foreground">{e.descripcion}</p>}<p className="text-sm"><strong>Fecha:</strong> {fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p>{e.lugar && <p className="text-sm"><strong>Lugar:</strong> {e.lugar}</p>}{e.penya_id && <p className="text-xs font-bold text-primary">{penyes.find(p=>p.id===e.penya_id)?.nombre || "Evento de peña"}</p>}{e.lat != null && e.lng != null && <button onClick={() => goMap("evento-" + e.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver ubicación en el mapa</button>}</div></details>)}</div>}
           </div>
         </section>
         <section id="penyes" className="scroll-mt-24">
