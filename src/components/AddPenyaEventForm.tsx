@@ -50,7 +50,7 @@ export default function AddPenyaEventForm({ penyaId, penyaName, onClose, onSaved
     }
 
     const ext = imagen.type === "image/png" ? "png" : imagen.type === "image/webp" ? "webp" : "jpg";
-    const imagePath = \`eventos/\${crypto.randomUUID()}.\${ext}\`;
+    const imagePath = "eventos/" + crypto.randomUUID() + "." + ext;
     const upload = await supabase.storage.from("penyes").upload(imagePath, imagen, { contentType: imagen.type });
     if (upload.error) {
       setBusy(false);
