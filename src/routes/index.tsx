@@ -58,13 +58,28 @@ async function sharePenyaCard(p: PenyaDb) {
   const words = p.nombre.split(" "); let line = ""; let y = 190;
   for (const word of words) { const test = line ? line + " " + word : word; if (c.measureText(test).width > 900) { c.fillText(line, 76, y); line = word; y += 78; } else line = test; }
   if (line) c.fillText(line, 76, y);
-  c.fillStyle = "#d9e3d8"; c.fillRect(60, 330, 960, 650);
-  c.strokeStyle = "#ffffff"; c.lineWidth = 28; c.lineCap = "round";
-  for (let i = 0; i < 5; i++) { c.beginPath(); c.moveTo(90, 410 + i * 115); c.bezierCurveTo(360, 330 + i * 110, 620, 620 + i * 70, 990, 390 + i * 100); c.stroke(); }
-  c.strokeStyle = "#c5d0c3"; c.lineWidth = 5;
-  for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(110 + i * 240, 350); c.lineTo(160 + i * 210, 950); c.stroke(); }
-  c.fillStyle = "#b45c79"; c.beginPath(); c.arc(540, 650, 44, 0, Math.PI * 2); c.fill();
-  c.fillStyle = "#49352f"; c.font = "bold 30px Arial"; c.fillText("AQUÍ ESTAMOS", 420, 840);
+  let mapDrawn = false;
+  try {
+    const mapUrl = "https://staticmap.openstreetmap.de/staticmap.php?center=" + p.lat + "," + p.lng + "&zoom=16&size=960x650&markers=" + p.lat + "," + p.lng + ",red-pushpin";
+    const response = await fetch(mapUrl);
+    if (!response.ok) throw new Error("No se pudo cargar el mapa.");
+    const mapBlob = await response.blob();
+    const mapObjectUrl = URL.createObjectURL(mapBlob);
+    const mapImage = new Image();
+    await new Promise<void>((resolve, reject) => { mapImage.onload = () => resolve(); mapImage.onerror = () => reject(new Error("Mapa no disponible.")); mapImage.src = mapObjectUrl; });
+    c.drawImage(mapImage, 60, 330, 960, 650);
+    URL.revokeObjectURL(mapObjectUrl);
+    mapDrawn = true;
+  } catch { mapDrawn = false; }
+  if (!mapDrawn) {
+    c.fillStyle = "#d9e3d8"; c.fillRect(60, 330, 960, 650);
+    c.strokeStyle = "#ffffff"; c.lineWidth = 28; c.lineCap = "round";
+    for (let i = 0; i < 5; i++) { c.beginPath(); c.moveTo(90, 410 + i * 115); c.bezierCurveTo(360, 330 + i * 110, 620, 620 + i * 70, 990, 390 + i * 100); c.stroke(); }
+    c.strokeStyle = "#c5d0c3"; c.lineWidth = 5;
+    for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(110 + i * 240, 350); c.lineTo(160 + i * 210, 950); c.stroke(); }
+    c.fillStyle = "#b45c79"; c.beginPath(); c.arc(540, 650, 44, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#49352f"; c.font = "bold 30px Arial"; c.fillText("UBICACIÓN EN EL MAPA", 340, 840);
+  }
   c.font = "bold 36px Arial"; c.fillText("EN L'ALFÀS DEL PI", 76, 1060);
   c.font = "30px Arial"; c.fillStyle = "#655650";
   c.fillText((p.direccion || "Consulta nuestra ubicación en el mapa de las fiestas").slice(0, 48), 76, 1115);
