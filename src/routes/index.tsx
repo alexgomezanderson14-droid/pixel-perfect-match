@@ -69,54 +69,145 @@ async function shareWebsite() {
 }
 
 async function sharePenyaCard(p: PenyaDb) {
+  // Plantilla vertical 9:16 lista para Stories de Instagram.
   const canvas = document.createElement("canvas");
-  canvas.width = 1080; canvas.height = 1350;
+  canvas.width = 1080;
+  canvas.height = 1920;
   const c = canvas.getContext("2d");
   if (!c) throw new Error("No se pudo crear la imagen.");
-  c.fillStyle = "#f4eee5"; c.fillRect(0, 0, 1080, 1350);
-  c.fillStyle = "#49352f"; c.fillRect(0, 0, 1080, 270);
-  c.fillStyle = "#e6b6c7"; c.font = "bold 30px Arial"; c.fillText("FIESTAS L'ALFÀS DEL PI · 2026", 76, 92);
-  c.fillStyle = "#ffffff"; c.font = "bold 66px Arial";
-  const words = p.nombre.split(" "); let line = ""; let y = 190;
-  for (const word of words) { const test = line ? line + " " + word : word; if (c.measureText(test).width > 900) { c.fillText(line, 76, y); line = word; y += 78; } else line = test; }
-  if (line) c.fillText(line, 76, y);
-  let mapDrawn = false;
-  try {
-    const mapUrl = "https://staticmap.openstreetmap.de/staticmap.php?center=" + p.lat + "," + p.lng + "&zoom=16&size=960x650&markers=" + p.lat + "," + p.lng + ",red-pushpin";
-    const response = await fetch(mapUrl);
-    if (!response.ok) throw new Error("No se pudo cargar el mapa.");
-    const mapBlob = await response.blob();
-    const mapObjectUrl = URL.createObjectURL(mapBlob);
-    const mapImage = new Image();
-    await new Promise<void>((resolve, reject) => { mapImage.onload = () => resolve(); mapImage.onerror = () => reject(new Error("Mapa no disponible.")); mapImage.src = mapObjectUrl; });
-    c.drawImage(mapImage, 60, 330, 960, 650);
-    URL.revokeObjectURL(mapObjectUrl);
-    mapDrawn = true;
-  } catch { mapDrawn = false; }
-  if (!mapDrawn) {
-    c.fillStyle = "#d9e3d8"; c.fillRect(60, 330, 960, 650);
-    c.strokeStyle = "#ffffff"; c.lineWidth = 28; c.lineCap = "round";
-    for (let i = 0; i < 5; i++) { c.beginPath(); c.moveTo(90, 410 + i * 115); c.bezierCurveTo(360, 330 + i * 110, 620, 620 + i * 70, 990, 390 + i * 100); c.stroke(); }
-    c.strokeStyle = "#c5d0c3"; c.lineWidth = 5;
-    for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(110 + i * 240, 350); c.lineTo(160 + i * 210, 950); c.stroke(); }
-    c.fillStyle = "#b45c79"; c.beginPath(); c.arc(540, 650, 44, 0, Math.PI * 2); c.fill();
-    c.fillStyle = "#49352f"; c.font = "bold 30px Arial"; c.fillText("UBICACIÓN EN EL MAPA", 340, 840);
+
+  c.fillStyle = "#f4eee5";
+  c.fillRect(0, 0, 1080, 1920);
+  c.fillStyle = "#49352f";
+  c.fillRect(0, 0, 1080, 430);
+
+  c.fillStyle = "#e6b6c7";
+  c.font = "bold 30px Arial";
+  c.fillText("FIESTAS L'ALFÀS DEL PI · 2026", 76, 88);
+
+  // La foto/logo de la peña se coloca como emblema circular.
+  if (p.foto) {
+    try {
+      const response = await fetch(p.foto, { mode: "cors" });
+      if (!response.ok) throw new Error("Logo no disponible");
+      const objectUrl = URL.createObjectURL(await response.blob());
+      const logo = new Image();
+      await new Promise<void>((resolve, reject) => {
+        logo.onload = () => resolve();
+        logo.onerror = () => reject(new Error("Logo no disponible"));
+        logo.src = objectUrl;
+      });
+      c.save();
+      c.beginPath();
+      c.arc(160, 245, 92, 0, Math.PI * 2);
+      c.clip();
+      c.drawImage(logo, 68, 153, 184, 184);
+      c.restore();
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      c.fillStyle = "#e6b6c7";
+      c.beginPath(); c.arc(160, 245, 92, 0, Math.PI * 2); c.fill();
+      c.fillStyle = "#49352f"; c.font = "bold 90px Arial";
+      c.textAlign = "center"; c.fillText(p.nombre.trim().charAt(0).toUpperCase(), 160, 276); c.textAlign = "left";
+    }
+  } else {
+    c.fillStyle = "#e6b6c7";
+    c.beginPath(); c.arc(160, 245, 92, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#49352f"; c.font = "bold 90px Arial";
+    c.textAlign = "center"; c.fillText(p.nombre.trim().charAt(0).toUpperCase(), 160, 276); c.textAlign = "left";
   }
-  c.font = "bold 36px Arial"; c.fillText("EN L'ALFÀS DEL PI", 76, 1060);
-  c.font = "30px Arial"; c.fillStyle = "#655650";
-  c.fillText((p.direccion || "Consulta nuestra ubicación en el mapa de las fiestas").slice(0, 48), 76, 1115);
-  c.fillStyle = "#49352f"; c.fillRect(60, 1180, 960, 2);
-  c.font = "bold 28px Arial"; c.fillText("DESCUBRE LAS PEÑAS · PROGRAMA · MAPA", 76, 1245);
-  c.font = "24px Arial"; c.fillStyle = "#806e65"; c.fillText(window.location.host, 76, 1295);
-  const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((b) => b ? resolve(b) : reject(new Error("No se pudo generar el PNG.")), "image/png"));
-  const file = new File([blob], "penya-" + p.nombre.toLowerCase().replace(/[^a-z0-9]+/g, "-") + ".png", { type: "image/png" });
+
+  c.fillStyle = "#ffffff";
+  c.font = "bold 58px Arial";
+  const words = p.nombre.split(" ");
+  let line = ""; let y = 210;
+  for (const word of words) {
+    const test = line ? line + " " + word : word;
+    if (c.measureText(test).width > 700) {
+      c.fillText(line, 300, y); line = word; y += 70;
+    } else line = test;
+  }
+  if (line) c.fillText(line, 300, y);
+
+  c.fillStyle = "#49352f";
+  c.font = "bold 34px Arial";
+  c.fillText("ENCUÉNTRANOS EN EL MAPA", 76, 510);
+
+  let mapDrawn = false;
+  if (p.lat != null && p.lng != null) {
+    try {
+      const mapUrl = "https://staticmap.openstreetmap.de/staticmap.php?center=" + p.lat + "," + p.lng + "&zoom=16&size=960x760&markers=" + p.lat + "," + p.lng + ",red-pushpin";
+      const response = await fetch(mapUrl, { mode: "cors" });
+      if (!response.ok) throw new Error("Mapa no disponible");
+      const objectUrl = URL.createObjectURL(await response.blob());
+      const mapImage = new Image();
+      await new Promise<void>((resolve, reject) => {
+        mapImage.onload = () => resolve();
+        mapImage.onerror = () => reject(new Error("Mapa no disponible"));
+        mapImage.src = objectUrl;
+      });
+      c.save();
+      c.beginPath(); c.roundRect(60, 550, 960, 760, 34); c.clip();
+      c.drawImage(mapImage, 60, 550, 960, 760);
+      c.restore();
+      URL.revokeObjectURL(objectUrl);
+      mapDrawn = true;
+    } catch { mapDrawn = false; }
+  }
+
+  if (!mapDrawn) {
+    c.fillStyle = "#d9e3d8"; c.fillRect(60, 550, 960, 760);
+    c.strokeStyle = "#ffffff"; c.lineWidth = 32; c.lineCap = "round";
+    for (let i = 0; i < 7; i++) {
+      c.beginPath(); c.moveTo(80, 620 + i * 100);
+      c.bezierCurveTo(360, 500 + i * 100, 640, 900 + i * 40, 1000, 600 + i * 100); c.stroke();
+    }
+    c.fillStyle = "#b45c79"; c.beginPath(); c.arc(540, 900, 35, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#49352f"; c.font = "bold 30px Arial";
+    c.textAlign = "center"; c.fillText("UBICACIÓN DE LA PEÑA", 540, 1200); c.textAlign = "left";
+  }
+
+  c.fillStyle = "#49352f";
+  c.font = "bold 34px Arial";
+  c.fillText("DÓNDE ESTAMOS", 76, 1390);
+  c.font = "30px Arial";
+  c.fillStyle = "#655650";
+  const address = (p.direccion || "L'Alfàs del Pi").trim();
+  const addressLines = address.match(/.{1,48}(?:\\s|$)/g) || [address];
+  addressLines.slice(0, 2).forEach((part, index) => c.fillText(part.trim(), 76, 1445 + index * 42));
+
+  c.fillStyle = "#49352f";
+  c.fillRect(60, 1570, 960, 3);
+  c.fillStyle = "#49352f";
+  c.font = "bold 38px Arial";
+  c.fillText("¡VEN A CONOCERNOS!", 76, 1650);
+  c.font = "bold 30px Arial";
+  c.fillStyle = "#806e65";
+  c.fillText("Descubre todas las peñas, planes y fiestas", 76, 1710);
+  c.fillStyle = "#b45c79";
+  c.font = "bold 34px Arial";
+  c.fillText("Consulta la web de fiestas", 76, 1790);
+  c.fillStyle = "#806e65";
+  c.font = "26px Arial";
+  c.fillText(window.location.host, 76, 1845);
+
+  const blob = await new Promise<Blob>((resolve, reject) =>
+    canvas.toBlob((b) => b ? resolve(b) : reject(new Error("No se pudo generar el PNG.")), "image/png")
+  );
+  const safeName = p.nombre.toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^a-z0-9]+/g, "-");
+  const file = new File([blob], "penya-" + safeName + "-stories.png", { type: "image/png" });
   const url = window.location.origin + "/#penya-" + p.id;
-  if (navigator.canShare?.({ files: [file] }) && navigator.share) await navigator.share({ files: [file], title: p.nombre, text: "Conoce " + p.nombre + " en las fiestas de l'Alfàs del Pi: " + url });
-  else { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = file.name; a.click(); URL.revokeObjectURL(a.href); await navigator.clipboard?.writeText(url); window.alert("Imagen descargada y enlace de la peña copiado."); }
+  if (navigator.canShare?.({ files: [file] }) && navigator.share) {
+    await navigator.share({ files: [file], title: p.nombre, text: "Conoce " + p.nombre + " en las fiestas de l'Alfàs del Pi: " + url });
+  } else {
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = objectUrl; a.download = file.name; a.click();
+    URL.revokeObjectURL(objectUrl);
+    try { await navigator.clipboard?.writeText(url); } catch { /* La descarga sigue disponible aunque no se copie el enlace. */ }
+    window.alert("Plantilla de Instagram descargada. Ya puedes subirla a tus historias.");
+  }
 }
-
-
-type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number; lng: number; foto: string; tipo_musica: string; tiene_evento?: boolean; instagram?: string | null };
+type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number | null; lng: number | null; foto: string; tipo_musica: string; tiene_evento?: boolean; instagram?: string | null };
 
 function Home() {
   const [q, setQ] = useState("");
@@ -216,7 +307,7 @@ function Home() {
       </header>
 
       <section className="relative flex min-h-[92vh] items-end overflow-hidden">
-        <img src={heroImage || hero} alt="Fiestas en las calles de l'Alfàs del Pi" width={1920} height={1088} className="absolute inset-0 h-full w-full object-cover" />
+        <img src={heroImage || hero} alt="Fiestas en las calles de l'Alfàs del Pi" width={1920} height={1280} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-t from-brown/90 via-brown/20 to-transparent" />
         <div className="relative mx-auto w-full max-w-6xl px-5 pb-16">
           <span className="glass-dark mb-4 inline-block rounded-full px-3 py-1 text-xs">{siteContent.hero_fechas || edicion.fechas}</span>
@@ -400,19 +491,67 @@ function Home() {
 
       {selectedPenya && (
         <div className="fixed inset-0 z-[1900] flex items-end justify-center bg-brown/70 p-3 sm:items-center" onClick={() => setSelectedPenya(null)}>
-          <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className="glass max-h-[92vh] w-full max-w-2xl overflow-auto rounded-[2rem] bg-background">
-            {selectedPenya.foto && <img src={selectedPenya.foto} alt={selectedPenya.nombre} className="h-56 w-full object-cover sm:h-72" />}
-            <div className="p-6 sm:p-8">
-              <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Peña participante</p><h2 className="mt-1 text-3xl font-bold text-primary sm:text-4xl">{selectedPenya.nombre}</h2></div><button onClick={() => setSelectedPenya(null)} aria-label="Cerrar" className="glass-btn h-10 w-10 shrink-0 rounded-full">✕</button></div>
-              {selectedPenya.direccion && <p className="mt-3 text-sm">📍 {selectedPenya.direccion}</p>}
+          <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className="glass max-h-[94vh] w-full max-w-2xl overflow-auto rounded-[2rem] bg-background">
+            {selectedPenya.foto && <img src={selectedPenya.foto} alt={selectedPenya.nombre} className="h-48 w-full object-cover sm:h-60" />}
+            <div className="p-5 sm:p-8">
+              <div className="flex items-start justify-between gap-4">
+                <div><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Peña participante</p><h2 className="mt-1 text-3xl font-bold text-primary sm:text-4xl">{selectedPenya.nombre}</h2></div>
+                <button onClick={() => setSelectedPenya(null)} aria-label="Cerrar" className="glass-btn h-10 w-10 shrink-0 rounded-full">✕</button>
+              </div>
+
+              <div className="mt-5 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-100 text-xl">✓</span>
+                <div><p className="font-bold">Esta peña acepta visitas</p><p className="text-sm text-emerald-700">Pásate a conocer el ambiente y disfrutar de las fiestas.</p></div>
+              </div>
+
+              <div className="mt-7">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h3 className="text-xl font-bold text-primary">Planes de la peña</h3>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Agenda</span>
+                </div>
+                {eventosActivos.filter((e) => e.penya_id === selectedPenya.id).length ? (
+                  <div className="space-y-3">
+                    {eventosActivos.filter((e) => e.penya_id === selectedPenya.id).map((e) => {
+                      const fecha = new Date(String(e.dia).slice(0, 10) + "T12:00:00");
+                      const diaNumero = fecha.toLocaleDateString("es-ES", { day: "2-digit" });
+                      const mes = fecha.toLocaleDateString("es-ES", { month: "short" }).replace(".", "").toUpperCase();
+                      return <article key={e.id} className="overflow-hidden rounded-2xl border border-border/70 bg-white/70 shadow-sm">
+                        <div className="grid grid-cols-[104px_1fr] sm:grid-cols-[124px_1fr]">
+                          <div className="flex min-h-[142px] flex-col items-center justify-center bg-[#e8b9c9] px-2 py-4 text-center text-[#49352f]">
+                            <span className="text-xs font-extrabold uppercase tracking-[0.18em]">{mes}</span>
+                            <span className="font-display text-5xl font-bold leading-none">{diaNumero}</span>
+                            <span className="mt-2 rounded-full bg-white/70 px-3 py-1 text-sm font-bold">{e.hora || "Hora por confirmar"}</span>
+                          </div>
+                          <div className="min-w-0 p-4 sm:p-5">
+                            <h4 className="text-lg font-bold leading-tight text-primary sm:text-xl">{e.titulo}</h4>
+                            {e.descripcion && <p className="mt-2 line-clamp-4 text-sm leading-relaxed text-muted-foreground">{e.descripcion}</p>}
+                            {e.lugar && <p className="mt-3 text-xs font-semibold text-muted-foreground">📍 {e.lugar}</p>}
+                          </div>
+                        </div>
+                        {e.imagen_url && <img src={e.imagen_url} alt={"Cartel de " + e.titulo} loading="lazy" className="max-h-64 w-full object-cover" />}
+                      </article>;
+                    })}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-border bg-glass p-5 text-sm text-muted-foreground">Esta peña todavía no ha publicado ningún plan. ¡Vuelve a consultar la agenda pronto!</div>
+                )}
+              </div>
+
+              {selectedPenya.direccion && <div className="mt-5 flex items-start gap-2 text-sm text-muted-foreground"><span>📍</span><span>{selectedPenya.direccion}</span></div>}
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl bg-glass p-4"><p className="text-xs font-bold uppercase text-muted-foreground">Música</p><p className="mt-1 font-semibold">{selectedPenya.tipo_musica || "Variada"}</p></div>
+                <a
+                  href={selectedPenya.lat != null && selectedPenya.lng != null
+                    ? "https://www.google.com/maps/dir/?api=1&destination=" + selectedPenya.lat + "," + selectedPenya.lng
+                    : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent((selectedPenya.direccion || selectedPenya.nombre) + ", l'Alfàs del Pi")}
+                  target="_blank" rel="noreferrer"
+                  className="flex min-h-14 items-center justify-center gap-2 rounded-full bg-[#49352f] px-5 py-3 text-center font-bold text-white transition hover:-translate-y-0.5"
+                >📍 Cómo llegar</a>
+                <button onClick={() => void sharePenyaCard(selectedPenya)} className="flex min-h-14 items-center justify-center gap-2 rounded-full border border-primary/20 bg-white/70 px-5 py-3 font-bold text-primary transition hover:-translate-y-0.5">↗ Compartir</button>
               </div>
-              
-              <div className="mt-6"><h3 className="text-xl font-bold">Eventos y actividades</h3>
-                {eventosActivos.filter((e) => e.penya_id === selectedPenya.id).length ? <div className="mt-3 space-y-3">{eventosActivos.filter((e) => e.penya_id === selectedPenya.id).map((e) => <article key={e.id} className="rounded-2xl bg-glass p-4"><p className="text-xs font-bold uppercase text-muted-foreground">{fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p><h4 className="mt-1 font-bold">{e.titulo}</h4>{e.imagen_url && <img src={e.imagen_url} alt={e.titulo} loading="lazy" className="mb-3 h-40 w-full rounded-xl object-cover" />}{e.descripcion && <p className="mt-1 text-sm text-muted-foreground">{e.descripcion}</p>}{e.lugar && <p className="mt-2 text-sm">📍 {e.lugar}</p>}</article>)}</div> : <p className="mt-2 text-sm text-muted-foreground">Esta peña todavía no tiene eventos publicados.</p>}
+              <div className="mt-4 flex flex-wrap gap-3 text-sm">
+                {instagramUrl(selectedPenya.instagram) && <a className="font-semibold text-primary underline" href={instagramUrl(selectedPenya.instagram)!} target="_blank" rel="noreferrer">{'Instagram · @' + selectedPenya.instagram?.replace(/^@/, "")}</a>}
+                <button onClick={() => setEventFormPenya(selectedPenya)} className="font-semibold text-primary underline">{selectedPenya.tiene_evento ? "Añadir otro evento" : "+ Añadir evento"}</button>
               </div>
-              <div className="mt-6 flex flex-wrap gap-2">{instagramUrl(selectedPenya.instagram) && <a className="glass-btn rounded-full px-4 py-2 text-sm font-bold" href={instagramUrl(selectedPenya.instagram)!} target="_blank" rel="noreferrer">{`Instagram · @${selectedPenya.instagram?.replace(/^@/, "") || ""}`}</a>}<button onClick={() => void sharePenyaCard(selectedPenya)} className="glass-btn rounded-full px-4 py-2 text-sm font-bold">↗ Compartir ficha</button><button onClick={() => setEventFormPenya(selectedPenya)} className="glass-btn rounded-full px-4 py-2 text-sm font-bold">{selectedPenya.tiene_evento ? "Añadir otro evento" : "+ Añadir evento"}</button><button onClick={() => { const id = selectedPenya.id; setSelectedPenya(null); goMap(id); }} className="rounded-full bg-pink px-5 py-3 text-sm font-bold text-brown">📍 Ver ubicación en el mapa</button></div>
             </div>
           </section>
         </div>
