@@ -88,7 +88,7 @@ function Home() {
   };
 
   return (
-    <div className="page-bg min-h-screen" style={{ "--pink": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--secondary": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--accent": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--ring": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--cat-penya": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--background": siteContent.theme_background || "oklch(0.95 0.015 75)" } as React.CSSProperties}>
+    <div className="page-bg min-h-screen" style={{ "--pink": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--secondary": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--accent": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--ring": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--cat-penya": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--background": siteContent.theme_background || "oklch(0.95 0.015 75)", "--gradient-page": `linear-gradient(180deg, ${siteContent.theme_background || "oklch(0.96 0.015 70)"}, ${siteContent.theme_background || "oklch(0.93 0.02 60)"})` } as React.CSSProperties}>
       <header className="fixed inset-x-0 top-4 z-[1000] flex justify-center px-4">
         <nav className="glass flex items-center gap-1 rounded-full p-1.5 text-sm">
           {(Object.keys(ui.nav) as (keyof typeof ui.nav)[]).map((k) => (
