@@ -34,7 +34,7 @@ function fmtDia(d: string) {
 
 function eventoSigueActivo(item: { dia?: string; hora?: string }, now = Date.now()) {
   if (!item.dia) return true;
-  const hora = String(item.hora || "").match(/(?:^|\\D)([01]\\d|2[0-3]):([0-5]\\d)/);
+  const hora = String(item.hora || "").match(/(?:^|\D)([01]\d|2[0-3]):([0-5]\d)/);
   const fechaLimite = new Date(`${String(item.dia).slice(0, 10)}T${hora ? hora[1] + ":" + hora[2] : "23:59"}:00`).getTime();
   return Number.isNaN(fechaLimite) || fechaLimite >= now;
 }
