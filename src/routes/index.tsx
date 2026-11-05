@@ -88,7 +88,7 @@ async function sharePenyaCard(p: PenyaDb) {
   c.font = "24px Arial"; c.fillStyle = "#806e65"; c.fillText(window.location.host, 76, 1295);
   const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((b) => b ? resolve(b) : reject(new Error("No se pudo generar el PNG.")), "image/png"));
   const file = new File([blob], "penya-" + p.nombre.toLowerCase().replace(/[^a-z0-9]+/g, "-") + ".png", { type: "image/png" });
-  const url = window.location.origin + "/#penyes";
+  const url = window.location.origin + "/#penya-" + p.id;
   if (navigator.canShare?.({ files: [file] }) && navigator.share) await navigator.share({ files: [file], title: p.nombre, text: "Conoce " + p.nombre + " en las fiestas de l'Alfàs del Pi: " + url });
   else { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = file.name; a.click(); URL.revokeObjectURL(a.href); await navigator.clipboard?.writeText(url); window.alert("Imagen descargada y enlace de la peña copiado."); }
 }
@@ -268,7 +268,7 @@ function Home() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {penyes.map((p) => (
-                <article key={p.id} className="glass overflow-hidden rounded-3xl">
+                <article id={"penya-" + p.id} key={p.id} className="glass overflow-hidden rounded-3xl">
                   {p.foto && <img src={p.foto} alt={p.nombre} loading="lazy" className="h-44 w-full object-cover" />}
                   <div className="p-6">
                     <h3 className="text-2xl font-bold">{p.nombre}</h3>
