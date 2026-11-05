@@ -116,7 +116,7 @@ async function sharePenyaCard(p: PenyaDb) {
 }
 
 
-type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number; lng: number; foto: string; tipo_musica: string; acepta_visitas: boolean; informacion: string; instagram?: string | null; email?: string | null };
+type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number; lng: number; foto: string; tipo_musica: string; tiene_evento?: boolean; informacion: string; instagram?: string | null; email?: string | null };
 
 function Home() {
   const [q, setQ] = useState("");
@@ -153,14 +153,14 @@ function Home() {
 
   const cargar = useCallback(async () => {
     const [penyaResult, { data: actosData }, { data: eventosData }, { data: contentData }] = await Promise.all([
-      supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,informacion,instagram,email").eq("estado","aprobada").order("nombre"),
+      supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,tiene_evento,informacion,instagram,email").eq("estado","aprobada").order("nombre"),
       supabase.from("actos").select("*").eq("publicado",true).order("dia").order("hora"),
       supabase.from("eventos").select("*").eq("publicado",true).order("dia").order("hora"),
       supabase.from("site_content").select("clave,valor"),
     ]);
     let data: any[] | null = penyaResult.data as any[] | null;
     if (penyaResult.error) {
-      const legacyPenyes = await supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,informacion").eq("estado","aprobada").order("nombre");
+      const legacyPenyes = await supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,tiene_evento,informacion").eq("estado","aprobada").order("nombre");
       data = legacyPenyes.data?.map((p) => ({ ...p, instagram: "", email: null })) ?? null;
     }
     const filas = actosData ?? [];
@@ -365,7 +365,7 @@ function Home() {
                     <p className="mt-1 text-sm"><strong>Visitas:</strong> {p.acepta_visitas ? "Sí, acepta visitas" : "No acepta visitas"}</p>
                     {p.informacion && <p className="mt-2 text-sm text-muted-foreground">{p.informacion}</p>}
                     {eventosActivos.filter(e=>e.penya_id===p.id).map(e=><p key={e.id} className="mt-2 text-sm"><strong>Evento:</strong> {e.titulo} · {fmtDia(e.dia)}</p>)}
-                    <div className="mt-4 flex flex-wrap gap-2"><button onClick={() => setSelectedPenya(p)} className="rounded-full bg-pink px-4 py-2 text-sm font-bold text-brown">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-4 py-2 text-sm font-bold">📍 {ui.verMapa}</button><button onClick={() => void sharePenyaCard(p)} className="glass-btn px-4 py-2 text-sm font-bold">↗ Compartir peña</button><button onClick={() => setEventFormPenya(p)} className="glass-btn px-4 py-2 text-sm font-bold">+ Añadir evento</button></div>
+                    <div className="mt-4 flex flex-wrap gap-2"><button onClick={() => setSelectedPenya(p)} className="rounded-full bg-pink px-4 py-2 text-sm font-bold text-brown">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-4 py-2 text-sm font-bold">📍 {ui.verMapa}</button><button onClick={() => void sharePenyaCard(p)} className="glass-btn px-4 py-2 text-sm font-bold">↗ Compartir peña</button><button onClick={() => setEventFormPenya(p)} className="glass-btn px-4 py-2 text-sm font-bold">{p.tiene_evento ? "Editar evento" : "+ Añadir evento"}</button></div>
                     <div className="mt-3 flex flex-wrap gap-3 text-sm">{instagramUrl(p.instagram) && <a className="font-semibold text-primary underline" href={instagramUrl(p.instagram)!} target="_blank" rel="noreferrer">↗ Instagram</a>}{p.email && <a className="font-semibold text-primary underline" href={"mailto:" + p.email}>Correo</a>}</div>
                   </div>
                 </article>
@@ -414,14 +414,14 @@ function Home() {
               <div className="mt-6"><h3 className="text-xl font-bold">Eventos y actividades</h3>
                 {eventosActivos.filter((e) => e.penya_id === selectedPenya.id).length ? <div className="mt-3 space-y-3">{eventosActivos.filter((e) => e.penya_id === selectedPenya.id).map((e) => <article key={e.id} className="rounded-2xl bg-glass p-4"><p className="text-xs font-bold uppercase text-muted-foreground">{fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p><h4 className="mt-1 font-bold">{e.titulo}</h4>{e.descripcion && <p className="mt-1 text-sm text-muted-foreground">{e.descripcion}</p>}{e.lugar && <p className="mt-2 text-sm">📍 {e.lugar}</p>}</article>)}</div> : <p className="mt-2 text-sm text-muted-foreground">Esta peña todavía no tiene eventos publicados.</p>}
               </div>
-              <div className="mt-6 flex flex-wrap gap-2">{instagramUrl(selectedPenya.instagram) && <a className="glass-btn rounded-full px-4 py-2 text-sm font-bold" href={instagramUrl(selectedPenya.instagram)!} target="_blank" rel="noreferrer">Instagram</a>}{selectedPenya.email && <a className="glass-btn rounded-full px-4 py-2 text-sm font-bold" href={"mailto:" + selectedPenya.email}>Correo</a>}<button onClick={() => void sharePenyaCard(selectedPenya)} className="glass-btn rounded-full px-4 py-2 text-sm font-bold">↗ Compartir ficha</button><button onClick={() => setEventFormPenya(selectedPenya)} className="glass-btn rounded-full px-4 py-2 text-sm font-bold">+ Añadir evento</button><button onClick={() => { const id = selectedPenya.id; setSelectedPenya(null); goMap(id); }} className="rounded-full bg-pink px-5 py-3 text-sm font-bold text-brown">📍 Ver ubicación en el mapa</button></div>
+              <div className="mt-6 flex flex-wrap gap-2">{instagramUrl(selectedPenya.instagram) && <a className="glass-btn rounded-full px-4 py-2 text-sm font-bold" href={instagramUrl(selectedPenya.instagram)!} target="_blank" rel="noreferrer">Instagram</a>}{selectedPenya.email && <a className="glass-btn rounded-full px-4 py-2 text-sm font-bold" href={"mailto:" + selectedPenya.email}>Correo</a>}<button onClick={() => void sharePenyaCard(selectedPenya)} className="glass-btn rounded-full px-4 py-2 text-sm font-bold">↗ Compartir ficha</button><button onClick={() => setEventFormPenya(selectedPenya)} className="glass-btn rounded-full px-4 py-2 text-sm font-bold">{selectedPenya.tiene_evento ? "Editar evento" : "+ Añadir evento"}</button><button onClick={() => { const id = selectedPenya.id; setSelectedPenya(null); goMap(id); }} className="rounded-full bg-pink px-5 py-3 text-sm font-bold text-brown">📍 Ver ubicación en el mapa</button></div>
             </div>
           </section>
         </div>
       )}
 
       {eventFormPenya && (
-        <ClientOnly><Suspense fallback={null}><AddPenyaEventForm penyaId={eventFormPenya.id} penyaName={eventFormPenya.nombre} onClose={() => setEventFormPenya(null)} onSaved={() => { setEventFormPenya(null); void cargar(); window.alert("¡Evento enviado! Aparecerá en la web cuando sea aprobado."); }} /></Suspense></ClientOnly>
+        <ClientOnly><Suspense fallback={null}><AddPenyaEventForm penyaId={eventFormPenya.id} penyaName={eventFormPenya.nombre} onClose={() => setEventFormPenya(null)} onSaved={(organizaEvento) => { setEventFormPenya(null); void cargar(); window.alert(organizaEvento ? "¡Evento enviado! Aparecerá en la web cuando sea aprobado." : "Se ha guardado que esta peña no organiza ningún evento."); }} /></Suspense></ClientOnly>
       )}
 
       {form && (
