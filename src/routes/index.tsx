@@ -42,8 +42,13 @@ function instagramUrl(value?: string | null) {
 
 async function shareWebsite() {
   const url = window.location.href;
-  if (navigator.share) await navigator.share({ title: "Fiestas de l'Alfàs del Pi 2026", text: "Consulta el programa, el mapa y las peñas de las fiestas.", url });
-  else { await navigator.clipboard.writeText(url); window.alert("Enlace de la web copiado."); }
+  try {
+    await navigator.clipboard.writeText(url);
+    window.alert("Enlace de la web copiado. ¡Ya puedes compartirlo!");
+  } catch {
+    if (navigator.share) await navigator.share({ title: "Fiestas de l'Alfàs del Pi 2026", text: "Consulta el programa, el mapa y las peñas de las fiestas.", url });
+    else window.prompt("Copia el enlace de la web:", url);
+  }
 }
 
 async function sharePenyaCard(p: PenyaDb) {
