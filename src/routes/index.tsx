@@ -74,7 +74,7 @@ function Home() {
     ...lugaresFijos,
     ...penyes.map((p) => ({ id: p.id, categoria: "penya" as const, nombre: p.nombre, descripcion: p.direccion ?? "", lat: p.lat, lng: p.lng, foto: p.foto })),
     ...actos.filter((a) => a.lat != null && a.lng != null).map((a) => ({ id: "acto-" + a.id, categoria: a.tipo as Categoria, nombre: a.titulo, descripcion: a.lugar || a.descripcion || "", lat: Number(a.lat), lng: Number(a.lng) })),
-  ], [penyes]);
+  ], [penyes, actos]);
 
   const visibles = todos.filter((l) => (!cat || l.categoria === cat) && l.nombre.toLowerCase().includes(q.toLowerCase()));
 
@@ -158,7 +158,7 @@ function Home() {
               </div>
               <div className="space-y-8">
                 {(["actuacion", "evento"] as const).map((tipo) => {
-                  const lista = actos.filter((a) => a.dia === dia && a.tipo === tipo);
+                  const lista = actos.filter((a) => a.dia === dia && a.tipo === tipo).sort((a, b) => { const minutes = (h: string) => { const [hh, mm] = (h || "00:00").split(":").map(Number); const value = hh * 60 + (mm || 0); return value < 5 * 60 ? value + 24 * 60 : value; }; return minutes(a.hora) - minutes(b.hora); });
                   if (!lista.length) return null;
                   return <section key={tipo} className="space-y-3">
                     <div className="flex items-center gap-3"><h3 className="text-2xl font-bold text-primary">{tipo === "actuacion" ? "Actuaciones" : "Otros actos y actividades"}</h3><span className="h-px flex-1 bg-primary/15" /></div>
