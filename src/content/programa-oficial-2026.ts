@@ -98,7 +98,34 @@ export const programaOficial2026 = [
     "titulo": "Autobús lanzadera (salidas cada hora)",
     "descripcion": "",
     "tipo": "evento",
-    "lugar": "Días 6, 7, 8 y 9. Salida desde el parking La Bolleta (frente a Gaudí). Paradas: Parque Escandinavia, San Rafael, Tossalet, avenida Sant Pere (Albir Garden) y Consum Albir. Regreso al parking La Bolleta."
+    "lugar": "Salida desde el parking La Bolleta (frente a Gaudí). Paradas: Parque Escandinavia, San Rafael, Tossalet, avenida Sant Pere (Albir Garden) y Consum Albir. Regreso al parking La Bolleta."
+  },
+  {
+    "id": "oficial-12",
+    "dia": "2026-11-07",
+    "hora": "01:00–04:00",
+    "titulo": "Autobús lanzadera (salidas cada hora)",
+    "descripcion": "",
+    "tipo": "evento",
+    "lugar": "Salida desde el parking La Bolleta (frente a Gaudí). Paradas: Parque Escandinavia, San Rafael, Tossalet, avenida Sant Pere (Albir Garden) y Consum Albir. Regreso al parking La Bolleta."
+  },
+  {
+    "id": "oficial-13",
+    "dia": "2026-11-08",
+    "hora": "01:00–04:00",
+    "titulo": "Autobús lanzadera (salidas cada hora)",
+    "descripcion": "",
+    "tipo": "evento",
+    "lugar": "Salida desde el parking La Bolleta (frente a Gaudí). Paradas: Parque Escandinavia, San Rafael, Tossalet, avenida Sant Pere (Albir Garden) y Consum Albir. Regreso al parking La Bolleta."
+  },
+  {
+    "id": "oficial-14",
+    "dia": "2026-11-09",
+    "hora": "01:00–04:00",
+    "titulo": "Autobús lanzadera (salidas cada hora)",
+    "descripcion": "",
+    "tipo": "evento",
+    "lugar": "Salida desde el parking La Bolleta (frente a Gaudí). Paradas: Parque Escandinavia, San Rafael, Tossalet, avenida Sant Pere (Albir Garden) y Consum Albir. Regreso al parking La Bolleta."
   },
   {
     "id": "oficial-12",
