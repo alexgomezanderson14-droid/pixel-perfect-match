@@ -243,7 +243,7 @@ function Home() {
               </div>
               <div className="space-y-3">
                 {[...actos.filter((a) => a.dia === dia)].sort((a, b) => {
-                  const minutes = (h: string) => { const match = (h || "00:00").match(/^(\\d{1,2}):(\\d{2})/); if (!match) return 0; const value = Number(match[1]) * 60 + Number(match[2]); return value < 5 * 60 ? value + 24 * 60 : value; };
+                  const minutes = (h: string) => { const match = (h || "00:00").match(/^(\d{1,2}):(\d{2})/); if (!match) return 0; const value = Number(match[1]) * 60 + Number(match[2]); return value < 5 * 60 ? value + 24 * 60 : value; };
                   return minutes(a.hora) - minutes(b.hora);
                 }).map((a) => {
                   const title = String(a.titulo || "").toLocaleLowerCase("es");
