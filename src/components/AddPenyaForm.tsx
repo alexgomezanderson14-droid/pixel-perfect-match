@@ -36,13 +36,13 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
     e.preventDefault();
     setError("");
     const v = schema.safeParse({ nombre, direccion });
-    if (!v.success) return setError(v.error.issues[0].message);
+    if (!v.success) return setError(v.error.issues[0]?.message ?? "Revisa los datos.");
     if (!pos) return setError("Indica la ubicación: busca la dirección o toca en el mapa.");
     if (!foto) return setError("Añade una fotografía de la peña.");
     if (!TIPOS.includes(foto.type)) return setError("La foto debe ser JPG, PNG o WEBP.");
     if (foto.size > 5 * 1024 * 1024) return setError("La foto no puede superar los 5 MB.");
     setBusy(true);
-    const ext = foto.type.split("/")[1].replace("jpeg", "jpg");
+    const ext = (foto.type.split("/")[1] ?? "jpg").replace("jpeg", "jpg");
     const path = `${crypto.randomUUID()}.${ext}`;
     const up = await supabase.storage.from("penyes").upload(path, foto, { contentType: foto.type });
     if (up.error) {
