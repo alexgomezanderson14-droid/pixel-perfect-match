@@ -94,7 +94,6 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
         tipo_musica: v.data.tipo_musica || "Variada",
         informacion: v.data.informacion,
         instagram: v.data.instagram.replace(/^@/, ""),
-        estado: "pendiente",
       });
       if (insertError) throw new Error("No se pudo guardar la peña en la base de datos: " + insertError.message);
       onSaved();
@@ -142,8 +141,8 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
           <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setFoto(e.target.files?.[0] ?? null)} className="w-full text-sm font-normal" />
         </label>
         {error && <p className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
-        <p className="text-xs text-muted-foreground">La solicitud se guarda en la web y quedará pendiente de aprobación. La foto y el punto exacto del mapa son opcionales.</p>
-        <button disabled={busy} className="w-full rounded-full bg-pink px-6 py-3 font-bold text-brown disabled:opacity-60">{busy ? "Guardando…" : "Enviar solicitud"}</button>
+        <p className="text-xs text-muted-foreground">La peña se publicará automáticamente al enviarla. La foto y el punto exacto del mapa son opcionales.</p>
+        <button disabled={busy} className="w-full rounded-full bg-pink px-6 py-3 font-bold text-brown disabled:opacity-60">{busy ? "Guardando…" : "Añadir peña"}</button>
       </form>
     </div>
   );
