@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      actos: {
+        Row: {
+          created_at: string
+          descripcion: string
+          dia: string
+          hora: string
+          id: string
+          lat: number | null
+          lng: number | null
+          lugar: string
+          publicado: boolean
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string
+          dia: string
+          hora?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          lugar?: string
+          publicado?: boolean
+          tipo?: string
+          titulo: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string
+          dia?: string
+          hora?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          lugar?: string
+          publicado?: boolean
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: []
+      }
       eventos: {
         Row: {
           created_at: string
