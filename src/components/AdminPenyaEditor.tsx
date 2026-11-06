@@ -30,9 +30,12 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     if (foto && (!["image/jpeg", "image/png", "image/webp"].includes(foto.type) || foto.size > 5 * 1024 * 1024)) {
       return setError("La foto debe ser JPG, PNG o WEBP y no superar 5 MB.");
     }
-    const lat = form.lat.trim() === "" ? null : Number(form.lat);
-    const lng = form.lng.trim() === "" ? null : Number(form.lng);
-    if ((lat !== null && !Number.isFinite(lat)) || (lng !== null && !Number.isFinite(lng))) return setError("Las coordenadas no son válidas.");
+    // Las coordenadas de las peñas son obligatorias en la base de datos.
+    // Si solo se cambia la dirección, conservar el punto actual del mapa.
+    const lat = form.lat.trim() === "" ? Number(penya.lat) : Number(form.lat.replace(",", "."));
+    const lng = form.lng.trim() === "" ? Number(penya.lng) : Number(form.lng.replace(",", "."));
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return setError("Indica una latitud y longitud válidas para el mapa.");
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return setError("Coordenadas fuera de rango. La latitud debe estar entre -90 y 90 y la longitud entre -180 y 180.");
     setBusy(true);
     try {
       let foto_url = quitarFoto ? null : penya.foto_url;
@@ -58,7 +61,10 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
       if (updateError) throw updateError;
       onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo guardar la ficha.");
+      const detail = err && typeof err === "object" && "message" in err
+        ? String((err as { message: unknown }).message)
+        : err instanceof Error ? err.message : String(err);
+      setError(detail || "No se pudo guardar la ficha.");
     } finally {
       setBusy(false);
     }
