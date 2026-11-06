@@ -313,7 +313,7 @@ function Home() {
     const content = Object.fromEntries((contentData ?? []).map((x:any)=>[x.clave,x.valor]));
     setSiteContent(content);
     try { const parsed=JSON.parse(content["avisos_json"]||"[]"); setAvisos(Array.isArray(parsed)?parsed.filter((a:any)=>a.activo && (!a.publicar_en || new Date(a.publicar_en).getTime()<=Date.now())):[]); } catch { setAvisos([]); }
-    try { const points=JSON.parse(content["mapa_puntos_json"]||"[]"); setMapPoints(Array.isArray(points)?points.filter((p:any)=>Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))):[]); } catch { setMapPoints([]); }
+    try { const points=JSON.parse(content["mapa_puntos_json"]||"[]"); setMapPoints(Array.isArray(points)?points.filter((p:any)=>Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))&&Number(p.lat)>=-90&&Number(p.lat)<=90&&Number(p.lng)>=-180&&Number(p.lng)<=180):[]); } catch { setMapPoints([]); }
     if (content["hero_image_path"]) {
       const { data: imageData } = supabase.storage.from("penyes").getPublicUrl(content["hero_image_path"]);
       setHeroImage(imageData.publicUrl);
@@ -348,11 +348,11 @@ function Home() {
   return (
     <div className="page-bg min-h-screen" style={{ "--pink": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--secondary": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--accent": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--ring": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--cat-penya": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--background": siteContent["theme_background"] || "oklch(0.95 0.015 75)", "--gradient-page": `linear-gradient(180deg, ${siteContent["theme_background"] || "oklch(0.96 0.015 70)"}, ${siteContent["theme_background"] || "oklch(0.93 0.02 60)"})` } as React.CSSProperties}>
       <header className="fixed inset-x-0 top-4 z-[1000] flex justify-center px-4">
-        <nav className="glass flex items-center gap-1 rounded-full p-1.5 text-sm">
+        <nav className="glass flex max-w-full items-center gap-1 overflow-x-auto whitespace-nowrap rounded-full p-1.5 text-xs sm:text-sm">
           {(Object.keys(ui.nav) as (keyof typeof ui.nav)[]).map((k) => (
-            <a key={k} href={`#${k}`} className="rounded-full px-3 py-1.5 hover:bg-glass">{ui.nav[k]}</a>
+            <a key={k} href={`#${k}`} className="rounded-full px-2 py-1.5 hover:bg-glass sm:px-3">{ui.nav[k]}</a>
           ))}
-          <a href="#agenda" className="rounded-full px-3 py-1.5 font-bold text-primary hover:bg-glass">Mi agenda</a>
+          <a href="#agenda" className="rounded-full px-2 py-1.5 font-bold text-primary hover:bg-glass sm:px-3">Mi agenda</a>
         </nav>
       </header>
 
@@ -488,7 +488,7 @@ function Home() {
               </details>;
             })}
           </div>
-          <div className="mt-8 space-y-3"><h3 className="text-2xl font-bold text-primary">Actividades y otros actos</h3>{filteredActs.filter((a)=>a.tipo!=="actuacion" && !/tardeo|mañaneo|mananeo|nocheo/i.test(a.titulo||"")).length?<div className="grid gap-2 sm:grid-cols-2">{filteredActs.filter((a)=>a.tipo!=="actuacion" && !/tardeo|mañaneo|mananeo|nocheo/i.test(a.titulo||"")).map((a)=><article key={"other-"+a.id} className="glass rounded-2xl p-3"><p className="text-xs font-bold uppercase text-primary">{a.dia} · {a.hora||"Hora por confirmar"}</p><h4 className="mt-1 font-bold">{a.titulo}</h4>{a.lugar&&<p className="mt-1 text-xs text-muted-foreground">📍 {a.lugar}</p>}<button type="button" onClick={()=>toggleFavorite("acto:"+a.id)} className="mt-2 text-xs font-bold text-primary">{favorites.includes("acto:"+a.id)?"★ En Mi agenda":"☆ Añadir a Mi agenda"}</button></article>)}</div>:<p className="glass rounded-2xl p-4 text-sm text-muted-foreground">No hay actividades para los filtros seleccionados.</p>}</div>
+          <div className="mt-8 space-y-3"><h3 className="text-2xl font-bold text-primary">Actividades y otros actos</h3>{filteredActs.filter((a)=>a.tipo!=="actuacion" && !/tardeo|mañaneo|mananeo|nocheo/i.test(a.titulo||"")).length?<div className="grid gap-2 sm:grid-cols-2">{filteredActs.filter((a)=>a.tipo!=="actuacion" && !/tardeo|mañaneo|mananeo|nocheo/i.test(a.titulo||"")).sort((a,b)=>String(a.dia||"").localeCompare(String(b.dia||""))||String(a.hora||"").localeCompare(String(b.hora||""))).map((a)=><article key={"other-"+a.id} className="glass rounded-2xl p-3"><p className="text-xs font-bold uppercase text-primary">{a.dia} · {a.hora||"Hora por confirmar"}</p><h4 className="mt-1 font-bold">{a.titulo}</h4>{a.lugar&&<p className="mt-1 text-xs text-muted-foreground">📍 {a.lugar}</p>}<button type="button" onClick={()=>toggleFavorite("acto:"+a.id)} className="mt-2 text-xs font-bold text-primary">{favorites.includes("acto:"+a.id)?"★ En Mi agenda":"☆ Añadir a Mi agenda"}</button></article>)}</div>:<p className="glass rounded-2xl p-4 text-sm text-muted-foreground">No hay actividades para los filtros seleccionados.</p>}</div>
           <div className="mt-10 space-y-3">
             <h3 className="text-2xl font-bold text-primary">Otros eventos de las peñas</h3>
             {!eventosActivos.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">Todavía no hay eventos de peñas publicados.</div> : <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">{filteredPenyaEvents.map((e) => {
