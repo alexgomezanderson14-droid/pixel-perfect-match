@@ -578,7 +578,7 @@ function Home() {
           <div className="absolute inset-0">
             <ClientOnly fallback={<div className="h-full w-full animate-pulse bg-muted" />}>
               <Suspense fallback={<div className="h-full w-full animate-pulse bg-muted" />}>
-                <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => setSelectedPenya(penyes.find((p) => p.id === id) ?? null)} onItemClick={(id)=>{const target=document.getElementById(id);if(target)target.scrollIntoView({behavior:"smooth",block:"center"});else document.getElementById(id.startsWith("acto-")?"programa":"eventos")?.scrollIntoView({behavior:"smooth"});}} />
+                <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => setSelectedPenya(penyes.find((p) => p.id === id) ?? null)} onItemClick={(id)=>{setMapFullscreen(false);setCurrentPage("eventos");setFilterDay("all");setFilterCategory(id.startsWith("acto-")?"actuaciones":"penyes");window.scrollTo({top:0,behavior:"smooth"});}} />
               </Suspense>
             </ClientOnly>
           </div>
