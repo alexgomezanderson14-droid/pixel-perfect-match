@@ -387,6 +387,7 @@ function Home() {
                   <Chip key={c} active={cat === c} onClick={() => setCat(c)}><span className={`h-2.5 w-2.5 rounded-full ${catBg[c]}`} />{ui.categorias[c]}</Chip>
                 ))}
               </div>
+              {penyes.some((p)=>p.lat==null||p.lng==null)||actos.some((a)=>a.lat==null||a.lng==null)||eventos.some((e)=>e.lat==null||e.lng==null) ? <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">Algunas peñas o actividades no aparecen en el mapa porque todavía no tienen coordenadas exactas verificadas. No se han inventado ubicaciones.</p> : null}
               <ul className="max-h-72 space-y-1 overflow-auto">
                 {visibles.map((l) => (
                   <li key={l.id}>
@@ -402,7 +403,7 @@ function Home() {
               <button type="button" onClick={() => setMapFullscreen(true)} aria-label="Ampliar mapa a pantalla completa" className="absolute right-3 top-3 z-[1200] rounded-full border border-white/70 bg-white/95 px-4 py-2 text-sm font-bold text-[#49352f] shadow-lg">⛶ Pantalla completa</button>
               <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
                 <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}>
-                  <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => setSelectedPenya(penyes.find((p) => p.id === id) ?? null)} onItemClick={(id)=>document.getElementById(id)?.scrollIntoView({behavior:"smooth",block:"center"})} />
+                  <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => setSelectedPenya(penyes.find((p) => p.id === id) ?? null)} onItemClick={(id)=>{const target=document.getElementById(id);if(target)target.scrollIntoView({behavior:"smooth",block:"center"});else document.getElementById(id.startsWith("acto-")?"programa":"eventos")?.scrollIntoView({behavior:"smooth"});}} />
                 </Suspense>
               </ClientOnly>
             </div>}
@@ -459,7 +460,7 @@ function Home() {
           </div>
           <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             {filteredActs.filter((a) => {
-              if (!eventoSigueActivo(a, now)) return false;
+              if (filterDay !== "all" && !eventoSigueActivo(a, now)) return false;
               const t = String(a.titulo || "").toLocaleLowerCase("es");
               const excluido = /despertà|desperta|despertada|nit de albaes|nit d'albaes|nit de les albaes|albaes/.test(t);
               return !excluido && (a.tipo === "actuacion" || /tardeo|mañaneo|mananeo|nocheo/.test(t));
@@ -561,7 +562,7 @@ function Home() {
           <div className="absolute inset-0">
             <ClientOnly fallback={<div className="h-full w-full animate-pulse bg-muted" />}>
               <Suspense fallback={<div className="h-full w-full animate-pulse bg-muted" />}>
-                <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => setSelectedPenya(penyes.find((p) => p.id === id) ?? null)} onItemClick={(id)=>document.getElementById(id)?.scrollIntoView({behavior:"smooth",block:"center"})} />
+                <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => setSelectedPenya(penyes.find((p) => p.id === id) ?? null)} onItemClick={(id)=>{const target=document.getElementById(id);if(target)target.scrollIntoView({behavior:"smooth",block:"center"});else document.getElementById(id.startsWith("acto-")?"programa":"eventos")?.scrollIntoView({behavior:"smooth"});}} />
               </Suspense>
             </ClientOnly>
           </div>
