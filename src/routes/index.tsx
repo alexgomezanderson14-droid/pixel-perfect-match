@@ -218,6 +218,11 @@ type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: numb
 
 function Home() {
   const [q, setQ] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
+  const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes"|"otros">("all");
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [avisos, setAvisos] = useState<any[]>([]);
   const [cat, setCat] = useState<Categoria | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
   const [penyes, setPenyes] = useState<PenyaDb[]>([]);
@@ -234,7 +239,20 @@ function Home() {
   const dias = useMemo(() => [...new Set(actos.map((a) => a.dia))].sort(), [actos]);
   const [dia, setDia] = useState<string | undefined>();
   const eventosActivos = useMemo(() => eventos.filter((e) => eventoSigueActivo(e, now)), [eventos, now]);
+  const todayDate = new Date(now);
+  const todayKey = todayDate.getFullYear()+"-"+String(todayDate.getMonth()+1).padStart(2,"0")+"-"+String(todayDate.getDate()).padStart(2,"0");
+  const tomorrowDate = new Date(now); tomorrowDate.setDate(tomorrowDate.getDate()+1);
+  const tomorrowKey = tomorrowDate.getFullYear()+"-"+String(tomorrowDate.getMonth()+1).padStart(2,"0")+"-"+String(tomorrowDate.getDate()).padStart(2,"0");
+  const matchesDay = (item:any) => filterDay==="all" || (filterDay==="upcoming" ? eventoSigueActivo(item,now) : String(item.dia||"").slice(0,10)===(filterDay==="today"?todayKey:tomorrowKey) && eventoSigueActivo(item,now));
+  const isOfficial = (item:any) => programaOficial2026.some((official)=>official.dia===item.dia && official.hora===item.hora && official.titulo===item.titulo);
+  const filteredActs = useMemo(()=>actos.filter((a)=>matchesDay(a) && (filterCategory==="all" || (filterCategory==="programa"?isOfficial(a):filterCategory==="actuaciones"?a.tipo==="actuacion" || /tardeo|mañaneo|mananeo|nocheo/i.test(a.titulo||""):filterCategory==="penyes"?false:!isOfficial(a) && a.tipo!=="actuacion")), [actos,filterDay,filterCategory,now]);
+  const filteredPenyaEvents = useMemo(()=>eventos.filter((e)=>matchesDay(e) && (filterCategory==="all" || filterCategory==="penyes")), [eventos,filterDay,filterCategory,now]);
+  const favoriteItems = useMemo(()=>[...actos.map((a)=>({...a,favoriteKey:"acto:"+a.id,kind:"Programa / actuación"})),...eventos.map((e)=>({...e,favoriteKey:"evento:"+e.id,kind:"Evento de peña"}))].filter((item)=>favorites.includes(item.favoriteKey)).sort((a,b)=>String(a.dia||"").localeCompare(String(b.dia||"")) || String(a.hora||"").localeCompare(String(b.hora||""))),[actos,eventos,favorites]);
+  const searchResults = useMemo(()=>{const term=searchTerm.trim().toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"");if(term.length<2)return [];const match=(...values:any[])=>values.some(v=>String(v||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"").includes(term));return [...penyes.filter(p=>match(p.nombre,p.direccion)).map(p=>({key:"penya:"+p.id,label:p.nombre,kind:"Peña",sub:p.direccion||"Ficha de la peña",onSelect:()=>setSelectedPenya(p)})),...eventos.filter(e=>match(e.titulo,e.descripcion,e.lugar)).map(e=>({key:"evento:"+e.id,label:e.titulo,kind:"Evento de peña",sub:[e.dia,e.hora,e.lugar].filter(Boolean).join(" · "),onSelect:()=>document.getElementById("evento-"+e.id)?.scrollIntoView({behavior:"smooth",block:"center"})})),...actos.filter(a=>match(a.titulo,a.descripcion,a.lugar)).map(a=>({key:"acto:"+a.id,label:a.titulo,kind:a.tipo==="actuacion"?"Actuación":"Programa oficial",sub:[a.dia,a.hora,a.lugar].filter(Boolean).join(" · "),onSelect:()=>document.getElementById("acto-"+a.id)?.scrollIntoView({behavior:"smooth",block:"center")}))].slice(0,12);},[searchTerm,penyes,eventos,actos]);
+  const toggleFavorite=(key:string)=>setFavorites((current)=>{const next=current.includes(key)?current.filter((x)=>x!==key):[...current,key];try{localStorage.setItem("fiestas-favorites",JSON.stringify(next));}catch{}return next;});
   useEffect(() => { if (dias.length && !dia) setDia(dias[0]); }, [dias, dia]);
+  useEffect(()=>{try{const saved=JSON.parse(localStorage.getItem("fiestas-favorites")||"[]");if(Array.isArray(saved))setFavorites(saved.filter((x)=>typeof x==="string"));}catch{setFavorites([]);}},[]);
+  useEffect(()=>{if(!actos.length&&!eventos.length)return;const valid=new Set([...actos.map(a=>"acto:"+a.id),...eventos.map(e=>"evento:"+e.id)]);setFavorites((current)=>{const next=current.filter((key)=>valid.has(key));if(next.length!==current.length){try{localStorage.setItem("fiestas-favorites",JSON.stringify(next));}catch{}}return next;});},[actos,eventos]);
   useEffect(() => {
     if (!mapFullscreen) return;
     const previousOverflow = document.body.style.overflow;
@@ -282,6 +300,7 @@ function Home() {
     setEventos(eventosData ?? []);
     const content = Object.fromEntries((contentData ?? []).map((x:any)=>[x.clave,x.valor]));
     setSiteContent(content);
+    try { const parsed=JSON.parse(content["avisos_json"]||"[]"); setAvisos(Array.isArray(parsed)?parsed.filter((a:any)=>a.activo && (!a.publicar_en || new Date(a.publicar_en).getTime()<=Date.now())):[]); } catch { setAvisos([]); }
     if (content["hero_image_path"]) {
       const { data: imageData } = supabase.storage.from("penyes").getPublicUrl(content["hero_image_path"]);
       setHeroImage(imageData.publicUrl);
@@ -297,8 +316,8 @@ function Home() {
   const todos: Lugar[] = useMemo(() => [
     ...lugaresFijos,
     ...penyes.filter((p) => p.lat != null && p.lng != null).map((p) => ({ id: p.id, categoria: "penya" as const, nombre: p.nombre, descripcion: p.direccion ?? "", lat: Number(p.lat), lng: Number(p.lng), foto: p.foto })),
-    ...actos.filter((a) => a.lat != null && a.lng != null).map((a) => ({ id: "acto-" + a.id, categoria: a.tipo as Categoria, nombre: a.titulo, descripcion: a.lugar || a.descripcion || "", lat: Number(a.lat), lng: Number(a.lng) })),
-    ...eventosActivos.filter((e) => e.lat != null && e.lng != null).map((e) => ({ id: "evento-" + e.id, categoria: "evento" as const, nombre: e.titulo, descripcion: e.lugar || e.descripcion || "", lat: Number(e.lat), lng: Number(e.lng) })),
+    ...actos.filter((a) => a.lat != null && a.lng != null).map((a) => ({ id: "acto-" + a.id, categoria: a.tipo as Categoria, nombre: a.titulo, descripcion: a.descripcion || a.lugar || "", lat: Number(a.lat), lng: Number(a.lng), dia:a.dia, hora:a.hora, detalleId:"acto-"+a.id })),
+    ...eventosActivos.filter((e) => e.lat != null && e.lng != null).map((e) => ({ id: "evento-" + e.id, categoria: "evento" as const, nombre: e.titulo, descripcion: e.descripcion || e.lugar || "", lat: Number(e.lat), lng: Number(e.lng), dia:e.dia, hora:e.hora, detalleId:"evento-"+e.id })),
   ], [penyes, actos, eventosActivos]);
 
   const visibles = todos.filter((l) => (!cat || l.categoria === cat) && l.nombre.toLowerCase().includes(q.toLowerCase()));
@@ -339,6 +358,9 @@ function Home() {
       </section>
 
       <main className="mx-auto max-w-6xl space-y-8 px-2.5 py-6 sm:space-y-20 sm:px-5 sm:py-20">
+        <section aria-label="Buscador general" className="relative z-30 scroll-mt-24"><div className="glass rounded-2xl p-3 sm:rounded-3xl sm:p-5"><label htmlFor="festival-search" className="mb-2 block text-sm font-bold text-primary">Busca peñas, eventos, actuaciones y lugares</label><input id="festival-search" value={searchTerm} onChange={(e)=>setSearchTerm(e.target.value)} placeholder="¿Qué estás buscando?" className="w-full rounded-full border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"/>{searchTerm.trim().length>=2&&<div className="mt-2 max-h-80 overflow-y-auto rounded-2xl border border-border bg-background p-2 shadow-lg">{searchResults.length?searchResults.map((result)=><button key={result.key} type="button" onClick={()=>{result.onSelect();setSearchTerm("");}} className="flex w-full items-start gap-3 rounded-xl px-3 py-2 text-left hover:bg-glass"><span className="mt-0.5 rounded-full bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary">{result.kind}</span><span className="min-w-0"><span className="block text-sm font-bold">{result.label}</span><span className="block truncate text-xs text-muted-foreground">{result.sub}</span></span></button>):<p className="p-3 text-sm text-muted-foreground">No se ha encontrado nada.</p>}</div>}</div></section>
+        {avisos.length>0&&<section aria-label="Avisos importantes" className="space-y-2">{avisos.map((aviso:any)=><article key={aviso.id} className={`rounded-2xl border p-3 sm:p-4 ${aviso.importante?"border-amber-400 bg-amber-50 text-amber-950 shadow-md":"border-border bg-background/80 text-foreground"}`}><div className="flex items-start gap-3"><span className="text-xl">{aviso.importante?"⚠️":"📢"}</span><div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-wide">{aviso.importante?"Aviso importante":"Comunicado"}</p><h2 className="font-bold">{aviso.titulo}</h2><p className="mt-1 text-sm">{aviso.descripcion}</p></div></div></article>)}</section>}
+        <section id="agenda" className="scroll-mt-24"><div className="mb-3 flex items-center justify-between gap-3"><SectionTitle>Mi agenda</SectionTitle><span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">{favoriteItems.length} guardados</span></div>{favoriteItems.length?<div className="grid gap-2 sm:grid-cols-2">{favoriteItems.map((item:any)=><article key={item.favoriteKey} className="glass flex items-center justify-between gap-3 rounded-2xl p-3"><div className="min-w-0"><p className="text-[10px] font-bold uppercase text-primary">{item.kind}</p><h3 className="truncate text-sm font-bold">{item.titulo}</h3><p className="text-xs text-muted-foreground">{item.dia} · {item.hora||"Hora por confirmar"}{item.lugar?" · "+item.lugar:""}</p></div><button type="button" onClick={()=>toggleFavorite(item.favoriteKey)} aria-label="Quitar de mi agenda" className="shrink-0 rounded-full px-3 py-2 text-lg text-primary">★</button></article>)}</div>:<p className="glass rounded-2xl p-4 text-sm text-muted-foreground">Todavía no has guardado favoritos. Pulsa la estrella de cualquier evento o actuación para añadirlo aquí.</p>}</section>
         <section id="mapa" className="scroll-mt-24">
           <SectionTitle>{ui.nav.mapa}</SectionTitle>
           <div className={`glass grid gap-3 rounded-[1.5rem] p-2 sm:gap-4 sm:rounded-[2rem] sm:p-3 ${mapFullscreen ? "grid-cols-1" : "md:grid-cols-[280px_1fr]"}`}>
@@ -415,12 +437,13 @@ function Home() {
 
         <section id="eventos" className="scroll-mt-24">
           <SectionTitle>Eventos</SectionTitle>
+          <div className="glass mb-5 space-y-3 rounded-2xl p-3 sm:p-4"><p className="text-sm font-bold text-primary">Filtrar actividades</p><div className="flex flex-wrap gap-2">{[["upcoming","Próximos eventos"],["today","Hoy"],["tomorrow","Mañana"],["all","Todos los días"]].map(([value,label])=><Chip key={value} active={filterDay===value} onClick={()=>setFilterDay(value as any)}>{label}</Chip>)}</div><div className="flex flex-wrap gap-2">{[["all","Todas las categorías"],["programa","Programa oficial"],["actuaciones","Actuaciones"],["penyes","Eventos de peñas"],["otros","Actividades y otros actos"]].map(([value,label])=><Chip key={value} active={filterCategory===value} onClick={()=>setFilterCategory(value as any)}>{label}</Chip>)}</div><button type="button" onClick={()=>{setFilterDay("upcoming");setFilterCategory("all");}} className="text-xs font-bold text-primary underline">Quitar todos los filtros</button></div>
           <div className="mb-6 space-y-2">
             <h3 className="text-2xl font-bold text-primary">Actuaciones y festes al carrer</h3>
             <p className="text-sm text-muted-foreground">Pulsa en cada evento para consultar su descripción, fecha y lugar.</p>
           </div>
           <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-            {actos.filter((a) => {
+            {filteredActs.filter((a) => {
               if (!eventoSigueActivo(a, now)) return false;
               const t = String(a.titulo || "").toLocaleLowerCase("es");
               const excluido = /despertà|desperta|despertada|nit de albaes|nit d'albaes|nit de les albaes|albaes/.test(t);
@@ -429,7 +452,7 @@ function Home() {
               const t = String(a.titulo || "").toLocaleLowerCase("es");
               const festaCarrer = /tardeo|mañaneo|mananeo|nocheo/.test(t);
               const portada = a.imagen_url || a.imagen || a.foto_url || a.foto || "";
-              return <details key={a.id} className="glass group min-w-0 overflow-hidden rounded-xl border border-border/60 shadow-sm sm:rounded-3xl">
+              return <details id={"acto-"+a.id} key={a.id} className="glass group min-w-0 overflow-hidden rounded-xl border border-border/60 shadow-sm sm:rounded-3xl">
                 <summary className="cursor-pointer list-none">
                   <div className="relative aspect-[5/4] overflow-hidden bg-gradient-to-br from-[#f4e8e9] via-[#ead9df] to-[#e9e3d7]">
                     {portada ? <img src={portada} alt={a.titulo} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"/> : <div className="absolute inset-0 flex items-center justify-center p-5 text-center"><span className="font-display text-base font-bold leading-tight text-[#765563] sm:text-3xl">{a.titulo}</span></div>}
@@ -440,7 +463,7 @@ function Home() {
                     </div>
                   </div>
                 </summary>
-                <div className="space-y-2 border-t border-border/50 p-2 sm:space-y-3 sm:p-4">
+                <div className="space-y-2 border-t border-border/50 p-2 sm:space-y-3 sm:p-4"><button type="button" onClick={()=>toggleFavorite("acto:"+a.id)} className="rounded-full border border-primary/30 px-3 py-1.5 text-xs font-bold text-primary">{favorites.includes("acto:"+a.id)?"★ Guardado en Mi agenda":"☆ Añadir a Mi agenda"}</button>
                   {a.descripcion && <p className="text-sm leading-relaxed text-muted-foreground">{a.descripcion}</p>}
                   <p className="text-sm"><strong>Fecha:</strong> {fmtDia(a.dia)}{a.hora ? " · " + a.hora : ""}</p>
                   {a.lugar && <p className="text-sm"><strong>Lugar:</strong> {a.lugar}</p>}
@@ -451,11 +474,11 @@ function Home() {
           </div>
           <div className="mt-10 space-y-3">
             <h3 className="text-2xl font-bold text-primary">Otros eventos de las peñas</h3>
-            {!eventosActivos.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">Todavía no hay eventos de peñas publicados.</div> : <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">{eventosActivos.map((e) => {
+            {!eventosActivos.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">Todavía no hay eventos de peñas publicados.</div> : <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">{filteredPenyaEvents.map((e) => {
               const imagen = e.imagen_url || e.imagen || e.foto_url || e.foto;
               const penyaAsociada = penyes.find(p => p.id === e.penya_id) || penyes.find(p => [e.titulo, e.descripcion, e.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(p.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, ""))));
               const penyaNombre = penyaAsociada?.nombre;
-              return <article key={e.id} className="glass min-w-0 overflow-hidden rounded-xl border border-border/60 shadow-sm sm:rounded-3xl">
+              return <article id={"evento-"+e.id} key={e.id} className="glass min-w-0 overflow-hidden rounded-xl border border-border/60 shadow-sm sm:rounded-3xl">
                 <div className="relative aspect-[5/4] overflow-hidden bg-gradient-to-br from-[#f4e8e9] via-[#ead9df] to-[#e9e3d7]">
                   {imagen ? <img src={imagen} alt={e.titulo} loading="lazy" className="absolute inset-0 h-full w-full object-cover"/> : <div className="absolute inset-0 flex items-center justify-center p-5 text-center"><span className="font-display text-xl font-bold text-[#49352f] sm:text-3xl">{e.titulo}</span></div>}
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#f4eee5] via-[#f4eee5]/95 to-[#f4eee5]/0 px-2 pb-2 pt-10 text-[#49352f] sm:px-4 sm:pb-4 sm:pt-16">
@@ -470,7 +493,7 @@ function Home() {
                     </div>
                   </div>
                 </div>
-                {e.lat != null && e.lng != null && <button onClick={() => goMap("evento-" + e.id)} className="w-full px-2 py-1.5 text-[10px] font-bold text-[#49352f] sm:px-4 sm:py-2 sm:text-sm">📍 Ver ubicación en el mapa</button>}
+                <div className="flex items-center justify-between gap-2 px-2 py-1.5"><button type="button" onClick={()=>toggleFavorite("evento:"+e.id)} className="text-xs font-bold text-primary">{favorites.includes("evento:"+e.id)?"★ En Mi agenda":"☆ Añadir a Mi agenda"}</button>{e.lat != null && e.lng != null && <button onClick={() => goMap("evento-" + e.id)} className="text-[10px] font-bold text-[#49352f] sm:text-sm">📍 Ver ubicación</button>}</div>
               </article>;
             })}</div>}
           </div>
