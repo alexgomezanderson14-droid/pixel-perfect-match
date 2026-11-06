@@ -483,10 +483,19 @@ function Home() {
                 <summary className="cursor-pointer list-none">
                   <div className="relative aspect-[5/4] overflow-hidden bg-gradient-to-br from-[#f4e8e9] via-[#ead9df] to-[#e9e3d7]">
                     {portada ? <img src={portada} alt={a.titulo} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"/> : <div className="absolute inset-0 flex items-center justify-center p-5 text-center"><span className="font-display text-base font-bold leading-tight text-[#765563] sm:text-3xl">{a.titulo}</span></div>}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#49352f]/80 to-transparent p-2 pt-8 sm:p-4 sm:pt-14">
-                      <span className="mb-2 inline-block rounded-full bg-white/85 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#765563]">{festaCarrer ? "Festa al carrer" : "Actuación"}</span>
-                      <h3 className="line-clamp-2 text-xs font-bold leading-tight text-white sm:text-xl">{a.titulo}</h3>
-                      <p className="mt-2 text-xs font-semibold text-white/90">Ver detalles <span className="inline-block transition group-open:rotate-180">⌄</span></p>
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#49352f]/90 via-[#49352f]/55 to-transparent p-2 pt-10 text-white sm:p-4 sm:pt-16">
+                      <div className="flex items-end gap-3">
+                        <div className="flex w-[62px] shrink-0 flex-col items-center rounded-xl border border-white/50 bg-white/90 px-1.5 py-2 text-center text-[#49352f] shadow-md sm:w-[86px] sm:rounded-2xl sm:px-3 sm:py-3">
+                          <span className="text-[9px] font-extrabold uppercase tracking-wider sm:text-xs">{new Date(String(a.dia).slice(0, 10) + "T12:00:00").toLocaleDateString("es-ES", { month: "short" }).replace(".", "")}</span>
+                          <span className="font-display text-2xl font-bold leading-none sm:text-4xl">{new Date(String(a.dia).slice(0, 10) + "T12:00:00").toLocaleDateString("es-ES", { day: "2-digit" })}</span>
+                          <span className="mt-1 text-[10px] font-bold sm:text-sm">{a.hora || "Hora por confirmar"}</span>
+                        </div>
+                        <div className="min-w-0 flex-1 pb-0.5">
+                          <span className="mb-1 inline-block rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#765563] sm:mb-2 sm:px-2.5 sm:py-1 sm:text-[10px]">{festaCarrer ? "Festa al carrer" : "Actuación"}</span>
+                          <h3 className="line-clamp-3 text-xs font-bold leading-tight text-white sm:text-xl">{a.titulo}</h3>
+                          <p className="mt-1.5 text-[10px] font-semibold text-white/90 sm:mt-2 sm:text-xs">Ver detalles <span className="inline-block transition group-open:rotate-180">⌄</span></p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </summary>
