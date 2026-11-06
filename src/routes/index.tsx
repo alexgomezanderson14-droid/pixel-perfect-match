@@ -338,6 +338,7 @@ function Home() {
           {(Object.keys(ui.nav) as (keyof typeof ui.nav)[]).map((k) => (
             <a key={k} href={`#${k}`} className="rounded-full px-3 py-1.5 hover:bg-glass">{ui.nav[k]}</a>
           ))}
+          <a href="#agenda" className="rounded-full px-3 py-1.5 font-bold text-primary hover:bg-glass">Mi agenda</a>
         </nav>
       </header>
 
@@ -387,7 +388,7 @@ function Home() {
               <button type="button" onClick={() => setMapFullscreen(true)} aria-label="Ampliar mapa a pantalla completa" className="absolute right-3 top-3 z-[1200] rounded-full border border-white/70 bg-white/95 px-4 py-2 text-sm font-bold text-[#49352f] shadow-lg">⛶ Pantalla completa</button>
               <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
                 <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}>
-                  <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => setSelectedPenya(penyes.find((p) => p.id === id) ?? null)} />
+                  <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => setSelectedPenya(penyes.find((p) => p.id === id) ?? null)} onItemClick={(id)=>document.getElementById(id)?.scrollIntoView({behavior:"smooth",block:"center"})} />
                 </Suspense>
               </ClientOnly>
             </div>}
@@ -418,7 +419,7 @@ function Home() {
                     /misa|trisagio|jubileo|santísimo|procesión|ofrenda/.test(title) ? "Acto religioso" :
                     /infantil|niño|niños|familiar|chocolatada/.test(title) ? "Actividad familiar" :
                     /autobús|bus lanzadera/.test(title) ? "Transporte" : "Actividad";
-                  return <article key={a.id} className="glass flex flex-col gap-1.5 rounded-xl p-2 sm:flex-row sm:items-center sm:gap-3 sm:rounded-3xl sm:p-5">
+                  return <article id={"programa-acto-"+a.id} key={a.id} className="glass flex flex-col gap-1.5 rounded-xl p-2 sm:flex-row sm:items-center sm:gap-3 sm:rounded-3xl sm:p-5">
                     <div className="font-display text-xl font-bold text-primary sm:w-28 sm:text-3xl">{a.hora || "—"}</div>
                     <div className="flex-1">
                       <span className={`mb-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-bold uppercase text-on-image ${esActuacion ? catBg.actuacion : festaCarrer ? "bg-pink" : catBg.evento}`}>{etiqueta}</span>
@@ -426,7 +427,7 @@ function Home() {
                       {a.descripcion && <p className="mt-1 hidden text-sm text-muted-foreground sm:block">{a.descripcion}</p>}
                       {a.lugar && <p className="mt-2 text-sm text-muted-foreground">📍 {a.lugar}</p>}
                     </div>
-                    {a.lat != null && a.lng != null ? <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa</button> : null}
+                    <div className="flex items-center gap-2">{a.lat != null && a.lng != null ? <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa</button> : null}<button type="button" onClick={()=>toggleFavorite("acto:"+a.id)} aria-label="Guardar actuación en Mi agenda" className="rounded-full border border-primary/30 px-3 py-2 text-sm font-bold text-primary">{favorites.includes("acto:"+a.id)?"★":"☆"}</button></div>
                   </article>;
                 })}
                 {!actos.some((a) => a.dia === dia) && <p className="glass rounded-2xl p-5 text-muted-foreground">No hay actos publicados para este día.</p>}
@@ -472,6 +473,7 @@ function Home() {
               </details>;
             })}
           </div>
+          <div className="mt-8 space-y-3"><h3 className="text-2xl font-bold text-primary">Actividades y otros actos</h3>{filteredActs.filter((a)=>a.tipo!=="actuacion" && !/tardeo|mañaneo|mananeo|nocheo/i.test(a.titulo||"")).length?<div className="grid gap-2 sm:grid-cols-2">{filteredActs.filter((a)=>a.tipo!=="actuacion" && !/tardeo|mañaneo|mananeo|nocheo/i.test(a.titulo||"")).map((a)=><article key={"other-"+a.id} className="glass rounded-2xl p-3"><p className="text-xs font-bold uppercase text-primary">{a.dia} · {a.hora||"Hora por confirmar"}</p><h4 className="mt-1 font-bold">{a.titulo}</h4>{a.lugar&&<p className="mt-1 text-xs text-muted-foreground">📍 {a.lugar}</p>}<button type="button" onClick={()=>toggleFavorite("acto:"+a.id)} className="mt-2 text-xs font-bold text-primary">{favorites.includes("acto:"+a.id)?"★ En Mi agenda":"☆ Añadir a Mi agenda"}</button></article>)}</div>:<p className="glass rounded-2xl p-4 text-sm text-muted-foreground">No hay actividades para los filtros seleccionados.</p>}</div>
           <div className="mt-10 space-y-3">
             <h3 className="text-2xl font-bold text-primary">Otros eventos de las peñas</h3>
             {!eventosActivos.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">Todavía no hay eventos de peñas publicados.</div> : <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">{filteredPenyaEvents.map((e) => {
@@ -545,7 +547,7 @@ function Home() {
           <div className="absolute inset-0">
             <ClientOnly fallback={<div className="h-full w-full animate-pulse bg-muted" />}>
               <Suspense fallback={<div className="h-full w-full animate-pulse bg-muted" />}>
-                <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => setSelectedPenya(penyes.find((p) => p.id === id) ?? null)} />
+                <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => setSelectedPenya(penyes.find((p) => p.id === id) ?? null)} onItemClick={(id)=>document.getElementById(id)?.scrollIntoView({behavior:"smooth",block:"center"})} />
               </Suspense>
             </ClientOnly>
           </div>
