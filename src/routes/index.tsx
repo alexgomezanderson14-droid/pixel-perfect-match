@@ -322,23 +322,23 @@ function Home() {
         </nav>
       </header>
 
-      <section className="relative flex min-h-[92vh] items-end overflow-hidden">
+      <section className="relative flex min-h-[76vh] items-end overflow-hidden sm:min-h-[92vh]">
         <img src={heroImage || hero} alt="Fiestas en las calles de l'Alfàs del Pi" width={1920} height={1280} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-t from-brown/90 via-brown/20 to-transparent" />
-        <div className="relative mx-auto w-full max-w-6xl px-5 pb-16">
+        <div className="relative mx-auto w-full max-w-6xl px-4 pb-9 sm:px-5 sm:pb-16">
           <span className="glass-dark mb-4 inline-block rounded-full px-3 py-1 text-xs">{siteContent.hero_fechas || edicion.fechas}</span>
-          <h1 className="rise text-5xl font-bold leading-[0.95] text-on-image sm:text-7xl md:text-8xl">{siteContent.hero_titulo || edicion.titulo} <span className="text-pink">{edicion.anyo}</span></h1>
-          <p className="rise mt-4 max-w-xl text-lg text-on-image/85">{siteContent.hero_subtitulo || edicion.subtitulo}</p>
-          <div className="rise mt-8 flex flex-wrap gap-3">
+          <h1 className="rise text-4xl font-bold leading-[0.98] text-on-image sm:text-7xl md:text-8xl">{siteContent.hero_titulo || edicion.titulo} <span className="text-pink">{edicion.anyo}</span></h1>
+          <p className="rise mt-3 max-w-xl text-sm text-on-image/85 sm:mt-4 sm:text-lg">{siteContent.hero_subtitulo || edicion.subtitulo}</p>
+          <div className="rise mt-5 flex flex-wrap gap-2 sm:mt-8 sm:gap-3">
             <div className="glass-dark rounded-2xl px-5 py-3 text-sm">¡VIVE LAS FIESTAS!</div>
-            <a href="#programa" className="rounded-full bg-pink px-6 py-3 font-bold text-brown transition hover:-translate-y-0.5">{ui.nav.programa}</a>
+            <a href="#programa" className="rounded-full bg-pink px-3 py-2 text-xs font-bold text-brown transition hover:-translate-y-0.5 sm:px-6 sm:py-3 sm:text-base">{ui.nav.programa}</a>
             <a href="#mapa" className="glass-dark rounded-full px-6 py-3 font-bold">{ui.nav.mapa}</a>
             <button onClick={() => void shareWebsite()} className="glass-dark rounded-full px-6 py-3 font-bold">↗ Compartir web</button>
           </div>
         </div>
       </section>
 
-      <main className="mx-auto max-w-6xl space-y-14 px-3 py-12 sm:space-y-20 sm:px-5 sm:py-20">
+      <main className="mx-auto max-w-6xl space-y-8 px-2.5 py-6 sm:space-y-20 sm:px-5 sm:py-20">
         <section id="mapa" className="scroll-mt-24">
           <SectionTitle>{ui.nav.mapa}</SectionTitle>
           <div className={`glass grid gap-3 rounded-[1.5rem] p-2 sm:gap-4 sm:rounded-[2rem] sm:p-3 ${mapFullscreen ? "grid-cols-1" : "md:grid-cols-[280px_1fr]"}`}>
@@ -455,25 +455,25 @@ function Home() {
           </div>
         </section>
         <section id="penyes" className="scroll-mt-24">
-          <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-            <h2 className="text-4xl font-bold text-primary sm:text-5xl">{ui.nav.penyes}</h2>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2 sm:mb-8 sm:gap-4">
+            <h2 className="text-2xl font-bold text-primary sm:text-5xl">{ui.nav.penyes}</h2>
             <button onClick={() => setForm(true)} className="rounded-full bg-pink px-6 py-3 font-bold text-brown transition hover:-translate-y-0.5">+ {ui.addPenya}</button>
           </div>
           {!penyes.length ? (
             <div className="glass rounded-3xl p-6 text-muted-foreground">{ui.sinPenyes}</div>
           ) : (
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
               {penyes.map((p) => (
-                <article id={"penya-" + p.id} key={p.id} className="glass overflow-hidden rounded-2xl sm:rounded-3xl">
-                  {p.foto && <img src={p.foto} alt={p.nombre} loading="lazy" className="h-28 w-full object-cover sm:h-44" />}
-                  <div className="p-3 sm:p-6">
-                    <h3 className="text-xl font-bold sm:text-2xl">{p.nombre}</h3>
-                    {p.direccion && <p className="mt-1 text-sm text-muted-foreground">{p.direccion}</p>}
-                    <p className="mt-3 text-sm"><strong>Música:</strong> {p.tipo_musica || "Variada"}</p>
+                <article id={"penya-" + p.id} key={p.id} className="glass min-w-0 overflow-hidden rounded-xl sm:rounded-3xl">
+                  {p.foto && <img src={p.foto} alt={p.nombre} loading="lazy" className="h-16 w-full object-cover sm:h-44" />}
+                  <div className="p-2 sm:p-6">
+                    <h3 className="line-clamp-2 text-xs font-bold leading-tight sm:text-2xl">{p.nombre}</h3>
+                    {p.direccion && <p className="mt-1 line-clamp-2 text-[10px] text-muted-foreground sm:text-sm">{p.direccion}</p>}
+                    <p className="mt-1 text-[10px] sm:mt-3 sm:text-sm"><strong>Música:</strong> {p.tipo_musica || "Variada"}</p>
                     
                     {eventosActivos.filter(e=>e.penya_id===p.id).map(e=><p key={e.id} className="mt-2 text-sm"><strong>Evento:</strong> {e.titulo} · {fmtDia(e.dia)}</p>)}
-                    <div className="mt-3 flex flex-wrap gap-2"><button onClick={() => setSelectedPenya(p)} className="rounded-full bg-pink px-4 py-2 text-sm font-bold text-brown">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-4 py-2 text-sm font-bold">📍 {ui.verMapa}</button><button onClick={() => void sharePenyaCard(p)} className="glass-btn px-4 py-2 text-sm font-bold">↗ Crear historia</button><button onClick={() => sharePenyaLink(p)} className="glass-btn px-4 py-2 text-sm font-bold">WhatsApp</button><button onClick={() => setEventFormPenya(p)} className="glass-btn px-4 py-2 text-sm font-bold">{p.tiene_evento ? "Añadir otro evento" : "+ Añadir evento"}</button></div>
-                    <div className="mt-3 flex flex-wrap gap-3 text-sm">{instagramUrl(p.instagram) && <a className="font-semibold text-primary underline" href={instagramUrl(p.instagram)!} target="_blank" rel="noreferrer">{`↗ @${p.instagram?.replace(/^@/, "") || "Instagram"}`}</a>}</div>
+                    <div className="mt-2 flex flex-wrap gap-1 sm:mt-3 sm:gap-2"><button onClick={() => setSelectedPenya(p)} className="rounded-full bg-pink px-2 py-1 text-[10px] font-bold text-brown sm:px-4 sm:py-2 sm:text-sm">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">📍 {ui.verMapa}</button><button onClick={() => void sharePenyaCard(p)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">↗ Crear historia</button><button onClick={() => setEventFormPenya(p)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">{p.tiene_evento ? "Añadir evento" : "+ Añadir evento"}</button></div>
+                    <div className="mt-2 flex flex-wrap gap-2 text-xs sm:mt-3 sm:gap-3 sm:text-sm">{instagramUrl(p.instagram) && <a className="font-semibold text-primary underline" href={instagramUrl(p.instagram)!} target="_blank" rel="noreferrer">{`↗ @${p.instagram?.replace(/^@/, "") || "Instagram"}`}</a>}</div>
                   </div>
                 </article>
               ))}
@@ -610,7 +610,7 @@ function Home() {
 }
 
 function SectionTitle({ children }: { children: ReactNode }) {
-  return <h2 className="mb-8 text-4xl font-bold text-primary sm:text-5xl">{children}</h2>;
+  return <h2 className="mb-4 text-2xl font-bold text-primary sm:mb-8 sm:text-5xl">{children}</h2>;
 }
 
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
