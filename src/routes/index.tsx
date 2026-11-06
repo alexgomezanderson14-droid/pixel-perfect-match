@@ -352,14 +352,15 @@ function Home() {
 
   return (
     <div className="page-bg min-h-screen" style={{ "--pink": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--secondary": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--accent": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--ring": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--cat-penya": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--background": siteContent["theme_background"] || "oklch(0.95 0.015 75)", "--gradient-page": `linear-gradient(180deg, ${siteContent["theme_background"] || "oklch(0.96 0.015 70)"}, ${siteContent["theme_background"] || "oklch(0.93 0.02 60)"})` } as React.CSSProperties}>
-      <nav aria-label="Navegación principal" className="fixed inset-x-2 bottom-2 z-[5000] mx-auto grid max-w-3xl grid-cols-5 items-stretch gap-1 rounded-[1.6rem] border border-white/80 bg-white/95 p-1.5 shadow-[0_8px_32px_rgba(45,32,30,0.2)] backdrop-blur-xl sm:bottom-4 sm:gap-2 sm:rounded-full sm:p-2" style={{paddingBottom:"max(0.375rem, env(safe-area-inset-bottom))"}}>
+      <nav aria-label="Navegación principal" className="fixed inset-x-2 bottom-2 z-[5000] mx-auto grid max-w-4xl grid-cols-6 items-stretch gap-1 rounded-[1.6rem] border border-white/80 bg-white/95 p-1.5 shadow-[0_8px_32px_rgba(45,32,30,0.2)] backdrop-blur-xl sm:bottom-4 sm:gap-2 sm:rounded-full sm:p-2" style={{paddingBottom:"max(0.375rem, env(safe-area-inset-bottom))"}}>
         {[
+          ["home","⌂","Inicio"],
           ["eventos","🎤","Eventos"],
           ["penyes","☷","Peñas"],
           ["programa","▦","Programa"],
-          ["agenda","★","Mi agenda"],
-          ["info","ⓘ","Información"],
-        ].map(([page,icon,label])=><button key={page} type="button" aria-current={currentPage===page?"page":undefined} onClick={()=>{setMapFullscreen(false);setCurrentPage(page as any);window.scrollTo({top:0,behavior:"smooth"});}} className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center transition sm:flex-row sm:gap-2 sm:rounded-full sm:px-4 sm:py-3 ${currentPage===page?"bg-pink/20 text-primary":"text-muted-foreground hover:bg-glass"}`}><span className="text-xl leading-none sm:text-lg">{icon}</span><span className="text-[10px] font-bold leading-tight sm:text-sm">{label}</span></button>)}
+          ["agenda","★","Agenda"],
+          ["info","ⓘ","Info"],
+        ].map(([page,icon,label])=><button key={page} type="button" aria-current={currentPage===page?"page":undefined} onClick={()=>{setMapFullscreen(false);setCurrentPage(page as any);window.scrollTo({top:0,behavior:"smooth"});}} className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-0.5 py-2 text-center transition sm:flex-row sm:gap-2 sm:rounded-full sm:px-4 sm:py-3 ${currentPage===page?"bg-pink/20 text-primary":"text-muted-foreground hover:bg-glass"}`}><span className="text-xl leading-none sm:text-lg">{icon}</span><span className="whitespace-nowrap text-[9px] font-bold leading-tight sm:text-sm">{label}</span></button>)}
       </nav>
 
       {currentPage==="home" && <>
