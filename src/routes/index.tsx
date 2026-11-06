@@ -222,7 +222,7 @@ function Home() {
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
   const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes">("all");
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState<"home"|"agenda">("home");
+  const [currentPage, setCurrentPage] = useState<"home"|"agenda"|"buscar"|"programa"|"eventos"|"mapa"|"penyes"|"info">("home");
   const [publicDataLoaded, setPublicDataLoaded] = useState(false);
   const [avisos, setAvisos] = useState<any[]>([]);
   const [mapPoints, setMapPoints] = useState<Lugar[]>([]);
@@ -258,10 +258,10 @@ function Home() {
     if (term.length < 2) return [];
     const matches = (...values: any[]) => values.some((value) => normalize(value).includes(term));
     const results: any[] = [];
-    penyes.filter((p) => matches(p.nombre, p.direccion)).forEach((p) => results.push({ key: "penya:" + p.id, label: p.nombre, kind: "Peña", sub: p.direccion || "Ficha de la peña", onSelect: () => setSelectedPenya(p) }));
-    eventos.filter((e) => matches(e.titulo, e.descripcion, e.lugar)).forEach((e) => results.push({ key: "evento:" + e.id, label: e.titulo, kind: "Evento de peña", sub: [e.dia, e.hora, e.lugar].filter(Boolean).join(" · "), onSelect: () => { setFilterDay("all"); setFilterCategory("all"); window.requestAnimationFrame(() => window.requestAnimationFrame(() => document.getElementById("evento-" + e.id)?.scrollIntoView({ behavior: "smooth", block: "center" }))); } }));
-    actos.filter((a) => matches(a.titulo, a.descripcion, a.lugar)).forEach((a) => results.push({ key: "acto:" + a.id, label: a.titulo, kind: a.tipo === "actuacion" ? "Actuación" : "Programa oficial", sub: [a.dia, a.hora, a.lugar].filter(Boolean).join(" · "), onSelect: () => { setFilterDay("all"); setFilterCategory("all"); const target = document.getElementById("acto-" + a.id); if (target) target.scrollIntoView({ behavior: "smooth", block: "center" }); else document.getElementById("programa")?.scrollIntoView({ behavior: "smooth" }); } }));
-    mapPoints.filter((p) => matches(p.nombre, p.descripcion)).forEach((p) => results.push({ key: "lugar:" + p.id, label: p.nombre, kind: "Ubicación", sub: p.descripcion || "Punto de interés", onSelect: () => { setCat(null); setQ(""); document.getElementById("mapa")?.scrollIntoView({ behavior: "smooth" }); setFocus(null); requestAnimationFrame(() => setFocus(p.id)); } }));
+    penyes.filter((p) => matches(p.nombre, p.direccion)).forEach((p) => results.push({ key: "penya:" + p.id, label: p.nombre, kind: "Peña", sub: p.direccion || "Ficha de la peña", onSelect: () => { setCurrentPage("penyes"); setSelectedPenya(p); window.scrollTo({top:0,behavior:"smooth"}); } }));
+    eventos.filter((e) => matches(e.titulo, e.descripcion, e.lugar)).forEach((e) => results.push({ key: "evento:" + e.id, label: e.titulo, kind: "Evento de peña", sub: [e.dia, e.hora, e.lugar].filter(Boolean).join(" · "), onSelect: () => { setCurrentPage("eventos"); setFilterDay("all"); setFilterCategory("penyes"); window.scrollTo({top:0,behavior:"smooth"}); } }));
+    actos.filter((a) => matches(a.titulo, a.descripcion, a.lugar)).forEach((a) => results.push({ key: "acto:" + a.id, label: a.titulo, kind: a.tipo === "actuacion" ? "Actuación" : "Programa oficial", sub: [a.dia, a.hora, a.lugar].filter(Boolean).join(" · "), onSelect: () => { setCurrentPage("eventos"); setFilterDay("all"); setFilterCategory("actuaciones"); window.scrollTo({top:0,behavior:"smooth"}); } }));
+    mapPoints.filter((p) => matches(p.nombre, p.descripcion)).forEach((p) => results.push({ key: "lugar:" + p.id, label: p.nombre, kind: "Ubicación", sub: p.descripcion || "Punto de interés", onSelect: () => { setCurrentPage("mapa"); setCat(null); setQ(""); setFocus(null); requestAnimationFrame(() => setFocus(p.id)); window.scrollTo({top:0,behavior:"smooth"}); } }));
     return results.slice(0, 12);
   }, [searchTerm, penyes, eventos, actos, mapPoints]);
   const toggleFavorite=(key:string)=>setFavorites((current)=>{const next=current.includes(key)?current.filter((x)=>x!==key):[...current,key];try{localStorage.setItem("fiestas-favorites",JSON.stringify(next));}catch{}return next;});
@@ -342,25 +342,17 @@ function Home() {
 
   const goMap = (id?: string) => {
     if (!id) return;
+    setCurrentPage("mapa");
     setCat(null);
     setQ("");
     setFocus(null);
     requestAnimationFrame(() => setFocus(id));
-    document.getElementById("mapa")?.scrollIntoView({ behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
     <div className="page-bg min-h-screen" style={{ "--pink": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--secondary": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--accent": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--ring": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--cat-penya": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--background": siteContent["theme_background"] || "oklch(0.95 0.015 75)", "--gradient-page": `linear-gradient(180deg, ${siteContent["theme_background"] || "oklch(0.96 0.015 70)"}, ${siteContent["theme_background"] || "oklch(0.93 0.02 60)"})` } as React.CSSProperties}>
-      <header className="fixed inset-x-0 top-2 z-[1000] flex justify-center px-2 sm:top-4 sm:px-4">
-        <nav aria-label="Navegación principal" className="glass nav-scrollbar-hidden flex w-full max-w-6xl flex-nowrap items-center justify-start gap-1 overflow-x-auto whitespace-nowrap rounded-full p-1 text-[11px] sm:w-auto sm:gap-1.5 sm:p-1.5 sm:text-sm">
-          {currentPage==="home" ? <>
-            {(Object.keys(ui.nav) as (keyof typeof ui.nav)[]).map((k) => (
-              <a key={k} href={`#${k}`} className="flex shrink-0 items-center justify-center rounded-full px-3 py-2 hover:bg-glass sm:px-3.5 sm:py-2">{ui.nav[k]}</a>
-            ))}
-            <button type="button" onClick={()=>{setMapFullscreen(false);setCurrentPage("agenda");window.scrollTo({top:0,behavior:"smooth"});}} className="flex shrink-0 items-center justify-center rounded-full px-3 py-2 font-bold text-primary hover:bg-glass sm:px-3.5">Mi agenda</button>
-          </> : <button type="button" onClick={()=>{setCurrentPage("home");window.scrollTo({top:0,behavior:"smooth"});}} className="shrink-0 rounded-full px-3 py-2 text-center font-bold text-primary hover:bg-glass">← Volver al inicio</button>}
-        </nav>
-      </header>
+      {currentPage!=="home" && <header className="fixed inset-x-0 top-2 z-[1000] flex justify-center px-2 sm:top-4 sm:px-4"><button type="button" onClick={()=>{setMapFullscreen(false);setCurrentPage("home");window.scrollTo({top:0,behavior:"smooth"});}} className="glass rounded-full px-5 py-2.5 text-sm font-bold text-primary shadow-lg">← Volver al inicio</button></header>}
 
       {currentPage==="home" && <>
       <section className="relative flex min-h-[76vh] items-end overflow-hidden sm:min-h-[92vh]">
@@ -379,10 +371,28 @@ function Home() {
         </div>
       </section>
 
-      <main className="mx-auto max-w-6xl space-y-8 px-2.5 py-6 sm:space-y-20 sm:px-5 sm:py-20">
+
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-5 sm:py-12">
+        <h2 className="mb-5 text-center text-2xl font-bold text-primary sm:text-4xl">Explora las fiestas</h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {[
+            ["buscar","⌕","Buscar"],
+            ["programa","📅",ui.nav.programa],
+            ["eventos","🎤","Eventos"],
+            ["penyes","🎉",ui.nav.penyes],
+            ["mapa","📍",ui.nav.mapa],
+            ["agenda","★","Mi agenda"],
+            ["info","ℹ️",ui.nav.info],
+          ].map(([page,icon,label])=><button key={page} type="button" onClick={()=>{setMapFullscreen(false);setCurrentPage(page as any);window.scrollTo({top:0,behavior:"smooth"});}} className="glass flex min-h-24 flex-col items-center justify-center gap-2 rounded-2xl p-4 text-center font-bold text-primary shadow-sm transition hover:-translate-y-1 hover:bg-pink/20 sm:min-h-28 sm:rounded-3xl"><span className="text-2xl sm:text-3xl">{icon}</span><span className="text-sm sm:text-base">{label}</span></button>)}
+        </div>
+      </main>
+      </>}
+      {currentPage==="buscar" && <main className="mx-auto min-h-[75vh] max-w-5xl space-y-6 px-4 pb-16 pt-24 sm:px-5">
+        <h1 className="text-3xl font-bold text-primary sm:text-5xl">Buscar</h1>
         <section aria-label="Buscador general" className="relative z-30 scroll-mt-24"><div className="glass rounded-2xl p-3 sm:rounded-3xl sm:p-5"><label htmlFor="festival-search" className="mb-2 block text-sm font-bold text-primary">Busca peñas, eventos, actuaciones y lugares</label><input id="festival-search" value={searchTerm} onChange={(e)=>setSearchTerm(e.target.value)} placeholder="¿Qué estás buscando?" className="w-full rounded-full border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"/>{searchTerm.trim().length>=2&&<div className="mt-2 max-h-80 overflow-y-auto rounded-2xl border border-border bg-background p-2 shadow-lg">{searchResults.length?searchResults.map((result)=><button key={result.key} type="button" onClick={()=>{result.onSelect();setSearchTerm("");}} className="flex w-full items-start gap-3 rounded-xl px-3 py-2 text-left hover:bg-glass"><span className="mt-0.5 rounded-full bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary">{result.kind}</span><span className="min-w-0"><span className="block text-sm font-bold">{result.label}</span><span className="block truncate text-xs text-muted-foreground">{result.sub}</span></span></button>):<p className="p-3 text-sm text-muted-foreground">No se ha encontrado nada.</p>}</div>}</div></section>
         {avisosVisibles.length>0&&<section aria-label="Avisos importantes" className="space-y-2">{avisosVisibles.map((aviso:any)=><article key={aviso.id} className={`rounded-2xl border p-3 sm:p-4 ${aviso.importante?"border-amber-400 bg-amber-50 text-amber-950 shadow-md":"border-border bg-background/80 text-foreground"}`}><div className="flex items-start gap-3"><span className="text-xl">{aviso.importante?"⚠️":"📢"}</span><div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-wide">{aviso.importante?"Aviso importante":"Comunicado"}</p><h2 className="font-bold">{aviso.titulo}</h2><p className="mt-1 text-sm">{aviso.descripcion}</p></div></div></article>)}</section>}
-        
+      </main>}
+      {currentPage==="mapa" && <main className="mx-auto min-h-[75vh] max-w-6xl px-3 pb-16 pt-24 sm:px-5">
         <section id="mapa" className="scroll-mt-24">
           <SectionTitle>{ui.nav.mapa}</SectionTitle>
           <div className="glass grid grid-cols-1 gap-3 rounded-[1.5rem] p-2 sm:gap-4 sm:rounded-[2rem] sm:p-3">
@@ -400,13 +410,14 @@ function Home() {
               <button type="button" onClick={() => setMapFullscreen(true)} aria-label="Ampliar mapa a pantalla completa" className="absolute right-3 top-3 z-[1200] rounded-full border border-white/70 bg-white/95 px-4 py-2 text-sm font-bold text-[#49352f] shadow-lg">⛶ Pantalla completa</button>
               <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
                 <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}>
-                  <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => setSelectedPenya(penyes.find((p) => p.id === id) ?? null)} onItemClick={(id)=>{const target=document.getElementById(id);if(target)target.scrollIntoView({behavior:"smooth",block:"center"});else document.getElementById(id.startsWith("acto-")?"programa":"eventos")?.scrollIntoView({behavior:"smooth"});}} />
+                  <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => setSelectedPenya(penyes.find((p) => p.id === id) ?? null)} onItemClick={(id)=>{setCurrentPage("eventos");setFilterDay("all");setFilterCategory(id.startsWith("acto-")?"actuaciones":"penyes");window.scrollTo({top:0,behavior:"smooth"});}} />
                 </Suspense>
               </ClientOnly>
             </div>}
           </div>
         </section>
-
+      </main>}
+      {currentPage==="programa" && <main className="mx-auto min-h-[75vh] max-w-6xl px-3 pb-16 pt-24 sm:px-5">
         <section id="programa" className="scroll-mt-24">
           <SectionTitle>{ui.nav.programa}</SectionTitle>
           {!dias.length ? (
@@ -447,7 +458,8 @@ function Home() {
             </>
           )}
         </section>
-
+      </main>}
+      {currentPage==="eventos" && <main className="mx-auto min-h-[75vh] max-w-6xl px-3 pb-16 pt-24 sm:px-5">
         <section id="eventos" className="scroll-mt-24">
           <SectionTitle>Eventos</SectionTitle>
           <details className="glass mb-5 rounded-2xl p-3 sm:p-4">
@@ -521,6 +533,8 @@ function Home() {
             })}</div>}
           </div>
         </section>
+      </main>}
+      {currentPage==="penyes" && <main className="mx-auto min-h-[75vh] max-w-6xl px-3 pb-16 pt-24 sm:px-5">
         <section id="penyes" className="scroll-mt-24">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2 sm:mb-8 sm:gap-4">
             <h2 className="text-2xl font-bold text-primary sm:text-5xl">{ui.nav.penyes}</h2>
@@ -547,7 +561,8 @@ function Home() {
             </div>
           )}
         </section>
-
+      </main>}
+      {currentPage==="info" && <main className="mx-auto min-h-[75vh] max-w-5xl px-4 pb-16 pt-24 sm:px-5">
         <section id="info" className="scroll-mt-24">
           <SectionTitle>{ui.nav.info}</SectionTitle>
           <div className="grid gap-4 md:grid-cols-2">
@@ -561,9 +576,8 @@ function Home() {
             </article>
           </div>
         </section>
-      </main>
-      </>}
-
+      </main>}
+      {currentPage!=="home" && avisosVisibles.length>0 && <section aria-label="Avisos importantes" className="mx-auto mb-8 max-w-5xl space-y-2 px-4 sm:px-5">{notices.replace('{avisosVisibles.length>0&&','').replace(/</section>}$/,'</section>')}</section>}
       {currentPage==="agenda" && <main className="mx-auto min-h-[85vh] max-w-5xl px-4 pb-16 pt-28 sm:px-5"><div className="mb-6 flex items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tus favoritos</p><h1 className="mt-1 text-3xl font-bold text-primary sm:text-5xl">Mi agenda</h1><p className="mt-2 text-sm text-muted-foreground">Tus eventos y actuaciones guardados, ordenados por fecha y hora.</p></div><span className="shrink-0 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary">{favoriteItems.length} guardados</span></div>{favoriteItems.length ? <div className="grid gap-3 sm:grid-cols-2">{favoriteItems.map((item:any)=><article key={item.favoriteKey} className="glass flex items-center justify-between gap-3 rounded-2xl p-4"><div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-wide text-primary">{item.kind}</p><h2 className="mt-1 text-base font-bold">{item.titulo}</h2><p className="mt-1 text-xs text-muted-foreground">{item.dia} · {item.hora||"Hora por confirmar"}{item.lugar?" · "+item.lugar:""}</p></div><button type="button" onClick={()=>toggleFavorite(item.favoriteKey)} aria-label="Quitar de mi agenda" title="Quitar de mi agenda" className="shrink-0 rounded-full border border-primary/20 bg-background/70 px-3 py-2 text-xl text-primary">★</button></article>)}</div> : <div className="glass rounded-3xl px-5 py-12 text-center"><p className="text-4xl">☆</p><h2 className="mt-3 text-xl font-bold text-primary">Todavía no tienes favoritos</h2><p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">Vuelve al inicio y pulsa la estrella de cualquier evento o actuación para guardarlo aquí.</p><button type="button" onClick={()=>{setCurrentPage("home");window.scrollTo({top:0,behavior:"smooth"});}} className="mt-5 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">Explorar fiestas</button></div>}</main>}
 
       {mapFullscreen && typeof document !== "undefined" && createPortal(
@@ -578,7 +592,7 @@ function Home() {
           <button type="button" onClick={() => setMapFullscreen(false)} className="absolute right-4 top-4 z-[100000] rounded-full border border-white bg-white px-5 py-3 text-sm font-bold text-[#49352f] shadow-xl">✕ Cerrar mapa</button>
         </div>, document.body
       )}
-      {currentPage==="home" && <footer className="space-y-4 px-5 pb-10 text-center text-sm text-muted-foreground">
+      {<footer className="space-y-4 px-5 pb-10 text-center text-sm text-muted-foreground">
         <p>{edicion.titulo} · {edicion.anyo}</p>
         <button onClick={() => void shareWebsite()} className="glass-btn rounded-full px-6 py-3 font-bold text-primary">↗ Compartir la web</button>
         <div className="flex flex-wrap justify-center gap-2">
