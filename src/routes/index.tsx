@@ -222,6 +222,7 @@ function Home() {
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
   const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes"|"otros">("all");
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [publicDataLoaded, setPublicDataLoaded] = useState(false);
   const [avisos, setAvisos] = useState<any[]>([]);
   const [mapPoints, setMapPoints] = useState<Lugar[]>([]);
   const [cat, setCat] = useState<Categoria | null>(null);
@@ -265,7 +266,7 @@ function Home() {
   const toggleFavorite=(key:string)=>setFavorites((current)=>{const next=current.includes(key)?current.filter((x)=>x!==key):[...current,key];try{localStorage.setItem("fiestas-favorites",JSON.stringify(next));}catch{}return next;});
   useEffect(() => { if (dias.length && !dia) setDia(dias[0]); }, [dias, dia]);
   useEffect(()=>{try{const saved=JSON.parse(localStorage.getItem("fiestas-favorites")||"[]");if(Array.isArray(saved))setFavorites(saved.filter((x)=>typeof x==="string"));}catch{setFavorites([]);}},[]);
-  useEffect(()=>{if(!actos.length&&!eventos.length)return;const valid=new Set([...actos.map(a=>"acto:"+a.id),...eventos.map(e=>"evento:"+e.id)]);setFavorites((current)=>{const next=current.filter((key)=>valid.has(key));if(next.length!==current.length){try{localStorage.setItem("fiestas-favorites",JSON.stringify(next));}catch{}}return next;});},[actos,eventos]);
+  useEffect(()=>{if(!publicDataLoaded)return;const valid=new Set([...actos.map(a=>"acto:"+a.id),...eventos.map(e=>"evento:"+e.id)]);setFavorites((current)=>{const next=current.filter((key)=>valid.has(key));if(next.length!==current.length){try{localStorage.setItem("fiestas-favorites",JSON.stringify(next));}catch{}}return next;});},[publicDataLoaded,actos,eventos]);
   useEffect(() => {
     if (!mapFullscreen) return;
     const previousOverflow = document.body.style.overflow;
@@ -301,6 +302,7 @@ function Home() {
       const legacyPenyes = await supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,tiene_evento").eq("estado","aprobada").order("nombre");
       data = legacyPenyes.data?.map((p) => ({ ...p, instagram: "" })) ?? null;
     }
+    setPublicDataLoaded(Array.isArray(actosData) && Array.isArray(eventosData));
     const filas = actosData ?? [];
     // El programa oficial del PDF es la fuente principal. La base de datos aporta
     // identificadores y actos añadidos, pero no debe sobrescribir el contenido oficial.
