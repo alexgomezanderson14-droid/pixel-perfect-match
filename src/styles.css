@@ -153,3 +153,19 @@
   h1, h2, h3 { font-family: var(--font-display); }
   html { scroll-behavior: smooth; }
 }
+
+
+/* Responsive layout safeguards across phones, tablets and desktop. */
+html { scroll-padding-top: 7rem; }
+@media (max-width: 639px) {
+  html { scroll-padding-top: 6.5rem; }
+  body { overflow-x: clip; background-attachment: scroll; }
+  #root, main, section, article { min-width: 0; }
+  img, video, canvas, iframe { max-width: 100%; }
+  .leaflet-container { max-width: 100%; }
+  .leaflet-popup-content {
+    max-width: min(240px, calc(100vw - 64px));
+    overflow-wrap: anywhere;
+  }
+  .leaflet-popup-content-wrapper { max-width: calc(100vw - 48px); }
+}
