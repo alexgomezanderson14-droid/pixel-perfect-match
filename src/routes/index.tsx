@@ -33,10 +33,13 @@ function fmtDia(d: string) {
   return new Date(d + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
 }
 
-function eventoSigueActivo(item: { dia?: string; hora?: string }, now = Date.now()) {
+function eventoSigueActivo(item: { dia?: string; hora?: string; diaSiguiente?: boolean }, now = Date.now()) {
   if (!item.dia) return true;
-  const hora = String(item.hora || "").match(/(?:^|\D)([01]\d|2[0-3]):([0-5]\d)/);
-  const inicio = new Date(`${String(item.dia).slice(0, 10)}T${hora ? hora[1] + ":" + hora[2] : "23:59"}:00`).getTime();
+  const hora = String(item.hora || "").match(/(?:^|\\D)([01]\\d|2[0-3]):([0-5]\\d)/);
+  const fecha = new Date(String(item.dia).slice(0, 10) + "T12:00:00");
+  if (item.diaSiguiente) fecha.setDate(fecha.getDate() + 1);
+  const fechaKey = fecha.toISOString().slice(0, 10);
+  const inicio = new Date(`${fechaKey}T${hora ? hora[1] + ":" + hora[2] : "23:59"}:00`).getTime();
   const fechaLimite = inicio + 3 * 60 * 60 * 1000;
   return Number.isNaN(inicio) || fechaLimite > now;
 }
