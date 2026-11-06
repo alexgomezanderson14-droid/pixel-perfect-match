@@ -202,6 +202,8 @@ async function sharePenyaCard(p: PenyaDb) {
   c.fillStyle = "#806e65";
   c.font = "26px Arial";
   c.fillText(window.location.host, 76, 1845);
+  c.font = "bold 24px Arial";
+  c.fillText("© Peña Enredats · Todos los derechos reservados", 76, 1885);
 
   const blob = await new Promise<Blob>((resolve, reject) =>
     canvas.toBlob((b) => b ? resolve(b) : reject(new Error("No se pudo generar el PNG.")), "image/png")
