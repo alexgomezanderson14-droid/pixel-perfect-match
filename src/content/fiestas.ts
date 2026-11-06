@@ -11,6 +11,9 @@ export type Lugar = {
   lat: number;
   lng: number;
   foto?: string;
+  dia?: string;
+  hora?: string;
+  detalleId?: string;
 };
 
 export type Acto = {
