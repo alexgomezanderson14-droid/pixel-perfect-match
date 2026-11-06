@@ -21,6 +21,7 @@ export type Database = {
           dia: string
           hora: string
           id: string
+          imagen_url: string | null
           lat: number | null
           lng: number | null
           lugar: string
@@ -34,6 +35,7 @@ export type Database = {
           dia: string
           hora?: string
           id?: string
+          imagen_url?: string | null
           lat?: number | null
           lng?: number | null
           lugar?: string
@@ -47,6 +49,7 @@ export type Database = {
           dia?: string
           hora?: string
           id?: string
+          imagen_url?: string | null
           lat?: number | null
           lng?: number | null
           lugar?: string
