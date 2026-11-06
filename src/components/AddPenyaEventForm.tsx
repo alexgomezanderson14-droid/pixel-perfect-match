@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
