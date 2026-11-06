@@ -458,6 +458,16 @@ function Home() {
                 <div className="relative aspect-[5/4] overflow-hidden bg-gradient-to-br from-[#f4e8e9] via-[#ead9df] to-[#e9e3d7]">
                   {imagen ? <img src={imagen} alt={e.titulo} loading="lazy" className="absolute inset-0 h-full w-full object-cover"/> : <div className="absolute inset-0 flex items-center justify-center p-5 text-center"><span className="font-display text-xl font-bold text-[#49352f] sm:text-3xl">{e.titulo}</span></div>}
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#f4eee5] via-[#f4eee5]/95 to-[#f4eee5]/0 px-2 pb-2 pt-10 text-[#49352f] sm:px-4 sm:pb-4 sm:pt-16">
+                    <div className="flex items-end justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="line-clamp-2 text-xs font-extrabold leading-tight text-[#49352f] sm:text-xl">{e.titulo}</h3>
+                        <p className="mt-1 text-[10px] font-bold text-[#59443c] sm:mt-2 sm:text-sm">{fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p>
+                        {e.lugar && <p className="mt-0.5 line-clamp-1 text-[10px] font-semibold text-[#59443c] sm:text-sm">📍 {e.lugar}</p>}
+                        {e.descripcion && <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-[#59443c] sm:text-sm">{e.descripcion}</p>}
+                      </div>
+                      {penyaNombre && <span className="max-w-[34%] shrink-0 text-right text-[9px] font-extrabold leading-tight text-[#49352f] sm:text-xs">{penyaNombre}</span>}
+                    </div>
+                  </div>
                     <h3 className="line-clamp-2 text-xs font-extrabold leading-tight text-[#49352f] sm:text-xl">{e.titulo}</h3>
                     <p className="mt-1 text-[10px] font-bold text-[#59443c] sm:mt-2 sm:text-sm">{fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p>
                     {e.lugar && <p className="mt-0.5 line-clamp-1 text-[10px] font-semibold text-[#59443c] sm:text-sm">📍 {e.lugar}</p>}
