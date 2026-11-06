@@ -1,5 +1,6 @@
 import { createFileRoute, ClientOnly } from "@tanstack/react-router";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import hero from "@/assets/hero-fiestas.jpg";
 import { edicion, lugares as lugaresFijos, ui, type Categoria, type Lugar } from "@/content/fiestas";
 import { programaOficial2026 } from "@/content/programa-oficial-2026";
@@ -49,23 +50,34 @@ async function shareWebsite() {
   const url = window.location.href;
   const title = "Fiestas de l'Alfàs del Pi 2026";
   const text = "Consulta el programa, el mapa y las peñas de las fiestas.";
-  try {
-    await navigator.clipboard.writeText(url);
-    localStorage.setItem("fiestas-share-reminder-last", String(Date.now()));
-    window.alert("Enlace de la web copiado. ¡Ya puedes compartirlo!");
-    return;
-  } catch {
-    if (navigator.share) {
-      try {
-        await navigator.share({ title, text, url });
-        localStorage.setItem("fiestas-share-reminder-last", String(Date.now()));
-        return;
-      } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-      }
-    }
-    window.prompt("Copia el enlace de la web:", url);
+  if (navigator.share) {
+    try { await navigator.share({ title, text, url }); localStorage.setItem("fiestas-share-reminder-last", String(Date.now())); return; }
+    catch (error) { if (error instanceof DOMException && error.name === "AbortError") return; }
   }
+  try { await navigator.clipboard.writeText(url); localStorage.setItem("fiestas-share-reminder-last", String(Date.now())); window.alert("Enlace copiado. Ya puedes pegarlo donde quieras."); }
+  catch { window.prompt("Copia el enlace de la web:", url); }
+}
+
+function shareOn(channel: "whatsapp" | "facebook" | "telegram" | "x" | "email", url: string, title: string, message: string) {
+  const u = encodeURIComponent(url), t = encodeURIComponent(message + " " + url), subject = encodeURIComponent(title);
+  const destinations = {
+    whatsapp: "https://wa.me/?text=" + t,
+    facebook: "https://www.facebook.com/sharer/sharer.php?u=" + u,
+    telegram: "https://t.me/share/url?url=" + u + "&text=" + encodeURIComponent(message),
+    x: "https://twitter.com/intent/tweet?text=" + encodeURIComponent(message) + "&url=" + u,
+    email: "mailto:?subject=" + subject + "&body=" + t,
+  };
+  window.open(destinations[channel], "_blank", "noopener,noreferrer");
+}
+
+async function copyShareLink(url: string) {
+  try { await navigator.clipboard.writeText(url); window.alert("Enlace copiado."); }
+  catch { window.prompt("Copia este enlace:", url); }
+}
+
+function sharePenyaLink(p: PenyaDb) {
+  const url = window.location.origin + "/#penya-" + p.id;
+  shareOn("whatsapp", url, p.nombre, "Conoce " + p.nombre + " en las fiestas de l'Alfàs del Pi.");
 }
 
 async function sharePenyaCard(p: PenyaDb) {
@@ -229,6 +241,14 @@ function Home() {
   const eventosActivos = useMemo(() => eventos.filter((e) => eventoSigueActivo(e, now)), [eventos, now]);
   useEffect(() => { if (dias.length && !dia) setDia(dias[0]); }, [dias, dia]);
   useEffect(() => {
+    if (!mapFullscreen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setMapFullscreen(false); };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener("keydown", closeOnEscape); };
+  }, [mapFullscreen]);
+  useEffect(() => {
     const tick = window.setInterval(() => setNow(Date.now()), 60_000);
     return () => window.clearInterval(tick);
   }, []);
@@ -346,14 +366,14 @@ function Home() {
                 {!visibles.length && <li className="px-3 text-sm text-muted-foreground">{ui.sinResultados}</li>}
               </ul>
             </div>}
-            <div className={`relative overflow-hidden ${mapFullscreen ? "fixed inset-0 z-[2200] h-[100dvh] w-screen rounded-none bg-background p-2" : "h-[340px] rounded-[1.25rem] sm:h-[460px] sm:rounded-[1.5rem] md:h-[540px]"}`}>
-              <button type="button" onClick={() => setMapFullscreen(value => !value)} aria-label={mapFullscreen ? "Cerrar mapa a pantalla completa" : "Ampliar mapa a pantalla completa"} className="absolute right-3 top-3 z-[1200] rounded-full border border-white/70 bg-white/95 px-4 py-2 text-sm font-bold text-[#49352f] shadow-lg">{mapFullscreen ? "✕ Cerrar mapa" : "⛶ Pantalla completa"}</button>
+            {!mapFullscreen && <div className="relative h-[340px] overflow-hidden rounded-[1.25rem] sm:h-[460px] sm:rounded-[1.5rem] md:h-[540px]">
+              <button type="button" onClick={() => setMapFullscreen(true)} aria-label="Ampliar mapa a pantalla completa" className="absolute right-3 top-3 z-[1200] rounded-full border border-white/70 bg-white/95 px-4 py-2 text-sm font-bold text-[#49352f] shadow-lg">⛶ Pantalla completa</button>
               <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
                 <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}>
                   <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => setSelectedPenya(penyes.find((p) => p.id === id) ?? null)} />
                 </Suspense>
               </ClientOnly>
-            </div>
+            </div>}
           </div>
         </section>
 
@@ -457,7 +477,7 @@ function Home() {
                     <p className="mt-3 text-sm"><strong>Música:</strong> {p.tipo_musica || "Variada"}</p>
                     
                     {eventosActivos.filter(e=>e.penya_id===p.id).map(e=><p key={e.id} className="mt-2 text-sm"><strong>Evento:</strong> {e.titulo} · {fmtDia(e.dia)}</p>)}
-                    <div className="mt-3 flex flex-wrap gap-2"><button onClick={() => setSelectedPenya(p)} className="rounded-full bg-pink px-4 py-2 text-sm font-bold text-brown">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-4 py-2 text-sm font-bold">📍 {ui.verMapa}</button><button onClick={() => void sharePenyaCard(p)} className="glass-btn px-4 py-2 text-sm font-bold">↗ Compartir peña</button><button onClick={() => setEventFormPenya(p)} className="glass-btn px-4 py-2 text-sm font-bold">{p.tiene_evento ? "Añadir otro evento" : "+ Añadir evento"}</button></div>
+                    <div className="mt-3 flex flex-wrap gap-2"><button onClick={() => setSelectedPenya(p)} className="rounded-full bg-pink px-4 py-2 text-sm font-bold text-brown">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-4 py-2 text-sm font-bold">📍 {ui.verMapa}</button><button onClick={() => void sharePenyaCard(p)} className="glass-btn px-4 py-2 text-sm font-bold">↗ Crear historia</button><button onClick={() => sharePenyaLink(p)} className="glass-btn px-4 py-2 text-sm font-bold">WhatsApp</button><button onClick={() => setEventFormPenya(p)} className="glass-btn px-4 py-2 text-sm font-bold">{p.tiene_evento ? "Añadir otro evento" : "+ Añadir evento"}</button></div>
                     <div className="mt-3 flex flex-wrap gap-3 text-sm">{instagramUrl(p.instagram) && <a className="font-semibold text-primary underline" href={instagramUrl(p.instagram)!} target="_blank" rel="noreferrer">{`↗ @${p.instagram?.replace(/^@/, "") || "Instagram"}`}</a>}</div>
                   </div>
                 </article>
@@ -481,9 +501,29 @@ function Home() {
         </section>
       </main>
 
+      {mapFullscreen && typeof document !== "undefined" && createPortal(
+        <div role="dialog" aria-modal="true" aria-label="Mapa a pantalla completa" className="fixed inset-0 z-[99999] h-[100dvh] w-screen overflow-hidden bg-[#f3eee6]">
+          <div className="absolute inset-0">
+            <ClientOnly fallback={<div className="h-full w-full animate-pulse bg-muted" />}>
+              <Suspense fallback={<div className="h-full w-full animate-pulse bg-muted" />}>
+                <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => setSelectedPenya(penyes.find((p) => p.id === id) ?? null)} />
+              </Suspense>
+            </ClientOnly>
+          </div>
+          <button type="button" onClick={() => setMapFullscreen(false)} className="absolute right-4 top-4 z-[100000] rounded-full border border-white bg-white px-5 py-3 text-sm font-bold text-[#49352f] shadow-xl">✕ Cerrar mapa</button>
+        </div>, document.body
+      )}
       <footer className="space-y-4 px-5 pb-10 text-center text-sm text-muted-foreground">
         <p>{edicion.titulo} · {edicion.anyo}</p>
         <button onClick={() => void shareWebsite()} className="glass-btn rounded-full px-6 py-3 font-bold text-primary">↗ Compartir la web</button>
+        <div className="flex flex-wrap justify-center gap-2">
+          <button onClick={() => shareOn("whatsapp", window.location.href, "Fiestas de l'Alfàs del Pi 2026", "Consulta el programa, el mapa y las peñas.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">WhatsApp</button>
+          <button onClick={() => shareOn("facebook", window.location.href, "Fiestas de l'Alfàs del Pi 2026", "Consulta el programa, el mapa y las peñas.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Facebook</button>
+          <button onClick={() => shareOn("telegram", window.location.href, "Fiestas de l'Alfàs del Pi 2026", "Consulta el programa, el mapa y las peñas.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Telegram</button>
+          <button onClick={() => shareOn("x", window.location.href, "Fiestas de l'Alfàs del Pi 2026", "Consulta el programa, el mapa y las peñas.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">X</button>
+          <button onClick={() => shareOn("email", window.location.href, "Fiestas de l'Alfàs del Pi 2026", "Consulta el programa, el mapa y las peñas.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Correo</button>
+          <button onClick={() => void copyShareLink(window.location.href)} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Copiar enlace</button>
+        </div>
       </footer>
       {shareReminder && <aside role="status" className="fixed inset-x-4 bottom-4 z-[1800] mx-auto flex max-w-xl items-center gap-3 rounded-2xl border border-border bg-background p-4 shadow-2xl">
         <div className="min-w-0 flex-1"><p className="font-bold text-primary">¿Compartimos las fiestas?</p><p className="text-sm text-muted-foreground">Pasa la web a tus amigos para que nadie se pierda el programa ni los eventos.</p></div>
