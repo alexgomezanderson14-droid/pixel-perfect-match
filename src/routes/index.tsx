@@ -554,18 +554,57 @@ function Home() {
         </section>
       </main>}
       {currentPage==="info" && <main className="mx-auto min-h-[75vh] max-w-5xl px-4 pb-32 pt-8 sm:px-5">
-        <section id="info" className="scroll-mt-24">
-          <SectionTitle>{ui.nav.info}</SectionTitle>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="glass rounded-3xl p-6"><h3 className="text-xl font-bold">{siteContent["info_titulo"] || ui.emergencias}</h3><p className="mt-2 font-display text-4xl font-bold text-primary">{siteContent["info_telefono"] || "112"}</p></div>
-            <article className="glass rounded-3xl p-6 md:col-span-2">
-              <div className="mb-3 flex items-center gap-3"><span className="text-3xl">🚌</span><div><h3 className="text-2xl font-bold text-primary">Autobús lanzadera</h3><p className="text-sm text-muted-foreground">Información práctica de transporte durante las fiestas</p></div></div>
-              <p className="font-semibold">Del 6 al 9 de noviembre · de 01:00 a 04:00 h</p>
-              <p className="mt-2 text-sm">Salidas cada hora desde el parking de La Bolleta (frente a Gaudí).</p>
-              <p className="mt-2 text-sm"><strong>Paradas:</strong> Parque Escandinavia, San Rafael, Tossalet, avenida Sant Pere (Albir Garden) y Consum Albir.</p>
-              <p className="mt-2 text-sm">El recorrido de regreso finaliza en el parking de La Bolleta.</p>
-            </article>
+        <section id="info" className="scroll-mt-24 space-y-6">
+          <div>
+            <SectionTitle>{ui.nav.info}</SectionTitle>
+            <p className="mt-2 text-sm text-muted-foreground">Teléfonos útiles y servicios de l’Alfàs del Pi para residentes y visitantes. En caso de peligro inmediato, llama al 112.</p>
           </div>
+
+          <section aria-labelledby="emergencias-title">
+            <h3 id="emergencias-title" className="mb-3 text-xl font-bold text-primary">🚨 Emergencias y seguridad</h3>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <a href="tel:112" className="glass flex items-center justify-between gap-3 rounded-2xl border-2 border-red-300 p-4">
+                <div><p className="text-xs font-bold uppercase tracking-wide text-red-700">Emergencias · 24 horas</p><h4 className="text-lg font-bold">Emergencias generales</h4><p className="text-sm text-muted-foreground">Ambulancia, bomberos, policía y rescate</p></div><span className="text-3xl font-black text-red-700">112</span>
+              </a>
+              <a href="tel:965887200" className="glass flex items-center justify-between gap-3 rounded-2xl p-4">
+                <div><p className="text-xs font-bold uppercase tracking-wide text-primary">Servicio municipal</p><h4 className="text-lg font-bold">Policía Local</h4><p className="text-sm text-muted-foreground">l’Alfàs del Pi</p></div><span className="text-right text-lg font-bold text-primary">965 887 200</span>
+              </a>
+              <a href="tel:091" className="glass flex items-center justify-between gap-3 rounded-2xl p-4"><div><h4 className="font-bold">Policía Nacional</h4><p className="text-sm text-muted-foreground">Atención policial</p></div><span className="text-xl font-bold text-primary">091</span></a>
+              <a href="tel:062" className="glass flex items-center justify-between gap-3 rounded-2xl p-4"><div><h4 className="font-bold">Guardia Civil</h4><p className="text-sm text-muted-foreground">Atención policial</p></div><span className="text-xl font-bold text-primary">062</span></a>
+            </div>
+          </section>
+
+          <section aria-labelledby="salud-title">
+            <h3 id="salud-title" className="mb-3 text-xl font-bold text-primary">🏥 Salud y asistencia</h3>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <a href="tel:966870080" className="glass rounded-2xl p-4"><p className="text-xs font-bold uppercase tracking-wide text-primary">Centro sanitario local</p><h4 className="mt-1 font-bold">Centro de Salud de l’Alfàs del Pi</h4><p className="mt-1 text-sm text-muted-foreground">C/ Príncipes de España, 6</p><p className="mt-2 text-lg font-bold text-primary">966 870 080</p><p className="text-xs text-muted-foreground">Consultas: lunes a viernes, 08:00–21:00. Atención continuada: noches, fines de semana y festivos.</p></a>
+              <a href="tel:966907200" className="glass rounded-2xl p-4"><p className="text-xs font-bold uppercase tracking-wide text-primary">Hospital de referencia</p><h4 className="mt-1 font-bold">Hospital Marina Baixa</h4><p className="mt-1 text-sm text-muted-foreground">La Vila Joiosa · Centralita</p><p className="mt-2 text-lg font-bold text-primary">966 907 200</p></a>
+              <a href="tel:016" className="glass rounded-2xl p-4"><p className="text-xs font-bold uppercase tracking-wide text-primary">Atención y apoyo</p><h4 className="mt-1 font-bold">Violencia contra las mujeres</h4><p className="mt-2 text-lg font-bold text-primary">016</p><p className="text-xs text-muted-foreground">Servicio gratuito, confidencial y permanente. Si hay peligro inmediato, llama al 112.</p></a>
+              <a href="tel:900202010" className="glass rounded-2xl p-4"><p className="text-xs font-bold uppercase tracking-wide text-primary">Ayuda a menores</p><h4 className="mt-1 font-bold">Fundación ANAR</h4><p className="mt-2 text-lg font-bold text-primary">900 20 20 10</p><p className="text-xs text-muted-foreground">Atención a niños, niñas y adolescentes.</p></a>
+            </div>
+          </section>
+
+          <section aria-labelledby="servicios-title">
+            <h3 id="servicios-title" className="mb-3 text-xl font-bold text-primary">🏛️ Servicios municipales y ciudadanía</h3>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <a href="tel:965887328" className="glass rounded-2xl p-4"><h4 className="font-bold">Servicios Sociales</h4><p className="mt-1 text-lg font-bold text-primary">965 887 328</p><p className="text-xs text-muted-foreground">Orientación y atención social municipal.</p></a>
+              <a href="tel:965888265" className="glass rounded-2xl p-4"><h4 className="font-bold">Oficina de Turismo · l’Alfàs</h4><p className="mt-1 text-lg font-bold text-primary">965 888 265</p><p className="text-xs text-muted-foreground">C/ les Escoles · Información para visitantes.</p></a>
+              <a href="tel:966867022" className="glass rounded-2xl p-4"><h4 className="font-bold">Oficina de Turismo · l’Albir</h4><p className="mt-1 text-lg font-bold text-primary">966 867 022</p><p className="text-xs text-muted-foreground">Passeig de les Estreles.</p></a>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-3 text-sm font-semibold">
+              <a className="text-primary underline" href="https://www.lalfas.es/" target="_blank" rel="noreferrer">Web oficial del Ayuntamiento</a>
+              <a className="text-primary underline" href="https://marinabaixa.san.gva.es/es/c.s.-l-alfas-del-pi" target="_blank" rel="noreferrer">Centro de Salud · información oficial</a>
+            </div>
+          </section>
+
+          <article className="glass rounded-3xl p-5 sm:p-6">
+            <div className="mb-3 flex items-center gap-3"><span className="text-3xl">🚌</span><div><h3 className="text-xl font-bold text-primary">Autobús lanzadera de fiestas</h3><p className="text-sm text-muted-foreground">Servicio nocturno gratuito</p></div></div>
+            <p className="font-semibold">Del 6 al 9 de noviembre · de 01:00 a 04:00 h</p>
+            <p className="mt-2 text-sm">Salidas cada hora desde el parking de La Bolleta (frente a Gaudí).</p>
+            <p className="mt-2 text-sm"><strong>Paradas:</strong> Parque Escandinavia, San Rafael, Tossalet, avenida Sant Pere (Albir Garden) y Consum Albir.</p>
+            <p className="mt-2 text-sm">El recorrido de regreso finaliza en el parking de La Bolleta.</p>
+          </article>
+          <p className="text-xs text-muted-foreground">Los teléfonos y horarios pueden cambiar. Comprueba la información con el servicio correspondiente. Esta página es informativa y no sustituye a los servicios oficiales de emergencia.</p>
         </section>
       </main>}
       {currentPage!=="home" && avisosVisibles.length>0 && <section aria-label="Avisos importantes" className="mx-auto mb-8 max-w-5xl space-y-2 px-4 sm:px-5">{avisosVisibles.map((aviso:any)=><article key={aviso.id} className={`rounded-2xl border p-3 sm:p-4 ${aviso.importante?"border-amber-400 bg-amber-50 text-amber-950 shadow-md":"border-border bg-background/80 text-foreground"}`}><div className="flex items-start gap-3"><span className="text-xl">{aviso.importante?"⚠️":"📢"}</span><div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-wide">{aviso.importante?"Aviso importante":"Comunicado"}</p><h2 className="font-bold">{aviso.titulo}</h2><p className="mt-1 text-sm">{aviso.descripcion}</p></div></div></article>)}</section>}
