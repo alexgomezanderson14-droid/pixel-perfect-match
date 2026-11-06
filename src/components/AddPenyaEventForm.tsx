@@ -1,8 +1,5 @@
-import { lazy, Suspense, useState } from "react";
-import { ClientOnly } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 
-const FestMap = lazy(() => import("@/components/FestMap"));
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export default function AddPenyaEventForm({ penyaId, penyaName, onClose, onSaved }: {
@@ -15,7 +12,6 @@ export default function AddPenyaEventForm({ penyaId, penyaName, onClose, onSaved
   const [descripcion, setDescripcion] = useState("");
   const [lugar, setLugar] = useState("");
   const [imagen, setImagen] = useState<File | null>(null);
-  const [pos, setPos] = useState<{ lat: number; lng: number } | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -34,10 +30,6 @@ export default function AddPenyaEventForm({ penyaId, penyaName, onClose, onSaved
       }
       if (imagen.size > 5 * 1024 * 1024) {
         setError("La imagen no puede superar los 5 MB.");
-        return;
-      }
-      if (pos && (pos.lat < 38.4 || pos.lat > 38.8 || pos.lng < -0.3 || pos.lng > 0.1)) {
-        setError("La ubicación seleccionada parece estar fuera de l’Alfàs del Pi.");
         return;
       }
     }
@@ -65,8 +57,6 @@ export default function AddPenyaEventForm({ penyaId, penyaName, onClose, onSaved
         hora: hora.trim(),
         lugar: lugar.trim(),
         imagen_url: imageUrl,
-        lat: pos?.lat ?? null,
-        lng: pos?.lng ?? null,
         publicado: false,
       });
       if (insertError) throw new Error("No se ha podido enviar el evento: " + insertError.message);
@@ -105,7 +95,6 @@ export default function AddPenyaEventForm({ penyaId, penyaName, onClose, onSaved
           <label className="block space-y-1 text-sm font-bold">Lugar *<input required maxLength={200} placeholder="Calle, plaza o dirección" value={lugar} onChange={(e) => setLugar(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-2 font-normal" /></label>
           <label className="block space-y-1 text-sm font-bold">Imagen del evento *<input required type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setImagen(e.target.files?.[0] ?? null)} className="w-full text-sm font-normal" /><span className="text-xs font-normal text-muted-foreground">JPG, PNG o WEBP · máximo 5 MB</span></label>
           <label className="block space-y-1 text-sm font-bold">Descripción (opcional)<textarea maxLength={1000} rows={3} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-2 font-normal" /></label>
-          <div className="space-y-2"><p className="text-sm font-bold">Ubicación exacta en el mapa (opcional)</p><div className="h-52 overflow-hidden rounded-2xl"><ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}><Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><FestMap lugares={[]} pick={pos} onPick={(lat, lng) => setPos({ lat, lng })} /></Suspense></ClientOnly></div>{pos && <button type="button" onClick={() => setPos(null)} className="text-xs underline">Quitar ubicación marcada</button>}</div>
           <p className="text-xs text-muted-foreground">El evento quedará pendiente de revisión antes de aparecer públicamente.</p>
         </>}
         {error && <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
