@@ -468,12 +468,6 @@ function Home() {
                       {penyaNombre && <span className="max-w-[34%] shrink-0 text-right text-[9px] font-extrabold leading-tight text-[#49352f] sm:text-xs">{penyaNombre}</span>}
                     </div>
                   </div>
-                    <h3 className="line-clamp-2 text-xs font-extrabold leading-tight text-[#49352f] sm:text-xl">{e.titulo}</h3>
-                    <p className="mt-1 text-[10px] font-bold text-[#59443c] sm:mt-2 sm:text-sm">{fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p>
-                    {e.lugar && <p className="mt-0.5 line-clamp-1 text-[10px] font-semibold text-[#59443c] sm:text-sm">📍 {e.lugar}</p>}
-                    {e.descripcion && <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-[#59443c] sm:text-sm">{e.descripcion}</p>}
-                    {penyaNombre && <p className="mt-1 line-clamp-1 text-[10px] font-extrabold text-[#49352f] sm:text-xs">{penyaNombre}</p>}
-                  </div>
                 </div>
                 {e.lat != null && e.lng != null && <button onClick={() => goMap("evento-" + e.id)} className="w-full px-2 py-1.5 text-[10px] font-bold text-[#49352f] sm:px-4 sm:py-2 sm:text-sm">📍 Ver ubicación en el mapa</button>}
               </article>;
