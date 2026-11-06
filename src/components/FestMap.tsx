@@ -12,12 +12,14 @@ export default function FestMap({
   onPick,
   pick,
   onPenyaClick,
+  onItemClick,
 }: {
   lugares: Lugar[];
   focusId?: string | null;
   onPick?: (lat: number, lng: number) => void;
   pick?: { lat: number; lng: number } | null;
   onPenyaClick?: (id: string) => void;
+  onItemClick?: (id: string) => void;
 }) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
@@ -28,6 +30,8 @@ export default function FestMap({
   pickRef.current = onPick;
   const penyaClickRef = useRef(onPenyaClick);
   penyaClickRef.current = onPenyaClick;
+  const itemClickRef = useRef(onItemClick);
+  itemClickRef.current = onItemClick;
 
   useEffect(() => {
     if (!el.current || map.current) return;
@@ -60,7 +64,8 @@ export default function FestMap({
       const markerHtml = l.categoria === "penya" && l.foto
         ? `<div class="fest-pin fest-pin-penya fest-pin-photo" style="width:50px;height:50px;box-sizing:border-box;overflow:hidden;border-radius:50%;border:3px solid #fff;background:#e6b6c7;box-shadow:0 2px 8px rgba(0,0,0,.35);padding:0;display:block;"><img src="${esc(l.foto)}" alt="" loading="lazy" referrerpolicy="no-referrer" style="display:block;width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;border:0;border-radius:50%;margin:0;padding:0;" /></div>`
         : `<div class="fest-pin fest-pin-${l.categoria}">${icons[l.categoria]}</div>`;
-      const popupHtml = `${img}<strong>${esc(l.nombre)}</strong>${l.descripcion ? `<br/><span>${esc(l.descripcion)}</span>` : ""}${l.categoria === "penya" ? `<br/><button type="button" data-penya-id="${esc(l.id)}" class="fest-popup-detail">Ver ficha de la peña</button>` : ""}`;
+      const categoryLabel:Record<string,string>={penya:"Peña",actuacion:"Actuación",evento:"Evento",recinto:"Recinto",servicio:"Servicio"};
+      const popupHtml = `${img}<small>${categoryLabel[l.categoria]||"Punto de interés"}</small><br/><strong>${esc(l.nombre)}</strong>${l.descripcion ? `<br/><span>${esc(l.descripcion)}</span>` : ""}${l.dia ? `<br/><small>${esc(l.dia)}${l.hora ? " · "+esc(l.hora) : ""}</small>` : ""}${l.categoria === "penya" ? `<br/><button type="button" data-penya-id="${esc(l.id)}" class="fest-popup-detail">Ver ficha de la peña</button>` : l.detalleId ? `<br/><button type="button" data-detail-id="${esc(l.detalleId)}" class="fest-popup-detail">Ver actividad</button>` : ""}`;
       const m = L.marker([l.lat, l.lng], {
         icon: L.divIcon({
           className: "",
@@ -69,10 +74,12 @@ export default function FestMap({
           iconAnchor: l.categoria === "penya" && l.foto ? [25, 25] : [18, 18],
         }),
       }).bindPopup(popupHtml);
-      if (l.categoria === "penya") {
+      if (l.categoria === "penya" || l.detalleId) {
         m.on("popupopen", (event) => {
           const button = event.popup.getElement()?.querySelector<HTMLButtonElement>("[data-penya-id]");
           button?.addEventListener("click", () => penyaClickRef.current?.(l.id));
+          const detailButton = event.popup.getElement()?.querySelector<HTMLButtonElement>("[data-detail-id]");
+          detailButton?.addEventListener("click", () => itemClickRef.current?.(l.detalleId!));
         });
       }
       m.addTo(layer.current!);
