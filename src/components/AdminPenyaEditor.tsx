@@ -12,7 +12,6 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     tipo_musica: penya.tipo_musica ?? "Variada",
     instagram: penya.instagram ?? "",
     informacion: penya.informacion ?? "",
-    email: penya.email ?? "",
     estado: penya.estado ?? "aprobada",
     tiene_evento: Boolean(penya.tiene_evento),
   });
@@ -53,7 +52,6 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
         tipo_musica: form.tipo_musica,
         instagram: form.instagram.trim().replace(/^@/, ""),
         informacion: form.informacion.trim(),
-        email: form.email.trim() || null,
         estado: form.estado,
         tiene_evento: form.tiene_evento,
         foto_url,
@@ -81,7 +79,6 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     <div className="grid grid-cols-2 gap-2"><label className="text-sm font-semibold">Latitud<input className={field} value={form.lat} onChange={e=>change("lat",e.target.value)} placeholder="38.58..." /></label><label className="text-sm font-semibold">Longitud<input className={field} value={form.lng} onChange={e=>change("lng",e.target.value)} placeholder="-0.10..." /></label></div>
     <label className="block space-y-1 text-sm font-semibold">Tipo de música<input className={field} maxLength={80} value={form.tipo_musica} onChange={e=>change("tipo_musica",e.target.value)} /></label>
     <label className="block space-y-1 text-sm font-semibold">Instagram<input className={field} maxLength={100} value={form.instagram} onChange={e=>change("instagram",e.target.value)} placeholder="@cuenta" /></label>
-    <label className="block space-y-1 text-sm font-semibold">Correo de contacto<input className={field} type="email" value={form.email} onChange={e=>change("email",e.target.value)} /></label>
     <label className="block space-y-1 text-sm font-semibold">Información / descripción<textarea className={field} rows={3} maxLength={1000} value={form.informacion} onChange={e=>change("informacion",e.target.value)} /></label>
     <div className="flex flex-wrap gap-4 text-sm"><label className="flex items-center gap-2"><input type="checkbox" checked={form.tiene_evento} onChange={e=>change("tiene_evento",e.target.checked)} /> Organiza evento</label></div>
     <label className="block space-y-1 text-sm font-semibold">Estado<select className={field} value={form.estado} onChange={e=>change("estado",e.target.value)}><option value="aprobada">Visible en la web</option><option value="pendiente">Pendiente / ocultar</option><option value="rechazada">Rechazada / ocultar</option></select></label>
