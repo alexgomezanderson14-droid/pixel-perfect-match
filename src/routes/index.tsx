@@ -352,13 +352,13 @@ function Home() {
   return (
     <div className="page-bg min-h-screen" style={{ "--pink": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--secondary": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--accent": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--ring": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--cat-penya": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--background": siteContent["theme_background"] || "oklch(0.95 0.015 75)", "--gradient-page": `linear-gradient(180deg, ${siteContent["theme_background"] || "oklch(0.96 0.015 70)"}, ${siteContent["theme_background"] || "oklch(0.93 0.02 60)"})` } as React.CSSProperties}>
       <header className="fixed inset-x-0 top-2 z-[1000] flex justify-center px-2 sm:top-4 sm:px-4">
-        <nav aria-label="Navegación principal" className={`glass grid w-full max-w-6xl grid-cols-3 items-center gap-1 rounded-2xl p-1.5 text-[11px] leading-tight sm:flex sm:w-auto sm:max-w-full sm:gap-1 sm:rounded-full sm:p-1.5 sm:text-sm ${currentPage==="home"?"":"grid-cols-1"}`}>
+        <nav aria-label="Navegación principal" className="glass nav-scrollbar-hidden flex w-full max-w-6xl flex-nowrap items-center justify-start gap-1 overflow-x-auto whitespace-nowrap rounded-full p-1 text-[11px] sm:w-auto sm:gap-1.5 sm:p-1.5 sm:text-sm">
           {currentPage==="home" ? <>
             {(Object.keys(ui.nav) as (keyof typeof ui.nav)[]).map((k) => (
-              <a key={k} href={`#${k}`} className="flex min-w-0 items-center justify-center rounded-xl px-1.5 py-2 text-center hover:bg-glass sm:whitespace-nowrap sm:rounded-full sm:px-3 sm:py-1.5">{ui.nav[k]}</a>
+              <a key={k} href={`#${k}`} className="flex shrink-0 items-center justify-center rounded-full px-3 py-2 hover:bg-glass sm:px-3.5 sm:py-2">{ui.nav[k]}</a>
             ))}
-            <button type="button" onClick={()=>{setMapFullscreen(false);setCurrentPage("agenda");window.scrollTo({top:0,behavior:"smooth"});}} className="flex min-w-0 items-center justify-center rounded-xl px-1.5 py-2 text-center font-bold text-primary hover:bg-glass sm:whitespace-nowrap sm:rounded-full sm:px-3 sm:py-1.5">Mi agenda</button>
-          </> : <button type="button" onClick={()=>{setCurrentPage("home");window.scrollTo({top:0,behavior:"smooth"});}} className="rounded-xl px-3 py-2 text-center font-bold text-primary hover:bg-glass sm:rounded-full sm:py-1.5">← Volver al inicio</button>}
+            <button type="button" onClick={()=>{setMapFullscreen(false);setCurrentPage("agenda");window.scrollTo({top:0,behavior:"smooth"});}} className="flex shrink-0 items-center justify-center rounded-full px-3 py-2 font-bold text-primary hover:bg-glass sm:px-3.5">Mi agenda</button>
+          </> : <button type="button" onClick={()=>{setCurrentPage("home");window.scrollTo({top:0,behavior:"smooth"});}} className="shrink-0 rounded-full px-3 py-2 text-center font-bold text-primary hover:bg-glass">← Volver al inicio</button>}
         </nav>
       </header>
 
@@ -385,9 +385,9 @@ function Home() {
         
         <section id="mapa" className="scroll-mt-24">
           <SectionTitle>{ui.nav.mapa}</SectionTitle>
-          <div className={`glass grid gap-3 rounded-[1.5rem] p-2 sm:gap-4 sm:rounded-[2rem] sm:p-3 ${mapFullscreen ? "grid-cols-1" : "md:grid-cols-[280px_1fr]"}`}>
-            {!mapFullscreen && <div className="space-y-3 p-2">
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={ui.buscar} className="w-full rounded-full border border-input bg-glass px-4 py-2.5 outline-none focus:ring-2 focus:ring-ring" />
+          <div className="glass grid grid-cols-1 gap-3 rounded-[1.5rem] p-2 sm:gap-4 sm:rounded-[2rem] sm:p-3">
+            {!mapFullscreen && <div className="space-y-3 p-1 sm:p-2">
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={ui.buscar} aria-label="Buscar en el mapa" className="w-full rounded-full border border-input bg-glass px-4 py-2.5 outline-none focus:ring-2 focus:ring-ring" />
               <div className="flex flex-wrap gap-2">
                 <Chip active={!cat} onClick={() => setCat(null)}>{ui.todos}</Chip>
                 {cats.map((c) => (
@@ -395,18 +395,8 @@ function Home() {
                 ))}
               </div>
               {penyes.some((p)=>p.lat==null||p.lng==null)||actos.some((a)=>a.lat==null||a.lng==null)||eventos.some((e)=>e.lat==null||e.lng==null) ? <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">Algunas peñas o actividades no aparecen en el mapa porque todavía no tienen coordenadas exactas verificadas. No se han inventado ubicaciones.</p> : null}
-              <ul className="max-h-72 space-y-1 overflow-auto">
-                {visibles.map((l) => (
-                  <li key={l.id}>
-                    <button onClick={() => { setFocus(null); requestAnimationFrame(() => setFocus(l.id)); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm hover:bg-glass">
-                      <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${catBg[l.categoria]}`} />{l.nombre}
-                    </button>
-                  </li>
-                ))}
-                {!visibles.length && <li className="px-3 text-sm text-muted-foreground">{ui.sinResultados}</li>}
-              </ul>
             </div>}
-            {!mapFullscreen && <div className="relative h-[340px] overflow-hidden rounded-[1.25rem] sm:h-[460px] sm:rounded-[1.5rem] md:h-[540px]">
+            {!mapFullscreen && <div className="relative h-[390px] overflow-hidden rounded-[1.25rem] sm:h-[500px] sm:rounded-[1.5rem] md:h-[600px]">
               <button type="button" onClick={() => setMapFullscreen(true)} aria-label="Ampliar mapa a pantalla completa" className="absolute right-3 top-3 z-[1200] rounded-full border border-white/70 bg-white/95 px-4 py-2 text-sm font-bold text-[#49352f] shadow-lg">⛶ Pantalla completa</button>
               <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
                 <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}>
@@ -460,7 +450,17 @@ function Home() {
 
         <section id="eventos" className="scroll-mt-24">
           <SectionTitle>Eventos</SectionTitle>
-          <div className="glass mb-5 space-y-3 rounded-2xl p-3 sm:p-4"><p className="text-sm font-bold text-primary">Filtrar actividades</p><div className="flex flex-wrap gap-2">{[["upcoming","Próximos eventos"],["today","Hoy"],["tomorrow","Mañana"],["all","Todos los días"]].map(([value,label])=><Chip key={value} active={filterDay===value} onClick={()=>setFilterDay(value as any)}>{label}</Chip>)}</div><div className="flex flex-wrap gap-2">{[["all","Todas las categorías"],["programa","Programa oficial"],["actuaciones","Actuaciones"],["penyes","Eventos de peñas"]].map(([value,label])=><Chip key={value} active={filterCategory===value} onClick={()=>setFilterCategory(value as any)}>{label}</Chip>)}</div><button type="button" onClick={()=>{setFilterDay("upcoming");setFilterCategory("all");}} className="text-xs font-bold text-primary underline">Quitar todos los filtros</button></div>
+          <details className="glass mb-5 rounded-2xl p-3 sm:p-4">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-bold text-primary">
+              <span className="flex min-w-0 items-center gap-2"><span>☷ Filtros</span><span className="truncate text-xs font-medium text-muted-foreground">{({upcoming:"Próximos eventos",today:"Hoy",tomorrow:"Mañana",all:"Todos los días"} as const)[filterDay]} · {({all:"Todas las categorías",programa:"Programa oficial",actuaciones:"Actuaciones",penyes:"Eventos de peñas"} as const)[filterCategory]}</span></span>
+              <span className="shrink-0 text-sm">⌄</span>
+            </summary>
+            <div className="mt-3 space-y-3 border-t border-border/60 pt-3">
+              <div><p className="mb-2 text-xs font-bold text-muted-foreground">DÍA</p><div className="flex flex-wrap gap-2">{[["upcoming","Próximos"],["today","Hoy"],["tomorrow","Mañana"],["all","Todos"]].map(([value,label])=><Chip key={value} active={filterDay===value} onClick={()=>setFilterDay(value as any)}>{label}</Chip>)}</div></div>
+              <div><p className="mb-2 text-xs font-bold text-muted-foreground">CATEGORÍA</p><div className="flex flex-wrap gap-2">{[["all","Todas"],["programa","Programa"],["actuaciones","Actuaciones"],["penyes","Peñas"]].map(([value,label])=><Chip key={value} active={filterCategory===value} onClick={()=>setFilterCategory(value as any)}>{label}</Chip>)}</div></div>
+              <button type="button" onClick={()=>{setFilterDay("upcoming");setFilterCategory("all");}} className="text-xs font-bold text-primary underline">Quitar todos los filtros</button>
+            </div>
+          </details>
           <div className="mb-6 space-y-2">
             <h3 className="text-2xl font-bold text-primary">Actuaciones y festes al carrer</h3>
             <p className="text-sm text-muted-foreground">Pulsa en cada evento para consultar su descripción, fecha y lugar.</p>
