@@ -659,7 +659,7 @@ function Home() {
             {selectedPenya.foto && <img src={selectedPenya.foto} alt={selectedPenya.nombre} className="h-48 w-full object-cover sm:h-60" />}
             <div className="p-5 sm:p-8">
               <div className="flex items-start justify-between gap-4">
-                <div><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Peña participante</p><h2 className="mt-1 text-3xl font-bold text-primary sm:text-4xl">{selectedPenya.nombre}</h2></div>
+                <div><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Peña participante</p><h2 className="mt-1 text-3xl font-bold text-primary sm:text-4xl">{selectedPenya.nombre}</h2>{selectedPenya.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").includes("impacte") && <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-amber-300 bg-gradient-to-r from-amber-100 via-yellow-50 to-amber-100 px-4 py-2 text-amber-950 shadow-sm"><span className="text-xl">♛</span><span className="text-xs font-black uppercase tracking-wider">Mayorales 2026</span><span className="text-[10px] font-semibold">Peña Impacte</span></div>}</div>
                 <button onClick={() => setSelectedPenya(null)} aria-label="Cerrar" className="glass-btn h-10 w-10 shrink-0 rounded-full">✕</button>
               </div>
 
