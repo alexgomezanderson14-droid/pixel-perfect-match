@@ -477,7 +477,9 @@ function Home() {
               if (filterDay !== "all" && !eventoSigueActivo(a, now)) return false;
               const t = String(a.titulo || "").toLocaleLowerCase("es");
               const excluido = /despertà|desperta|despertada|nit de albaes|nit d'albaes|nit de les albaes|albaes/.test(t);
-              return !excluido && (a.tipo === "actuacion" || /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/.test(t));
+              // En Eventos también deben aparecer los actos oficiales añadidos manualmente
+              // desde administración aunque su tipo sea "evento" y no "actuacion".
+              return !excluido;
             }).sort((a,b) => a.dia.localeCompare(b.dia) || (a.hora || "").localeCompare(b.hora || "")).map((a) => {
               const t = String(a.titulo || "").toLocaleLowerCase("es");
               const festaCarrer = /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/.test(t);
@@ -494,7 +496,7 @@ function Home() {
                           <span className="mt-1 text-[10px] font-bold sm:text-sm">{a.hora || "Hora por confirmar"}</span>
                         </div>
                         <div className="min-w-0 flex-1 pb-0.5">
-                          <span className="mb-1 inline-block rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#765563] sm:mb-2 sm:px-2.5 sm:py-1 sm:text-[10px]">{festaCarrer ? "Festa al carrer" : "Actuación"}</span>
+                          <span className="mb-1 inline-block rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#765563] sm:mb-2 sm:px-2.5 sm:py-1 sm:text-[10px]">{festaCarrer ? "Festa al carrer" : a.tipo === "evento" ? "Evento oficial" : "Actuación"}</span>
                           <h3 className="line-clamp-3 text-xs font-bold leading-tight text-white sm:text-xl">{a.titulo}</h3>
                           <p className="mt-1.5 text-[10px] font-semibold text-white/90 sm:mt-2 sm:text-xs">Ver detalles <span className="inline-block transition group-open:rotate-180">⌄</span></p>
                         </div>
