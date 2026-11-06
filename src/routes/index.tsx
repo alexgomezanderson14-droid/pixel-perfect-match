@@ -566,9 +566,9 @@ function Home() {
                   <h3 className="text-xl font-bold text-primary">Planes de la peña</h3>
                   <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Agenda</span>
                 </div>
-                {eventosActivos.filter((e) => e.penya_id === selectedPenya.id).length ? (
+                {eventos.filter((e) => e.penya_id === selectedPenya.id).length ? (
                   <div className="space-y-3">
-                    {eventosActivos.filter((e) => e.penya_id === selectedPenya.id).map((e) => {
+                    {eventos.filter((e) => e.penya_id === selectedPenya.id).map((e) => {
                       const fecha = new Date(String(e.dia).slice(0, 10) + "T12:00:00");
                       const diaNumero = fecha.toLocaleDateString("es-ES", { day: "2-digit" });
                       const mes = fecha.toLocaleDateString("es-ES", { month: "short" }).replace(".", "").toUpperCase();
