@@ -174,3 +174,8 @@ html { scroll-padding-top: 7rem; }
 /* Keep the compact top navigation on one line without a visible scrollbar. */
 .nav-scrollbar-hidden { scrollbar-width: none; -ms-overflow-style: none; }
 .nav-scrollbar-hidden::-webkit-scrollbar { display: none; }
+
+
+/* Discourage casual saving/dragging of site imagery while keeping text accessible. */
+img { -webkit-user-drag: none; }
+.copyright-footer { position: relative; z-index: 1; }
