@@ -223,6 +223,7 @@ function Home() {
   const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes"|"otros">("all");
   const [favorites, setFavorites] = useState<string[]>([]);
   const [avisos, setAvisos] = useState<any[]>([]);
+  const [mapPoints, setMapPoints] = useState<Lugar[]>([]);
   const [cat, setCat] = useState<Categoria | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
   const [penyes, setPenyes] = useState<PenyaDb[]>([]);
@@ -257,8 +258,9 @@ function Home() {
     penyes.filter((p) => matches(p.nombre, p.direccion)).forEach((p) => results.push({ key: "penya:" + p.id, label: p.nombre, kind: "Peña", sub: p.direccion || "Ficha de la peña", onSelect: () => setSelectedPenya(p) }));
     eventos.filter((e) => matches(e.titulo, e.descripcion, e.lugar)).forEach((e) => results.push({ key: "evento:" + e.id, label: e.titulo, kind: "Evento de peña", sub: [e.dia, e.hora, e.lugar].filter(Boolean).join(" · "), onSelect: () => document.getElementById("evento-" + e.id)?.scrollIntoView({ behavior: "smooth", block: "center" }) }));
     actos.filter((a) => matches(a.titulo, a.descripcion, a.lugar)).forEach((a) => results.push({ key: "acto:" + a.id, label: a.titulo, kind: a.tipo === "actuacion" ? "Actuación" : "Programa oficial", sub: [a.dia, a.hora, a.lugar].filter(Boolean).join(" · "), onSelect: () => { const target = document.getElementById("acto-" + a.id); if (target) target.scrollIntoView({ behavior: "smooth", block: "center" }); else document.getElementById("programa")?.scrollIntoView({ behavior: "smooth" }); } }));
+    mapPoints.filter((p) => matches(p.nombre, p.descripcion)).forEach((p) => results.push({ key: "lugar:" + p.id, label: p.nombre, kind: "Ubicación", sub: p.descripcion || "Punto de interés", onSelect: () => { document.getElementById("mapa")?.scrollIntoView({ behavior: "smooth" }); setFocus(null); requestAnimationFrame(() => setFocus(p.id)); } }));
     return results.slice(0, 12);
-  }, [searchTerm, penyes, eventos, actos]);
+  }, [searchTerm, penyes, eventos, actos, mapPoints]);
   const toggleFavorite=(key:string)=>setFavorites((current)=>{const next=current.includes(key)?current.filter((x)=>x!==key):[...current,key];try{localStorage.setItem("fiestas-favorites",JSON.stringify(next));}catch{}return next;});
   useEffect(() => { if (dias.length && !dia) setDia(dias[0]); }, [dias, dia]);
   useEffect(()=>{try{const saved=JSON.parse(localStorage.getItem("fiestas-favorites")||"[]");if(Array.isArray(saved))setFavorites(saved.filter((x)=>typeof x==="string"));}catch{setFavorites([]);}},[]);
@@ -311,6 +313,7 @@ function Home() {
     const content = Object.fromEntries((contentData ?? []).map((x:any)=>[x.clave,x.valor]));
     setSiteContent(content);
     try { const parsed=JSON.parse(content["avisos_json"]||"[]"); setAvisos(Array.isArray(parsed)?parsed.filter((a:any)=>a.activo && (!a.publicar_en || new Date(a.publicar_en).getTime()<=Date.now())):[]); } catch { setAvisos([]); }
+    try { const points=JSON.parse(content["mapa_puntos_json"]||"[]"); setMapPoints(Array.isArray(points)?points.filter((p:any)=>Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))):[]); } catch { setMapPoints([]); }
     if (content["hero_image_path"]) {
       const { data: imageData } = supabase.storage.from("penyes").getPublicUrl(content["hero_image_path"]);
       setHeroImage(imageData.publicUrl);
@@ -325,10 +328,11 @@ function Home() {
 
   const todos: Lugar[] = useMemo(() => [
     ...lugaresFijos,
+    ...mapPoints,
     ...penyes.filter((p) => p.lat != null && p.lng != null).map((p) => ({ id: p.id, categoria: "penya" as const, nombre: p.nombre, descripcion: p.direccion ?? "", lat: Number(p.lat), lng: Number(p.lng), foto: p.foto })),
     ...actos.filter((a) => a.lat != null && a.lng != null).map((a) => ({ id: "acto-" + a.id, categoria: a.tipo as Categoria, nombre: a.titulo, descripcion: a.descripcion || a.lugar || "", lat: Number(a.lat), lng: Number(a.lng), dia:a.dia, hora:a.hora, detalleId:"acto-"+a.id })),
     ...eventosActivos.filter((e) => e.lat != null && e.lng != null).map((e) => ({ id: "evento-" + e.id, categoria: "evento" as const, nombre: e.titulo, descripcion: e.descripcion || e.lugar || "", lat: Number(e.lat), lng: Number(e.lng), dia:e.dia, hora:e.hora, detalleId:"evento-"+e.id })),
-  ], [penyes, actos, eventosActivos]);
+  ], [penyes, actos, eventosActivos, mapPoints]);
 
   const visibles = todos.filter((l) => (!cat || l.categoria === cat) && l.nombre.toLowerCase().includes(q.toLowerCase()));
 
