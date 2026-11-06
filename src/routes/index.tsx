@@ -222,6 +222,7 @@ function Home() {
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
   const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes">("all");
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState<"home"|"agenda">("home");
   const [publicDataLoaded, setPublicDataLoaded] = useState(false);
   const [avisos, setAvisos] = useState<any[]>([]);
   const [mapPoints, setMapPoints] = useState<Lugar[]>([]);
@@ -352,13 +353,16 @@ function Home() {
     <div className="page-bg min-h-screen" style={{ "--pink": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--secondary": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--accent": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--ring": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--cat-penya": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--background": siteContent["theme_background"] || "oklch(0.95 0.015 75)", "--gradient-page": `linear-gradient(180deg, ${siteContent["theme_background"] || "oklch(0.96 0.015 70)"}, ${siteContent["theme_background"] || "oklch(0.93 0.02 60)"})` } as React.CSSProperties}>
       <header className="fixed inset-x-0 top-4 z-[1000] flex justify-center px-4">
         <nav className="glass flex max-w-full items-center gap-1 overflow-x-auto whitespace-nowrap rounded-full p-1.5 text-xs sm:text-sm">
-          {(Object.keys(ui.nav) as (keyof typeof ui.nav)[]).map((k) => (
-            <a key={k} href={`#${k}`} className="rounded-full px-2 py-1.5 hover:bg-glass sm:px-3">{ui.nav[k]}</a>
-          ))}
-          <a href="#agenda" className="rounded-full px-2 py-1.5 font-bold text-primary hover:bg-glass sm:px-3">Mi agenda</a>
+          {currentPage==="home" ? <>
+            {(Object.keys(ui.nav) as (keyof typeof ui.nav)[]).map((k) => (
+              <a key={k} href={`#${k}`} className="rounded-full px-2 py-1.5 hover:bg-glass sm:px-3">{ui.nav[k]}</a>
+            ))}
+            <button type="button" onClick={()=>{setMapFullscreen(false);setCurrentPage("agenda");window.scrollTo({top:0,behavior:"smooth"});}} className="rounded-full px-2 py-1.5 font-bold text-primary hover:bg-glass sm:px-3">Mi agenda</button>
+          </> : <button type="button" onClick={()=>{setCurrentPage("home");window.scrollTo({top:0,behavior:"smooth"});}} className="rounded-full px-3 py-1.5 font-bold text-primary hover:bg-glass">← Volver al inicio</button>}
         </nav>
       </header>
 
+      {currentPage==="home" && <>
       <section className="relative flex min-h-[76vh] items-end overflow-hidden sm:min-h-[92vh]">
         <img src={heroImage || hero} alt="Fiestas en las calles de l'Alfàs del Pi" width={1920} height={1280} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-t from-brown/90 via-brown/20 to-transparent" />
@@ -378,7 +382,7 @@ function Home() {
       <main className="mx-auto max-w-6xl space-y-8 px-2.5 py-6 sm:space-y-20 sm:px-5 sm:py-20">
         <section aria-label="Buscador general" className="relative z-30 scroll-mt-24"><div className="glass rounded-2xl p-3 sm:rounded-3xl sm:p-5"><label htmlFor="festival-search" className="mb-2 block text-sm font-bold text-primary">Busca peñas, eventos, actuaciones y lugares</label><input id="festival-search" value={searchTerm} onChange={(e)=>setSearchTerm(e.target.value)} placeholder="¿Qué estás buscando?" className="w-full rounded-full border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"/>{searchTerm.trim().length>=2&&<div className="mt-2 max-h-80 overflow-y-auto rounded-2xl border border-border bg-background p-2 shadow-lg">{searchResults.length?searchResults.map((result)=><button key={result.key} type="button" onClick={()=>{result.onSelect();setSearchTerm("");}} className="flex w-full items-start gap-3 rounded-xl px-3 py-2 text-left hover:bg-glass"><span className="mt-0.5 rounded-full bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary">{result.kind}</span><span className="min-w-0"><span className="block text-sm font-bold">{result.label}</span><span className="block truncate text-xs text-muted-foreground">{result.sub}</span></span></button>):<p className="p-3 text-sm text-muted-foreground">No se ha encontrado nada.</p>}</div>}</div></section>
         {avisosVisibles.length>0&&<section aria-label="Avisos importantes" className="space-y-2">{avisosVisibles.map((aviso:any)=><article key={aviso.id} className={`rounded-2xl border p-3 sm:p-4 ${aviso.importante?"border-amber-400 bg-amber-50 text-amber-950 shadow-md":"border-border bg-background/80 text-foreground"}`}><div className="flex items-start gap-3"><span className="text-xl">{aviso.importante?"⚠️":"📢"}</span><div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-wide">{aviso.importante?"Aviso importante":"Comunicado"}</p><h2 className="font-bold">{aviso.titulo}</h2><p className="mt-1 text-sm">{aviso.descripcion}</p></div></div></article>)}</section>}
-        <section id="agenda" className="scroll-mt-24"><div className="mb-3 flex items-center justify-between gap-3"><SectionTitle>Mi agenda</SectionTitle><span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">{favoriteItems.length} guardados</span></div>{favoriteItems.length?<div className="grid gap-2 sm:grid-cols-2">{favoriteItems.map((item:any)=><article key={item.favoriteKey} className="glass flex items-center justify-between gap-3 rounded-2xl p-3"><div className="min-w-0"><p className="text-[10px] font-bold uppercase text-primary">{item.kind}</p><h3 className="truncate text-sm font-bold">{item.titulo}</h3><p className="text-xs text-muted-foreground">{item.dia} · {item.hora||"Hora por confirmar"}{item.lugar?" · "+item.lugar:""}</p></div><button type="button" onClick={()=>toggleFavorite(item.favoriteKey)} aria-label="Quitar de mi agenda" className="shrink-0 rounded-full px-3 py-2 text-lg text-primary">★</button></article>)}</div>:<p className="glass rounded-2xl p-4 text-sm text-muted-foreground">Todavía no has guardado favoritos. Pulsa la estrella de cualquier evento o actuación para añadirlo aquí.</p>}</section>
+        
         <section id="mapa" className="scroll-mt-24">
           <SectionTitle>{ui.nav.mapa}</SectionTitle>
           <div className={`glass grid gap-3 rounded-[1.5rem] p-2 sm:gap-4 sm:rounded-[2rem] sm:p-3 ${mapFullscreen ? "grid-cols-1" : "md:grid-cols-[280px_1fr]"}`}>
@@ -558,6 +562,9 @@ function Home() {
           </div>
         </section>
       </main>
+      </>}
+
+      {currentPage==="agenda" && <main className="mx-auto min-h-[85vh] max-w-5xl px-4 pb-16 pt-28 sm:px-5"><div className="mb-6 flex items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tus favoritos</p><h1 className="mt-1 text-3xl font-bold text-primary sm:text-5xl">Mi agenda</h1><p className="mt-2 text-sm text-muted-foreground">Tus eventos y actuaciones guardados, ordenados por fecha y hora.</p></div><span className="shrink-0 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary">{favoriteItems.length} guardados</span></div>{favoriteItems.length ? <div className="grid gap-3 sm:grid-cols-2">{favoriteItems.map((item:any)=><article key={item.favoriteKey} className="glass flex items-center justify-between gap-3 rounded-2xl p-4"><div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-wide text-primary">{item.kind}</p><h2 className="mt-1 text-base font-bold">{item.titulo}</h2><p className="mt-1 text-xs text-muted-foreground">{item.dia} · {item.hora||"Hora por confirmar"}{item.lugar?" · "+item.lugar:""}</p></div><button type="button" onClick={()=>toggleFavorite(item.favoriteKey)} aria-label="Quitar de mi agenda" title="Quitar de mi agenda" className="shrink-0 rounded-full border border-primary/20 bg-background/70 px-3 py-2 text-xl text-primary">★</button></article>)}</div> : <div className="glass rounded-3xl px-5 py-12 text-center"><p className="text-4xl">☆</p><h2 className="mt-3 text-xl font-bold text-primary">Todavía no tienes favoritos</h2><p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">Vuelve al inicio y pulsa la estrella de cualquier evento o actuación para guardarlo aquí.</p><button type="button" onClick={()=>{setCurrentPage("home");window.scrollTo({top:0,behavior:"smooth"});}} className="mt-5 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">Explorar fiestas</button></div>}</main>}
 
       {mapFullscreen && typeof document !== "undefined" && createPortal(
         <div role="dialog" aria-modal="true" aria-label="Mapa a pantalla completa" className="fixed inset-0 z-[99999] h-[100dvh] w-screen overflow-hidden bg-[#f3eee6]">
@@ -571,7 +578,7 @@ function Home() {
           <button type="button" onClick={() => setMapFullscreen(false)} className="absolute right-4 top-4 z-[100000] rounded-full border border-white bg-white px-5 py-3 text-sm font-bold text-[#49352f] shadow-xl">✕ Cerrar mapa</button>
         </div>, document.body
       )}
-      <footer className="space-y-4 px-5 pb-10 text-center text-sm text-muted-foreground">
+      {currentPage==="home" && <footer className="space-y-4 px-5 pb-10 text-center text-sm text-muted-foreground">
         <p>{edicion.titulo} · {edicion.anyo}</p>
         <button onClick={() => void shareWebsite()} className="glass-btn rounded-full px-6 py-3 font-bold text-primary">↗ Compartir la web</button>
         <div className="flex flex-wrap justify-center gap-2">
@@ -582,8 +589,8 @@ function Home() {
           <button onClick={() => shareOn("email", window.location.href, "Fiestas de l'Alfàs del Pi 2026", "Consulta el programa, el mapa y las peñas.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Correo</button>
           <button onClick={() => void copyShareLink(window.location.href)} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Copiar enlace</button>
         </div>
-      </footer>
-      {shareReminder && <aside role="status" className="fixed inset-x-4 bottom-4 z-[1800] mx-auto flex max-w-xl items-center gap-3 rounded-2xl border border-border bg-background p-4 shadow-2xl">
+      </footer>}
+      {currentPage==="home" && shareReminder && <aside role="status" className="fixed inset-x-4 bottom-4 z-[1800] mx-auto flex max-w-xl items-center gap-3 rounded-2xl border border-border bg-background p-4 shadow-2xl">
         <div className="min-w-0 flex-1"><p className="font-bold text-primary">¿Compartimos las fiestas?</p><p className="text-sm text-muted-foreground">Pasa la web a tus amigos para que nadie se pierda el programa ni los eventos.</p></div>
         <button onClick={() => { setShareReminder(false); localStorage.setItem("fiestas-share-reminder-last", String(Date.now())); }} className="shrink-0 rounded-full px-3 py-2 text-sm">Ahora no</button>
         <button onClick={() => { setShareReminder(false); void shareWebsite(); }} className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">Compartir</button>
