@@ -265,7 +265,7 @@ function Home() {
     return results.slice(0, 12);
   }, [searchTerm, penyes, eventos, actos, mapPoints]);
   const toggleFavorite=(key:string)=>setFavorites((current)=>{const next=current.includes(key)?current.filter((x)=>x!==key):[...current,key];try{localStorage.setItem("fiestas-favorites",JSON.stringify(next));}catch{}return next;});
-  useEffect(() => { if (dias.length && !dia) setDia(dias[0]); }, [dias, dia]);
+  useEffect(() => { if (dias.length && (!dia || !dias.includes(dia))) { const siguiente = dias.find((d) => d >= todayKey); setDia(dias.includes(todayKey) ? todayKey : siguiente || dias[dias.length - 1]); } }, [dias, dia, todayKey]);
   useEffect(()=>{try{const saved=JSON.parse(localStorage.getItem("fiestas-favorites")||"[]");if(Array.isArray(saved))setFavorites(saved.filter((x)=>typeof x==="string"));}catch{setFavorites([]);}},[]);
   useEffect(()=>{if(!publicDataLoaded)return;const valid=new Set([...actos.map(a=>"acto:"+a.id),...eventos.map(e=>"evento:"+e.id)]);setFavorites((current)=>{const next=current.filter((key)=>valid.has(key));if(next.length!==current.length){try{localStorage.setItem("fiestas-favorites",JSON.stringify(next));}catch{}}return next;});},[publicDataLoaded,actos,eventos]);
   useEffect(() => {
@@ -408,9 +408,16 @@ function Home() {
             <div className="glass rounded-3xl p-6 text-muted-foreground">{ui.programaPendiente}</div>
           ) : (
             <>
+              <div className="mb-5 rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-primary">{dia === todayKey ? "Programa de hoy" : "Día seleccionado"}</p>
+                <h3 className="mt-1 text-xl font-bold capitalize text-primary sm:text-2xl">{dia ? fmtDia(dia) : "Selecciona un día"}</h3>
+              </div>
+              <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">Consulta otros días</p>
               <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
                 {dias.map((d) => (
-                  <Chip key={d} active={dia === d} onClick={() => setDia(d)}><span className="inline-block first-letter:uppercase">{fmtDia(d)}</span></Chip>
+                  <Chip key={d} active={dia === d} onClick={() => setDia(d)}>
+                    <span className="inline-block whitespace-nowrap first-letter:uppercase">{d === todayKey ? "Hoy · " : ""}{fmtDia(d)}</span>
+                  </Chip>
                 ))}
               </div>
               <div className="space-y-3">
