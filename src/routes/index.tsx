@@ -5,6 +5,7 @@ import hero from "@/assets/hero-fiestas.jpg";
 import { edicion, lugares as lugaresFijos, ui, type Categoria, type Lugar } from "@/content/fiestas";
 import { programaOficial2026 } from "@/content/programa-oficial-2026";
 import { supabase } from "@/integrations/supabase/client";
+import CopyrightFooter from "@/components/CopyrightFooter";
 
 const FestMap = lazy(() => import("@/components/FestMap"));
 const AddPenyaForm = lazy(() => import("@/components/AddPenyaForm"));
@@ -734,6 +735,7 @@ function Home() {
           </Suspense>
         </ClientOnly>
       )}
+      <CopyrightFooter />
     </div>
   );
 }
