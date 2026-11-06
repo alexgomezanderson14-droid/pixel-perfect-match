@@ -14,7 +14,6 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     informacion: penya.informacion ?? "",
     email: penya.email ?? "",
     estado: penya.estado ?? "aprobada",
-    acepta_visitas: Boolean(penya.acepta_visitas),
     tiene_evento: Boolean(penya.tiene_evento),
   });
   const [foto, setFoto] = useState<File | null>(null);
@@ -53,7 +52,6 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
         informacion: form.informacion.trim(),
         email: form.email.trim() || null,
         estado: form.estado,
-        acepta_visitas: form.acepta_visitas,
         tiene_evento: form.tiene_evento,
         foto_url,
       }).eq("id", penya.id);
@@ -79,7 +77,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     <label className="block space-y-1 text-sm font-semibold">Instagram<input className={field} maxLength={100} value={form.instagram} onChange={e=>change("instagram",e.target.value)} placeholder="@cuenta" /></label>
     <label className="block space-y-1 text-sm font-semibold">Correo de contacto<input className={field} type="email" value={form.email} onChange={e=>change("email",e.target.value)} /></label>
     <label className="block space-y-1 text-sm font-semibold">Información / descripción<textarea className={field} rows={3} maxLength={1000} value={form.informacion} onChange={e=>change("informacion",e.target.value)} /></label>
-    <div className="flex flex-wrap gap-4 text-sm"><label className="flex items-center gap-2"><input type="checkbox" checked={form.acepta_visitas} onChange={e=>change("acepta_visitas",e.target.checked)} /> Acepta visitas</label><label className="flex items-center gap-2"><input type="checkbox" checked={form.tiene_evento} onChange={e=>change("tiene_evento",e.target.checked)} /> Organiza evento</label></div>
+    <div className="flex flex-wrap gap-4 text-sm"><label className="flex items-center gap-2"><input type="checkbox" checked={form.tiene_evento} onChange={e=>change("tiene_evento",e.target.checked)} /> Organiza evento</label></div>
     <label className="block space-y-1 text-sm font-semibold">Estado<select className={field} value={form.estado} onChange={e=>change("estado",e.target.value)}><option value="aprobada">Visible en la web</option><option value="pendiente">Pendiente / ocultar</option><option value="rechazada">Rechazada / ocultar</option></select></label>
     {fotoUrl && !quitarFoto && <img src={fotoUrl} alt={"Foto de "+penya.nombre} className="h-36 w-full rounded-xl object-cover" />}
     <label className="block space-y-1 text-sm font-semibold">Cambiar fotografía (JPG, PNG o WEBP, máx. 5 MB)<input className="block w-full text-sm font-normal" type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setFoto(e.target.files?.[0]??null)} /></label>
