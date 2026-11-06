@@ -282,8 +282,8 @@ function Home() {
     setEventos(eventosData ?? []);
     const content = Object.fromEntries((contentData ?? []).map((x:any)=>[x.clave,x.valor]));
     setSiteContent(content);
-    if (content.hero_image_path) {
-      const { data: imageData } = supabase.storage.from("penyes").getPublicUrl(content.hero_image_path);
+    if (content["hero_image_path"]) {
+      const { data: imageData } = supabase.storage.from("penyes").getPublicUrl(content["hero_image_path"]);
       setHeroImage(imageData.publicUrl);
     } else {
       setHeroImage("");
@@ -296,7 +296,7 @@ function Home() {
 
   const todos: Lugar[] = useMemo(() => [
     ...lugaresFijos,
-    ...penyes.filter((p) => p.lat != null && p.lng != null).map((p) => ({ id: p.id, categoria: "penya" as const, nombre: p.nombre, descripcion: p.direccion ?? "", lat: p.lat, lng: p.lng, foto: p.foto })),
+    ...penyes.filter((p) => p.lat != null && p.lng != null).map((p) => ({ id: p.id, categoria: "penya" as const, nombre: p.nombre, descripcion: p.direccion ?? "", lat: Number(p.lat), lng: Number(p.lng), foto: p.foto })),
     ...actos.filter((a) => a.lat != null && a.lng != null).map((a) => ({ id: "acto-" + a.id, categoria: a.tipo as Categoria, nombre: a.titulo, descripcion: a.lugar || a.descripcion || "", lat: Number(a.lat), lng: Number(a.lng) })),
     ...eventosActivos.filter((e) => e.lat != null && e.lng != null).map((e) => ({ id: "evento-" + e.id, categoria: "evento" as const, nombre: e.titulo, descripcion: e.lugar || e.descripcion || "", lat: Number(e.lat), lng: Number(e.lng) })),
   ], [penyes, actos, eventosActivos]);
@@ -313,7 +313,7 @@ function Home() {
   };
 
   return (
-    <div className="page-bg min-h-screen" style={{ "--pink": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--secondary": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--accent": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--ring": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--cat-penya": siteContent.theme_accent || "oklch(0.76 0.08 355)", "--background": siteContent.theme_background || "oklch(0.95 0.015 75)", "--gradient-page": `linear-gradient(180deg, ${siteContent.theme_background || "oklch(0.96 0.015 70)"}, ${siteContent.theme_background || "oklch(0.93 0.02 60)"})` } as React.CSSProperties}>
+    <div className="page-bg min-h-screen" style={{ "--pink": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--secondary": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--accent": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--ring": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--cat-penya": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--background": siteContent["theme_background"] || "oklch(0.95 0.015 75)", "--gradient-page": `linear-gradient(180deg, ${siteContent["theme_background"] || "oklch(0.96 0.015 70)"}, ${siteContent["theme_background"] || "oklch(0.93 0.02 60)"})` } as React.CSSProperties}>
       <header className="fixed inset-x-0 top-4 z-[1000] flex justify-center px-4">
         <nav className="glass flex items-center gap-1 rounded-full p-1.5 text-sm">
           {(Object.keys(ui.nav) as (keyof typeof ui.nav)[]).map((k) => (
@@ -326,9 +326,9 @@ function Home() {
         <img src={heroImage || hero} alt="Fiestas en las calles de l'Alfàs del Pi" width={1920} height={1280} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-t from-brown/90 via-brown/20 to-transparent" />
         <div className="relative mx-auto w-full max-w-6xl px-4 pb-9 sm:px-5 sm:pb-16">
-          <span className="glass-dark mb-4 inline-block rounded-full px-3 py-1 text-xs">{siteContent.hero_fechas || edicion.fechas}</span>
-          <h1 className="rise text-4xl font-bold leading-[0.98] text-on-image sm:text-7xl md:text-8xl">{siteContent.hero_titulo || edicion.titulo} <span className="text-pink">{edicion.anyo}</span></h1>
-          <p className="rise mt-3 max-w-xl text-sm text-on-image/85 sm:mt-4 sm:text-lg">{siteContent.hero_subtitulo || edicion.subtitulo}</p>
+          <span className="glass-dark mb-4 inline-block rounded-full px-3 py-1 text-xs">{siteContent["hero_fechas"] || edicion.fechas}</span>
+          <h1 className="rise text-4xl font-bold leading-[0.98] text-on-image sm:text-7xl md:text-8xl">{siteContent["hero_titulo"] || edicion.titulo} <span className="text-pink">{edicion.anyo}</span></h1>
+          <p className="rise mt-3 max-w-xl text-sm text-on-image/85 sm:mt-4 sm:text-lg">{siteContent["hero_subtitulo"] || edicion.subtitulo}</p>
           <div className="rise mt-5 flex flex-wrap gap-2 sm:mt-8 sm:gap-3">
             <div className="glass-dark rounded-2xl px-5 py-3 text-sm">¡VIVE LAS FIESTAS!</div>
             <a href="#programa" className="rounded-full bg-pink px-3 py-2 text-xs font-bold text-brown transition hover:-translate-y-0.5 sm:px-6 sm:py-3 sm:text-base">{ui.nav.programa}</a>
@@ -484,7 +484,7 @@ function Home() {
         <section id="info" className="scroll-mt-24">
           <SectionTitle>{ui.nav.info}</SectionTitle>
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="glass rounded-3xl p-6"><h3 className="text-xl font-bold">{siteContent.info_titulo || ui.emergencias}</h3><p className="mt-2 font-display text-4xl font-bold text-primary">{siteContent.info_telefono || "112"}</p></div>
+            <div className="glass rounded-3xl p-6"><h3 className="text-xl font-bold">{siteContent["info_titulo"] || ui.emergencias}</h3><p className="mt-2 font-display text-4xl font-bold text-primary">{siteContent["info_telefono"] || "112"}</p></div>
             <article className="glass rounded-3xl p-6 md:col-span-2">
               <div className="mb-3 flex items-center gap-3"><span className="text-3xl">🚌</span><div><h3 className="text-2xl font-bold text-primary">Autobús lanzadera</h3><p className="text-sm text-muted-foreground">Información práctica de transporte durante las fiestas</p></div></div>
               <p className="font-semibold">Del 6 al 9 de noviembre · de 01:00 a 04:00 h</p>

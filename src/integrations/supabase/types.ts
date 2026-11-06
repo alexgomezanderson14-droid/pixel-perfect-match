@@ -1,17 +1,306 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
-type PenyaInsert={created_at?:string;direccion?:string|null;foto_url:string;id?:string;lat:number;lng:number;nombre:string;tipo_musica?:string;tiene_evento?:boolean;informacion?:string;estado?:string;instagram?:string;email?:string|null};
-type ActoInsert={id?:string;dia:string;hora?:string;titulo:string;descripcion?:string;tipo?:string;lugar?:string;lat?:number|null;lng?:number|null;publicado?:boolean;created_at?:string};
-type EventoInsert={id?:string;penya_id?:string|null;dia:string;hora?:string;titulo:string;descripcion?:string;lugar?:string;lat?:number|null;lng?:number|null;imagen_url?:string|null;publicado?:boolean;created_at?:string};
-type SiteContentInsert={clave:string;valor?:string;updated_at?:string};
-export type Database={__InternalSupabase:{PostgrestVersion:"14.18"};public:{Tables:{
-penyes:{Row:PenyaInsert & {created_at:string;foto_url:string;id:string;lat:number;lng:number;nombre:string;tipo_musica:string;tiene_evento:boolean;informacion:string;estado:string;instagram:string;email:string|null};Insert:PenyaInsert;Update:Partial<PenyaInsert>;Relationships:[]};
-actos:{Row:{id:string;dia:string;hora:string;titulo:string;descripcion:string;tipo:string;lugar:string;lat:number|null;lng:number|null;publicado:boolean;created_at:string};Insert:ActoInsert;Update:Partial<ActoInsert>;Relationships:[]};
-eventos:{Row:{id:string;penya_id:string|null;dia:string;hora:string;titulo:string;descripcion:string;lugar:string;lat:number|null;lng:number|null;imagen_url:string|null;publicado:boolean;created_at:string};Insert:EventoInsert;Update:Partial<EventoInsert>;Relationships:[]};
-site_content:{Row:{clave:string;valor:string;updated_at:string};Insert:SiteContentInsert;Update:Partial<SiteContentInsert>;Relationships:[]};
-};Views:{[_ in never]:never};Functions:{[_ in never]:never};Enums:{[_ in never]:never};CompositeTypes:{[_ in never]:never}}};
-type DB=Omit<Database,"__InternalSupabase">;type Public=DB[Extract<keyof DB,"public">];
-export type Tables<T extends keyof Public["Tables"]>=Public["Tables"][T]["Row"];
-export type TablesInsert<T extends keyof Public["Tables"]>=Public["Tables"][T]["Insert"];
-export type TablesUpdate<T extends keyof Public["Tables"]>=Public["Tables"][T]["Update"];
-export type Enums<T extends keyof Public["Enums"]>=Public["Enums"][T];
-export const Constants={public:{Enums:{}}} as const;
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.18"
+  }
+  public: {
+    Tables: {
+      actos: {
+        Row: {
+          created_at: string
+          descripcion: string
+          dia: string
+          hora: string
+          id: string
+          lat: number | null
+          lng: number | null
+          lugar: string
+          publicado: boolean
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string
+          dia: string
+          hora?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          lugar?: string
+          publicado?: boolean
+          tipo?: string
+          titulo: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string
+          dia?: string
+          hora?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          lugar?: string
+          publicado?: boolean
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: []
+      }
+      eventos: {
+        Row: {
+          created_at: string
+          descripcion: string
+          dia: string
+          hora: string
+          id: string
+          imagen_url: string | null
+          lugar: string
+          penya_id: string | null
+          publicado: boolean
+          titulo: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string
+          dia?: string
+          hora?: string
+          id?: string
+          imagen_url?: string | null
+          lugar?: string
+          penya_id?: string | null
+          publicado?: boolean
+          titulo?: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string
+          dia?: string
+          hora?: string
+          id?: string
+          imagen_url?: string | null
+          lugar?: string
+          penya_id?: string | null
+          publicado?: boolean
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eventos_penya_id_fkey"
+            columns: ["penya_id"]
+            isOneToOne: false
+            referencedRelation: "penyes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      penyes: {
+        Row: {
+          created_at: string
+          direccion: string | null
+          estado: string
+          foto_url: string | null
+          id: string
+          informacion: string
+          instagram: string | null
+          lat: number | null
+          lng: number | null
+          nombre: string
+          tiene_evento: boolean
+          tipo_musica: string
+        }
+        Insert: {
+          created_at?: string
+          direccion?: string | null
+          estado?: string
+          foto_url?: string | null
+          id?: string
+          informacion?: string
+          instagram?: string | null
+          lat?: number | null
+          lng?: number | null
+          nombre: string
+          tiene_evento?: boolean
+          tipo_musica?: string
+        }
+        Update: {
+          created_at?: string
+          direccion?: string | null
+          estado?: string
+          foto_url?: string | null
+          id?: string
+          informacion?: string
+          instagram?: string | null
+          lat?: number | null
+          lng?: number | null
+          nombre?: string
+          tiene_evento?: boolean
+          tipo_musica?: string
+        }
+        Relationships: []
+      }
+      site_content: {
+        Row: {
+          clave: string
+          updated_at: string
+          valor: string
+        }
+        Insert: {
+          clave: string
+          updated_at?: string
+          valor?: string
+        }
+        Update: {
+          clave?: string
+          updated_at?: string
+          valor?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never) = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never) = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
