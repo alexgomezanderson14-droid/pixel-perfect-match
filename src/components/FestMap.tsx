@@ -73,14 +73,18 @@ export default function FestMap({
           iconSize: l.categoria === "penya" && l.foto ? [50, 50] : [36, 36],
           iconAnchor: l.categoria === "penya" && l.foto ? [25, 25] : [18, 18],
         }),
-      }).bindPopup(popupHtml);
-      if (l.categoria === "penya" || l.detalleId) {
-        m.on("popupopen", (event) => {
-          const button = event.popup.getElement()?.querySelector<HTMLButtonElement>("[data-penya-id]");
-          button?.addEventListener("click", () => penyaClickRef.current?.(l.id));
-          const detailButton = event.popup.getElement()?.querySelector<HTMLButtonElement>("[data-detail-id]");
-          detailButton?.addEventListener("click", () => itemClickRef.current?.(l.detalleId!));
-        });
+      });
+      if (l.categoria === "penya") {
+        // Al tocar el icono de una peña, abrir directamente su ficha.
+        m.on("click", () => penyaClickRef.current?.(l.id));
+      } else {
+        m.bindPopup(popupHtml);
+        if (l.detalleId) {
+          m.on("popupopen", (event) => {
+            const detailButton = event.popup.getElement()?.querySelector<HTMLButtonElement>("[data-detail-id]");
+            detailButton?.addEventListener("click", () => itemClickRef.current?.(l.detalleId!));
+          });
+        }
       }
       m.addTo(layer.current!);
       markers.current[l.id] = m;
