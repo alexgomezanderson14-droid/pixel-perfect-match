@@ -220,7 +220,7 @@ function Home() {
   const [q, setQ] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
-  const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes"|"otros">("all");
+  const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes">("all");
   const [favorites, setFavorites] = useState<string[]>([]);
   const [publicDataLoaded, setPublicDataLoaded] = useState(false);
   const [avisos, setAvisos] = useState<any[]>([]);
@@ -247,7 +247,7 @@ function Home() {
   const tomorrowKey = tomorrowDate.getFullYear()+"-"+String(tomorrowDate.getMonth()+1).padStart(2,"0")+"-"+String(tomorrowDate.getDate()).padStart(2,"0");
   const matchesDay = (item:any) => filterDay==="all" || (filterDay==="upcoming" ? eventoSigueActivo(item,now) : String(item.dia||"").slice(0,10)===(filterDay==="today"?todayKey:tomorrowKey) && eventoSigueActivo(item,now));
   const isOfficial = (item:any) => programaOficial2026.some((official)=>official.dia===item.dia && official.hora===item.hora && official.titulo===item.titulo);
-  const filteredActs = useMemo(()=>actos.filter((a)=>matchesDay(a) && (filterCategory==="all" || (filterCategory==="programa"?isOfficial(a):filterCategory==="actuaciones"?a.tipo==="actuacion" || /tardeo|mañaneo|mananeo|nocheo/i.test(a.titulo||""):filterCategory==="penyes"?false:!isOfficial(a) && a.tipo!=="actuacion"))), [actos,filterDay,filterCategory,now]);
+  const filteredActs = useMemo(()=>actos.filter((a)=>matchesDay(a) && (filterCategory==="all" || (filterCategory==="programa"?isOfficial(a):filterCategory==="actuaciones"?a.tipo==="actuacion" || /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/i.test(a.titulo||""):filterCategory==="penyes"?false:false))), [actos,filterDay,filterCategory,now]);
   const filteredPenyaEvents = useMemo(()=>eventos.filter((e)=>matchesDay(e) && (filterCategory==="all" || filterCategory==="penyes")), [eventos,filterDay,filterCategory,now]);
   const avisosVisibles = avisos.filter((aviso:any)=>aviso.activo && (!aviso.publicar_en || new Date(aviso.publicar_en).getTime()<=now));
   const favoriteItems = useMemo(()=>[...actos.map((a)=>({...a,favoriteKey:"acto:"+a.id,kind:"Programa / actuación"})),...eventos.map((e)=>({...e,favoriteKey:"evento:"+e.id,kind:"Evento de peña"}))].filter((item)=>favorites.includes(item.favoriteKey)).sort((a,b)=>String(a.dia||"").localeCompare(String(b.dia||"")) || String(a.hora||"").localeCompare(String(b.hora||""))),[actos,eventos,favorites]);
@@ -430,7 +430,7 @@ function Home() {
                   return minutes(a.hora) - minutes(b.hora);
                 }).map((a) => {
                   const title = String(a.titulo || "").toLocaleLowerCase("es");
-                  const festaCarrer = /tardeo|mañaneo|mananeo|nocheo/.test(title);
+                  const festaCarrer = /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/.test(title);
                   const esActuacion = !festaCarrer && a.tipo === "actuacion";
                   const etiqueta = festaCarrer ? "Festa al carrer" : esActuacion ? "Actuación" :
                     /albaes|maleta|despertà|desperta|pasacalles|visita de los mayorales/.test(title) ? "Tradición" :
@@ -456,7 +456,7 @@ function Home() {
 
         <section id="eventos" className="scroll-mt-24">
           <SectionTitle>Eventos</SectionTitle>
-          <div className="glass mb-5 space-y-3 rounded-2xl p-3 sm:p-4"><p className="text-sm font-bold text-primary">Filtrar actividades</p><div className="flex flex-wrap gap-2">{[["upcoming","Próximos eventos"],["today","Hoy"],["tomorrow","Mañana"],["all","Todos los días"]].map(([value,label])=><Chip key={value} active={filterDay===value} onClick={()=>setFilterDay(value as any)}>{label}</Chip>)}</div><div className="flex flex-wrap gap-2">{[["all","Todas las categorías"],["programa","Programa oficial"],["actuaciones","Actuaciones"],["penyes","Eventos de peñas"],["otros","Actividades y otros actos"]].map(([value,label])=><Chip key={value} active={filterCategory===value} onClick={()=>setFilterCategory(value as any)}>{label}</Chip>)}</div><button type="button" onClick={()=>{setFilterDay("upcoming");setFilterCategory("all");}} className="text-xs font-bold text-primary underline">Quitar todos los filtros</button></div>
+          <div className="glass mb-5 space-y-3 rounded-2xl p-3 sm:p-4"><p className="text-sm font-bold text-primary">Filtrar actividades</p><div className="flex flex-wrap gap-2">{[["upcoming","Próximos eventos"],["today","Hoy"],["tomorrow","Mañana"],["all","Todos los días"]].map(([value,label])=><Chip key={value} active={filterDay===value} onClick={()=>setFilterDay(value as any)}>{label}</Chip>)}</div><div className="flex flex-wrap gap-2">{[["all","Todas las categorías"],["programa","Programa oficial"],["actuaciones","Actuaciones"],["penyes","Eventos de peñas"]].map(([value,label])=><Chip key={value} active={filterCategory===value} onClick={()=>setFilterCategory(value as any)}>{label}</Chip>)}</div><button type="button" onClick={()=>{setFilterDay("upcoming");setFilterCategory("all");}} className="text-xs font-bold text-primary underline">Quitar todos los filtros</button></div>
           <div className="mb-6 space-y-2">
             <h3 className="text-2xl font-bold text-primary">Actuaciones y festes al carrer</h3>
             <p className="text-sm text-muted-foreground">Pulsa en cada evento para consultar su descripción, fecha y lugar.</p>
@@ -466,10 +466,10 @@ function Home() {
               if (filterDay !== "all" && !eventoSigueActivo(a, now)) return false;
               const t = String(a.titulo || "").toLocaleLowerCase("es");
               const excluido = /despertà|desperta|despertada|nit de albaes|nit d'albaes|nit de les albaes|albaes/.test(t);
-              return !excluido && (a.tipo === "actuacion" || /tardeo|mañaneo|mananeo|nocheo/.test(t));
+              return !excluido && (a.tipo === "actuacion" || /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/.test(t));
             }).sort((a,b) => a.dia.localeCompare(b.dia) || (a.hora || "").localeCompare(b.hora || "")).map((a) => {
               const t = String(a.titulo || "").toLocaleLowerCase("es");
-              const festaCarrer = /tardeo|mañaneo|mananeo|nocheo/.test(t);
+              const festaCarrer = /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/.test(t);
               const portada = a.imagen_url || a.imagen || a.foto_url || a.foto || "";
               return <details id={"acto-"+a.id} key={a.id} className="glass group min-w-0 overflow-hidden rounded-xl border border-border/60 shadow-sm sm:rounded-3xl">
                 <summary className="cursor-pointer list-none">
@@ -491,7 +491,6 @@ function Home() {
               </details>;
             })}
           </div>
-          <div className="mt-8 space-y-3"><h3 className="text-2xl font-bold text-primary">Actividades y otros actos</h3>{filteredActs.filter((a)=>a.tipo!=="actuacion" && !/tardeo|mañaneo|mananeo|nocheo/i.test(a.titulo||"")).length?<div className="grid gap-2 sm:grid-cols-2">{filteredActs.filter((a)=>a.tipo!=="actuacion" && !/tardeo|mañaneo|mananeo|nocheo/i.test(a.titulo||"")).sort((a,b)=>String(a.dia||"").localeCompare(String(b.dia||""))||String(a.hora||"").localeCompare(String(b.hora||""))).map((a)=><article key={"other-"+a.id} className="glass rounded-2xl p-3"><p className="text-xs font-bold uppercase text-primary">{a.dia} · {a.hora||"Hora por confirmar"}</p><h4 className="mt-1 font-bold">{a.titulo}</h4>{a.lugar&&<p className="mt-1 text-xs text-muted-foreground">📍 {a.lugar}</p>}<button type="button" onClick={()=>toggleFavorite("acto:"+a.id)} className="mt-2 text-xs font-bold text-primary">{favorites.includes("acto:"+a.id)?"★ En Mi agenda":"☆ Añadir a Mi agenda"}</button></article>)}</div>:<p className="glass rounded-2xl p-4 text-sm text-muted-foreground">No hay actividades para los filtros seleccionados.</p>}</div>
           <div className="mt-10 space-y-3">
             <h3 className="text-2xl font-bold text-primary">Otros eventos de las peñas</h3>
             {!eventosActivos.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">Todavía no hay eventos de peñas publicados.</div> : <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">{filteredPenyaEvents.map((e) => {
