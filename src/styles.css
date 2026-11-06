@@ -169,3 +169,8 @@ html { scroll-padding-top: 7rem; }
   }
   .leaflet-popup-content-wrapper { max-width: calc(100vw - 48px); }
 }
+
+
+/* Keep the compact top navigation on one line without a visible scrollbar. */
+.nav-scrollbar-hidden { scrollbar-width: none; -ms-overflow-style: none; }
+.nav-scrollbar-hidden::-webkit-scrollbar { display: none; }
