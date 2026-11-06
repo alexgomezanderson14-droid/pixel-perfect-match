@@ -38,7 +38,10 @@ export default function FestMap({
     }).addTo(map.current);
     layer.current = L.layerGroup().addTo(map.current);
     map.current.on("click", (e) => pickRef.current?.(e.latlng.lat, e.latlng.lng));
+    const resizeObserver = new ResizeObserver(() => map.current?.invalidateSize());
+    resizeObserver.observe(el.current);
     return () => {
+      resizeObserver.disconnect();
       map.current?.remove();
       map.current = null;
     };
