@@ -351,14 +351,14 @@ function Home() {
 
   return (
     <div className="page-bg min-h-screen" style={{ "--pink": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--secondary": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--accent": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--ring": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--cat-penya": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--background": siteContent["theme_background"] || "oklch(0.95 0.015 75)", "--gradient-page": `linear-gradient(180deg, ${siteContent["theme_background"] || "oklch(0.96 0.015 70)"}, ${siteContent["theme_background"] || "oklch(0.93 0.02 60)"})` } as React.CSSProperties}>
-      <header className="fixed inset-x-0 top-4 z-[1000] flex justify-center px-4">
-        <nav className="glass flex max-w-full items-center gap-1 overflow-x-auto whitespace-nowrap rounded-full p-1.5 text-xs sm:text-sm">
+      <header className="fixed inset-x-0 top-2 z-[1000] flex justify-center px-2 sm:top-4 sm:px-4">
+        <nav aria-label="Navegación principal" className={`glass grid w-full max-w-6xl grid-cols-3 items-center gap-1 rounded-2xl p-1.5 text-[11px] leading-tight sm:flex sm:w-auto sm:max-w-full sm:gap-1 sm:rounded-full sm:p-1.5 sm:text-sm ${currentPage==="home"?"":"grid-cols-1"}`}>
           {currentPage==="home" ? <>
             {(Object.keys(ui.nav) as (keyof typeof ui.nav)[]).map((k) => (
-              <a key={k} href={`#${k}`} className="rounded-full px-2 py-1.5 hover:bg-glass sm:px-3">{ui.nav[k]}</a>
+              <a key={k} href={`#${k}`} className="flex min-w-0 items-center justify-center rounded-xl px-1.5 py-2 text-center hover:bg-glass sm:whitespace-nowrap sm:rounded-full sm:px-3 sm:py-1.5">{ui.nav[k]}</a>
             ))}
-            <button type="button" onClick={()=>{setMapFullscreen(false);setCurrentPage("agenda");window.scrollTo({top:0,behavior:"smooth"});}} className="rounded-full px-2 py-1.5 font-bold text-primary hover:bg-glass sm:px-3">Mi agenda</button>
-          </> : <button type="button" onClick={()=>{setCurrentPage("home");window.scrollTo({top:0,behavior:"smooth"});}} className="rounded-full px-3 py-1.5 font-bold text-primary hover:bg-glass">← Volver al inicio</button>}
+            <button type="button" onClick={()=>{setMapFullscreen(false);setCurrentPage("agenda");window.scrollTo({top:0,behavior:"smooth"});}} className="flex min-w-0 items-center justify-center rounded-xl px-1.5 py-2 text-center font-bold text-primary hover:bg-glass sm:whitespace-nowrap sm:rounded-full sm:px-3 sm:py-1.5">Mi agenda</button>
+          </> : <button type="button" onClick={()=>{setCurrentPage("home");window.scrollTo({top:0,behavior:"smooth"});}} className="rounded-xl px-3 py-2 text-center font-bold text-primary hover:bg-glass sm:rounded-full sm:py-1.5">← Volver al inicio</button>}
         </nav>
       </header>
 
