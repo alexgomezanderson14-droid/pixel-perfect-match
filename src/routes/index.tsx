@@ -517,7 +517,7 @@ function Home() {
           </div>
         </section>
       </main>}
-      {currentPage==="penyes" && <main className="mx-auto min-h-[75vh] max-w-6xl px-3 pb-16 pt-24 sm:px-5">
+      {currentPage==="penyes" && <main className="mx-auto min-h-[75vh] max-w-6xl px-3 pb-32 pt-8 sm:px-5">
         <section id="penyes" className="scroll-mt-24">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2 sm:mb-8 sm:gap-4">
             <h2 className="text-2xl font-bold text-primary sm:text-5xl">{ui.nav.penyes}</h2>
