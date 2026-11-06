@@ -260,7 +260,7 @@ function Home() {
     const results: any[] = [];
     penyes.filter((p) => matches(p.nombre, p.direccion)).forEach((p) => results.push({ key: "penya:" + p.id, label: p.nombre, kind: "Peña", sub: p.direccion || "Ficha de la peña", onSelect: () => { setCurrentPage("penyes"); setSelectedPenya(p); window.scrollTo({top:0,behavior:"smooth"}); } }));
     eventos.filter((e) => matches(e.titulo, e.descripcion, e.lugar)).forEach((e) => results.push({ key: "evento:" + e.id, label: e.titulo, kind: "Evento de peña", sub: [e.dia, e.hora, e.lugar].filter(Boolean).join(" · "), onSelect: () => { setCurrentPage("eventos"); setFilterDay("all"); setFilterCategory("penyes"); window.scrollTo({top:0,behavior:"smooth"}); } }));
-    actos.filter((a) => matches(a.titulo, a.descripcion, a.lugar)).forEach((a) => results.push({ key: "acto:" + a.id, label: a.titulo, kind: a.tipo === "actuacion" ? "Actuación" : "Programa oficial", sub: [a.dia, a.hora, a.lugar].filter(Boolean).join(" · "), onSelect: () => { setCurrentPage("eventos"); setFilterDay("all"); setFilterCategory("actuaciones"); window.scrollTo({top:0,behavior:"smooth"}); } }));
+    actos.filter((a) => matches(a.titulo, a.descripcion, a.lugar)).forEach((a) => results.push({ key: "acto:" + a.id, label: a.titulo, kind: a.tipo === "actuacion" ? "Actuación" : "Programa oficial", sub: [a.dia, a.hora, a.lugar].filter(Boolean).join(" · "), onSelect: () => { const isAct = a.tipo === "actuacion" || /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/i.test(a.titulo || ""); setCurrentPage(isAct ? "eventos" : "programa"); if (!isAct) setDia(a.dia); setFilterDay("all"); setFilterCategory(isAct ? "actuaciones" : "all"); window.scrollTo({top:0,behavior:"smooth"}); } }));
     mapPoints.filter((p) => matches(p.nombre, p.descripcion)).forEach((p) => results.push({ key: "lugar:" + p.id, label: p.nombre, kind: "Ubicación", sub: p.descripcion || "Punto de interés", onSelect: () => { setCurrentPage("mapa"); setCat(null); setQ(""); setFocus(null); requestAnimationFrame(() => setFocus(p.id)); window.scrollTo({top:0,behavior:"smooth"}); } }));
     return results.slice(0, 12);
   }, [searchTerm, penyes, eventos, actos, mapPoints]);
@@ -362,12 +362,6 @@ function Home() {
           <span className="glass-dark mb-4 inline-block rounded-full px-3 py-1 text-xs">{siteContent["hero_fechas"] || edicion.fechas}</span>
           <h1 className="rise text-4xl font-bold leading-[0.98] text-on-image sm:text-7xl md:text-8xl">{siteContent["hero_titulo"] || edicion.titulo} <span className="text-pink">{edicion.anyo}</span></h1>
           <p className="rise mt-3 max-w-xl text-sm text-on-image/85 sm:mt-4 sm:text-lg">{siteContent["hero_subtitulo"] || edicion.subtitulo}</p>
-          <div className="rise mt-5 flex flex-wrap gap-2 sm:mt-8 sm:gap-3">
-            <div className="glass-dark rounded-2xl px-5 py-3 text-sm">¡VIVE LAS FIESTAS!</div>
-            <a href="#programa" className="rounded-full bg-pink px-3 py-2 text-xs font-bold text-brown transition hover:-translate-y-0.5 sm:px-6 sm:py-3 sm:text-base">{ui.nav.programa}</a>
-            <a href="#mapa" className="glass-dark rounded-full px-6 py-3 font-bold">{ui.nav.mapa}</a>
-            <button onClick={() => void shareWebsite()} className="glass-dark rounded-full px-6 py-3 font-bold">↗ Compartir web</button>
-          </div>
         </div>
       </section>
 
@@ -390,7 +384,6 @@ function Home() {
       {currentPage==="buscar" && <main className="mx-auto min-h-[75vh] max-w-5xl space-y-6 px-4 pb-16 pt-24 sm:px-5">
         <h1 className="text-3xl font-bold text-primary sm:text-5xl">Buscar</h1>
         <section aria-label="Buscador general" className="relative z-30 scroll-mt-24"><div className="glass rounded-2xl p-3 sm:rounded-3xl sm:p-5"><label htmlFor="festival-search" className="mb-2 block text-sm font-bold text-primary">Busca peñas, eventos, actuaciones y lugares</label><input id="festival-search" value={searchTerm} onChange={(e)=>setSearchTerm(e.target.value)} placeholder="¿Qué estás buscando?" className="w-full rounded-full border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"/>{searchTerm.trim().length>=2&&<div className="mt-2 max-h-80 overflow-y-auto rounded-2xl border border-border bg-background p-2 shadow-lg">{searchResults.length?searchResults.map((result)=><button key={result.key} type="button" onClick={()=>{result.onSelect();setSearchTerm("");}} className="flex w-full items-start gap-3 rounded-xl px-3 py-2 text-left hover:bg-glass"><span className="mt-0.5 rounded-full bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary">{result.kind}</span><span className="min-w-0"><span className="block text-sm font-bold">{result.label}</span><span className="block truncate text-xs text-muted-foreground">{result.sub}</span></span></button>):<p className="p-3 text-sm text-muted-foreground">No se ha encontrado nada.</p>}</div>}</div></section>
-        {avisosVisibles.length>0&&<section aria-label="Avisos importantes" className="space-y-2">{avisosVisibles.map((aviso:any)=><article key={aviso.id} className={`rounded-2xl border p-3 sm:p-4 ${aviso.importante?"border-amber-400 bg-amber-50 text-amber-950 shadow-md":"border-border bg-background/80 text-foreground"}`}><div className="flex items-start gap-3"><span className="text-xl">{aviso.importante?"⚠️":"📢"}</span><div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-wide">{aviso.importante?"Aviso importante":"Comunicado"}</p><h2 className="font-bold">{aviso.titulo}</h2><p className="mt-1 text-sm">{aviso.descripcion}</p></div></div></article>)}</section>}
       </main>}
       {currentPage==="mapa" && <main className="mx-auto min-h-[75vh] max-w-6xl px-3 pb-16 pt-24 sm:px-5">
         <section id="mapa" className="scroll-mt-24">
