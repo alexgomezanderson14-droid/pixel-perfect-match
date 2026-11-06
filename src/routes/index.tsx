@@ -442,7 +442,7 @@ function Home() {
           )}
         </section>
       </main>}
-      {currentPage==="eventos" && <main className="mx-auto min-h-[75vh] max-w-6xl px-3 pb-16 pt-24 sm:px-5">
+      {currentPage==="eventos" && <main className="mx-auto min-h-[75vh] max-w-6xl px-3 pb-32 pt-8 sm:px-5">
         <section id="eventos" className="scroll-mt-24">
           <SectionTitle>Eventos</SectionTitle>
           <details className="glass mb-5 rounded-2xl p-3 sm:p-4">
@@ -545,7 +545,7 @@ function Home() {
           )}
         </section>
       </main>}
-      {currentPage==="info" && <main className="mx-auto min-h-[75vh] max-w-5xl px-4 pb-16 pt-24 sm:px-5">
+      {currentPage==="info" && <main className="mx-auto min-h-[75vh] max-w-5xl px-4 pb-32 pt-8 sm:px-5">
         <section id="info" className="scroll-mt-24">
           <SectionTitle>{ui.nav.info}</SectionTitle>
           <div className="grid gap-4 md:grid-cols-2">
