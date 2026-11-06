@@ -6,7 +6,7 @@ const programaCompleto2026 = [
     "dia": "2026-10-31",
     "hora": "16:30",
     "titulo": "Torrà de llonganisses y tardeo por el 30 aniversario de la Peña La Llonganissa",
-    "descripcion": "",
+    "descripcion": "Celebración del 30 aniversario de la Penya La Llonganissa.",
     "tipo": "evento",
     "lugar": "Peña La Llonganissa · Plaza Salvador Dalí"
   },
@@ -14,8 +14,9 @@ const programaCompleto2026 = [
     "id": "oficial-2",
     "dia": "2026-10-31",
     "hora": "00:30",
+    "diaSiguiente": true,
     "titulo": "Guateque temático de Halloween con DJ Em-Gi",
-    "descripcion": "",
+    "descripcion": "Fiesta con temática de Halloween.",
     "tipo": "actuacion",
     "lugar": "Carpa Municipal"
   },
@@ -24,7 +25,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-01",
     "hora": "14:00",
     "titulo": "Concurso de paellas organizado por la Asociación de Peñas",
-    "descripcion": "",
+    "descripcion": "Concurso organizado por la Asociación de Peñas.",
     "tipo": "evento",
     "lugar": "Carpa Municipal"
   },
@@ -33,7 +34,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-01",
     "hora": "16:30",
     "titulo": "Entrega de corbatines a las peñas de la Asociación",
-    "descripcion": "",
+    "descripcion": "Entrega de corbatines a las peñas pertenecientes a la Asociación.",
     "tipo": "evento",
     "lugar": ""
   },
@@ -42,7 +43,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-01",
     "hora": "17:00",
     "titulo": "Concurso de playbacks organizado por la Asociación de Peñas",
-    "descripcion": "",
+    "descripcion": "Concurso organizado por la Asociación de Peñas.",
     "tipo": "actuacion",
     "lugar": ""
   },
@@ -60,7 +61,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-04",
     "hora": "20:15",
     "titulo": "Pasacalles con la Reina, Damas de Honor, Mayorales y autoridades, con xirimita y tabalet",
-    "descripcion": "",
+    "descripcion": "Pasacalles con xirimita y tabalet en dirección a las Escoles Velles.",
     "tipo": "evento",
     "lugar": "Hacia las Escoles Velles"
   },
@@ -69,7 +70,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-04",
     "hora": "20:30",
     "titulo": "Presentación del libro de fiestas y visita a la Plaza Mayor",
-    "descripcion": "",
+    "descripcion": "Presentación del libro oficial de fiestas y visita posterior a la Plaza Mayor.",
     "tipo": "evento",
     "lugar": "Escoles Velles · Plaza Mayor"
   },
@@ -78,7 +79,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-05",
     "hora": "21:00",
     "titulo": "Nit d’Albaes: recorrido por las casas de las Damas y de la Reina; después, fiesta en casa de la Reina Infantil Sofía Giménez",
-    "descripcion": "",
+    "descripcion": "Salida desde la calle Murcia y recorrido por las casas de las Damas y de la Reina. Al terminar las albaes, la Reina Infantil, Sofía Giménez, ofrecerá una pequeña fiesta en su casa hasta el inicio de la Nit de la Maleta.",
     "tipo": "actuacion",
     "lugar": "Salida desde la calle Murcia"
   },
@@ -86,8 +87,9 @@ const programaCompleto2026 = [
     "id": "oficial-10",
     "dia": "2026-11-05",
     "hora": "00:30",
+    "diaSiguiente": true,
     "titulo": "Nit de la Maleta: visita a las peñas acompañados por xirimita y tabalet",
-    "descripcion": "",
+    "descripcion": "Visita a las peñas acompañados por la xirimita y el tabalet.",
     "tipo": "evento",
     "lugar": "Inicio en calle Balde, 17"
   },
@@ -141,7 +143,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-06",
     "hora": "19:00",
     "titulo": "Pasacalles para recoger a la Reina Infantil Sofía Giménez",
-    "descripcion": "",
+    "descripcion": "Recogida de la Reina Infantil, Sofía Giménez. Pasacalles acompañado por la Tribute Band, xirimita y tabalet.",
     "tipo": "evento",
     "lugar": "Con Tribute Band, xirimita y tabalet"
   },
@@ -168,7 +170,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-06",
     "hora": "20:30",
     "titulo": "Pregón de inicio de fiestas",
-    "descripcion": "",
+    "descripcion": "El programa oficial deja sin indicar el nombre de la persona pregonera.",
     "tipo": "evento",
     "lugar": "Casa de Cultura · El nombre de la persona pregonera aparece sin indicar en el programa"
   },
@@ -177,7 +179,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-06",
     "hora": "21:30",
     "titulo": "Concurso de «Fútbol Granera» después del pregón",
-    "descripcion": "",
+    "descripcion": "Se celebra después del pregón.",
     "tipo": "evento",
     "lugar": "Explanada de la Casa de Cultura"
   },
@@ -195,7 +197,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-06",
     "hora": "23:00",
     "titulo": "Nocheo de la Peña L’Os por su 45 aniversario",
-    "descripcion": "",
+    "descripcion": "Nocheo con motivo del 45 aniversario de la Penya L’Os.",
     "tipo": "actuacion",
     "lugar": "Peña L’Os"
   },
@@ -203,6 +205,7 @@ const programaCompleto2026 = [
     "id": "oficial-20",
     "dia": "2026-11-06",
     "hora": "00:00",
+    "diaSiguiente": true,
     "titulo": "Actuación musical de DJ Marcos Modino",
     "descripcion": "",
     "tipo": "actuacion",
@@ -212,6 +215,7 @@ const programaCompleto2026 = [
     "id": "oficial-21",
     "dia": "2026-11-06",
     "hora": "02:00",
+    "diaSiguiente": true,
     "titulo": "Actuación musical de DJ Rajobos y Nev",
     "descripcion": "",
     "tipo": "actuacion",
@@ -222,7 +226,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-07",
     "hora": "08:30",
     "titulo": "Despertà acompañada por xirimita y tabalet",
-    "descripcion": "",
+    "descripcion": "Salida desde las Escoles Velles, acompañada por xirimita y tabalet.",
     "tipo": "actuacion",
     "lugar": "Salida desde las Escoles Velles"
   },
@@ -231,7 +235,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-07",
     "hora": "10:00",
     "titulo": "Inicio del Jubileo con exposición del Santísimo Sacramento y rezo de laudes",
-    "descripcion": "",
+    "descripcion": "Inicio del Jubileo con exposición del Santísimo Sacramento y rezo de laudes.",
     "tipo": "evento",
     "lugar": ""
   },
@@ -249,7 +253,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-07",
     "hora": "11:00",
     "titulo": "Pasacalles con la Reina, Damas y Mayorales",
-    "descripcion": "",
+    "descripcion": "Pasacalles acompañado por la Tribute Band.",
     "tipo": "evento",
     "lugar": "Con Tribute Band"
   },
@@ -258,7 +262,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-07",
     "hora": "12:00",
     "titulo": "Misa solemne presidida por Mn. Miguel Ángel Marcos Botella y cantada por el Coro Parroquial",
-    "descripcion": "",
+    "descripcion": "Presidida por Mn. Miguel Ángel Marcos Botella, rector de la Purísima Concepción de La Nucía. Cantada por el Coro Parroquial.",
     "tipo": "evento",
     "lugar": ""
   },
@@ -276,7 +280,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-07",
     "hora": "13:00",
     "titulo": "Visita de los Mayorales a las peñas con la Reina y las Damas",
-    "descripcion": "",
+    "descripcion": "Visita acompañada por la Tribute Band.",
     "tipo": "evento",
     "lugar": "Con Tribute Band"
   },
@@ -294,7 +298,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-07",
     "hora": "19:00",
     "titulo": "Pasacalles con la Reina, Damas y Mayorales",
-    "descripcion": "",
+    "descripcion": "Pasacalles acompañado por la Tribute Band.",
     "tipo": "evento",
     "lugar": "Con Tribute Band"
   },
@@ -303,7 +307,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-07",
     "hora": "19:30",
     "titulo": "Cabalgata multicolor",
-    "descripcion": "",
+    "descripcion": "Salida desde la Casa de Cultura.",
     "tipo": "actuacion",
     "lugar": "Salida desde la Casa de Cultura"
   },
@@ -311,8 +315,9 @@ const programaCompleto2026 = [
     "id": "oficial-32",
     "dia": "2026-11-07",
     "hora": "00:00",
+    "diaSiguiente": true,
     "titulo": "Batalla de xarangas: Tribute Band contra Ni Pa Ti Ni Pa Mi",
-    "descripcion": "",
+    "descripcion": "Batalla en la carpa situada en la calle Murcia.",
     "tipo": "actuacion",
     "lugar": "Carpa de la calle Murcia"
   },
@@ -320,6 +325,7 @@ const programaCompleto2026 = [
     "id": "oficial-33",
     "dia": "2026-11-07",
     "hora": "02:00",
+    "diaSiguiente": true,
     "titulo": "Actuación musical de DJ Borja Conesa",
     "descripcion": "",
     "tipo": "actuacion",
@@ -330,7 +336,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-08",
     "hora": "08:30",
     "titulo": "Despertà acompañada por xirimita y tabalet",
-    "descripcion": "",
+    "descripcion": "Salida desde las Escoles Velles, acompañada por xirimita y tabalet.",
     "tipo": "actuacion",
     "lugar": "Salida desde las Escoles Velles"
   },
@@ -339,7 +345,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-08",
     "hora": "10:00",
     "titulo": "Exposición del Santísimo Sacramento y rezo de laudes",
-    "descripcion": "",
+    "descripcion": "Exposición del Santísimo Sacramento y rezo de laudes.",
     "tipo": "evento",
     "lugar": ""
   },
@@ -357,7 +363,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-08",
     "hora": "11:00",
     "titulo": "Pasacalles con la Reina, Damas y Mayorales",
-    "descripcion": "",
+    "descripcion": "Pasacalles acompañado por la Tribute Band.",
     "tipo": "evento",
     "lugar": "Con Tribute Band"
   },
@@ -366,7 +372,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-08",
     "hora": "12:00",
     "titulo": "Misa solemne presidida por Mn. Juan Vicente Ferrando Molines y cantada por el Coro Parroquial",
-    "descripcion": "",
+    "descripcion": "Presidida por Mn. Juan Vicente Ferrando Molines, rector de Sant Josep de l’Alfàs del Pi. Cantada por el Coro Parroquial.",
     "tipo": "evento",
     "lugar": ""
   },
@@ -384,7 +390,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-08",
     "hora": "13:00",
     "titulo": "Visita de los Mayorales a las peñas con la Reina y las Damas",
-    "descripcion": "",
+    "descripcion": "Visita acompañada por la Tribute Band.",
     "tipo": "evento",
     "lugar": "Con Tribute Band"
   },
@@ -411,7 +417,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-08",
     "hora": "19:30",
     "titulo": "Pasacalles con la Reina y las Damas hasta la Casa de Cultura",
-    "descripcion": "",
+    "descripcion": "Pasacalles con la Reina y las Damas hasta la Casa de Cultura, acompañadas por la Tribute Band.",
     "tipo": "evento",
     "lugar": "Con Tribute Band"
   },
@@ -420,7 +426,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-08",
     "hora": "20:00",
     "titulo": "Ofrenda de flores al Santísimo Cristo del Buen Acierto",
-    "descripcion": "",
+    "descripcion": "Salida desde la Casa de Cultura.",
     "tipo": "evento",
     "lugar": "Salida desde la Casa de Cultura"
   },
@@ -428,8 +434,9 @@ const programaCompleto2026 = [
     "id": "oficial-45",
     "dia": "2026-11-08",
     "hora": "00:00",
+    "diaSiguiente": true,
     "titulo": "Actuación musical del grupo Seguridad Social",
-    "descripcion": "",
+    "descripcion": "Concierto del grupo Seguridad Social.",
     "tipo": "actuacion",
     "lugar": "Carpa Municipal"
   },
@@ -437,6 +444,7 @@ const programaCompleto2026 = [
     "id": "oficial-46",
     "dia": "2026-11-08",
     "hora": "02:00",
+    "diaSiguiente": true,
     "titulo": "Actuación musical de DJ Toni Castro",
     "descripcion": "",
     "tipo": "actuacion",
@@ -447,7 +455,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-09",
     "hora": "08:30",
     "titulo": "Despertà acompañada por xirimita y tabalet",
-    "descripcion": "",
+    "descripcion": "Salida desde las Escoles Velles, acompañada por xirimita y tabalet.",
     "tipo": "actuacion",
     "lugar": "Salida desde las Escoles Velles"
   },
@@ -456,7 +464,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-09",
     "hora": "10:00",
     "titulo": "Exposición del Santísimo Sacramento y rezo de laudes",
-    "descripcion": "",
+    "descripcion": "Exposición del Santísimo Sacramento y rezo de laudes.",
     "tipo": "evento",
     "lugar": ""
   },
@@ -474,7 +482,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-09",
     "hora": "11:00",
     "titulo": "Pasacalles con la Reina, Damas y Mayorales",
-    "descripcion": "",
+    "descripcion": "Pasacalles acompañado por la Tribute Band.",
     "tipo": "evento",
     "lugar": "Con Tribute Band"
   },
@@ -483,7 +491,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-09",
     "hora": "12:00",
     "titulo": "Misa solemne presidida por Mn. Juan Carlos Ferri Albert y cantada por la coral L’Alfàs Canta",
-    "descripcion": "",
+    "descripcion": "Presidida por Mn. Juan Carlos Ferri Albert, rector de Santa Anna de Altea la Vella. Cantada por la coral L’Alfàs Canta, dirigida por José Antonio Rubio.",
     "tipo": "evento",
     "lugar": ""
   },
@@ -501,7 +509,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-09",
     "hora": "13:00",
     "titulo": "Visita de los Mayorales a las peñas con la Reina y las Damas",
-    "descripcion": "",
+    "descripcion": "Visita acompañada por la Tribute Band.",
     "tipo": "evento",
     "lugar": "Con Tribute Band"
   },
@@ -519,7 +527,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-09",
     "hora": "16:30",
     "titulo": "Teatro infantil itinerante «Diminuts»",
-    "descripcion": "",
+    "descripcion": "Inicio desde la explanada de la Casa de Cultura, en colaboración con la Concejalía de Cultura.",
     "tipo": "actuacion",
     "lugar": "Inicio en la explanada de la Casa de Cultura"
   },
@@ -537,7 +545,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-09",
     "hora": "17:30",
     "titulo": "Pasacalles con la Reina, Damas y Mayorales",
-    "descripcion": "",
+    "descripcion": "Pasacalles acompañado por la Tribute Band.",
     "tipo": "evento",
     "lugar": "Con Tribute Band"
   },
@@ -555,7 +563,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-09",
     "hora": "19:00",
     "titulo": "Procesión solemne de clausura de las 40 horas; al finalizar, bajada del Santísimo Cristo del Buen Acierto",
-    "descripcion": "",
+    "descripcion": "Clausura de las 40 horas. Al finalizar, tendrá lugar la bajada del Santísimo Cristo del Buen Acierto.",
     "tipo": "evento",
     "lugar": ""
   },
@@ -564,7 +572,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-09",
     "hora": "23:00",
     "titulo": "Correfocs a cargo de los Dimonis Rafolins",
-    "descripcion": "",
+    "descripcion": "Inicio desde el Ayuntamiento. Recorrido: c/ Escoles, c/ Palmera, c/ el Gall, c/ Calvari, c/ Ametler Amarg, c/ Plata, c/ el Gall, c/ Palmera, c/ Major, av. Carbonera, c/ Escoles y av. Exèrcits Espanyols. Finaliza en la explanada de la Casa de Cultura.",
     "tipo": "actuacion",
     "lugar": "Salida desde el Ayuntamiento. Recorrido: c/ Escoles, c/ Palmera, c/ el Gall, c/ Calvari, c/ Ametler Amarg, c/ Plata, c/ el Gall, c/ Palmera, c/ Major, av. Carbonera, c/ Escoles, av. Exèrcits Espanyols y explanada de la Casa de Cultura"
   },
@@ -572,8 +580,9 @@ const programaCompleto2026 = [
     "id": "oficial-61",
     "dia": "2026-11-09",
     "hora": "00:00",
+    "diaSiguiente": true,
     "titulo": "Noche Remember con los DJ Miguel Serna, Batiste y José Coll",
-    "descripcion": "",
+    "descripcion": "Sesión remember con DJ Miguel Serna, Batiste y José Coll.",
     "tipo": "actuacion",
     "lugar": "Carpa Municipal"
   },
@@ -581,6 +590,7 @@ const programaCompleto2026 = [
     "id": "oficial-62",
     "dia": "2026-11-09",
     "hora": "02:00",
+    "diaSiguiente": true,
     "titulo": "Actuación de DJ Franbo",
     "descripcion": "",
     "tipo": "actuacion",
@@ -591,7 +601,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-10",
     "hora": "08:30",
     "titulo": "Despertà acompañada por xirimita y tabalet",
-    "descripcion": "",
+    "descripcion": "Salida desde las Escoles Velles, acompañada por xirimita y tabalet.",
     "tipo": "actuacion",
     "lugar": "Salida desde las Escoles Velles"
   },
@@ -600,7 +610,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-10",
     "hora": "11:00",
     "titulo": "Pasacalles con la Reina, Damas y Mayorales",
-    "descripcion": "",
+    "descripcion": "Pasacalles acompañado por la Tribute Band.",
     "tipo": "evento",
     "lugar": "Con Tribute Band"
   },
@@ -609,7 +619,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-10",
     "hora": "11:00",
     "titulo": "Jornada de diversión familiar corresponsable",
-    "descripcion": "",
+    "descripcion": "Jornada con la colaboración de la Concejalía de Igualdad.",
     "tipo": "evento",
     "lugar": "Parking La Bolleta · Colabora la Concejalía de Igualdad"
   },
@@ -618,7 +628,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-10",
     "hora": "12:00",
     "titulo": "Misa solemne presidida por Mn. Francisco Luis Soler Alós y cantada por la coral L’Alfàs Canta",
-    "descripcion": "",
+    "descripcion": "Presidida por Mn. Francisco Luis Soler Alós, rector de Sant Agatàngel de Elche e hijo de l’Alfàs. Cantada por la coral L’Alfàs Canta, dirigida por José Antonio Rubio.",
     "tipo": "evento",
     "lugar": ""
   },
@@ -636,7 +646,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-10",
     "hora": "18:00",
     "titulo": "Recogida de las Mayorales, Damas, Reina y Ángel",
-    "descripcion": "",
+    "descripcion": "Recogida acompañada por la Tribute Band.",
     "tipo": "evento",
     "lugar": "Con Tribute Band"
   },
@@ -645,7 +655,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-10",
     "hora": "20:00",
     "titulo": "Procesión solemne con la imagen del Santísimo Cristo del Buen Acierto. Al finalizar, embajada al Cristo a cargo de Valeria Orta Rojas",
-    "descripcion": "",
+    "descripcion": "Al finalizar la procesión, Valeria Orta Rojas recitará la tradicional embajada al Cristo.",
     "tipo": "evento",
     "lugar": ""
   },
@@ -654,7 +664,7 @@ const programaCompleto2026 = [
     "dia": "2026-11-10",
     "hora": "22:00",
     "titulo": "Gran mascletà nocturna a cargo de Pirotecnia Valenciana",
-    "descripcion": "",
+    "descripcion": "A cargo de Pirotecnia Valenciana.",
     "tipo": "actuacion",
     "lugar": "Avenida de la Constitución"
   }
