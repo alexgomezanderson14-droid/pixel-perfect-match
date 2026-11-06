@@ -75,11 +75,6 @@ async function copyShareLink(url: string) {
   catch { window.prompt("Copia este enlace:", url); }
 }
 
-function sharePenyaLink(p: PenyaDb) {
-  const url = window.location.origin + "/#penya-" + p.id;
-  shareOn("whatsapp", url, p.nombre, "Conoce " + p.nombre + " en las fiestas de l'Alfàs del Pi.");
-}
-
 async function sharePenyaCard(p: PenyaDb) {
   // Plantilla vertical 9:16 lista para Stories de Instagram.
   const canvas = document.createElement("canvas");
@@ -467,7 +462,7 @@ function Home() {
           {!penyes.length ? (
             <div className="glass rounded-3xl p-6 text-muted-foreground">{ui.sinPenyes}</div>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
               {penyes.map((p) => (
                 <article id={"penya-" + p.id} key={p.id} className="glass overflow-hidden rounded-2xl sm:rounded-3xl">
                   {p.foto && <img src={p.foto} alt={p.nombre} loading="lazy" className="h-28 w-full object-cover sm:h-44" />}
