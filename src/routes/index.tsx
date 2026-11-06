@@ -35,7 +35,7 @@ function fmtDia(d: string) {
 
 function eventoSigueActivo(item: { dia?: string; hora?: string; diaSiguiente?: boolean }, now = Date.now()) {
   if (!item.dia) return true;
-  const hora = String(item.hora || "").match(/(?:^|\\D)([01]\\d|2[0-3]):([0-5]\\d)/);
+  const hora = String(item.hora || "").match(/(?:^|\D)([01]\d|2[0-3]):([0-5]\d)/);
   const fecha = new Date(String(item.dia).slice(0, 10) + "T12:00:00");
   if (item.diaSiguiente) fecha.setDate(fecha.getDate() + 1);
   const fechaKey = fecha.toISOString().slice(0, 10);
