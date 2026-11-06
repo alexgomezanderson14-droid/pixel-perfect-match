@@ -223,6 +223,7 @@ function Home() {
   const [now, setNow] = useState(() => Date.now());
   const [selectedPenya, setSelectedPenya] = useState<PenyaDb | null>(null);
   const [eventFormPenya, setEventFormPenya] = useState<PenyaDb | null>(null);
+  const [mapFullscreen, setMapFullscreen] = useState(false);
   const dias = useMemo(() => [...new Set(actos.map((a) => a.dia))].sort(), [actos]);
   const [dia, setDia] = useState<string | undefined>();
   const eventosActivos = useMemo(() => eventos.filter((e) => eventoSigueActivo(e, now)), [eventos, now]);
@@ -322,11 +323,11 @@ function Home() {
         </div>
       </section>
 
-      <main className="mx-auto max-w-6xl space-y-24 px-5 py-20">
+      <main className="mx-auto max-w-6xl space-y-14 px-3 py-12 sm:space-y-20 sm:px-5 sm:py-20">
         <section id="mapa" className="scroll-mt-24">
           <SectionTitle>{ui.nav.mapa}</SectionTitle>
-          <div className="glass grid gap-4 rounded-[2rem] p-3 md:grid-cols-[280px_1fr]">
-            <div className="space-y-3 p-2">
+          <div className={`glass grid gap-3 rounded-[1.5rem] p-2 sm:gap-4 sm:rounded-[2rem] sm:p-3 ${mapFullscreen ? "grid-cols-1" : "md:grid-cols-[280px_1fr]"}`}>
+            {!mapFullscreen && <div className="space-y-3 p-2">
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={ui.buscar} className="w-full rounded-full border border-input bg-glass px-4 py-2.5 outline-none focus:ring-2 focus:ring-ring" />
               <div className="flex flex-wrap gap-2">
                 <Chip active={!cat} onClick={() => setCat(null)}>{ui.todos}</Chip>
@@ -344,8 +345,9 @@ function Home() {
                 ))}
                 {!visibles.length && <li className="px-3 text-sm text-muted-foreground">{ui.sinResultados}</li>}
               </ul>
-            </div>
-            <div className="h-[460px] overflow-hidden rounded-[1.5rem] md:h-[540px]">
+            </div>}
+            <div className={`relative overflow-hidden ${mapFullscreen ? "fixed inset-0 z-[2200] h-[100dvh] w-screen rounded-none bg-background p-2" : "h-[340px] rounded-[1.25rem] sm:h-[460px] sm:rounded-[1.5rem] md:h-[540px]"}`}>
+              <button type="button" onClick={() => setMapFullscreen(value => !value)} aria-label={mapFullscreen ? "Cerrar mapa a pantalla completa" : "Ampliar mapa a pantalla completa"} className="absolute right-3 top-3 z-[1200] rounded-full border border-white/70 bg-white/95 px-4 py-2 text-sm font-bold text-[#49352f] shadow-lg">{mapFullscreen ? "✕ Cerrar mapa" : "⛶ Pantalla completa"}</button>
               <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
                 <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}>
                   <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => setSelectedPenya(penyes.find((p) => p.id === id) ?? null)} />
@@ -379,11 +381,11 @@ function Home() {
                     /misa|trisagio|jubileo|santísimo|procesión|ofrenda/.test(title) ? "Acto religioso" :
                     /infantil|niño|niños|familiar|chocolatada/.test(title) ? "Actividad familiar" :
                     /autobús|bus lanzadera/.test(title) ? "Transporte" : "Actividad";
-                  return <article key={a.id} className="glass flex flex-col gap-3 rounded-3xl p-5 sm:flex-row sm:items-center">
+                  return <article key={a.id} className="glass flex flex-col gap-2 rounded-2xl p-3 sm:flex-row sm:items-center sm:gap-3 sm:rounded-3xl sm:p-5">
                     <div className="font-display text-3xl font-bold text-primary sm:w-28">{a.hora || "—"}</div>
                     <div className="flex-1">
                       <span className={`mb-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-bold uppercase text-on-image ${esActuacion ? catBg.actuacion : festaCarrer ? "bg-pink" : catBg.evento}`}>{etiqueta}</span>
-                      <h4 className="text-xl font-bold">{a.titulo}</h4>
+                      <h4 className="text-base font-bold sm:text-xl">{a.titulo}</h4>
                       {a.descripcion && <p className="mt-1 text-sm text-muted-foreground">{a.descripcion}</p>}
                       {a.lugar && <p className="mt-2 text-sm text-muted-foreground">📍 {a.lugar}</p>}
                     </div>
@@ -402,7 +404,7 @@ function Home() {
             <h3 className="text-2xl font-bold text-primary">Actuaciones y festes al carrer</h3>
             <p className="text-sm text-muted-foreground">Pulsa en cada evento para consultar su descripción, fecha y lugar.</p>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             {actos.filter((a) => {
               if (!eventoSigueActivo(a, now)) return false;
               const t = String(a.titulo || "").toLocaleLowerCase("es");
@@ -414,7 +416,7 @@ function Home() {
               const portada = a.imagen_url || a.imagen || a.foto_url || a.foto || "";
               return <details key={a.id} className="glass group min-w-0 overflow-hidden rounded-3xl border border-border/60 shadow-sm">
                 <summary className="cursor-pointer list-none">
-                  <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-[#f4e8e9] via-[#ead9df] to-[#e9e3d7]">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-[#f4e8e9] via-[#ead9df] to-[#e9e3d7]">
                     {portada ? <img src={portada} alt={a.titulo} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"/> : <div className="absolute inset-0 flex items-center justify-center p-5 text-center"><span className="font-display text-3xl font-bold leading-tight text-[#765563]">{a.titulo}</span></div>}
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#49352f]/80 to-transparent p-4 pt-14">
                       <span className="mb-2 inline-block rounded-full bg-white/85 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#765563]">{festaCarrer ? "Festa al carrer" : "Actuación"}</span>
@@ -434,7 +436,7 @@ function Home() {
           </div>
           <div className="mt-10 space-y-3">
             <h3 className="text-2xl font-bold text-primary">Otros eventos de las peñas</h3>
-            {!eventosActivos.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">Todavía no hay eventos de peñas publicados.</div> : <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">{eventosActivos.map((e) => <details key={e.id} className="glass group min-w-0 overflow-hidden rounded-3xl border border-border/60 shadow-sm"><summary className="cursor-pointer list-none"><div className="relative aspect-square overflow-hidden bg-gradient-to-br from-[#f4e8e9] via-[#ead9df] to-[#e9e3d7]">{(e.imagen_url || e.imagen || e.foto_url || e.foto) ? <img src={e.imagen_url || e.imagen || e.foto_url || e.foto} alt={e.titulo} loading="lazy" className="absolute inset-0 h-full w-full object-cover"/> : <div className="absolute inset-0 flex items-center justify-center p-5 text-center"><span className="font-display text-3xl font-bold text-[#765563]">{e.titulo}</span></div>}<div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#49352f]/80 to-transparent p-4 pt-14"><h3 className="text-xl font-bold text-white">{e.titulo}</h3><p className="mt-2 text-xs font-semibold text-white/90">Ver detalles <span className="inline-block transition group-open:rotate-180">⌄</span></p></div></div></summary><div className="space-y-3 border-t border-border/50 p-4">{e.descripcion && <p className="text-sm leading-relaxed text-muted-foreground">{e.descripcion}</p>}<p className="text-sm"><strong>Fecha:</strong> {fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p>{e.lugar && <p className="text-sm"><strong>Lugar:</strong> {e.lugar}</p>}{e.penya_id && <p className="text-xs font-bold text-primary">{penyes.find(p=>p.id===e.penya_id)?.nombre || "Evento de peña"}</p>}{e.lat != null && e.lng != null && <button onClick={() => goMap("evento-" + e.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver ubicación en el mapa</button>}</div></details>)}</div>}
+            {!eventosActivos.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">Todavía no hay eventos de peñas publicados.</div> : <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">{eventosActivos.map((e) => <details key={e.id} className="glass group min-w-0 overflow-hidden rounded-3xl border border-border/60 shadow-sm"><summary className="cursor-pointer list-none"><div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-[#f4e8e9] via-[#ead9df] to-[#e9e3d7]">{(e.imagen_url || e.imagen || e.foto_url || e.foto) ? <img src={e.imagen_url || e.imagen || e.foto_url || e.foto} alt={e.titulo} loading="lazy" className="absolute inset-0 h-full w-full object-cover"/> : <div className="absolute inset-0 flex items-center justify-center p-5 text-center"><span className="font-display text-3xl font-bold text-[#765563]">{e.titulo}</span></div>}<div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#49352f]/80 to-transparent p-4 pt-14"><h3 className="text-xl font-bold text-white">{e.titulo}</h3><p className="mt-2 text-xs font-semibold text-white/90">Ver detalles <span className="inline-block transition group-open:rotate-180">⌄</span></p></div></div></summary><div className="space-y-3 border-t border-border/50 p-4">{e.descripcion && <p className="text-sm leading-relaxed text-muted-foreground">{e.descripcion}</p>}<p className="text-sm"><strong>Fecha:</strong> {fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p>{e.lugar && <p className="text-sm"><strong>Lugar:</strong> {e.lugar}</p>}{e.penya_id && <p className="text-xs font-bold text-primary">{penyes.find(p=>p.id===e.penya_id)?.nombre || "Evento de peña"}</p>}{e.lat != null && e.lng != null && <button onClick={() => goMap("evento-" + e.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver ubicación en el mapa</button>}</div></details>)}</div>}
           </div>
         </section>
         <section id="penyes" className="scroll-mt-24">
@@ -445,17 +447,17 @@ function Home() {
           {!penyes.length ? (
             <div className="glass rounded-3xl p-6 text-muted-foreground">{ui.sinPenyes}</div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
               {penyes.map((p) => (
-                <article id={"penya-" + p.id} key={p.id} className="glass overflow-hidden rounded-3xl">
-                  {p.foto && <img src={p.foto} alt={p.nombre} loading="lazy" className="h-44 w-full object-cover" />}
-                  <div className="p-6">
-                    <h3 className="text-2xl font-bold">{p.nombre}</h3>
+                <article id={"penya-" + p.id} key={p.id} className="glass overflow-hidden rounded-2xl sm:rounded-3xl">
+                  {p.foto && <img src={p.foto} alt={p.nombre} loading="lazy" className="h-28 w-full object-cover sm:h-44" />}
+                  <div className="p-3 sm:p-6">
+                    <h3 className="text-xl font-bold sm:text-2xl">{p.nombre}</h3>
                     {p.direccion && <p className="mt-1 text-sm text-muted-foreground">{p.direccion}</p>}
                     <p className="mt-3 text-sm"><strong>Música:</strong> {p.tipo_musica || "Variada"}</p>
                     
                     {eventosActivos.filter(e=>e.penya_id===p.id).map(e=><p key={e.id} className="mt-2 text-sm"><strong>Evento:</strong> {e.titulo} · {fmtDia(e.dia)}</p>)}
-                    <div className="mt-4 flex flex-wrap gap-2"><button onClick={() => setSelectedPenya(p)} className="rounded-full bg-pink px-4 py-2 text-sm font-bold text-brown">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-4 py-2 text-sm font-bold">📍 {ui.verMapa}</button><button onClick={() => void sharePenyaCard(p)} className="glass-btn px-4 py-2 text-sm font-bold">↗ Compartir peña</button><button onClick={() => setEventFormPenya(p)} className="glass-btn px-4 py-2 text-sm font-bold">{p.tiene_evento ? "Añadir otro evento" : "+ Añadir evento"}</button></div>
+                    <div className="mt-3 flex flex-wrap gap-2"><button onClick={() => setSelectedPenya(p)} className="rounded-full bg-pink px-4 py-2 text-sm font-bold text-brown">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-4 py-2 text-sm font-bold">📍 {ui.verMapa}</button><button onClick={() => void sharePenyaCard(p)} className="glass-btn px-4 py-2 text-sm font-bold">↗ Compartir peña</button><button onClick={() => setEventFormPenya(p)} className="glass-btn px-4 py-2 text-sm font-bold">{p.tiene_evento ? "Añadir otro evento" : "+ Añadir evento"}</button></div>
                     <div className="mt-3 flex flex-wrap gap-3 text-sm">{instagramUrl(p.instagram) && <a className="font-semibold text-primary underline" href={instagramUrl(p.instagram)!} target="_blank" rel="noreferrer">{`↗ @${p.instagram?.replace(/^@/, "") || "Instagram"}`}</a>}</div>
                   </div>
                 </article>
