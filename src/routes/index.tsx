@@ -3,7 +3,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNo
 import { createPortal } from "react-dom";
 import hero from "@/assets/hero-fiestas.jpg";
 import { edicion, lugares as lugaresFijos, ui, type Categoria, type Lugar } from "@/content/fiestas";
-import { programaOficial2026 } from "@/content/programa-oficial-2026";
+import { informacionBus2026, programaOficial2026 } from "@/content/programa-oficial-2026";
 import { supabase } from "@/integrations/supabase/client";
 import CopyrightFooter from "@/components/CopyrightFooter";
 
@@ -259,7 +259,7 @@ function Home() {
   const avisosVisibles = avisos.filter((aviso:any)=>aviso.activo && (!aviso.publicar_en || new Date(aviso.publicar_en).getTime()<=now));
   const favoriteItems = useMemo(()=>[...actos.filter((a)=>eventoSigueActivo(a,now)).map((a)=>({...a,favoriteKey:"acto:"+a.id,kind:"Programa / actuación"})),...eventos.filter((e)=>eventoSigueActivo(e,now)).map((e)=>({...e,favoriteKey:"evento:"+e.id,kind:"Evento de peña"}))].filter((item)=>favorites.includes(item.favoriteKey)).sort((a,b)=>String(a.dia||"").localeCompare(String(b.dia||"")) || String(a.hora||"").localeCompare(String(b.hora||""))),[actos,eventos,favorites,now]);
   const historicalActs = useMemo(() => {
-    const rows: any[] = [...programaOficial2026, ...actos.filter((a) => !eventoSigueActivo(a, now))];
+    const rows: any[] = [...programaOficial2026, ...informacionBus2026, ...actos.filter((a) => !eventoSigueActivo(a, now))];
     const seen = new Set<string>();
     return rows.filter((a) => {
       const key = [a.dia, a.hora, a.titulo].join("|");
@@ -381,7 +381,7 @@ function Home() {
         <div className="absolute inset-0 bg-gradient-to-t from-brown/90 via-brown/20 to-transparent" />
         <div className="relative mx-auto w-full max-w-6xl px-4 pb-9 sm:px-5 sm:pb-16">
           <span className="glass-dark mb-4 inline-block rounded-full px-3 py-1 text-xs">{edicion.fechas}</span>
-          <h1 className="rise text-4xl font-bold leading-[0.98] text-on-image sm:text-7xl md:text-8xl">{siteContent["hero_titulo"] || edicion.titulo} <span className="text-pink">{edicion.anyo}</span></h1>
+          <h1 className="rise text-4xl font-bold leading-[0.98] text-on-image sm:text-7xl md:text-8xl">{siteContent["hero_titulo"]?.replace(/2026/g, String(edicion.anyo)) || edicion.titulo} <span className="text-pink">{edicion.anyo}</span></h1>
           <p className="rise mt-3 max-w-xl text-sm text-on-image/85 sm:mt-4 sm:text-lg">{siteContent["hero_subtitulo"] || edicion.subtitulo}</p>
         </div>
       </section>
