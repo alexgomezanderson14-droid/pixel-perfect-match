@@ -27,16 +27,16 @@ export type Acto = {
 };
 
 export const edicion = {
-  anyo: 2026,
-  titulo: "Fiestas del Jubileo y del Santísimo Cristo del Buen Acierto",
-  subtitulo: "L' ALFÀS DEL PI",
-  fechas: "Del 07 al 10 de Noviembre de 2026",
+  anyo: 2027,
+  titulo: "Fiestas de l'Alfàs del Pi",
+  subtitulo: "PEÑAS · TRADICIÓN · CULTURA · CONVIVENCIA",
+  fechas: "Próximas fiestas · Fechas por confirmar",
 };
 
 // Lugares fijos citados en el programa oficial (pendiente del PDF).
 export const lugares: Lugar[] = [];
 
-// Programa oficial 2026 (pendiente de incorporar desde el PDF oficial).
+// Los actos de nuevas ediciones se publicarán desde la base de datos; 2026 queda archivado aparte.
 export const actos: Acto[] = [];
 
 export const ui = {
@@ -53,7 +53,7 @@ export const ui = {
     servicio: "Servicios",
   } as Record<Categoria, string>,
   emergencias: "Emergencias",
-  programaPendiente: "El programa oficial se publicará aquí en breve.",
+  programaPendiente: "El programa de las próximas fiestas se publicará aquí cuando esté confirmado. Mientras tanto, puedes consultar el archivo de 2026 en Información.",
   sinPenyes: "Aún no hay peñas. ¡Sé la primera en añadir la tuya!",
   addPenya: "Añadir peña",
 };

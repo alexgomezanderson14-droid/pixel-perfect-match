@@ -3,7 +3,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNo
 import { createPortal } from "react-dom";
 import hero from "@/assets/hero-fiestas.jpg";
 import { edicion, lugares as lugaresFijos, ui, type Categoria, type Lugar } from "@/content/fiestas";
-import { programaOficial2026 } from "@/content/programa-oficial-2026";
+import { informacionBus2026, programaOficial2026 } from "@/content/programa-oficial-2026";
 import { supabase } from "@/integrations/supabase/client";
 import CopyrightFooter from "@/components/CopyrightFooter";
 
@@ -14,9 +14,9 @@ const AddPenyaEventForm = lazy(() => import("@/components/AddPenyaEventForm"));
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Fiestas de l'Alfàs del Pi 2026 · Programa, mapa y peñas" },
-      { name: "description", content: "Programa oficial, mapa interactivo y peñas de las Fiestas del Jubileo y del Santísimo Cristo del Buen Acierto de l'Alfàs del Pi." },
-      { property: "og:title", content: "Fiestas de l'Alfàs del Pi 2026" },
+      { title: "Fiestas de l'Alfàs del Pi · Peñas, agenda y novedades" },
+      { name: "description", content: "Información de las peñas, actividades, agenda, mapa y archivo de las fiestas de l'Alfàs del Pi." },
+      { property: "og:title", content: "Fiestas de l'Alfàs del Pi" },
       { property: "og:description", content: "Programa oficial, mapa interactivo y peñas de las fiestas." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -53,7 +53,7 @@ function instagramUrl(value?: string | null) {
 
 async function shareWebsite() {
   const url = window.location.href;
-  const title = "Fiestas de l'Alfàs del Pi 2026";
+  const title = "Fiestas de l'Alfàs del Pi";
   const text = "Consulta el programa, el mapa y las peñas de las fiestas.";
   if (navigator.share) {
     try { await navigator.share({ title, text, url }); localStorage.setItem("fiestas-share-reminder-last", String(Date.now())); return; }
@@ -95,7 +95,7 @@ async function sharePenyaCard(p: PenyaDb) {
 
   c.fillStyle = "#e6b6c7";
   c.font = "bold 30px Arial";
-  c.fillText("FIESTAS L'ALFÀS DEL PI · 2026", 76, 88);
+  c.fillText("FIESTAS L'ALFÀS DEL PI", 76, 88);
 
   // La foto/logo de la peña se coloca como emblema circular.
   if (p.foto) {
@@ -203,7 +203,7 @@ async function sharePenyaCard(p: PenyaDb) {
   c.font = "26px Arial";
   c.fillText(window.location.host, 76, 1845);
   c.font = "bold 24px Arial";
-  c.fillText("© Peña Enredats · Todos los derechos reservados", 76, 1885);
+  c.fillText("© Todos los derechos reservados", 76, 1885);
 
   const blob = await new Promise<Blob>((resolve, reject) =>
     canvas.toBlob((b) => b ? resolve(b) : reject(new Error("No se pudo generar el PNG.")), "image/png")
@@ -246,19 +246,29 @@ function Home() {
   const [selectedPenya, setSelectedPenya] = useState<PenyaDb | null>(null);
   const [eventFormPenya, setEventFormPenya] = useState<PenyaDb | null>(null);
   const [mapFullscreen, setMapFullscreen] = useState(false);
-  const dias = useMemo(() => [...new Set(actos.map((a) => a.dia))].sort(), [actos]);
+  const dias = useMemo(() => [...new Set(actos.filter((a) => eventoSigueActivo(a, now)).map((a) => a.dia))].sort(), [actos, now]);
   const [dia, setDia] = useState<string | undefined>();
   const eventosActivos = useMemo(() => eventos.filter((e) => eventoSigueActivo(e, now)), [eventos, now]);
   const todayDate = new Date(now);
   const todayKey = todayDate.getFullYear()+"-"+String(todayDate.getMonth()+1).padStart(2,"0")+"-"+String(todayDate.getDate()).padStart(2,"0");
   const tomorrowDate = new Date(now); tomorrowDate.setDate(tomorrowDate.getDate()+1);
   const tomorrowKey = tomorrowDate.getFullYear()+"-"+String(tomorrowDate.getMonth()+1).padStart(2,"0")+"-"+String(tomorrowDate.getDate()).padStart(2,"0");
-  const matchesDay = (item:any) => filterDay==="all" || (filterDay==="upcoming" ? eventoSigueActivo(item,now) : String(item.dia||"").slice(0,10)===(filterDay==="today"?todayKey:tomorrowKey) && eventoSigueActivo(item,now));
-  const isOfficial = (item:any) => programaOficial2026.some((official)=>official.dia===item.dia && official.hora===item.hora && official.titulo===item.titulo);
-  const filteredActs = useMemo(()=>actos.filter((a)=>!a._officialOnly && matchesDay(a) && (filterCategory==="all" || (filterCategory==="programa" && (a.tipo==="evento" || isOfficial(a))) || (filterCategory==="actuaciones" && (a.tipo==="evento" || a.tipo==="actuacion" || /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/i.test(a.titulo||""))))), [actos,filterDay,filterCategory,now]);
+  const matchesDay = (item:any) => eventoSigueActivo(item,now) && (filterDay==="all" || (filterDay==="upcoming" ? true : String(item.dia||"").slice(0,10)===(filterDay==="today"?todayKey:tomorrowKey)));
+  const filteredActs = useMemo(()=>actos.filter((a)=>matchesDay(a) && (filterCategory==="all" || (filterCategory==="programa" && a.tipo==="evento") || (filterCategory==="actuaciones" && (a.tipo==="evento" || a.tipo==="actuacion" || /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/i.test(a.titulo||""))))), [actos,filterDay,filterCategory,now]);
   const filteredPenyaEvents = useMemo(()=>eventos.filter((e)=>matchesDay(e) && (filterCategory==="all" || filterCategory==="penyes")), [eventos,filterDay,filterCategory,now]);
   const avisosVisibles = avisos.filter((aviso:any)=>aviso.activo && (!aviso.publicar_en || new Date(aviso.publicar_en).getTime()<=now));
   const favoriteItems = useMemo(()=>[...actos.filter((a)=>eventoSigueActivo(a,now)).map((a)=>({...a,favoriteKey:"acto:"+a.id,kind:"Programa / actuación"})),...eventos.filter((e)=>eventoSigueActivo(e,now)).map((e)=>({...e,favoriteKey:"evento:"+e.id,kind:"Evento de peña"}))].filter((item)=>favorites.includes(item.favoriteKey)).sort((a,b)=>String(a.dia||"").localeCompare(String(b.dia||"")) || String(a.hora||"").localeCompare(String(b.hora||""))),[actos,eventos,favorites,now]);
+  const historicalActs = useMemo(() => {
+    const rows: any[] = [...programaOficial2026, ...informacionBus2026, ...actos.filter((a) => !eventoSigueActivo(a, now))];
+    const seen = new Set<string>();
+    return rows.filter((a) => {
+      const key = [a.dia, a.hora, a.titulo].join("|");
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).sort((a, b) => String(a.dia).localeCompare(String(b.dia)) || String(a.hora).localeCompare(String(b.hora)));
+  }, [actos, now]);
+  const historicalPenyaEvents = useMemo(() => eventos.filter((e) => !eventoSigueActivo(e, now)), [eventos, now]);
   const searchResults = useMemo(() => {
     const normalize = (value: any) => String(value || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "");
     const term = normalize(searchTerm.trim());
@@ -266,7 +276,7 @@ function Home() {
     const matches = (...values: any[]) => values.some((value) => normalize(value).includes(term));
     const results: any[] = [];
     penyes.filter((p) => matches(p.nombre, p.direccion)).forEach((p) => results.push({ key: "penya:" + p.id, label: p.nombre, kind: "Peña", sub: p.direccion || "Ficha de la peña", onSelect: () => { setCurrentPage("penyes"); setSelectedPenya(p); window.scrollTo({top:0,behavior:"smooth"}); } }));
-    eventos.filter((e) => matches(e.titulo, e.descripcion, e.lugar)).forEach((e) => results.push({ key: "evento:" + e.id, label: e.titulo, kind: "Evento de peña", sub: [e.dia, e.hora, e.lugar].filter(Boolean).join(" · "), onSelect: () => { setCurrentPage("eventos"); setFilterDay("all"); setFilterCategory("penyes"); window.scrollTo({top:0,behavior:"smooth"}); } }));
+    eventos.filter((e) => eventoSigueActivo(e,now) && matches(e.titulo, e.descripcion, e.lugar)).forEach((e) => results.push({ key: "evento:" + e.id, label: e.titulo, kind: "Evento de peña", sub: [e.dia, e.hora, e.lugar].filter(Boolean).join(" · "), onSelect: () => { setCurrentPage("eventos"); setFilterDay("all"); setFilterCategory("penyes"); window.scrollTo({top:0,behavior:"smooth"}); } }));
     actos.filter((a) => !a._officialOnly && eventoSigueActivo(a,now) && matches(a.titulo, a.descripcion, a.lugar)).forEach((a) => results.push({ key: "acto:" + a.id, label: a.titulo, kind: a.tipo === "actuacion" ? "Actuación" : "Programa oficial", sub: [a.dia, a.hora, a.lugar].filter(Boolean).join(" · "), onSelect: () => { const isAct = a.tipo === "actuacion" || /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/i.test(a.titulo || ""); setCurrentPage(isAct ? "eventos" : "programa"); if (!isAct) setDia(a.dia); setFilterDay("all"); setFilterCategory(isAct ? "actuaciones" : "all"); window.scrollTo({top:0,behavior:"smooth"}); } }));
     mapPoints.filter((p) => matches(p.nombre, p.descripcion)).forEach((p) => results.push({ key: "lugar:" + p.id, label: p.nombre, kind: "Ubicación", sub: p.descripcion || "Punto de interés", onSelect: () => { setCurrentPage("home"); setCat(null); setQ(""); setFocus(null); requestAnimationFrame(() => setFocus(p.id)); window.scrollTo({top:0,behavior:"smooth"}); } }));
     return results.slice(0, 12);
@@ -312,14 +322,9 @@ function Home() {
     }
     setPublicDataLoaded(Array.isArray(actosData) && Array.isArray(eventosData));
     const filas = actosData ?? [];
-    // El programa oficial del PDF es la fuente principal. La base de datos aporta
-    // identificadores y actos añadidos, pero no debe sobrescribir el contenido oficial.
-    const oficiales = programaOficial2026.map((oficial) => {
-      const fila = filas.find((item) => item.dia === oficial.dia && item.hora === oficial.hora && item.titulo === oficial.titulo);
-      return fila ? { ...oficial, ...fila, id: fila.id, _officialOnly: false } : { ...oficial, _officialOnly: true };
-    });
-    const extras = filas.filter((fila) => !/autobús lanzadera/i.test(fila.titulo || "") && !programaOficial2026.some((oficial) => fila.dia === oficial.dia && fila.hora === oficial.hora && fila.titulo === oficial.titulo));
-    setActos([...oficiales, ...extras]);
+    // Los actos guardados se conservan en la base de datos. El programa de 2026
+    // queda disponible en el archivo histórico y no se mezcla con la edición futura.
+    setActos(filas);
     setEventos(eventosData ?? []);
     const content = Object.fromEntries((contentData ?? []).map((x:any)=>[x.clave,x.valor]));
     setSiteContent(content);
@@ -375,8 +380,8 @@ function Home() {
         <img src={heroImage || hero} alt="Fiestas en las calles de l'Alfàs del Pi" width={1920} height={1280} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-t from-brown/90 via-brown/20 to-transparent" />
         <div className="relative mx-auto w-full max-w-6xl px-4 pb-9 sm:px-5 sm:pb-16">
-          <span className="glass-dark mb-4 inline-block rounded-full px-3 py-1 text-xs">{siteContent["hero_fechas"] || edicion.fechas}</span>
-          <h1 className="rise text-4xl font-bold leading-[0.98] text-on-image sm:text-7xl md:text-8xl">{siteContent["hero_titulo"] || edicion.titulo} <span className="text-pink">{edicion.anyo}</span></h1>
+          <span className="glass-dark mb-4 inline-block rounded-full px-3 py-1 text-xs">{edicion.fechas}</span>
+          <h1 className="rise text-4xl font-bold leading-[0.98] text-on-image sm:text-7xl md:text-8xl">{siteContent["hero_titulo"]?.replace(/2026/g, String(edicion.anyo)) || edicion.titulo} <span className="text-pink">{edicion.anyo}</span></h1>
           <p className="rise mt-3 max-w-xl text-sm text-on-image/85 sm:mt-4 sm:text-lg">{siteContent["hero_subtitulo"] || edicion.subtitulo}</p>
         </div>
       </section>
@@ -616,12 +621,24 @@ function Home() {
           </section>
 
           <article className="glass rounded-3xl p-5 sm:p-6">
-            <div className="mb-3 flex items-center gap-3"><span className="text-3xl">🚌</span><div><h3 className="text-xl font-bold text-primary">Autobús lanzadera de fiestas</h3><p className="text-sm text-muted-foreground">Servicio nocturno gratuito</p></div></div>
-            <p className="font-semibold">Del 6 al 9 de noviembre · de 01:00 a 04:00 h</p>
-            <p className="mt-2 text-sm">Salidas cada hora desde el parking de La Bolleta (frente a Gaudí).</p>
-            <p className="mt-2 text-sm"><strong>Paradas:</strong> Parque Escandinavia, San Rafael, Tossalet, avenida Sant Pere (Albir Garden) y Consum Albir.</p>
-            <p className="mt-2 text-sm">El recorrido de regreso finaliza en el parking de La Bolleta.</p>
+            <div className="mb-3 flex items-center gap-3"><span className="text-3xl">👑</span><div><h3 className="text-xl font-bold text-primary">Mayorales</h3><p className="text-sm text-muted-foreground">Próxima comisión pendiente de anunciar</p></div></div>
+            <p className="text-sm">Todavía no se han anunciado los nuevos Mayorales. Cuando haya información confirmada, se publicará aquí. La peña Impakte conserva su ficha como una peña más, sin distintivo de Mayorales.</p>
           </article>
+          <section aria-labelledby="archivo-fiestas-title" className="space-y-3">
+            <div><h3 id="archivo-fiestas-title" className="text-xl font-bold text-primary">📚 Archivo de las fiestas 2026</h3><p className="mt-1 text-sm text-muted-foreground">El programa y las actividades de la edición pasada se conservan como recuerdo. No aparecen mezclados con la información de las próximas fiestas.</p></div>
+            <details className="glass rounded-2xl p-4">
+              <summary className="cursor-pointer font-bold text-primary">Programa oficial 2026 ({historicalActs.length} actividades)</summary>
+              <div className="mt-3 max-h-[28rem] space-y-2 overflow-y-auto border-t border-border/60 pt-3">
+                {historicalActs.map((a:any)=><article key={a.id || [a.dia,a.hora,a.titulo].join("-")} className="rounded-xl bg-background/60 p-3"><p className="text-xs font-bold text-primary">{fmtDia(a.dia)} · {a.hora || "Hora no indicada"}</p><h4 className="mt-1 text-sm font-bold">{a.titulo}</h4>{a.descripcion&&<p className="mt-1 text-xs text-muted-foreground">{a.descripcion}</p>}{a.lugar&&<p className="mt-1 text-xs text-muted-foreground">📍 {a.lugar}</p>}</article>)}
+              </div>
+            </details>
+            <details className="glass rounded-2xl p-4">
+              <summary className="cursor-pointer font-bold text-primary">Eventos de las peñas de 2026 ({historicalPenyaEvents.length} eventos)</summary>
+              <div className="mt-3 max-h-[22rem] space-y-2 overflow-y-auto border-t border-border/60 pt-3">
+                {historicalPenyaEvents.length ? historicalPenyaEvents.map((e:any)=><article key={e.id} className="rounded-xl bg-background/60 p-3"><p className="text-xs font-bold text-primary">{e.dia ? fmtDia(e.dia) : "Fecha no indicada"} · {e.hora || "Hora no indicada"}</p><h4 className="mt-1 text-sm font-bold">{e.titulo}</h4>{e.descripcion&&<p className="mt-1 text-xs text-muted-foreground">{e.descripcion}</p>}{e.lugar&&<p className="mt-1 text-xs text-muted-foreground">📍 {e.lugar}</p>}</article>) : <p className="text-sm text-muted-foreground">No hay eventos antiguos de peñas guardados.</p>}
+              </div>
+            </details>
+          </section>
           <p className="text-xs text-muted-foreground">Los teléfonos y horarios pueden cambiar. Comprueba la información con el servicio correspondiente. Esta página es informativa y no sustituye a los servicios oficiales de emergencia.</p>
         </section>
       </main>}
@@ -644,11 +661,11 @@ function Home() {
         <p>{edicion.titulo} · {edicion.anyo}</p>
         <button onClick={() => void shareWebsite()} className="glass-btn rounded-full px-6 py-3 font-bold text-primary">↗ Compartir la web</button>
         <div className="flex flex-wrap justify-center gap-2">
-          <button onClick={() => shareOn("whatsapp", window.location.href, "Fiestas de l'Alfàs del Pi 2026", "Consulta el programa, el mapa y las peñas.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">WhatsApp</button>
-          <button onClick={() => shareOn("facebook", window.location.href, "Fiestas de l'Alfàs del Pi 2026", "Consulta el programa, el mapa y las peñas.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Facebook</button>
-          <button onClick={() => shareOn("telegram", window.location.href, "Fiestas de l'Alfàs del Pi 2026", "Consulta el programa, el mapa y las peñas.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Telegram</button>
-          <button onClick={() => shareOn("x", window.location.href, "Fiestas de l'Alfàs del Pi 2026", "Consulta el programa, el mapa y las peñas.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">X</button>
-          <button onClick={() => shareOn("email", window.location.href, "Fiestas de l'Alfàs del Pi 2026", "Consulta el programa, el mapa y las peñas.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Correo</button>
+          <button onClick={() => shareOn("whatsapp", window.location.href, "Fiestas de l'Alfàs del Pi", "Consulta las peñas, la agenda y las novedades.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">WhatsApp</button>
+          <button onClick={() => shareOn("facebook", window.location.href, "Fiestas de l'Alfàs del Pi", "Consulta las peñas, la agenda y las novedades.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Facebook</button>
+          <button onClick={() => shareOn("telegram", window.location.href, "Fiestas de l'Alfàs del Pi", "Consulta las peñas, la agenda y las novedades.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Telegram</button>
+          <button onClick={() => shareOn("x", window.location.href, "Fiestas de l'Alfàs del Pi", "Consulta las peñas, la agenda y las novedades.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">X</button>
+          <button onClick={() => shareOn("email", window.location.href, "Fiestas de l'Alfàs del Pi", "Consulta las peñas, la agenda y las novedades.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Correo</button>
           <button onClick={() => void copyShareLink(window.location.href)} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Copiar enlace</button>
         </div>
       </footer>}
@@ -664,7 +681,7 @@ function Home() {
             {selectedPenya.foto && <img src={selectedPenya.foto} alt={selectedPenya.nombre} className="h-48 w-full object-cover sm:h-60" />}
             <div className="p-5 sm:p-8">
               <div className="flex items-start justify-between gap-4">
-                <div><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Peña participante</p><h2 className="mt-1 text-3xl font-bold text-primary sm:text-4xl">{selectedPenya.nombre}</h2>{selectedPenya.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").includes("impacte") && <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-amber-300 bg-gradient-to-r from-amber-100 via-yellow-50 to-amber-100 px-4 py-2 text-amber-950 shadow-sm"><span className="text-xl">♛</span><span className="text-xs font-black uppercase tracking-wider">Mayorales 2026</span><span className="text-[10px] font-semibold">Peña Impacte</span></div>}</div>
+                <div><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Peña participante</p><h2 className="mt-1 text-3xl font-bold text-primary sm:text-4xl">{selectedPenya.nombre}</h2></div>
                 <button onClick={() => setSelectedPenya(null)} aria-label="Cerrar" className="glass-btn h-10 w-10 shrink-0 rounded-full">✕</button>
               </div>
 
