@@ -36,7 +36,7 @@ export const edicion = {
 // Lugares fijos citados en el programa oficial (pendiente del PDF).
 export const lugares: Lugar[] = [];
 
-// Programa oficial 2026 (pendiente de incorporar desde el PDF oficial).
+// Los actos de nuevas ediciones se publicarán desde la base de datos; 2026 queda archivado aparte.
 export const actos: Acto[] = [];
 
 export const ui = {
