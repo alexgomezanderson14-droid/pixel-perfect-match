@@ -89,6 +89,7 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
         lat: pos?.lat ?? null,
         lng: pos?.lng ?? null,
         foto_url: fotoPath,
+        estado: "pendiente",
         tipo_musica: v.data.tipo_musica || "Variada",
         instagram: v.data.instagram.replace(/^@/, ""),
       });
