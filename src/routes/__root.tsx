@@ -113,6 +113,9 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function getWordmarkColor(): "white" | "black" {
+  // Comprueba el color sólido del elemento que queda debajo de la marca.
+  // Los fondos transparentes o con imagen se omiten para buscar el siguiente
+  // fondo sólido de sus contenedores, en lugar de forzar siempre el blanco.
   const x = Math.max(0, window.innerWidth - 32);
   const y = 20;
   let element = document.elementFromPoint(x, y) as HTMLElement | null;
@@ -120,25 +123,28 @@ function getWordmarkColor(): "white" | "black" {
   while (element) {
     const style = window.getComputedStyle(element);
     const background = style.backgroundColor;
-    const match = background.match(/rgba?\((\d+)[, ]+\s*(\d+)[, ]+\s*(\d+)/);
+    const match = background.match(/rgba?\(\s*(\d+)[, ]+\s*(\d+)[, ]+\s*(\d+)(?:\s*[,/]\s*([\d.]+))?\s*\)/);
 
     if (match && Number(style.opacity) > 0) {
-      const [, red, green, blue] = match.map(Number);
-      const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
-      return luminance > 0.5 ? "black" : "white";
+      const alpha = match[4] === undefined ? 1 : Number(match[4]);
+      if (alpha > 0.05) {
+        const red = Number(match[1]);
+        const green = Number(match[2]);
+        const blue = Number(match[3]);
+        const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
+        return luminance > 0.5 ? "black" : "white";
+      }
     }
 
-    // Las imágenes y fondos fotográficos suelen llevar una capa oscura encima.
-    if (style.backgroundImage !== "none" || element instanceof HTMLImageElement) {
-      return "white";
-    }
     element = element.parentElement;
   }
 
   const bodyBackground = window.getComputedStyle(document.body).backgroundColor;
-  const bodyMatch = bodyBackground.match(/rgba?\((\d+)[, ]+\s*(\d+)[, ]+\s*(\d+)/);
+  const bodyMatch = bodyBackground.match(/rgba?\(\s*(\d+)[, ]+\s*(\d+)[, ]+\s*(\d+)/);
   if (bodyMatch) {
-    const [, red, green, blue] = bodyMatch.map(Number);
+    const red = Number(bodyMatch[1]);
+    const green = Number(bodyMatch[2]);
+    const blue = Number(bodyMatch[3]);
     return (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255 > 0.5 ? "black" : "white";
   }
   return "black";
