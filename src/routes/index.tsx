@@ -681,7 +681,7 @@ function Home() {
             {selectedPenya.foto && <img src={selectedPenya.foto} alt={selectedPenya.nombre} className="h-48 w-full object-cover sm:h-60" />}
             <div className="p-5 sm:p-8">
               <div className="flex items-start justify-between gap-4">
-                <div><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Peña participante</p><h2 className="mt-1 text-3xl font-bold text-primary sm:text-4xl">{selectedPenya.nombre}</h2>{selectedPenya.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").includes("impacte") </div>
+                <div><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Peña participante</p><h2 className="mt-1 text-3xl font-bold text-primary sm:text-4xl">{selectedPenya.nombre}</h2></div>
                 <button onClick={() => setSelectedPenya(null)} aria-label="Cerrar" className="glass-btn h-10 w-10 shrink-0 rounded-full">✕</button>
               </div>
 
