@@ -7,7 +7,7 @@ export default function AddPenyaEventForm({ penyaId, penyaName, onClose, onSaved
   penyaId: string; penyaName: string; onClose: () => void; onSaved: (organizaEvento: boolean) => void;
 }) {
   const [organizaEvento, setOrganizaEvento] = useState<"si" | "no">("si");
-  const [dia, setDia] = useState("2026-11-07");
+  const [dia, setDia] = useState("");
   const [hora, setHora] = useState("");
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
