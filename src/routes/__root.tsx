@@ -121,6 +121,12 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <div className="min-h-screen" onContextMenu={(event) => { if ((event.target as HTMLElement).closest('img, picture, video')) event.preventDefault(); }} onDragStart={(event) => { if ((event.target as HTMLElement).closest('img, picture')) event.preventDefault(); }}>
         <Outlet />
+        <div
+          aria-label="festalfàs"
+          className="pointer-events-none fixed right-4 top-3 z-[10000] select-none text-sm font-extrabold tracking-tight text-white mix-blend-difference sm:right-6 sm:top-4 sm:text-base"
+        >
+          festalfàs
+        </div>
       </div>
     </QueryClientProvider>
   );
