@@ -35,7 +35,7 @@ function fmtDia(d: string) {
 }
 
 function esPenyaCuBaTa(nombre: string) {
-  return nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^a-z0-9]/g, "").includes("cubata");
+  return nombre.toLocaleLowerCase("es").replace(/[^a-z0-9]/g, "").includes("cubata");
 }
 
 function CountdownFiestas() {
