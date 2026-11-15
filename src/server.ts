@@ -24,7 +24,7 @@ function isSocialCrawler(userAgent: string): boolean {
 
 async function handleNewsShare(request: Request, env: CloudflareEnv): Promise<Response | null> {
   const url = new URL(request.url);
-  const match = url.pathname.match(/^\\/noticia\\/([^/]+)\\/?$/);
+  const match = url.pathname.match(/^\/noticia\/([^/]+)\/?$/);
   if (!match) return null;
 
   let id: string;
@@ -65,7 +65,13 @@ async function handleNewsShare(request: Request, env: CloudflareEnv): Promise<Re
   const title = escapeHtml(news.titulo);
   const description = escapeHtml(news.resumen || "Lee esta noticia en festalfàs.");
   const imagePath = news.imagen_url || "/mayorales-2027.svg";
-  const imageUrl = new URL(imagePath, url.origin).toString();
+  let imageUrl = new URL("/mayorales-2027.svg", url.origin).toString();
+  try {
+    const candidate = new URL(imagePath, url.origin);
+    if (candidate.protocol === "https:" || candidate.protocol === "http:") imageUrl = candidate.toString();
+  } catch {
+    // Si una URL de imagen está dañada, se conserva la imagen segura de respaldo.
+  }
   const canonical = new URL("/noticia/" + encodeURIComponent(id), url.origin).toString();
   const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} · festalfàs</title><meta name="description" content="${description}"><link rel="canonical" href="${escapeHtml(canonical)}"><meta property="og:type" content="article"><meta property="og:site_name" content="festalfàs"><meta property="og:title" content="${title}"><meta property="og:description" content="${description}"><meta property="og:url" content="${escapeHtml(canonical)}"><meta property="og:image" content="${escapeHtml(imageUrl)}"><meta property="og:image:alt" content="${title}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${title}"><meta name="twitter:description" content="${description}"><meta name="twitter:image" content="${escapeHtml(imageUrl)}"></head><body><main><h1>${title}</h1><p>${description}</p><img src="${escapeHtml(imageUrl)}" alt="${title}"><p><a href="/#noticia=${encodeURIComponent(id)}">Leer noticia en festalfàs</a></p></main></body></html>`;
   return new Response(html, {
