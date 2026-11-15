@@ -214,7 +214,7 @@ async function sharePenyaCard(p: PenyaDb) {
   c.font = "30px Arial";
   c.fillStyle = "#655650";
   const address = (p.direccion || "L'Alfàs del Pi").trim();
-  const addressLines = address.match(/.{1,48}(?:\\s|$)/g) || [address];
+  const addressLines = address.match(/.{1,48}(?:\s|$)/g) || [address];
   addressLines.slice(0, 2).forEach((part, index) => c.fillText(part.trim(), 76, 1445 + index * 42));
 
   c.fillStyle = "#173f52";
@@ -254,7 +254,7 @@ type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: numb
 const normalizarBusqueda=(value:any)=>String(value||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
 const videoEmbedUrl=(value:string)=>{try{const u=new URL(value);const host=u.hostname.toLowerCase();if(host==="youtube.com"||host==="www.youtube.com"){const id=u.searchParams.get("v")||(u.pathname.startsWith("/shorts/")?u.pathname.split("/")[2]:"");return id?"https://www.youtube-nocookie.com/embed/"+id:"";}if(host==="youtu.be")return "https://www.youtube-nocookie.com/embed/"+u.pathname.split("/").filter(Boolean)[0];if(host==="vimeo.com"||host==="www.vimeo.com")return "https://player.vimeo.com/video/"+u.pathname.split("/").filter(Boolean).pop();if(host==="instagram.com"||host==="www.instagram.com"){const path=u.pathname.endsWith("/")?u.pathname.slice(0,-1):u.pathname;if(path.includes("/reel/")||path.includes("/p/")||path.includes("/tv/"))return u.origin+path+"/embed";}return "";}catch{return "";}};
 const esVideoDirecto=(value:string)=>{try{const path=new URL(value).pathname.toLowerCase();return [".mp4",".webm",".ogg",".mov"].some(ext=>path.endsWith(ext));}catch{return false;}};
-const esVideoVertical=(value:string)=>{try{const u=new URL(value);return /\\/shorts\\/|\\/reel\\/|\\/p\\//i.test(u.pathname);}catch{return false;}};
+const esVideoVertical=(value:string)=>{try{const u=new URL(value);return /\/shorts\/|\/reel\/|\/p\//i.test(u.pathname);}catch{return false;}};
 function Home() {
   const [q, setQ] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
