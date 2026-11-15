@@ -257,7 +257,6 @@ function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
   const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes">("all");
-  const [favorites, setFavorites] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState<"home"|"noticias"|"buscar"|"programa"|"eventos"|"mapa"|"penyes"|"info">("home");
   const [publicDataLoaded, setPublicDataLoaded] = useState(false);
   const [avisos, setAvisos] = useState<any[]>([]);
@@ -311,10 +310,7 @@ function Home() {
     mapPoints.filter((p) => matches(p.nombre, p.descripcion)).forEach((p) => results.push({ key: "lugar:" + p.id, label: p.nombre, kind: "Ubicación", sub: p.descripcion || "Punto de interés", onSelect: () => { setCurrentPage("home"); setCat(null); setQ(""); setFocus(null); requestAnimationFrame(() => setFocus(p.id)); window.scrollTo({top:0,behavior:"smooth"}); } }));
     return results.slice(0, 12);
   }, [searchTerm, penyes, eventos, actos, mapPoints, now]);
-  const toggleFavorite=(key:string)=>setFavorites((current)=>{const next=current.includes(key)?current.filter((x)=>x!==key):[...current,key];try{localStorage.setItem("fiestas-favorites",JSON.stringify(next));}catch{}return next;});
   useEffect(() => { if (dias.length && (!dia || !dias.includes(dia))) { const siguiente = dias.find((d) => d >= todayKey); setDia(dias.includes(todayKey) ? todayKey : siguiente || dias[dias.length - 1]); } }, [dias, dia, todayKey]);
-  useEffect(()=>{try{const saved=JSON.parse(localStorage.getItem("fiestas-favorites")||"[]");if(Array.isArray(saved))setFavorites(saved.filter((x)=>typeof x==="string"));}catch{setFavorites([]);}},[]);
-  useEffect(()=>{if(!publicDataLoaded)return;const valid=new Set([...actos.map(a=>"acto:"+a.id),...eventos.map(e=>"evento:"+e.id)]);setFavorites((current)=>{const next=current.filter((key)=>valid.has(key));if(next.length!==current.length){try{localStorage.setItem("fiestas-favorites",JSON.stringify(next));}catch{}}return next;});},[publicDataLoaded,actos,eventos]);
   useEffect(() => {
     if (!mapFullscreen) return;
     const previousOverflow = document.body.style.overflow;
@@ -494,7 +490,7 @@ function Home() {
                       {a.descripcion && <p className="mt-1 hidden text-sm text-muted-foreground sm:block">{a.descripcion}</p>}
                       {a.lugar && <p className="mt-2 text-sm text-muted-foreground">📍 {a.lugar}</p>}
                     </div>
-                    <div className="flex items-center gap-2">{a.lat != null && a.lng != null ? <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa</button> : null}<button type="button" onClick={()=>toggleFavorite("acto:"+a.id)} aria-label="Guardar actuación en Mi agenda" className="rounded-full border border-primary/30 px-3 py-2 text-sm font-bold text-primary">{favorites.includes("acto:"+a.id)?"★":"☆"}</button></div>
+                    <div className="flex items-center gap-2">{a.lat != null && a.lng != null ? <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa</button> : null}</div>
                   </article>;
                 })}
                 {!actos.some((a) => a.dia === dia) && <p className="glass rounded-2xl p-5 text-muted-foreground">No hay actos publicados para este día.</p>}
@@ -553,7 +549,7 @@ function Home() {
                     </div>
                   </div>
                 </summary>
-                <div className="space-y-2 border-t border-border/50 p-2 sm:space-y-3 sm:p-4"><button type="button" onClick={()=>toggleFavorite("acto:"+a.id)} className="rounded-full border border-primary/30 px-3 py-1.5 text-xs font-bold text-primary">{favorites.includes("acto:"+a.id)?"★ Guardado en Mi agenda":"☆ Añadir a Mi agenda"}</button>
+                <div className="space-y-2 border-t border-border/50 p-2 sm:space-y-3 sm:p-4">
                   {a.descripcion && <p className="text-sm leading-relaxed text-muted-foreground">{a.descripcion}</p>}
                   <p className="text-sm"><strong>Fecha:</strong> {fmtDia(a.dia)}{a.hora ? " · " + a.hora : ""}</p>
                   {a.lugar && <p className="text-sm"><strong>Lugar:</strong> {a.lugar}</p>}
@@ -583,7 +579,7 @@ function Home() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center justify-between gap-2 px-2 py-1.5"><button type="button" onClick={()=>toggleFavorite("evento:"+e.id)} className="text-xs font-bold text-primary">{favorites.includes("evento:"+e.id)?"★ En Mi agenda":"☆ Añadir a Mi agenda"}</button>{e.lat != null && e.lng != null && <button onClick={() => goMap("evento-" + e.id)} className="text-[10px] font-bold text-[#173f52] sm:text-sm">📍 Ver ubicación</button>}</div>
+                <div className="flex items-center justify-between gap-2 px-2 py-1.5">{e.lat != null && e.lng != null && <button onClick={() => goMap("evento-" + e.id)} className="text-[10px] font-bold text-[#173f52] sm:text-sm">📍 Ver ubicación</button>}</div>
               </article>;
             })}</div>}
           </div>
@@ -719,7 +715,7 @@ function Home() {
         <p>{edicion.titulo} · {edicion.anyo}</p>
         <button onClick={() => void shareWebsite()} className="glass-btn rounded-full px-6 py-3 font-bold text-primary">↗ Compartir la web</button>
         <div className="flex flex-wrap justify-center gap-2">
-          <button onClick={() => shareOn("whatsapp", window.location.href, "Fiestas de l'Alfàs del Pi", "Consulta las peñas, la agenda y las novedades.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">WhatsApp</button>
+          <button onClick={() => shareOn("whatsapp", window.location.href, "Fiestas de l'Alfàs del Pi", "Consulta las peñas y las últimas noticias de las fiestas.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">WhatsApp</button>
           <button onClick={() => shareOn("facebook", window.location.href, "Fiestas de l'Alfàs del Pi", "Consulta las peñas, la agenda y las novedades.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Facebook</button>
           <button onClick={() => shareOn("telegram", window.location.href, "Fiestas de l'Alfàs del Pi", "Consulta las peñas, la agenda y las novedades.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Telegram</button>
           <button onClick={() => shareOn("x", window.location.href, "Fiestas de l'Alfàs del Pi", "Consulta las peñas, la agenda y las novedades.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">X</button>
@@ -751,7 +747,7 @@ function Home() {
               <div className="mt-7">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <h3 className="text-xl font-bold text-primary">Planes de la peña</h3>
-                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Agenda</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Planes de la peña</span>
                 </div>
                 {(eventos.filter((e) => eventoSigueActivo(e,now) && (e.penya_id === selectedPenya.id || [e.titulo, e.descripcion, e.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(selectedPenya.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, ""))))).length + actos.filter((a) => eventoSigueActivo(a,now) && [a.titulo, a.descripcion, a.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(selectedPenya.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "")))).length) ? (
                   <div className="space-y-3">
@@ -777,7 +773,7 @@ function Home() {
                     })}
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-border bg-glass p-5 text-sm text-muted-foreground">Esta peña todavía no ha publicado ningún plan. ¡Vuelve a consultar la agenda pronto!</div>
+                  <div className="rounded-2xl border border-dashed border-border bg-glass p-5 text-sm text-muted-foreground">Esta peña todavía no ha publicado ningún plan. ¡Vuelve a consultar sus próximos planes pronto!</div>
                 )}
               </div>
 
