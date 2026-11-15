@@ -123,7 +123,7 @@ function getWordmarkColor(): "white" | "black" {
     const match = background.match(/rgba?\((\d+)[, ]+\s*(\d+)[, ]+\s*(\d+)/);
 
     if (match && Number(style.opacity) > 0) {
-      const [, red, green, blue] = match.map(Number);
+      const [, red = 0, green = 0, blue = 0] = match.map(Number);
       const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
       return luminance > 0.5 ? "black" : "white";
     }
@@ -138,7 +138,7 @@ function getWordmarkColor(): "white" | "black" {
   const bodyBackground = window.getComputedStyle(document.body).backgroundColor;
   const bodyMatch = bodyBackground.match(/rgba?\((\d+)[, ]+\s*(\d+)[, ]+\s*(\d+)/);
   if (bodyMatch) {
-    const [, red, green, blue] = bodyMatch.map(Number);
+    const [, red = 0, green = 0, blue = 0] = bodyMatch.map(Number);
     return (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255 > 0.5 ? "black" : "white";
   }
   return "black";
