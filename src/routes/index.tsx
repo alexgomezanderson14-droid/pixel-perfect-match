@@ -297,8 +297,7 @@ function Home() {
       seen.add(key);
       return true;
     }).sort((a, b) => String(a.dia).localeCompare(String(b.dia)) || String(a.hora).localeCompare(String(b.hora)));
-  }, [actos, now]);
-  const historicalPenyaEvents = useMemo(() => eventos.filter((e) => !eventoSigueActivo(e, now)), [eventos, now]);
+  }, [actos, now]);  const historicalPenyaEvents = useMemo(() => eventos.filter((e) => !eventoSigueActivo(e, now)), [eventos, now]);
   const searchResults = useMemo(() => {
     const normalize = (value: any) => String(value || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "");
     const term = normalize(searchTerm.trim());
@@ -597,8 +596,7 @@ function Home() {
             })}</div>}
           </div>
         </section>
-      </main>}
-      {currentPage==="penyes" && <main className="mx-auto min-h-[75vh] max-w-6xl px-3 pb-32 pt-8 sm:px-5">
+      </main>}      {currentPage==="penyes" && <main className="mx-auto min-h-[75vh] max-w-6xl px-3 pb-32 pt-8 sm:px-5">
         <section id="penyes" className="scroll-mt-24">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2 sm:mb-8 sm:gap-4">
             <h2 className="text-2xl font-bold text-primary sm:text-5xl">{ui.nav.penyes}</h2>
@@ -699,12 +697,12 @@ function Home() {
       {currentPage==="noticias" && <main className="mx-auto min-h-[85vh] max-w-6xl px-4 pb-32 pt-8 sm:px-5">
         {noticiaSeleccionada ? <article className="mx-auto max-w-4xl">
           <button type="button" onClick={()=>setNoticiaSeleccionada(null)} className="mb-5 rounded-full border border-primary/20 bg-background/80 px-4 py-2 text-sm font-bold text-primary">← Volver a noticias</button>
-          {noticiaSeleccionada.logo_url && <div className="mb-5 flex items-center justify-center gap-5 rounded-3xl border border-border/70 bg-card/70 p-5"><img src={noticiaSeleccionada.logo_url} alt="Logo de CuBaTa" className="h-24 w-24 object-contain"/><img src={noticiaSeleccionada.emblema_url || "/mayorales-2027.svg"} alt="Emblema de Mayorales 2027" className="h-24 w-24 object-contain"/></div>}
-          {noticiaSeleccionada.imagen_url && <img src={noticiaSeleccionada.imagen_url} alt={noticiaSeleccionada.titulo} className={`mb-6 max-h-[520px] w-full rounded-3xl shadow-lg ${noticiaSeleccionada.logo_url ? "bg-card p-4 object-contain" : "object-cover"}`} />}
+          {noticiaSeleccionada.logo_url && <div className="mb-6 flex justify-center"><img src={noticiaSeleccionada.logo_url} alt="Logotipo de CuBaTa" className="h-24 max-w-[min(100%,320px)] object-contain"/></div>}
+          {noticiaSeleccionada.imagen_url && <div className="mb-8 h-[min(68vh,620px)] min-h-[260px] w-full overflow-hidden rounded-3xl bg-muted shadow-lg"><img src={noticiaSeleccionada.imagen_url} alt={noticiaSeleccionada.titulo} className="h-full w-full object-cover" /></div>}
           <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary"><span className="rounded-full bg-primary/10 px-3 py-1">{noticiaSeleccionada.tipo==="oficial"?"Información oficial":"Noticias de las peñas"}</span>{noticiaSeleccionada.autor && <span>{noticiaSeleccionada.autor}</span>}<span>{new Date(noticiaSeleccionada.fecha||noticiaSeleccionada.created_at||Date.now()).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"})}</span></div>
           <h1 className="text-3xl font-extrabold leading-tight text-primary sm:text-5xl">{noticiaSeleccionada.titulo}</h1>
           {noticiaSeleccionada.resumen && <p className="mt-4 text-lg font-medium leading-relaxed text-muted-foreground sm:text-xl">{noticiaSeleccionada.resumen}</p>}
-          <div className="mt-8 whitespace-pre-line text-base leading-8 text-foreground sm:text-lg">{noticiaSeleccionada.contenido}</div>
+          <div className="mt-8 space-y-6 text-base leading-8 text-foreground sm:text-lg">{String(noticiaSeleccionada.contenido || "").split(/\n\s*\n/).filter((bloque:string)=>bloque.trim()).map((bloque:string,index:number)=>{const texto=bloque.trim();const esTitulo=/^[A-ZÁÉÍÓÚÜÑ «»0-9:¿?¡!,.]+$/.test(texto)&&texto.length<85;return esTitulo?<h2 key={index} className="border-l-4 border-primary pl-4 pt-2 text-xl font-extrabold uppercase tracking-wide text-primary sm:text-2xl">{texto}</h2>:<p key={index} className={index===0?"rounded-r-2xl border-l-4 border-primary/40 bg-primary/[0.045] py-4 pl-5 pr-4 text-lg font-medium leading-relaxed sm:text-xl": "text-base leading-8 text-foreground sm:text-lg"}>{texto}</p>;})}</div>
           <div className="mt-10 border-t border-border pt-5"><button type="button" onClick={()=>{setNoticiaSeleccionada(null);window.scrollTo({top:0,behavior:"smooth"});}} className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">← Todas las noticias</button></div>
         </article> : <>
           <header className="mb-7"><p className="text-xs font-extrabold uppercase tracking-[.2em] text-primary">Actualidad festera</p><h1 className="mt-2 text-4xl font-extrabold text-primary sm:text-5xl">Noticias</h1><p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">Toda la actualidad de las fiestas: comunicados oficiales, novedades y noticias de nuestras peñas.</p></header>
