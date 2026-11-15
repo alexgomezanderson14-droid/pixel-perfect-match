@@ -3,7 +3,6 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNo
 import { createPortal } from "react-dom";
 import hero from "@/assets/hero-fiestas.jpg";
 import { edicion, lugares as lugaresFijos, ui, type Categoria, type Lugar } from "@/content/fiestas";
-import { informacionBus2026, programaOficial2026 } from "@/content/programa-oficial-2026";
 import { supabase } from "@/integrations/supabase/client";
 import CopyrightFooter from "@/components/CopyrightFooter";
 import { noticiaCuBaTa2027 } from "@/content/noticia-cubata-2027";
@@ -296,16 +295,6 @@ function Home() {
   const visiblePenyes = useMemo(()=>[...penyes].filter(p=>!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica].join(" ")).includes(normalizarBusqueda(penyaSearch))).sort((a,b)=>Number(esPenyaCuBaTa(b.nombre))-Number(esPenyaCuBaTa(a.nombre))||Number(misPenyes.includes(b.id))-Number(misPenyes.includes(a.id))||a.nombre.localeCompare(b.nombre,"es")),[penyes,penyaSearch,misPenyes]);
   const visibleNews = useMemo(()=>noticias.filter((n:any)=>n.publicado&&(!newsSearch.trim()||normalizarBusqueda([n.titulo,n.resumen,n.contenido,n.autor,n.fuente].join(" ")).includes(normalizarBusqueda(newsSearch)))).slice().sort((x:any,y:any)=>String(y.fecha||y.created_at||"").localeCompare(String(x.fecha||x.created_at||""))),[noticias,newsSearch]);
   const avisosVisibles = avisos.filter((aviso:any)=>aviso.activo && (!aviso.publicar_en || new Date(aviso.publicar_en).getTime()<=now));
-  const historicalActs = useMemo(() => {
-    const rows: any[] = [...programaOficial2026, ...informacionBus2026, ...actos.filter((a) => !eventoSigueActivo(a, now))];
-    const seen = new Set<string>();
-    return rows.filter((a) => {
-      const key = [a.dia, a.hora, a.titulo].join("|");
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    }).sort((a, b) => String(a.dia).localeCompare(String(b.dia)) || String(a.hora).localeCompare(String(b.hora)));
-  }, [actos, now]);  const historicalPenyaEvents = useMemo(() => eventos.filter((e) => !eventoSigueActivo(e, now)), [eventos, now]);
   const searchResults = useMemo(() => {
     const normalize = (value: any) => String(value || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const term = normalize(searchTerm.trim());
@@ -711,21 +700,6 @@ function Home() {
             <div className="mb-3 flex items-center gap-3"><span className="text-3xl">👑</span><div><h3 className="text-xl font-bold text-primary">Mayorales 2027 · CuBaTa</h3><p className="text-sm text-muted-foreground">Peña encargada de la mayoralía de 2027</p></div></div>
             <p className="text-sm">La peña CuBaTa ya está confirmada como Mayorales de 2027. ¡Enhorabuena!</p>
           </article>
-          <section aria-labelledby="archivo-fiestas-title" className="space-y-3">
-            <div><h3 id="archivo-fiestas-title" className="text-xl font-bold text-primary">📚 Archivo de las fiestas 2026</h3><p className="mt-1 text-sm text-muted-foreground">El programa y las actividades de la edición pasada se conservan como recuerdo. No aparecen mezclados con la información de las próximas fiestas.</p></div>
-            <details className="glass rounded-2xl p-4">
-              <summary className="cursor-pointer font-bold text-primary">Programa oficial 2026 ({historicalActs.length} actividades)</summary>
-              <div className="mt-3 max-h-[28rem] space-y-2 overflow-y-auto border-t border-border/60 pt-3">
-                {historicalActs.map((a:any)=><article key={a.id || [a.dia,a.hora,a.titulo].join("-")} className="rounded-xl bg-background/60 p-3"><p className="text-xs font-bold text-primary">{fmtDia(a.dia)} · {a.hora || "Hora no indicada"}</p><h4 className="mt-1 text-sm font-bold">{a.titulo}</h4>{a.descripcion&&<p className="mt-1 text-xs text-muted-foreground">{a.descripcion}</p>}{a.lugar&&<p className="mt-1 text-xs text-muted-foreground">📍 {a.lugar}</p>}</article>)}
-              </div>
-            </details>
-            <details className="glass rounded-2xl p-4">
-              <summary className="cursor-pointer font-bold text-primary">Eventos de las peñas de 2026 ({historicalPenyaEvents.length} eventos)</summary>
-              <div className="mt-3 max-h-[22rem] space-y-2 overflow-y-auto border-t border-border/60 pt-3">
-                {historicalPenyaEvents.length ? historicalPenyaEvents.map((e:any)=><article key={e.id} className="rounded-xl bg-background/60 p-3"><p className="text-xs font-bold text-primary">{e.dia ? fmtDia(e.dia) : "Fecha no indicada"} · {e.hora || "Hora no indicada"}</p><h4 className="mt-1 text-sm font-bold">{e.titulo}</h4>{e.descripcion&&<p className="mt-1 text-xs text-muted-foreground">{e.descripcion}</p>}{e.lugar&&<p className="mt-1 text-xs text-muted-foreground">📍 {e.lugar}</p>}</article>) : <p className="text-sm text-muted-foreground">No hay eventos antiguos de peñas guardados.</p>}
-              </div>
-            </details>
-          </section>
           <p className="text-xs text-muted-foreground">Los teléfonos y horarios pueden cambiar. Comprueba la información con el servicio correspondiente. Esta página es informativa y no sustituye a los servicios oficiales de emergencia.</p>
         </section>
       </main>}
