@@ -269,6 +269,7 @@ function Home() {
   const [eventos, setEventos] = useState<any[]>([]);
   const [noticias, setNoticias] = useState<any[]>([]);
   const [noticiaSeleccionada, setNoticiaSeleccionada] = useState<any | null>(null);
+  const [newsPopup, setNewsPopup] = useState<any[]>([]);
   const [siteContent, setSiteContent] = useState<Record<string,string>>({});
   const [heroImage, setHeroImage] = useState("");
   const [form, setForm] = useState(false);
@@ -380,6 +381,18 @@ function Home() {
     setPenyes(data.map((p, i) => ({ ...p, foto: urls[i] ?? "" })));
   }, []);
   useEffect(() => { cargar(); }, [cargar]);
+  useEffect(() => {
+    if (!noticias.length || typeof window === "undefined" || sessionStorage.getItem("festalfas-news-popup-seen")) return;
+    const latest = noticias.filter((item:any) => item.publicado).slice().sort((a:any,b:any) => String(b.fecha||b.created_at||"").localeCompare(String(a.fecha||a.created_at||""))).slice(0,2);
+    if (!latest.length) return;
+    const showTimer = window.setTimeout(() => {
+      setNewsPopup(latest);
+      sessionStorage.setItem("festalfas-news-popup-seen", "1");
+      hideTimer = window.setTimeout(() => setNewsPopup([]), 7000);
+    }, 900);
+    let hideTimer: number | undefined;
+    return () => { window.clearTimeout(showTimer); if (hideTimer) window.clearTimeout(hideTimer); };
+  }, [noticias]);
 
   const todos: Lugar[] = useMemo(() => [
     ...lugaresFijos,
@@ -697,12 +710,12 @@ function Home() {
       {currentPage==="noticias" && <main className="mx-auto min-h-[85vh] max-w-6xl px-4 pb-32 pt-8 sm:px-5">
         {noticiaSeleccionada ? <article className="mx-auto max-w-4xl">
           <button type="button" onClick={()=>setNoticiaSeleccionada(null)} className="mb-5 rounded-full border border-primary/20 bg-background/80 px-4 py-2 text-sm font-bold text-primary">← Volver a noticias</button>
-          {noticiaSeleccionada.logo_url && <div className="mb-6 flex justify-center"><img src={noticiaSeleccionada.logo_url} alt="Logotipo de CuBaTa" className="h-24 max-w-[min(100%,320px)] object-contain"/></div>}
-          {noticiaSeleccionada.imagen_url && <div className="mb-8 h-[min(68vh,620px)] min-h-[260px] w-full overflow-hidden rounded-3xl bg-muted shadow-lg"><img src={noticiaSeleccionada.imagen_url} alt={noticiaSeleccionada.titulo} className="h-full w-full object-cover" /></div>}
+          {noticiaSeleccionada.imagen_url && <div className="mb-8 flex max-h-[72vh] w-full items-center justify-center overflow-hidden rounded-3xl bg-muted shadow-lg"><img src={noticiaSeleccionada.imagen_url} alt={noticiaSeleccionada.titulo} className="max-h-[72vh] w-full object-contain" /></div>}
           <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary"><span className="rounded-full bg-primary/10 px-3 py-1">{noticiaSeleccionada.tipo==="oficial"?"Información oficial":"Noticias de las peñas"}</span>{noticiaSeleccionada.autor && <span>{noticiaSeleccionada.autor}</span>}<span>{new Date(noticiaSeleccionada.fecha||noticiaSeleccionada.created_at||Date.now()).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"})}</span></div>
           <h1 className="text-3xl font-extrabold leading-tight text-primary sm:text-5xl">{noticiaSeleccionada.titulo}</h1>
           {noticiaSeleccionada.resumen && <p className="mt-4 text-lg font-medium leading-relaxed text-muted-foreground sm:text-xl">{noticiaSeleccionada.resumen}</p>}
           <div className="mt-8 space-y-6 text-base leading-8 text-foreground sm:text-lg">{String(noticiaSeleccionada.contenido || "").split(/\n\s*\n/).filter((bloque:string)=>bloque.trim()).map((bloque:string,index:number)=>{const texto=bloque.trim();const esTitulo=/^[A-ZÁÉÍÓÚÜÑ «»0-9:¿?¡!,.]+$/.test(texto)&&texto.length<85;return esTitulo?<h2 key={index} className="border-l-4 border-primary pl-4 pt-2 text-xl font-extrabold uppercase tracking-wide text-primary sm:text-2xl">{texto}</h2>:<p key={index} className={index===0?"rounded-r-2xl border-l-4 border-primary/40 bg-primary/[0.045] py-4 pl-5 pr-4 text-lg font-medium leading-relaxed sm:text-xl": "text-base leading-8 text-foreground sm:text-lg"}>{texto}</p>;})}</div>
+          {noticiaSeleccionada.logo_url && <div className="my-12 flex justify-center rounded-3xl border border-border/60 bg-white/70 px-6 py-10"><img src={noticiaSeleccionada.logo_url} alt="Logotipo de CuBaTa" className="h-auto max-h-64 w-full max-w-[min(100%,560px)] object-contain sm:max-h-80"/></div>}
           <div className="mt-10 border-t border-border pt-5"><button type="button" onClick={()=>{setNoticiaSeleccionada(null);window.scrollTo({top:0,behavior:"smooth"});}} className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">← Todas las noticias</button></div>
         </article> : <>
           <header className="mb-7"><p className="text-xs font-extrabold uppercase tracking-[.2em] text-primary">Actualidad festera</p><h1 className="mt-2 text-4xl font-extrabold text-primary sm:text-5xl">Noticias</h1><p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">Toda la actualidad de las fiestas: comunicados oficiales, novedades y noticias de nuestras peñas.</p></header>
@@ -713,6 +726,16 @@ function Home() {
         </>}
       </main>}
 
+      {newsPopup.length > 0 && currentPage === "home" && <div className="fixed inset-0 z-[6000] flex items-center justify-center bg-[#173f52]/45 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Últimas noticias">
+        <section className="w-full max-w-lg rounded-3xl border border-white/70 bg-background p-5 shadow-2xl sm:p-7">
+          <div className="mb-4 flex items-start justify-between gap-3"><div><p className="text-xs font-extrabold uppercase tracking-[.18em] text-primary">Actualidad festera</p><h2 className="mt-1 text-2xl font-extrabold text-primary">Últimas noticias</h2></div><button type="button" onClick={() => setNewsPopup([])} aria-label="Cerrar aviso de noticias" className="rounded-full border border-border px-3 py-1.5 text-sm font-bold">✕</button></div>
+          <div className="space-y-3">{newsPopup.map((item:any) => <button key={item.id} type="button" onClick={() => { setNewsPopup([]); setCurrentPage("noticias"); setNoticiaSeleccionada(item); window.scrollTo({top:0,behavior:"smooth"}); }} className="flex w-full items-center gap-3 rounded-2xl border border-border/70 bg-white/70 p-3 text-left transition hover:border-primary/40 hover:shadow-md">
+            {item.imagen_url ? <img src={item.imagen_url} alt="" className="h-16 w-20 shrink-0 rounded-xl bg-muted object-cover"/> : <span className="grid h-16 w-20 shrink-0 place-items-center rounded-xl bg-primary/10 text-2xl text-primary">▤</span>}
+            <span className="min-w-0"><span className="block text-[10px] font-bold uppercase tracking-wide text-primary">{item.tipo==="oficial"?"Información oficial":"Noticias de las peñas"}</span><span className="mt-1 block font-bold leading-snug text-foreground">{item.titulo}</span><span className="mt-1 block text-xs font-semibold text-primary">Leer noticia →</span></span>
+          </button>)}</div>
+          <p className="mt-4 text-center text-xs text-muted-foreground">Este aviso se cerrará automáticamente en unos segundos.</p>
+        </section>
+      </div>}
       {mapFullscreen && typeof document !== "undefined" && createPortal(
         <div role="dialog" aria-modal="true" aria-label="Mapa a pantalla completa" className="fixed inset-0 z-[99999] h-[100dvh] w-screen overflow-hidden bg-[#f3eee6]">
           <div className="absolute inset-0">
