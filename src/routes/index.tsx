@@ -593,7 +593,7 @@ function Home() {
             <div className="glass rounded-3xl p-6 text-muted-foreground">{ui.sinPenyes}</div>
           ) : (
             <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-              {penyes.map((p) => (
+              {[...penyes].sort((a, b) => Number(esPenyaCuBaTa(b.nombre)) - Number(esPenyaCuBaTa(a.nombre)) || a.nombre.localeCompare(b.nombre, "es")).map((p) => (
                 <article id={"penya-" + p.id} key={p.id} className="glass min-w-0 overflow-hidden rounded-xl sm:rounded-3xl">
                   {p.foto && <img src={p.foto} alt={p.nombre} loading="lazy" className="h-16 w-full object-cover sm:h-44" />}
                   <div className="p-2 sm:p-6">
