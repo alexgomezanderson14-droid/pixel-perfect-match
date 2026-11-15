@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-labelledby="title">
+<title id="title">Mayorales 2027 · Santíssim Crist del Bon Encert · CuBaTa</title>
+<defs><path id="topArc" d="M 82,300 A 218,218 0 0,1 518,300"/><path id="bottomArc" d="M 62,300 A 238,238 0 0,0 538,300"/></defs>
+<circle cx="300" cy="300" r="282" fill="#00aaa5"/>
+<circle cx="300" cy="300" r="266" fill="none" stroke="#fff" stroke-width="5"/>
+<circle cx="300" cy="300" r="225" fill="none" stroke="#fff" stroke-width="4"/>
+<g fill="#fff" font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="2">
+  <text font-size="42"><textPath href="#topArc" startOffset="50%" text-anchor="middle">MAJORALS 2027</textPath></text>
+  <text font-size="27"><textPath href="#bottomArc" startOffset="50%" text-anchor="middle">SANTÍSSIM CRIST DEL BON ENCERT</textPath></text>
+</g>
+<circle cx="66" cy="300" r="8" fill="#fff"/><circle cx="534" cy="300" r="8" fill="#fff"/>
+<g font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle">
+  <g transform="translate(104 225)">
+    <rect width="124" height="124" fill="none" stroke="#fff" stroke-width="4"/>
+    <text x="8" y="30" fill="#fff" font-size="22" text-anchor="start">11</text><text x="116" y="25" fill="#fff" font-size="13" text-anchor="end">VJX.AP</text>
+    <text x="62" y="84" fill="#fff" font-size="54">Cu</text><text x="62" y="111" fill="#fff" font-size="20" font-style="italic">Cobre</text>
+  </g>
+  <g transform="translate(238 258)">
+    <rect width="124" height="124" fill="none" stroke="#fff" stroke-width="4"/>
+    <text x="8" y="30" fill="#fff" font-size="22" text-anchor="start">11</text><text x="116" y="25" fill="#fff" font-size="13" text-anchor="end">JJ.MLR</text>
+    <text x="62" y="84" fill="#fff" font-size="54">Ba</text><text x="62" y="111" fill="#fff" font-size="20" font-style="italic">Bario</text>
+  </g>
+  <g transform="translate(372 225)">
+    <rect width="124" height="124" fill="none" stroke="#fff" stroke-width="4"/>
+    <text x="8" y="30" fill="#fff" font-size="22" text-anchor="start">19</text><text x="116" y="25" fill="#fff" font-size="13" text-anchor="end">MP.MLA</text>
+    <text x="62" y="84" fill="#fff" font-size="54">Ta</text><text x="62" y="111" fill="#fff" font-size="20" font-style="italic">Tántalo</text>
+  </g>
+</g></svg>

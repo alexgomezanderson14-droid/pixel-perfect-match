@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1091 477" role="img" aria-labelledby="title">
+<title id="title">Logotipo CuBaTa</title>
+<g font-family="Arial, Helvetica, sans-serif" font-weight="700">
+  <g fill="none" stroke="#147be9" stroke-width="8">
+    <rect x="147" y="55" width="247" height="247"/>
+  </g>
+  <g fill="#147be9">
+    <text x="160" y="106" font-size="43">11</text><text x="268" y="94" font-size="32">VJX.AP</text>
+    <text x="185" y="225" font-size="122">Cu</text>
+    <text x="199" y="280" font-size="45" font-style="italic">Cobre</text>
+  </g>
+  <g fill="none" stroke="#12d4e3" stroke-width="8">
+    <rect x="416" y="154" width="247" height="247"/>
+  </g>
+  <g fill="#12d4e3">
+    <text x="427" y="208" font-size="43">11</text><text x="535" y="194" font-size="32">JJ.MLR</text>
+    <text x="455" y="323" font-size="122">Ba</text>
+    <text x="471" y="379" font-size="45" font-style="italic">Bario</text>
+  </g>
+  <g fill="none" stroke="#172dbb" stroke-width="8">
+    <rect x="687" y="97" width="247" height="247"/>
+  </g>
+  <g fill="#172dbb">
+    <text x="700" y="150" font-size="43">19</text><text x="798" y="137" font-size="32">MP.MLA</text>
+    <text x="746" y="267" font-size="122">Ta</text>
+    <text x="727" y="323" font-size="45" font-style="italic">Tántalo</text>
+  </g>
+</g></svg>
