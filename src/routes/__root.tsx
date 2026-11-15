@@ -167,18 +167,11 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <div className="min-h-screen" onContextMenu={(event) => { if ((event.target as HTMLElement).closest('img, picture, video')) event.preventDefault(); }} onDragStart={(event) => { if ((event.target as HTMLElement).closest('img, picture')) event.preventDefault(); }}>
         <Outlet />
-        <div className="pointer-events-none fixed right-4 top-3 z-[10000] flex select-none flex-col items-end gap-1 sm:right-6 sm:top-4">
-          <div
-            aria-label="festalfàs"
-            className={`text-sm font-extrabold tracking-tight sm:text-base ${wordmarkColor === "white" ? "text-white" : "text-black"}`}
-          >
-            festalfàs
-          </div>
-          <img
-            src="/mayorales-2027.svg"
-            alt="Mayorales 2027 · Peña CuBaTa"
-            className="h-10 w-10 object-contain drop-shadow-sm sm:h-12 sm:w-12"
-          />
+        <div
+          aria-label="festalfàs"
+          className={`pointer-events-none fixed right-4 top-3 z-[10000] select-none text-sm font-extrabold tracking-tight sm:right-6 sm:top-4 sm:text-base ${wordmarkColor === "white" ? "text-white" : "text-black"}`}
+        >
+          festalfàs
         </div>
       </div>
     </QueryClientProvider>
