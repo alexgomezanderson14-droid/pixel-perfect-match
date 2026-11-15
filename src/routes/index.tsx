@@ -14,8 +14,8 @@ const AddPenyaEventForm = lazy(() => import("@/components/AddPenyaEventForm"));
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Fiestas de l'Alfàs del Pi · Peñas, agenda y novedades" },
-      { name: "description", content: "Información de las peñas, actividades, agenda, mapa y archivo de las fiestas de l'Alfàs del Pi." },
+      { title: "Fiestas de l'Alfàs del Pi · Peñas y noticias" },
+      { name: "description", content: "Últimas noticias oficiales y de las peñas, programa, mapa e información de las fiestas de l'Alfàs del Pi." },
       { property: "og:title", content: "Fiestas de l'Alfàs del Pi" },
       { property: "og:description", content: "Programa oficial, mapa interactivo y peñas de las fiestas." },
       { property: "og:type", content: "website" },
@@ -257,9 +257,7 @@ function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
   const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes">("all");
-  const [favorites, setFavorites] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState<"home"|"agenda"|"buscar"|"programa"|"eventos"|"mapa"|"penyes"|"info">("home");
-  const [publicDataLoaded, setPublicDataLoaded] = useState(false);
+  const [currentPage, setCurrentPage] = useState<"home"|"noticias"|"buscar"|"programa"|"eventos"|"mapa"|"penyes"|"info">("home");
   const [avisos, setAvisos] = useState<any[]>([]);
   const [mapPoints, setMapPoints] = useState<Lugar[]>([]);
   const [cat, setCat] = useState<Categoria | null>(null);
@@ -267,6 +265,8 @@ function Home() {
   const [penyes, setPenyes] = useState<PenyaDb[]>([]);
   const [actos, setActos] = useState<any[]>([]);
   const [eventos, setEventos] = useState<any[]>([]);
+  const [noticias, setNoticias] = useState<any[]>([]);
+  const [noticiaSeleccionada, setNoticiaSeleccionada] = useState<any | null>(null);
   const [siteContent, setSiteContent] = useState<Record<string,string>>({});
   const [heroImage, setHeroImage] = useState("");
   const [form, setForm] = useState(false);
@@ -286,7 +286,6 @@ function Home() {
   const filteredActs = useMemo(()=>actos.filter((a)=>matchesDay(a) && (filterCategory==="all" || (filterCategory==="programa" && a.tipo==="evento") || (filterCategory==="actuaciones" && (a.tipo==="evento" || a.tipo==="actuacion" || /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/i.test(a.titulo||""))))), [actos,filterDay,filterCategory,now]);
   const filteredPenyaEvents = useMemo(()=>eventos.filter((e)=>matchesDay(e) && (filterCategory==="all" || filterCategory==="penyes")), [eventos,filterDay,filterCategory,now]);
   const avisosVisibles = avisos.filter((aviso:any)=>aviso.activo && (!aviso.publicar_en || new Date(aviso.publicar_en).getTime()<=now));
-  const favoriteItems = useMemo(()=>[...actos.filter((a)=>eventoSigueActivo(a,now)).map((a)=>({...a,favoriteKey:"acto:"+a.id,kind:"Programa / actuación"})),...eventos.filter((e)=>eventoSigueActivo(e,now)).map((e)=>({...e,favoriteKey:"evento:"+e.id,kind:"Evento de peña"}))].filter((item)=>favorites.includes(item.favoriteKey)).sort((a,b)=>String(a.dia||"").localeCompare(String(b.dia||"")) || String(a.hora||"").localeCompare(String(b.hora||""))),[actos,eventos,favorites,now]);
   const historicalActs = useMemo(() => {
     const rows: any[] = [...programaOficial2026, ...informacionBus2026, ...actos.filter((a) => !eventoSigueActivo(a, now))];
     const seen = new Set<string>();
@@ -310,10 +309,7 @@ function Home() {
     mapPoints.filter((p) => matches(p.nombre, p.descripcion)).forEach((p) => results.push({ key: "lugar:" + p.id, label: p.nombre, kind: "Ubicación", sub: p.descripcion || "Punto de interés", onSelect: () => { setCurrentPage("home"); setCat(null); setQ(""); setFocus(null); requestAnimationFrame(() => setFocus(p.id)); window.scrollTo({top:0,behavior:"smooth"}); } }));
     return results.slice(0, 12);
   }, [searchTerm, penyes, eventos, actos, mapPoints, now]);
-  const toggleFavorite=(key:string)=>setFavorites((current)=>{const next=current.includes(key)?current.filter((x)=>x!==key):[...current,key];try{localStorage.setItem("fiestas-favorites",JSON.stringify(next));}catch{}return next;});
   useEffect(() => { if (dias.length && (!dia || !dias.includes(dia))) { const siguiente = dias.find((d) => d >= todayKey); setDia(dias.includes(todayKey) ? todayKey : siguiente || dias[dias.length - 1]); } }, [dias, dia, todayKey]);
-  useEffect(()=>{try{const saved=JSON.parse(localStorage.getItem("fiestas-favorites")||"[]");if(Array.isArray(saved))setFavorites(saved.filter((x)=>typeof x==="string"));}catch{setFavorites([]);}},[]);
-  useEffect(()=>{if(!publicDataLoaded)return;const valid=new Set([...actos.map(a=>"acto:"+a.id),...eventos.map(e=>"evento:"+e.id)]);setFavorites((current)=>{const next=current.filter((key)=>valid.has(key));if(next.length!==current.length){try{localStorage.setItem("fiestas-favorites",JSON.stringify(next));}catch{}}return next;});},[publicDataLoaded,actos,eventos]);
   useEffect(() => {
     if (!mapFullscreen) return;
     const previousOverflow = document.body.style.overflow;
@@ -349,7 +345,6 @@ function Home() {
       const legacyPenyes = await supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,tiene_evento").eq("estado","aprobada").order("nombre");
       data = legacyPenyes.data?.map((p) => ({ ...p, instagram: "" })) ?? null;
     }
-    setPublicDataLoaded(Array.isArray(actosData) && Array.isArray(eventosData));
     const filas = actosData ?? [];
     // Los actos guardados se conservan en la base de datos. El programa de 2026
     // queda disponible en el archivo histórico y no se mezcla con la edición futura.
@@ -358,6 +353,7 @@ function Home() {
     const content = Object.fromEntries((contentData ?? []).map((x:any)=>[x.clave,x.valor]));
     setSiteContent(content);
     try { const parsed=JSON.parse(content["avisos_json"]||"[]"); setAvisos(Array.isArray(parsed)?parsed:[]); } catch { setAvisos([]); }
+    try { const parsed=JSON.parse(content["noticias_json"]||"[]"); setNoticias(Array.isArray(parsed)?parsed:[]); } catch { setNoticias([]); }
     try { const points=JSON.parse(content["mapa_puntos_json"]||"[]"); setMapPoints(Array.isArray(points)?points.filter((p:any)=>Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))&&Number(p.lat)>=-90&&Number(p.lat)<=90&&Number(p.lng)>=-180&&Number(p.lng)<=180):[]); } catch { setMapPoints([]); }
     if (content["hero_image_path"]) {
       const { data: imageData } = supabase.storage.from("penyes").getPublicUrl(content["hero_image_path"]);
@@ -399,7 +395,7 @@ function Home() {
           ["eventos","🎤","Eventos"],
           ["penyes","☷","Peñas"],
           ["programa","▦","Programa"],
-          ["agenda","★","Agenda"],
+          ["noticias","▤","Noticias"],
           ["info","ⓘ","Info"],
         ].map(([page,icon,label])=><button key={page} type="button" aria-current={currentPage===page?"page":undefined} onClick={()=>{setMapFullscreen(false);setCurrentPage(page as any);window.scrollTo({top:0,behavior:"smooth"});}} className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-0.5 py-2 text-center transition sm:flex-row sm:gap-2 sm:rounded-full sm:px-4 sm:py-3 ${currentPage===page?"bg-pink/20 text-primary":"text-muted-foreground hover:bg-glass"}`}><span className="text-xl leading-none sm:text-lg">{icon}</span><span className="whitespace-nowrap text-[9px] font-bold leading-tight sm:text-sm">{label}</span></button>)}
       </nav>
@@ -492,7 +488,7 @@ function Home() {
                       {a.descripcion && <p className="mt-1 hidden text-sm text-muted-foreground sm:block">{a.descripcion}</p>}
                       {a.lugar && <p className="mt-2 text-sm text-muted-foreground">📍 {a.lugar}</p>}
                     </div>
-                    <div className="flex items-center gap-2">{a.lat != null && a.lng != null ? <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa</button> : null}<button type="button" onClick={()=>toggleFavorite("acto:"+a.id)} aria-label="Guardar actuación en Mi agenda" className="rounded-full border border-primary/30 px-3 py-2 text-sm font-bold text-primary">{favorites.includes("acto:"+a.id)?"★":"☆"}</button></div>
+                    <div className="flex items-center gap-2">{a.lat != null && a.lng != null ? <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa</button> : null}</div>
                   </article>;
                 })}
                 {!actos.some((a) => a.dia === dia) && <p className="glass rounded-2xl p-5 text-muted-foreground">No hay actos publicados para este día.</p>}
@@ -551,7 +547,7 @@ function Home() {
                     </div>
                   </div>
                 </summary>
-                <div className="space-y-2 border-t border-border/50 p-2 sm:space-y-3 sm:p-4"><button type="button" onClick={()=>toggleFavorite("acto:"+a.id)} className="rounded-full border border-primary/30 px-3 py-1.5 text-xs font-bold text-primary">{favorites.includes("acto:"+a.id)?"★ Guardado en Mi agenda":"☆ Añadir a Mi agenda"}</button>
+                <div className="space-y-2 border-t border-border/50 p-2 sm:space-y-3 sm:p-4">
                   {a.descripcion && <p className="text-sm leading-relaxed text-muted-foreground">{a.descripcion}</p>}
                   <p className="text-sm"><strong>Fecha:</strong> {fmtDia(a.dia)}{a.hora ? " · " + a.hora : ""}</p>
                   {a.lugar && <p className="text-sm"><strong>Lugar:</strong> {a.lugar}</p>}
@@ -581,7 +577,7 @@ function Home() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center justify-between gap-2 px-2 py-1.5"><button type="button" onClick={()=>toggleFavorite("evento:"+e.id)} className="text-xs font-bold text-primary">{favorites.includes("evento:"+e.id)?"★ En Mi agenda":"☆ Añadir a Mi agenda"}</button>{e.lat != null && e.lng != null && <button onClick={() => goMap("evento-" + e.id)} className="text-[10px] font-bold text-[#173f52] sm:text-sm">📍 Ver ubicación</button>}</div>
+                <div className="flex items-center justify-between gap-2 px-2 py-1.5">{e.lat != null && e.lng != null && <button onClick={() => goMap("evento-" + e.id)} className="text-[10px] font-bold text-[#173f52] sm:text-sm">📍 Ver ubicación</button>}</div>
               </article>;
             })}</div>}
           </div>
@@ -683,7 +679,23 @@ function Home() {
         </section>
       </main>}
       {currentPage!=="home" && avisosVisibles.length>0 && <section aria-label="Avisos importantes" className="mx-auto mb-8 max-w-5xl space-y-2 px-4 sm:px-5">{avisosVisibles.map((aviso:any)=><article key={aviso.id} className={`rounded-2xl border p-3 sm:p-4 ${aviso.importante?"border-amber-400 bg-amber-50 text-amber-950 shadow-md":"border-border bg-background/80 text-foreground"}`}><div className="flex items-start gap-3"><span className="text-xl">{aviso.importante?"⚠️":"📢"}</span><div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-wide">{aviso.importante?"Aviso importante":"Comunicado"}</p><h2 className="font-bold">{aviso.titulo}</h2><p className="mt-1 text-sm">{aviso.descripcion}</p></div></div></article>)}</section>}
-      {currentPage==="agenda" && <main className="mx-auto min-h-[85vh] max-w-5xl px-4 pb-32 pt-8 sm:px-5"><div className="mb-6 flex items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tus favoritos</p><h1 className="mt-1 text-3xl font-bold text-primary sm:text-5xl">Mi agenda</h1><p className="mt-2 text-sm text-muted-foreground">Tus eventos y actuaciones guardados, ordenados por fecha y hora.</p></div><span className="shrink-0 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary">{favoriteItems.length} guardados</span></div>{favoriteItems.length ? <div className="grid gap-3 sm:grid-cols-2">{favoriteItems.map((item:any)=><article key={item.favoriteKey} className="glass flex items-center justify-between gap-3 rounded-2xl p-4"><div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-wide text-primary">{item.kind}</p><h2 className="mt-1 text-base font-bold">{item.titulo}</h2><p className="mt-1 text-xs text-muted-foreground">{item.dia} · {item.hora||"Hora por confirmar"}{item.lugar?" · "+item.lugar:""}</p></div><button type="button" onClick={()=>toggleFavorite(item.favoriteKey)} aria-label="Quitar de mi agenda" title="Quitar de mi agenda" className="shrink-0 rounded-full border border-primary/20 bg-background/70 px-3 py-2 text-xl text-primary">★</button></article>)}</div> : <div className="glass rounded-3xl px-5 py-12 text-center"><p className="text-4xl">☆</p><h2 className="mt-3 text-xl font-bold text-primary">Todavía no tienes favoritos</h2><p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">Vuelve al inicio y pulsa la estrella de cualquier evento o actuación para guardarlo aquí.</p><button type="button" onClick={()=>{setCurrentPage("home");window.scrollTo({top:0,behavior:"smooth"});}} className="mt-5 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">Explorar fiestas</button></div>}</main>}
+      {currentPage==="noticias" && <main className="mx-auto min-h-[85vh] max-w-6xl px-4 pb-32 pt-8 sm:px-5">
+        {noticiaSeleccionada ? <article className="mx-auto max-w-4xl">
+          <button type="button" onClick={()=>setNoticiaSeleccionada(null)} className="mb-5 rounded-full border border-primary/20 bg-background/80 px-4 py-2 text-sm font-bold text-primary">← Volver a noticias</button>
+          {noticiaSeleccionada.imagen_url && <img src={noticiaSeleccionada.imagen_url} alt={noticiaSeleccionada.titulo} className="mb-6 max-h-[520px] w-full rounded-3xl object-cover shadow-lg" />}
+          <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary"><span className="rounded-full bg-primary/10 px-3 py-1">{noticiaSeleccionada.tipo==="oficial"?"Información oficial":"Noticias de las peñas"}</span>{noticiaSeleccionada.autor && <span>{noticiaSeleccionada.autor}</span>}<span>{new Date(noticiaSeleccionada.fecha||noticiaSeleccionada.created_at||Date.now()).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"})}</span></div>
+          <h1 className="text-3xl font-extrabold leading-tight text-primary sm:text-5xl">{noticiaSeleccionada.titulo}</h1>
+          {noticiaSeleccionada.resumen && <p className="mt-4 text-lg font-medium leading-relaxed text-muted-foreground sm:text-xl">{noticiaSeleccionada.resumen}</p>}
+          <div className="mt-8 whitespace-pre-line text-base leading-8 text-foreground sm:text-lg">{noticiaSeleccionada.contenido}</div>
+          <div className="mt-10 border-t border-border pt-5"><button type="button" onClick={()=>{setNoticiaSeleccionada(null);window.scrollTo({top:0,behavior:"smooth"});}} className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">← Todas las noticias</button></div>
+        </article> : <>
+          <header className="mb-7"><p className="text-xs font-extrabold uppercase tracking-[.2em] text-primary">Actualidad festera</p><h1 className="mt-2 text-4xl font-extrabold text-primary sm:text-5xl">Noticias</h1><p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">Toda la actualidad de las fiestas: comunicados oficiales, novedades y noticias de nuestras peñas.</p></header>
+          {noticias.filter((n:any)=>n.publicado).length ? <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{noticias.filter((n:any)=>n.publicado).slice().sort((x:any,y:any)=>String(y.fecha||y.created_at||"").localeCompare(String(x.fecha||x.created_at||""))).map((n:any)=><button type="button" key={n.id} onClick={()=>{setNoticiaSeleccionada(n);window.scrollTo({top:0,behavior:"smooth"});}} className="group overflow-hidden rounded-3xl border border-border/70 bg-card text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+            <div className="relative aspect-[16/10] overflow-hidden bg-muted">{n.imagen_url ? <img src={n.imagen_url} alt="" loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105"/> : <div className="flex h-full items-center justify-center text-5xl text-primary/40">▤</div>}<span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide text-primary shadow">{n.tipo==="oficial"?"Oficial":"Peñas"}</span></div>
+            <div className="p-5"><p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{new Date(n.fecha||n.created_at||Date.now()).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"})}{n.autor?" · "+n.autor:""}</p><h2 className="mt-2 text-xl font-extrabold leading-snug text-primary">{n.titulo}</h2>{n.resumen&&<p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{n.resumen}</p>}<span className="mt-4 inline-flex items-center gap-2 text-sm font-extrabold text-primary">Leer noticia →</span></div>
+          </button>)}</div> : <div className="rounded-3xl border border-dashed border-border bg-card/60 px-5 py-14 text-center"><p className="text-4xl">▤</p><h2 className="mt-3 text-xl font-bold text-primary">Todavía no hay noticias publicadas</h2><p className="mt-2 text-sm text-muted-foreground">Aquí aparecerán las últimas novedades oficiales y de las peñas.</p></div>}
+        </>}
+      </main>}
 
       {mapFullscreen && typeof document !== "undefined" && createPortal(
         <div role="dialog" aria-modal="true" aria-label="Mapa a pantalla completa" className="fixed inset-0 z-[99999] h-[100dvh] w-screen overflow-hidden bg-[#f3eee6]">
@@ -701,7 +713,7 @@ function Home() {
         <p>{edicion.titulo} · {edicion.anyo}</p>
         <button onClick={() => void shareWebsite()} className="glass-btn rounded-full px-6 py-3 font-bold text-primary">↗ Compartir la web</button>
         <div className="flex flex-wrap justify-center gap-2">
-          <button onClick={() => shareOn("whatsapp", window.location.href, "Fiestas de l'Alfàs del Pi", "Consulta las peñas, la agenda y las novedades.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">WhatsApp</button>
+          <button onClick={() => shareOn("whatsapp", window.location.href, "Fiestas de l'Alfàs del Pi", "Consulta las peñas y las últimas noticias de las fiestas.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">WhatsApp</button>
           <button onClick={() => shareOn("facebook", window.location.href, "Fiestas de l'Alfàs del Pi", "Consulta las peñas, la agenda y las novedades.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Facebook</button>
           <button onClick={() => shareOn("telegram", window.location.href, "Fiestas de l'Alfàs del Pi", "Consulta las peñas, la agenda y las novedades.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Telegram</button>
           <button onClick={() => shareOn("x", window.location.href, "Fiestas de l'Alfàs del Pi", "Consulta las peñas, la agenda y las novedades.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">X</button>
@@ -733,7 +745,7 @@ function Home() {
               <div className="mt-7">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <h3 className="text-xl font-bold text-primary">Planes de la peña</h3>
-                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Agenda</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Planes de la peña</span>
                 </div>
                 {(eventos.filter((e) => eventoSigueActivo(e,now) && (e.penya_id === selectedPenya.id || [e.titulo, e.descripcion, e.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(selectedPenya.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, ""))))).length + actos.filter((a) => eventoSigueActivo(a,now) && [a.titulo, a.descripcion, a.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(selectedPenya.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "")))).length) ? (
                   <div className="space-y-3">
@@ -759,7 +771,7 @@ function Home() {
                     })}
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-border bg-glass p-5 text-sm text-muted-foreground">Esta peña todavía no ha publicado ningún plan. ¡Vuelve a consultar la agenda pronto!</div>
+                  <div className="rounded-2xl border border-dashed border-border bg-glass p-5 text-sm text-muted-foreground">Esta peña todavía no ha publicado ningún plan. ¡Vuelve a consultar sus próximos planes pronto!</div>
                 )}
               </div>
 
