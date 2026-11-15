@@ -6,6 +6,7 @@ import { edicion, lugares as lugaresFijos, ui, type Categoria, type Lugar } from
 import { informacionBus2026, programaOficial2026 } from "@/content/programa-oficial-2026";
 import { supabase } from "@/integrations/supabase/client";
 import CopyrightFooter from "@/components/CopyrightFooter";
+import { noticiaCuBaTa2027 } from "@/content/noticia-cubata-2027";
 
 const FestMap = lazy(() => import("@/components/FestMap"));
 const AddPenyaForm = lazy(() => import("@/components/AddPenyaForm"));
@@ -367,7 +368,7 @@ function Home() {
     const content = Object.fromEntries((contentData ?? []).map((x:any)=>[x.clave,x.valor]));
     setSiteContent(content);
     try { const parsed=JSON.parse(content["avisos_json"]||"[]"); setAvisos(Array.isArray(parsed)?parsed:[]); } catch { setAvisos([]); }
-    try { const parsed=JSON.parse(content["noticias_json"]||"[]"); setNoticias(Array.isArray(parsed)?parsed:[]); } catch { setNoticias([]); }
+    try { const parsed=JSON.parse(content["noticias_json"]||"[]"); setNoticias(Array.isArray(parsed)&&parsed.length?parsed:[noticiaCuBaTa2027]); } catch { setNoticias([noticiaCuBaTa2027]); }
     try { const points=JSON.parse(content["mapa_puntos_json"]||"[]"); setMapPoints(Array.isArray(points)?points.filter((p:any)=>Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))&&Number(p.lat)>=-90&&Number(p.lat)<=90&&Number(p.lng)>=-180&&Number(p.lng)<=180):[]); } catch { setMapPoints([]); }
     if (content["hero_image_path"]) {
       const { data: imageData } = supabase.storage.from("penyes").getPublicUrl(content["hero_image_path"]);
@@ -698,7 +699,8 @@ function Home() {
       {currentPage==="noticias" && <main className="mx-auto min-h-[85vh] max-w-6xl px-4 pb-32 pt-8 sm:px-5">
         {noticiaSeleccionada ? <article className="mx-auto max-w-4xl">
           <button type="button" onClick={()=>setNoticiaSeleccionada(null)} className="mb-5 rounded-full border border-primary/20 bg-background/80 px-4 py-2 text-sm font-bold text-primary">← Volver a noticias</button>
-          {noticiaSeleccionada.imagen_url && <img src={noticiaSeleccionada.imagen_url} alt={noticiaSeleccionada.titulo} className="mb-6 max-h-[520px] w-full rounded-3xl object-cover shadow-lg" />}
+          {noticiaSeleccionada.logo_url && <div className="mb-5 flex items-center justify-center gap-5 rounded-3xl border border-border/70 bg-card/70 p-5"><img src={noticiaSeleccionada.logo_url} alt="Logo de CuBaTa" className="h-24 w-24 object-contain"/><img src={noticiaSeleccionada.emblema_url || "/mayorales-2027.svg"} alt="Emblema de Mayorales 2027" className="h-24 w-24 object-contain"/></div>}
+          {noticiaSeleccionada.imagen_url && <img src={noticiaSeleccionada.imagen_url} alt={noticiaSeleccionada.titulo} className="mb-6 max-h-[520px] w-full rounded-3xl object-contain bg-card p-4 sm:rounded-3xl shadow-lg" />}
           <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary"><span className="rounded-full bg-primary/10 px-3 py-1">{noticiaSeleccionada.tipo==="oficial"?"Información oficial":"Noticias de las peñas"}</span>{noticiaSeleccionada.autor && <span>{noticiaSeleccionada.autor}</span>}<span>{new Date(noticiaSeleccionada.fecha||noticiaSeleccionada.created_at||Date.now()).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"})}</span></div>
           <h1 className="text-3xl font-extrabold leading-tight text-primary sm:text-5xl">{noticiaSeleccionada.titulo}</h1>
           {noticiaSeleccionada.resumen && <p className="mt-4 text-lg font-medium leading-relaxed text-muted-foreground sm:text-xl">{noticiaSeleccionada.resumen}</p>}
