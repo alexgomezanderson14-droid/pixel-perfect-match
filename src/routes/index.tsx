@@ -541,7 +541,8 @@ function Home() {
       </main>}
       {currentPage==="eventos" && <main className="mx-auto min-h-[75vh] max-w-6xl px-3 pb-32 pt-8 sm:px-5">
         <section id="eventos" className="scroll-mt-24">
-          <SectionTitle>Eventos</SectionTitle>\n          <label className="mb-4 block"><span className="sr-only">Buscar eventos</span><input type="search" value={eventsSearch} onChange={e=>setEventsSearch(e.target.value)} placeholder="Buscar eventos por nombre, peña o lugar…" className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-base shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"/></label>
+          <SectionTitle>Eventos</SectionTitle>
+          <label className="mb-4 block"><span className="sr-only">Buscar eventos</span><input type="search" value={eventsSearch} onChange={e=>setEventsSearch(e.target.value)} placeholder="Buscar eventos por nombre, peña o lugar…" className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-base shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"/></label>
           <details className="glass mb-5 rounded-2xl p-3 sm:p-4">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-bold text-primary">
               <span className="flex min-w-0 items-center gap-2"><span>☷ Filtros</span><span className="truncate text-xs font-medium text-muted-foreground">{({upcoming:"Próximos eventos",today:"Hoy",tomorrow:"Mañana",all:"Todos los días"} as const)[filterDay]} · {({all:"Todas las categorías",programa:"Programa oficial",actuaciones:"Actuaciones",penyes:"Eventos de peñas"} as const)[filterCategory]}</span></span>
@@ -627,7 +628,8 @@ function Home() {
       </main>}      {currentPage==="penyes" && <main className="mx-auto min-h-[75vh] max-w-6xl px-3 pb-32 pt-8 sm:px-5">
         <section id="penyes" className="scroll-mt-24">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2 sm:mb-8 sm:gap-4">
-            <h2 className="text-2xl font-bold text-primary sm:text-5xl">{ui.nav.penyes}</h2>\n            <label className="w-full"><span className="sr-only">Buscar peñas</span><input type="search" value={penyaSearch} onChange={e=>setPenyaSearch(e.target.value)} placeholder="Buscar peña por nombre, música o ubicación…" className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-base shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"/></label>
+            <h2 className="text-2xl font-bold text-primary sm:text-5xl">{ui.nav.penyes}</h2>
+            <label className="w-full"><span className="sr-only">Buscar peñas</span><input type="search" value={penyaSearch} onChange={e=>setPenyaSearch(e.target.value)} placeholder="Buscar peña por nombre, música o ubicación…" className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-base shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"/></label>
             <p className="w-full text-xs text-muted-foreground sm:text-sm">Marca tus peñas para tenerlas identificadas y verlas destacadas en este dispositivo. Los Mayorales 2027 aparecen siempre en primer lugar.</p>
             <button onClick={() => setForm(true)} className="rounded-full bg-pink px-6 py-3 font-bold text-brown transition hover:-translate-y-0.5">+ {ui.addPenya}</button>
           </div>
