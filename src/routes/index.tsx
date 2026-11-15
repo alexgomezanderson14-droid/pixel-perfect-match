@@ -382,6 +382,19 @@ function Home() {
   }, []);
   useEffect(() => { cargar(); }, [cargar]);
   useEffect(() => {
+    if (!noticias.length || typeof window === "undefined") return;
+    const openFromHash = () => {
+      const match = window.location.hash.match(/^#noticia=(.+)$/);
+      if (!match) return;
+      const id = decodeURIComponent(match[1]);
+      const found = noticias.find((item:any) => String(item.id) === id);
+      if (found) { setCurrentPage("noticias"); setNoticiaSeleccionada(found); }
+    };
+    openFromHash();
+    window.addEventListener("hashchange", openFromHash);
+    return () => window.removeEventListener("hashchange", openFromHash);
+  }, [noticias]);
+  useEffect(() => {
     if (!noticias.length || typeof window === "undefined" || sessionStorage.getItem("festalfas-news-popup-seen")) return;
     const latest = noticias.filter((item:any) => item.publicado).slice().sort((a:any,b:any) => String(b.fecha||b.created_at||"").localeCompare(String(a.fecha||a.created_at||""))).slice(0,2);
     if (!latest.length) return;
@@ -710,12 +723,12 @@ function Home() {
       {currentPage==="noticias" && <main className="mx-auto min-h-[85vh] max-w-6xl px-4 pb-32 pt-8 sm:px-5">
         {noticiaSeleccionada ? <article className="mx-auto max-w-4xl">
           <button type="button" onClick={()=>setNoticiaSeleccionada(null)} className="mb-5 rounded-full border border-primary/20 bg-background/80 px-4 py-2 text-sm font-bold text-primary">← Volver a noticias</button>
-          {noticiaSeleccionada.imagen_url && <div className="mb-8 flex max-h-[72vh] w-full items-center justify-center overflow-hidden rounded-3xl bg-muted shadow-lg"><img src={noticiaSeleccionada.imagen_url} alt={noticiaSeleccionada.titulo} className="max-h-[72vh] w-full object-contain" /></div>}
+          {noticiaSeleccionada.imagen_url && <div className="relative mb-8 flex max-h-[72vh] w-full items-center justify-center overflow-hidden rounded-3xl bg-muted shadow-lg"><img src={noticiaSeleccionada.imagen_url} alt={noticiaSeleccionada.titulo} className="max-h-[72vh] w-full object-contain" />{noticiaSeleccionada.logo_url && <img src={noticiaSeleccionada.logo_url} alt={noticiaSeleccionada.autor || "Logotipo de la peña"} className="absolute left-4 top-4 z-10 h-16 max-w-[38%] object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.45)] sm:left-6 sm:top-6 sm:h-24" />}</div>}
           <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary"><span className="rounded-full bg-primary/10 px-3 py-1">{noticiaSeleccionada.tipo==="oficial"?"Información oficial":"Noticias de las peñas"}</span>{noticiaSeleccionada.autor && <span>{noticiaSeleccionada.autor}</span>}<span>{new Date(noticiaSeleccionada.fecha||noticiaSeleccionada.created_at||Date.now()).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"})}</span></div>
           <h1 className="text-3xl font-extrabold leading-tight text-primary sm:text-5xl">{noticiaSeleccionada.titulo}</h1>
+          <div className="mt-5"><button type="button" onClick={async()=>{const url=window.location.origin+window.location.pathname+"#noticia="+encodeURIComponent(String(noticiaSeleccionada.id));const title=noticiaSeleccionada.titulo||"Noticia de festalfàs";try{if(navigator.share){await navigator.share({title,text:noticiaSeleccionada.resumen||"Lee esta noticia en festalfàs",url});}else{await navigator.clipboard.writeText(url);window.alert("Enlace de la noticia copiado.");}}catch(error){if(!(error instanceof DOMException&&error.name==="AbortError")){try{await navigator.clipboard.writeText(url);window.alert("Enlace de la noticia copiado.");}catch{window.prompt("Copia el enlace de la noticia:",url);}}}}} className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/10">↗ Compartir noticia</button></div>
           {noticiaSeleccionada.resumen && <p className="mt-4 text-lg font-medium leading-relaxed text-muted-foreground sm:text-xl">{noticiaSeleccionada.resumen}</p>}
           <div className="mt-8 space-y-6 text-base leading-8 text-foreground sm:text-lg">{String(noticiaSeleccionada.contenido || "").split(/\n\s*\n/).filter((bloque:string)=>bloque.trim()).map((bloque:string,index:number)=>{const texto=bloque.trim();const esTitulo=/^[A-ZÁÉÍÓÚÜÑ «»0-9:¿?¡!,.]+$/.test(texto)&&texto.length<85;return esTitulo?<h2 key={index} className="border-l-4 border-primary pl-4 pt-2 text-xl font-extrabold uppercase tracking-wide text-primary sm:text-2xl">{texto}</h2>:<p key={index} className={index===0?"rounded-r-2xl border-l-4 border-primary/40 bg-primary/[0.045] py-4 pl-5 pr-4 text-lg font-medium leading-relaxed sm:text-xl": "text-base leading-8 text-foreground sm:text-lg"}>{texto}</p>;})}</div>
-          {noticiaSeleccionada.logo_url && <div className="my-12 flex justify-center rounded-3xl border border-border/60 bg-white/70 px-6 py-10"><img src={noticiaSeleccionada.logo_url} alt="Logotipo de CuBaTa" className="h-auto max-h-64 w-full max-w-[min(100%,560px)] object-contain sm:max-h-80"/></div>}
           <div className="mt-10 border-t border-border pt-5"><button type="button" onClick={()=>{setNoticiaSeleccionada(null);window.scrollTo({top:0,behavior:"smooth"});}} className="rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">← Todas las noticias</button></div>
         </article> : <>
           <header className="mb-7"><p className="text-xs font-extrabold uppercase tracking-[.2em] text-primary">Actualidad festera</p><h1 className="mt-2 text-4xl font-extrabold text-primary sm:text-5xl">Noticias</h1><p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">Toda la actualidad de las fiestas: comunicados oficiales, novedades y noticias de nuestras peñas.</p></header>
