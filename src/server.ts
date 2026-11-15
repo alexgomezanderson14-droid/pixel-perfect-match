@@ -58,6 +58,12 @@ async function handleNewsShare(request: Request, env: CloudflareEnv): Promise<Re
     };
   }
 
+  // Antes de conectar D1, evita que las noticias existentes acaben en un 404:
+  // el despliegue actual todavía puede servirlas desde el almacenamiento legado.
+  if (!news && !env.DB) {
+    return Response.redirect(new URL("/#noticia=" + encodeURIComponent(id), url.origin), 302);
+  }
+
   if (!news || news.publicado === false || news.publicado === 0) {
     return new Response("Noticia no encontrada", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
   }
