@@ -179,3 +179,13 @@ html { scroll-padding-top: 7rem; }
 /* Discourage casual saving/dragging of site imagery while keeping text accessible. */
 img { -webkit-user-drag: none; }
 .copyright-footer { position: relative; z-index: 1; }
+
+
+/* Mobile-first refinements: comfortable touch targets and readable cards. */
+@media (max-width: 639px) {
+  input[type="search"] { min-height: 48px; font-size: 16px; }
+  button, a { -webkit-tap-highlight-color: transparent; }
+  main { padding-left: max(0.75rem, env(safe-area-inset-left)); padding-right: max(0.75rem, env(safe-area-inset-right)); }
+  video, iframe { display: block; width: 100%; }
+  article { overflow-wrap: anywhere; }
+}
