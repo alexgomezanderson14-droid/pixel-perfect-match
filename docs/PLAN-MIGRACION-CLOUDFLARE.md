@@ -32,9 +32,19 @@ El esquema es una propuesta inicial y debe contrastarse con la estructura real e
 2. Crear D1 y R2 en una cuenta Cloudflare del propietario; guardar identificadores y secretos como variables/secretos de despliegue, nunca en Git.
 3. Aplicar y revisar el esquema D1; importar datos y archivos; comparar recuentos y referencias con el origen.
 4. Desplegar Worker con autenticación, validación, moderación, límites anti-spam y endpoints de compatibilidad.
-5. Cambiar la web por módulos (primero noticias, después peñas/eventos/administración), manteniendo Supabase como origen de lectura hasta validar cada módulo.
-6. Activar vistas previas sociales de noticias y verificar la imagen asignada en WhatsApp/Facebook/Telegram.
-7. Solo cuando todo esté verificado, retirar la dependencia de Supabase.
+5. Conectar la base D1 al Worker con el binding `DB` y aplicar `cloudflare/migrations/0001_initial.sql` en un entorno de pruebas.
+6. Importar noticias y probar `GET /noticia/:id`: los rastreadores sociales reciben HTML con Open Graph/Twitter Card; los visitantes normales se redirigen a la ruta hash existente de la SPA.
+7. Cambiar la web por módulos (primero noticias, después peñas/eventos/administración), manteniendo Supabase como origen de lectura hasta validar cada módulo.
+8. Verificar las vistas previas con las herramientas de depuración de WhatsApp/Facebook y con Telegram; comprobar que `og:image` coincide con `imagen_url` de cada noticia.
+9. Solo cuando todo esté verificado, retirar la dependencia de Supabase.
+
+## Vistas previas para compartir noticias
+- La aplicación genera enlaces canónicos con formato `/noticia/<id>`.
+- `src/server.ts` intercepta esa ruta antes del SSR normal. Los bots sociales reciben HTML con `og:title`, `og:description`, `og:image`, `og:url` y etiquetas Twitter.
+- Los visitantes normales reciben una redirección a `/#noticia=<id>`, por lo que se conserva la navegación actual de la SPA.
+- El Worker consulta `noticias` en D1 mediante el binding opcional `DB`. La noticia CuBaTa 2027 tiene un fallback temporal en código hasta importar las noticias.
+- Para que funcione en producción, el despliegue Cloudflare debe pasar el binding D1 como `env.DB` y ejecutar el Worker para la ruta `/noticia/*`. Si la aplicación sigue desplegada únicamente en otro hosting, los metadatos dinámicos no estarán activos en el dominio público.
+- Las imágenes de `og:image` deben ser URLs públicas HTTPS, accesibles por los rastreadores sin cookies ni autenticación.
 
 ## Requisitos antes del despliegue
 - Acceso a una cuenta Cloudflare del propietario para crear D1, R2 y Workers.
