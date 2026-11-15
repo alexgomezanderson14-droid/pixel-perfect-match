@@ -252,10 +252,9 @@ async function sharePenyaCard(p: PenyaDb) {
   }
 }
 type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number | null; lng: number | null; foto: string; tipo_musica: string; tiene_evento?: boolean; instagram?: string | null };
-const normalizarBusqueda=(value:any)=>String(value||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
-const videoEmbedUrl=(value:string)=>{try{const u=new URL(value);if(u.hostname.includes("youtube.com")){const id=u.searchParams.get("v");return id?"https://www.youtube-nocookie.com/embed/"+id:value;}if(u.hostname==="youtu.be")return "https://www.youtube-nocookie.com/embed/"+u.pathname.slice(1);if(u.hostname.includes("vimeo.com"))return "https://player.vimeo.com/video/"+u.pathname.split("/").filter(Boolean).pop();if(u.hostname.includes("instagram.com")&&/\\/(reel|p|tv)\\//.test(u.pathname))return u.origin+u.pathname.replace(/\\/$/,"")+"/embed";return "";}catch{return "";}};
-const esVideoDirecto=(value:string)=>/\\.(mp4|webm|ogg|mov)(\\?.*)?$/i.test(value);
-
+const normalizarBusqueda=(value:any)=>String(value||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").trim();
+const videoEmbedUrl=(value:string)=>{try{const u=new URL(value);const host=u.hostname.toLowerCase();if(host==="youtube.com"||host==="www.youtube.com"){const id=u.searchParams.get("v")||(u.pathname.startsWith("/shorts/")?u.pathname.split("/")[2]:"");return id?"https://www.youtube-nocookie.com/embed/"+id:"";}if(host==="youtu.be")return "https://www.youtube-nocookie.com/embed/"+u.pathname.split("/").filter(Boolean)[0];if(host==="vimeo.com"||host==="www.vimeo.com")return "https://player.vimeo.com/video/"+u.pathname.split("/").filter(Boolean).pop();if(host==="instagram.com"||host==="www.instagram.com"){const path=u.pathname.endsWith("/")?u.pathname.slice(0,-1):u.pathname;if(path.includes("/reel/")||path.includes("/p/")||path.includes("/tv/"))return u.origin+path+"/embed";}return "";}catch{return "";}};
+const esVideoDirecto=(value:string)=>{try{const path=new URL(value).pathname.toLowerCase();return [".mp4",".webm",".ogg",".mov"].some(ext=>path.endsWith(ext));}catch{return false;}};
 function Home() {
   const [q, setQ] = useState("");
   const [searchTerm, setSearchTerm] = useState("");\n  const [newsSearch, setNewsSearch] = useState("");\n  const [penyaSearch, setPenyaSearch] = useState("");\n  const [eventsSearch, setEventsSearch] = useState("");
