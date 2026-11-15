@@ -35,7 +35,9 @@ function fmtDia(d: string) {
 }
 
 function esPenyaCuBaTa(nombre: string) {
-  return nombre.toLocaleLowerCase("es").replace(/[^a-z0-9]/g, "").includes("cubata");
+  const nombreNormalizado = nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[^a-z0-9]/g, "");
+  return nombreNormalizado.includes("cubata") || nombreNormalizado.includes("cobrebariotantalo") ||
+    (nombreNormalizado.includes("cobre") && nombreNormalizado.includes("bario") && nombreNormalizado.includes("tantal"));
 }
 
 function CountdownFiestas() {
@@ -117,7 +119,7 @@ async function sharePenyaCard(p: PenyaDb) {
 
   c.fillStyle = "#f4eee5";
   c.fillRect(0, 0, 1080, 1920);
-  c.fillStyle = "#49352f";
+  c.fillStyle = "#173f52";
   c.fillRect(0, 0, 1080, 430);
 
   c.fillStyle = "#e6b6c7";
@@ -146,13 +148,13 @@ async function sharePenyaCard(p: PenyaDb) {
     } catch {
       c.fillStyle = "#e6b6c7";
       c.beginPath(); c.arc(160, 245, 92, 0, Math.PI * 2); c.fill();
-      c.fillStyle = "#49352f"; c.font = "bold 90px Arial";
+      c.fillStyle = "#173f52"; c.font = "bold 90px Arial";
       c.textAlign = "center"; c.fillText(p.nombre.trim().charAt(0).toUpperCase(), 160, 276); c.textAlign = "left";
     }
   } else {
     c.fillStyle = "#e6b6c7";
     c.beginPath(); c.arc(160, 245, 92, 0, Math.PI * 2); c.fill();
-    c.fillStyle = "#49352f"; c.font = "bold 90px Arial";
+    c.fillStyle = "#173f52"; c.font = "bold 90px Arial";
     c.textAlign = "center"; c.fillText(p.nombre.trim().charAt(0).toUpperCase(), 160, 276); c.textAlign = "left";
   }
 
@@ -168,7 +170,7 @@ async function sharePenyaCard(p: PenyaDb) {
   }
   if (line) c.fillText(line, 300, y);
 
-  c.fillStyle = "#49352f";
+  c.fillStyle = "#173f52";
   c.font = "bold 34px Arial";
   c.fillText("ENCUÉNTRANOS EN EL MAPA", 76, 510);
 
@@ -202,11 +204,11 @@ async function sharePenyaCard(p: PenyaDb) {
       c.bezierCurveTo(360, 500 + i * 100, 640, 900 + i * 40, 1000, 600 + i * 100); c.stroke();
     }
     c.fillStyle = "#b45c79"; c.beginPath(); c.arc(540, 900, 35, 0, Math.PI * 2); c.fill();
-    c.fillStyle = "#49352f"; c.font = "bold 30px Arial";
+    c.fillStyle = "#173f52"; c.font = "bold 30px Arial";
     c.textAlign = "center"; c.fillText("UBICACIÓN DE LA PEÑA", 540, 1200); c.textAlign = "left";
   }
 
-  c.fillStyle = "#49352f";
+  c.fillStyle = "#173f52";
   c.font = "bold 34px Arial";
   c.fillText("DÓNDE ESTAMOS", 76, 1390);
   c.font = "30px Arial";
@@ -215,9 +217,9 @@ async function sharePenyaCard(p: PenyaDb) {
   const addressLines = address.match(/.{1,48}(?:\\s|$)/g) || [address];
   addressLines.slice(0, 2).forEach((part, index) => c.fillText(part.trim(), 76, 1445 + index * 42));
 
-  c.fillStyle = "#49352f";
+  c.fillStyle = "#173f52";
   c.fillRect(60, 1570, 960, 3);
-  c.fillStyle = "#49352f";
+  c.fillStyle = "#173f52";
   c.font = "bold 38px Arial";
   c.fillText("¡VEN A CONOCERNOS!", 76, 1650);
   c.font = "bold 30px Arial";
@@ -429,7 +431,7 @@ function Home() {
               {penyes.some((p)=>p.lat==null||p.lng==null)||actos.some((a)=>a.lat==null||a.lng==null)||eventos.some((e)=>e.lat==null||e.lng==null) ? <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">Algunas peñas o actividades no aparecen en el mapa porque todavía no tienen coordenadas exactas verificadas. No se han inventado ubicaciones.</p> : null}
             </div>}
             {!mapFullscreen && <div className="relative h-[390px] overflow-hidden rounded-[1.25rem] sm:h-[500px] sm:rounded-[1.5rem] md:h-[600px]">
-              <button type="button" onClick={() => setMapFullscreen(true)} aria-label="Ampliar mapa a pantalla completa" className="absolute right-3 top-3 z-[1200] rounded-full border border-white/70 bg-white/95 px-4 py-2 text-sm font-bold text-[#49352f] shadow-lg">⛶ Pantalla completa</button>
+              <button type="button" onClick={() => setMapFullscreen(true)} aria-label="Ampliar mapa a pantalla completa" className="absolute right-3 top-3 z-[1200] rounded-full border border-white/70 bg-white/95 px-4 py-2 text-sm font-bold text-[#173f52] shadow-lg">⛶ Pantalla completa</button>
               <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
                 <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}>
                   <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => setSelectedPenya(penyes.find((p) => p.id === id) ?? null)} onItemClick={(id)=>{setCurrentPage("eventos");setFilterDay("all");setFilterCategory(id.startsWith("acto-")?"actuaciones":"penyes");window.scrollTo({top:0,behavior:"smooth"});}} />
@@ -533,9 +535,9 @@ function Home() {
                 <summary className="cursor-pointer list-none">
                   <div className="relative aspect-[5/4] overflow-hidden bg-gradient-to-br from-[#f4e8e9] via-[#ead9df] to-[#e9e3d7]">
                     {portada ? <img src={portada} alt={a.titulo} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"/> : <div className="absolute inset-0 flex items-center justify-center p-5 text-center"><span className="font-display text-base font-bold leading-tight text-[#765563] sm:text-3xl">{a.titulo}</span></div>}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#49352f]/90 via-[#49352f]/55 to-transparent p-2 pt-10 text-white sm:p-4 sm:pt-16">
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#173f52]/90 via-[#173f52]/55 to-transparent p-2 pt-10 text-white sm:p-4 sm:pt-16">
                       <div className="flex items-end gap-3">
-                        <div className="flex w-[62px] shrink-0 flex-col items-center rounded-xl border border-white/50 bg-white/90 px-1.5 py-2 text-center text-[#49352f] shadow-md sm:w-[86px] sm:rounded-2xl sm:px-3 sm:py-3">
+                        <div className="flex w-[62px] shrink-0 flex-col items-center rounded-xl border border-white/50 bg-white/90 px-1.5 py-2 text-center text-[#173f52] shadow-md sm:w-[86px] sm:rounded-2xl sm:px-3 sm:py-3">
                           <span className="text-[9px] font-extrabold uppercase tracking-wider sm:text-xs">{new Date(String(a.dia).slice(0, 10) + "T12:00:00").toLocaleDateString("es-ES", { month: "short" }).replace(".", "")}</span>
                           <span className="font-display text-2xl font-bold leading-none sm:text-4xl">{new Date(String(a.dia).slice(0, 10) + "T12:00:00").toLocaleDateString("es-ES", { day: "2-digit" })}</span>
                           <span className="mt-1 text-[10px] font-bold sm:text-sm">{a.hora || "Hora por confirmar"}</span>
@@ -566,20 +568,20 @@ function Home() {
               const penyaNombre = penyaAsociada?.nombre;
               return <article id={"evento-"+e.id} key={e.id} className="glass min-w-0 overflow-hidden rounded-xl border border-border/60 shadow-sm sm:rounded-3xl">
                 <div className="relative aspect-[5/4] overflow-hidden bg-gradient-to-br from-[#f4e8e9] via-[#ead9df] to-[#e9e3d7]">
-                  {imagen ? <img src={imagen} alt={e.titulo} loading="lazy" className="absolute inset-0 h-full w-full object-cover"/> : <div className="absolute inset-0 flex items-center justify-center p-5 text-center"><span className="font-display text-xl font-bold text-[#49352f] sm:text-3xl">{e.titulo}</span></div>}
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#f4eee5] via-[#f4eee5]/95 to-[#f4eee5]/0 px-2 pb-2 pt-10 text-[#49352f] sm:px-4 sm:pb-4 sm:pt-16">
+                  {imagen ? <img src={imagen} alt={e.titulo} loading="lazy" className="absolute inset-0 h-full w-full object-cover"/> : <div className="absolute inset-0 flex items-center justify-center p-5 text-center"><span className="font-display text-xl font-bold text-[#173f52] sm:text-3xl">{e.titulo}</span></div>}
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#f4eee5] via-[#f4eee5]/95 to-[#f4eee5]/0 px-2 pb-2 pt-10 text-[#173f52] sm:px-4 sm:pb-4 sm:pt-16">
                     <div className="flex items-end justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <h3 className="line-clamp-2 text-xs font-extrabold leading-tight text-[#49352f] sm:text-xl">{e.titulo}</h3>
+                        <h3 className="line-clamp-2 text-xs font-extrabold leading-tight text-[#173f52] sm:text-xl">{e.titulo}</h3>
                         <p className="mt-1 text-[10px] font-bold text-[#59443c] sm:mt-2 sm:text-sm">{fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p>
                         {e.lugar && <p className="mt-0.5 line-clamp-1 text-[10px] font-semibold text-[#59443c] sm:text-sm">📍 {e.lugar}</p>}
                         {e.descripcion && <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-[#59443c] sm:text-sm">{e.descripcion}</p>}
                       </div>
-                      {penyaNombre && <div className="max-w-[34%] shrink-0 flex flex-col items-end gap-1 text-right"><img src={penyaAsociada?.foto || ""} alt="" className="h-8 w-8 rounded-full border-2 border-white object-cover shadow-sm sm:h-11 sm:w-11"/><span className="text-[9px] font-extrabold leading-tight text-[#49352f] sm:text-xs">{penyaNombre}</span></div>}
+                      {penyaNombre && <div className="max-w-[34%] shrink-0 flex flex-col items-end gap-1 text-right"><img src={penyaAsociada?.foto || ""} alt="" className="h-8 w-8 rounded-full border-2 border-white object-cover shadow-sm sm:h-11 sm:w-11"/><span className="text-[9px] font-extrabold leading-tight text-[#173f52] sm:text-xs">{penyaNombre}</span></div>}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center justify-between gap-2 px-2 py-1.5"><button type="button" onClick={()=>toggleFavorite("evento:"+e.id)} className="text-xs font-bold text-primary">{favorites.includes("evento:"+e.id)?"★ En Mi agenda":"☆ Añadir a Mi agenda"}</button>{e.lat != null && e.lng != null && <button onClick={() => goMap("evento-" + e.id)} className="text-[10px] font-bold text-[#49352f] sm:text-sm">📍 Ver ubicación</button>}</div>
+                <div className="flex items-center justify-between gap-2 px-2 py-1.5"><button type="button" onClick={()=>toggleFavorite("evento:"+e.id)} className="text-xs font-bold text-primary">{favorites.includes("evento:"+e.id)?"★ En Mi agenda":"☆ Añadir a Mi agenda"}</button>{e.lat != null && e.lng != null && <button onClick={() => goMap("evento-" + e.id)} className="text-[10px] font-bold text-[#173f52] sm:text-sm">📍 Ver ubicación</button>}</div>
               </article>;
             })}</div>}
           </div>
@@ -604,7 +606,7 @@ function Home() {
                     {p.direccion && <p className="mt-1 line-clamp-2 text-[10px] text-muted-foreground sm:text-sm">{p.direccion}</p>}
                     <p className="mt-1 text-[10px] sm:mt-3 sm:text-sm"><strong>Música:</strong> {p.tipo_musica || "Variada"}</p>
                     
-                    {eventos.filter((e) => eventoSigueActivo(e,now) && (e.penya_id === p.id || [e.titulo, e.descripcion, e.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(p.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, ""))))).map((e) => <p key={"evento-" + e.id} className="mt-2 rounded-lg bg-pink/20 px-2 py-1 text-[10px] leading-snug text-[#49352f] sm:text-sm"><strong>Plan:</strong> {e.titulo} · {fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p>)}{actos.filter((a) => eventoSigueActivo(a,now) && [a.titulo, a.descripcion, a.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(p.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "")))).map((a) => <p key={"acto-" + a.id} className="mt-2 rounded-lg bg-pink/20 px-2 py-1 text-[10px] leading-snug text-[#49352f] sm:text-sm"><strong>Plan:</strong> {a.titulo} · {fmtDia(a.dia)}{a.hora ? " · " + a.hora : ""}</p>)}
+                    {eventos.filter((e) => eventoSigueActivo(e,now) && (e.penya_id === p.id || [e.titulo, e.descripcion, e.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(p.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, ""))))).map((e) => <p key={"evento-" + e.id} className="mt-2 rounded-lg bg-pink/20 px-2 py-1 text-[10px] leading-snug text-[#173f52] sm:text-sm"><strong>Plan:</strong> {e.titulo} · {fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p>)}{actos.filter((a) => eventoSigueActivo(a,now) && [a.titulo, a.descripcion, a.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(p.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "")))).map((a) => <p key={"acto-" + a.id} className="mt-2 rounded-lg bg-pink/20 px-2 py-1 text-[10px] leading-snug text-[#173f52] sm:text-sm"><strong>Plan:</strong> {a.titulo} · {fmtDia(a.dia)}{a.hora ? " · " + a.hora : ""}</p>)}
                     <div className="mt-2 flex flex-wrap gap-1 sm:mt-3 sm:gap-2"><button onClick={() => setSelectedPenya(p)} className="rounded-full bg-pink px-2 py-1 text-[10px] font-bold text-brown sm:px-4 sm:py-2 sm:text-sm">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">📍 {ui.verMapa}</button><button onClick={() => void sharePenyaCard(p)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">↗ Crear historia</button><button onClick={() => setEventFormPenya(p)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">{p.tiene_evento ? "Añadir evento" : "+ Añadir evento"}</button></div>
                     <div className="mt-2 flex flex-wrap gap-2 text-xs sm:mt-3 sm:gap-3 sm:text-sm">{instagramUrl(p.instagram) && <a className="font-semibold text-primary underline" href={instagramUrl(p.instagram)!} target="_blank" rel="noreferrer">{`↗ @${p.instagram?.replace(/^@/, "") || "Instagram"}`}</a>}</div>
                   </div>
@@ -692,7 +694,7 @@ function Home() {
               </Suspense>
             </ClientOnly>
           </div>
-          <button type="button" onClick={() => setMapFullscreen(false)} className="absolute right-4 top-4 z-[100000] rounded-full border border-white bg-white px-5 py-3 text-sm font-bold text-[#49352f] shadow-xl">✕ Cerrar mapa</button>
+          <button type="button" onClick={() => setMapFullscreen(false)} className="absolute right-4 top-4 z-[100000] rounded-full border border-white bg-white px-5 py-3 text-sm font-bold text-[#173f52] shadow-xl">✕ Cerrar mapa</button>
         </div>, document.body
       )}
       {<footer className="space-y-4 px-5 pb-32 text-center text-sm text-muted-foreground">
@@ -741,7 +743,7 @@ function Home() {
                       const mes = fecha.toLocaleDateString("es-ES", { month: "short" }).replace(".", "").toUpperCase();
                       return <article key={e.id} className="overflow-hidden rounded-2xl border border-border/70 bg-white/70 shadow-sm">
                         <div className="grid grid-cols-[104px_1fr] sm:grid-cols-[124px_1fr]">
-                          <div className="flex min-h-[142px] flex-col items-center justify-center bg-[#e8b9c9] px-2 py-4 text-center text-[#49352f]">
+                          <div className="flex min-h-[142px] flex-col items-center justify-center bg-[#e8b9c9] px-2 py-4 text-center text-[#173f52]">
                             <span className="text-xs font-extrabold uppercase tracking-[0.18em]">{mes}</span>
                             <span className="font-display text-5xl font-bold leading-none">{diaNumero}</span>
                             <span className="mt-2 rounded-full bg-white/70 px-3 py-1 text-sm font-bold">{e.hora || "Hora por confirmar"}</span>
@@ -768,7 +770,7 @@ function Home() {
                     ? "https://www.google.com/maps/dir/?api=1&destination=" + selectedPenya.lat + "," + selectedPenya.lng
                     : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent((selectedPenya.direccion || selectedPenya.nombre) + ", l'Alfàs del Pi")}
                   target="_blank" rel="noreferrer"
-                  className="flex min-h-14 items-center justify-center gap-2 rounded-full bg-[#49352f] px-5 py-3 text-center font-bold text-white transition hover:-translate-y-0.5"
+                  className="flex min-h-14 items-center justify-center gap-2 rounded-full bg-[#173f52] px-5 py-3 text-center font-bold text-white transition hover:-translate-y-0.5"
                 >📍 Cómo llegar</a>
                 <button onClick={() => void sharePenyaCard(selectedPenya)} className="flex min-h-14 items-center justify-center gap-2 rounded-full border border-primary/20 bg-white/70 px-5 py-3 font-bold text-primary transition hover:-translate-y-0.5">↗ Compartir</button>
               </div>

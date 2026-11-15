@@ -61,7 +61,8 @@ export default function FestMap({
     markers.current = {};
     lugares.forEach((l) => {
       const img = l.foto ? `<img src="${esc(l.foto)}" alt="" style="width:180px;height:110px;object-fit:cover;border-radius:10px;margin-bottom:6px"/>` : "";
-      const esCuBaTa = l.categoria === "penya" && l.nombre.toLocaleLowerCase("es").replace(/[^a-z0-9]/g, "").includes("cubata");
+      const nombrePenyaNormalizado = l.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[^a-z0-9]/g, "");
+      const esCuBaTa = l.categoria === "penya" && (nombrePenyaNormalizado.includes("cubata") || nombrePenyaNormalizado.includes("cobrebariotantalo") || (nombrePenyaNormalizado.includes("cobre") && nombrePenyaNormalizado.includes("bario") && nombrePenyaNormalizado.includes("tantal")));
       const markerHtml = l.categoria === "penya" && l.foto
         ? esCuBaTa
           ? `<div style="position:relative;width:86px;height:76px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;"><div style="position:relative;width:50px;height:50px;box-sizing:border-box;overflow:hidden;border-radius:50%;border:3px solid #00aaa5;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.4);"><img src="${esc(l.foto)}" alt="" loading="lazy" referrerpolicy="no-referrer" style="display:block;width:100%;height:100%;object-fit:cover;border:0;border-radius:50%;margin:0;padding:0;" /></div><span style="position:absolute;top:-5px;right:9px;width:23px;height:23px;border:2px solid #fff;border-radius:50%;background:#00aaa5;color:#fff;font-size:14px;font-weight:900;line-height:19px;text-align:center;box-shadow:0 2px 5px #0005;">♛</span><span style="margin-top:3px;padding:2px 6px;border-radius:9px;background:#07516a;color:#fff;font-size:8px;font-weight:900;letter-spacing:.04em;white-space:nowrap;box-shadow:0 2px 5px #0004;">MAYORALES 2027</span></div>`
