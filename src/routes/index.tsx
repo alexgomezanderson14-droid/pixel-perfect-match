@@ -393,9 +393,9 @@ function Home() {
         {[
           ["home","⌂","Inicio"],
           ["eventos","🎤","Eventos"],
-          ["penyes","☷","Peñas"],
-          ["programa","▦","Programa"],
-          ["noticias","▤","Noticias"],
+          ["penyes","👥","Peñas"],
+          ["programa","📅","Programa"],
+          ["noticias","📰","Noticias"],
           ["info","ⓘ","Info"],
         ].map(([page,icon,label])=><button key={page} type="button" aria-current={currentPage===page?"page":undefined} onClick={()=>{setMapFullscreen(false);setCurrentPage(page as any);window.scrollTo({top:0,behavior:"smooth"});}} className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-0.5 py-2 text-center transition sm:flex-row sm:gap-2 sm:rounded-full sm:px-4 sm:py-3 ${currentPage===page?"bg-pink/20 text-primary":"text-muted-foreground hover:bg-glass"}`}><span className="text-xl leading-none sm:text-lg">{icon}</span><span className="whitespace-nowrap text-[9px] font-bold leading-tight sm:text-sm">{label}</span></button>)}
       </nav>
