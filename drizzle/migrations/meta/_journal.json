@@ -29,6 +29,13 @@
       "when": 1794498688023,
       "tag": "0003_tighten_penyes_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794774532783,
+      "tag": "0004_bind_storage_uploads_to_owner",
+      "breakpoints": true
     }
   ]
 }
