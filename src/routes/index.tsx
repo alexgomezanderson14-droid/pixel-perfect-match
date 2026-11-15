@@ -263,6 +263,7 @@ function Home() {
   const [cat, setCat] = useState<Categoria | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
   const [penyes, setPenyes] = useState<PenyaDb[]>([]);
+  const [misPenyes, setMisPenyes] = useState<string[]>([]);
   const [actos, setActos] = useState<any[]>([]);
   const [eventos, setEventos] = useState<any[]>([]);
   const [noticias, setNoticias] = useState<any[]>([]);
@@ -309,6 +310,19 @@ function Home() {
     mapPoints.filter((p) => matches(p.nombre, p.descripcion)).forEach((p) => results.push({ key: "lugar:" + p.id, label: p.nombre, kind: "Ubicación", sub: p.descripcion || "Punto de interés", onSelect: () => { setCurrentPage("home"); setCat(null); setQ(""); setFocus(null); requestAnimationFrame(() => setFocus(p.id)); window.scrollTo({top:0,behavior:"smooth"}); } }));
     return results.slice(0, 12);
   }, [searchTerm, penyes, eventos, actos, mapPoints, now]);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("festalfas-mis-penyes") || "[]");
+      if (Array.isArray(saved)) setMisPenyes(saved.filter((id): id is string => typeof id === "string"));
+    } catch { setMisPenyes([]); }
+  }, []);
+  const toggleMiPenya = (id: string) => {
+    setMisPenyes((current) => {
+      const next = current.includes(id) ? current.filter((item) => item !== id) : [...current, id];
+      try { localStorage.setItem("festalfas-mis-penyes", JSON.stringify(next)); } catch { /* La selección sigue activa durante esta visita. */ }
+      return next;
+    });
+  };
   useEffect(() => { if (dias.length && (!dia || !dias.includes(dia))) { const siguiente = dias.find((d) => d >= todayKey); setDia(dias.includes(todayKey) ? todayKey : siguiente || dias[dias.length - 1]); } }, [dias, dia, todayKey]);
   useEffect(() => {
     if (!mapFullscreen) return;
@@ -587,23 +601,25 @@ function Home() {
         <section id="penyes" className="scroll-mt-24">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2 sm:mb-8 sm:gap-4">
             <h2 className="text-2xl font-bold text-primary sm:text-5xl">{ui.nav.penyes}</h2>
+            <p className="w-full text-xs text-muted-foreground sm:text-sm">Marca tus peñas para tenerlas identificadas y verlas destacadas en este dispositivo. Los Mayorales 2027 aparecen siempre en primer lugar.</p>
             <button onClick={() => setForm(true)} className="rounded-full bg-pink px-6 py-3 font-bold text-brown transition hover:-translate-y-0.5">+ {ui.addPenya}</button>
           </div>
           {!penyes.length ? (
             <div className="glass rounded-3xl p-6 text-muted-foreground">{ui.sinPenyes}</div>
           ) : (
             <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-              {[...penyes].sort((a, b) => Number(esPenyaCuBaTa(b.nombre)) - Number(esPenyaCuBaTa(a.nombre)) || a.nombre.localeCompare(b.nombre, "es")).map((p) => (
+              {[...penyes].sort((a, b) => Number(esPenyaCuBaTa(b.nombre)) - Number(esPenyaCuBaTa(a.nombre)) || Number(misPenyes.includes(b.id)) - Number(misPenyes.includes(a.id)) || a.nombre.localeCompare(b.nombre, "es")).map((p) => (
                 <article id={"penya-" + p.id} key={p.id} className="glass min-w-0 overflow-hidden rounded-xl sm:rounded-3xl">
                   {p.foto && <img src={p.foto} alt={p.nombre} loading="lazy" className="h-16 w-full object-cover sm:h-44" />}
                   <div className="p-2 sm:p-6">
                     {esPenyaCuBaTa(p.nombre) && <span className="mb-1 inline-flex items-center gap-1 rounded-full bg-[#00AAA5] px-2 py-1 text-[9px] font-extrabold tracking-wide text-white shadow-sm sm:text-xs">♛ MAYORALES 2027</span>}
+                    {misPenyes.includes(p.id) && <span className="mb-1 ml-1 inline-flex items-center rounded-full bg-[#173f52] px-2 py-1 text-[9px] font-extrabold tracking-wide text-white shadow-sm sm:text-xs">★ MI PEÑA</span>}
                     <h3 className="line-clamp-2 text-xs font-bold leading-tight sm:text-2xl">{p.nombre}</h3>
                     {p.direccion && <p className="mt-1 line-clamp-2 text-[10px] text-muted-foreground sm:text-sm">{p.direccion}</p>}
                     <p className="mt-1 text-[10px] sm:mt-3 sm:text-sm"><strong>Música:</strong> {p.tipo_musica || "Variada"}</p>
                     
                     {eventos.filter((e) => eventoSigueActivo(e,now) && (e.penya_id === p.id || [e.titulo, e.descripcion, e.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(p.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, ""))))).map((e) => <p key={"evento-" + e.id} className="mt-2 rounded-lg bg-pink/20 px-2 py-1 text-[10px] leading-snug text-[#173f52] sm:text-sm"><strong>Plan:</strong> {e.titulo} · {fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p>)}{actos.filter((a) => eventoSigueActivo(a,now) && [a.titulo, a.descripcion, a.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(p.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "")))).map((a) => <p key={"acto-" + a.id} className="mt-2 rounded-lg bg-pink/20 px-2 py-1 text-[10px] leading-snug text-[#173f52] sm:text-sm"><strong>Plan:</strong> {a.titulo} · {fmtDia(a.dia)}{a.hora ? " · " + a.hora : ""}</p>)}
-                    <div className="mt-2 flex flex-wrap gap-1 sm:mt-3 sm:gap-2"><button onClick={() => setSelectedPenya(p)} className="rounded-full bg-pink px-2 py-1 text-[10px] font-bold text-brown sm:px-4 sm:py-2 sm:text-sm">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">📍 {ui.verMapa}</button><button onClick={() => void sharePenyaCard(p)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">↗ Crear historia</button><button onClick={() => setEventFormPenya(p)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">{p.tiene_evento ? "Añadir evento" : "+ Añadir evento"}</button></div>
+                    <div className="mt-2 flex flex-wrap gap-1 sm:mt-3 sm:gap-2"><button onClick={() => toggleMiPenya(p.id)} aria-pressed={misPenyes.includes(p.id)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-3 sm:py-2 sm:text-sm">{misPenyes.includes(p.id) ? "★ Mi peña" : "☆ Marcar mi peña"}</button><button onClick={() => setSelectedPenya(p)} className="rounded-full bg-pink px-2 py-1 text-[10px] font-bold text-brown sm:px-4 sm:py-2 sm:text-sm">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">📍 {ui.verMapa}</button><button onClick={() => void sharePenyaCard(p)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">↗ Crear historia</button><button onClick={() => setEventFormPenya(p)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">{p.tiene_evento ? "Añadir evento" : "+ Añadir evento"}</button></div>
                     <div className="mt-2 flex flex-wrap gap-2 text-xs sm:mt-3 sm:gap-3 sm:text-sm">{instagramUrl(p.instagram) && <a className="font-semibold text-primary underline" href={instagramUrl(p.instagram)!} target="_blank" rel="noreferrer">{`↗ @${p.instagram?.replace(/^@/, "") || "Instagram"}`}</a>}</div>
                   </div>
                 </article>
