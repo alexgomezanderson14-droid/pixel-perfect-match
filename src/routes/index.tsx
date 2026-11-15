@@ -257,7 +257,10 @@ const videoEmbedUrl=(value:string)=>{try{const u=new URL(value);const host=u.hos
 const esVideoDirecto=(value:string)=>{try{const path=new URL(value).pathname.toLowerCase();return [".mp4",".webm",".ogg",".mov"].some(ext=>path.endsWith(ext));}catch{return false;}};
 function Home() {
   const [q, setQ] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");\n  const [newsSearch, setNewsSearch] = useState("");\n  const [penyaSearch, setPenyaSearch] = useState("");\n  const [eventsSearch, setEventsSearch] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [newsSearch, setNewsSearch] = useState("");
+  const [penyaSearch, setPenyaSearch] = useState("");
+  const [eventsSearch, setEventsSearch] = useState("");
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
   const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes">("all");
   const [currentPage, setCurrentPage] = useState<"home"|"noticias"|"buscar"|"programa"|"eventos"|"mapa"|"penyes"|"info">("home");
@@ -289,7 +292,9 @@ function Home() {
   const tomorrowKey = tomorrowDate.getFullYear()+"-"+String(tomorrowDate.getMonth()+1).padStart(2,"0")+"-"+String(tomorrowDate.getDate()).padStart(2,"0");
   const matchesDay = (item:any) => eventoSigueActivo(item,now) && (filterDay==="all" || (filterDay==="upcoming" ? true : String(item.dia||"").slice(0,10)===(filterDay==="today"?todayKey:tomorrowKey)));
   const filteredActs = useMemo(()=>actos.filter((a)=>matchesDay(a) && (filterCategory==="all" || (filterCategory==="programa" && a.tipo==="evento") || (filterCategory==="actuaciones" && (a.tipo==="evento" || a.tipo==="actuacion" || /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/i.test(a.titulo||"")))) && (!eventsSearch.trim() || normalizarBusqueda([a.titulo,a.descripcion,a.lugar].join(" ")).includes(normalizarBusqueda(eventsSearch)))), [actos,filterDay,filterCategory,now,eventsSearch]);
-  const filteredPenyaEvents = useMemo(()=>eventos.filter((e)=>matchesDay(e) && (filterCategory==="all" || filterCategory==="penyes") && (!eventsSearch.trim() || normalizarBusqueda([e.titulo,e.descripcion,e.lugar,penyes.find(p=>p.id===e.penya_id)?.nombre].join(" ")).includes(normalizarBusqueda(eventsSearch)))), [eventos,filterDay,filterCategory,now,eventsSearch,penyes]);\n  const visiblePenyes = useMemo(()=>[...penyes].filter(p=>!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica].join(" ")).includes(normalizarBusqueda(penyaSearch))).sort((a,b)=>Number(esPenyaCuBaTa(b.nombre))-Number(esPenyaCuBaTa(a.nombre))||Number(misPenyes.includes(b.id))-Number(misPenyes.includes(a.id))||a.nombre.localeCompare(b.nombre,"es")),[penyes,penyaSearch,misPenyes]);\n  const visibleNews = useMemo(()=>noticias.filter((n:any)=>n.publicado&&(!newsSearch.trim()||normalizarBusqueda([n.titulo,n.resumen,n.contenido,n.autor,n.fuente].join(" ")).includes(normalizarBusqueda(newsSearch)))).slice().sort((x:any,y:any)=>String(y.fecha||y.created_at||"").localeCompare(String(x.fecha||x.created_at||""))),[noticias,newsSearch]);
+  const filteredPenyaEvents = useMemo(()=>eventos.filter((e)=>matchesDay(e) && (filterCategory==="all" || filterCategory==="penyes") && (!eventsSearch.trim() || normalizarBusqueda([e.titulo,e.descripcion,e.lugar,penyes.find(p=>p.id===e.penya_id)?.nombre].join(" ")).includes(normalizarBusqueda(eventsSearch)))), [eventos,filterDay,filterCategory,now,eventsSearch,penyes]);
+  const visiblePenyes = useMemo(()=>[...penyes].filter(p=>!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica].join(" ")).includes(normalizarBusqueda(penyaSearch))).sort((a,b)=>Number(esPenyaCuBaTa(b.nombre))-Number(esPenyaCuBaTa(a.nombre))||Number(misPenyes.includes(b.id))-Number(misPenyes.includes(a.id))||a.nombre.localeCompare(b.nombre,"es")),[penyes,penyaSearch,misPenyes]);
+  const visibleNews = useMemo(()=>noticias.filter((n:any)=>n.publicado&&(!newsSearch.trim()||normalizarBusqueda([n.titulo,n.resumen,n.contenido,n.autor,n.fuente].join(" ")).includes(normalizarBusqueda(newsSearch)))).slice().sort((x:any,y:any)=>String(y.fecha||y.created_at||"").localeCompare(String(x.fecha||x.created_at||""))),[noticias,newsSearch]);
   const avisosVisibles = avisos.filter((aviso:any)=>aviso.activo && (!aviso.publicar_en || new Date(aviso.publicar_en).getTime()<=now));
   const historicalActs = useMemo(() => {
     const rows: any[] = [...programaOficial2026, ...informacionBus2026, ...actos.filter((a) => !eventoSigueActivo(a, now))];
@@ -387,8 +392,9 @@ function Home() {
     if (!noticias.length || typeof window === "undefined") return;
     const openFromHash = () => {
       const match = window.location.hash.match(/^#noticia=(.+)$/);
-      if (!match) return;
-      const id = decodeURIComponent(match[1]);
+      const rawId = match?.[1];
+      if (!rawId) return;
+      const id = decodeURIComponent(rawId);
       const found = noticias.find((item:any) => String(item.id) === id);
       if (found) { setCurrentPage("noticias"); setNoticiaSeleccionada(found); }
     };

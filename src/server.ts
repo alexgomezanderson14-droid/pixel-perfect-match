@@ -27,8 +27,10 @@ async function handleNewsShare(request: Request, env: CloudflareEnv): Promise<Re
   const match = url.pathname.match(/^\/noticia\/([^/]+)\/?$/);
   if (!match) return null;
 
+  const rawId = match[1];
+  if (!rawId) return new Response("Noticia no encontrada", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
   let id: string;
-  try { id = decodeURIComponent(match[1]); } catch { return new Response("Noticia no encontrada", { status: 404 }); }
+  try { id = decodeURIComponent(rawId); } catch { return new Response("Noticia no encontrada", { status: 404 }); }
   const crawler = isSocialCrawler(request.headers.get("user-agent") ?? "");
 
   // Los visitantes normales llegan a la ruta hash que ya entiende la aplicación.
