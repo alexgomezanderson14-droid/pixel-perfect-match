@@ -413,9 +413,10 @@ function Home() {
           <section className="mt-6 overflow-hidden rounded-[1.75rem] border border-primary/15 bg-white/70 p-5 shadow-sm sm:p-7">
             <div className="mx-auto max-w-3xl text-center">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Una nueva etapa</p>
-              <h2 className="mt-2 text-2xl font-bold text-primary sm:text-3xl">{siteContent["mayorales_titulo"] || "¿Quiénes serán los próximos Mayorales?"}</h2>
-              <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">{siteContent["mayorales_texto"] || "La próxima mayoralía está pendiente de confirmación. En cuanto se anuncie, aquí compartiremos su presentación y sus novedades."}</p>
-              {siteContent["mayorales_media_url"]?.trim() ? <div className="mt-5 overflow-hidden rounded-2xl bg-black">{/\.(mp4|webm|ogg)(\?.*)?$/i.test(siteContent["mayorales_media_url"]) ? <video className="max-h-[520px] w-full" controls playsInline preload="metadata" src={siteContent["mayorales_media_url"]} /> : <img className="max-h-[520px] w-full object-contain" src={siteContent["mayorales_media_url"]} alt="Presentación de los próximos Mayorales" loading="lazy" />}</div> : null}
+              <h2 className="mt-2 text-2xl font-bold text-primary sm:text-3xl">{siteContent["mayorales_titulo"] || "Mayorales 2027 · Peña CuBaTa"}</h2>
+              <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">{siteContent["mayorales_texto"] || "La mayoralía de 2027 ya está confirmada: la peña CuBaTa será la encargada de representar y organizar las fiestas del próximo año. ¡Enhorabuena!"}</p>
+              <img className="mx-auto mt-5 h-auto w-full max-w-2xl object-contain" src="/cubata-logo.svg" alt="Logotipo original de la peña CuBaTa: Cobre, Bario y Tántalo" loading="lazy" />
+              {siteContent["mayorales_media_url"]?.trim() ? <div className="mt-5 overflow-hidden rounded-2xl bg-black">{/\.(mp4|webm|ogg)(\?.*)?$/i.test(siteContent["mayorales_media_url"]) ? <video className="max-h-[520px] w-full" controls playsInline preload="metadata" src={siteContent["mayorales_media_url"]} /> : <img className="max-h-[520px] w-full object-contain" src={siteContent["mayorales_media_url"]} alt="Contenido adicional de los Mayorales" loading="lazy" />}</div> : null}
               {siteContent["mayorales_cuenta_url"]?.trim() && <a className="mt-4 inline-flex rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground" href={siteContent["mayorales_cuenta_url"]} target="_blank" rel="noreferrer">Seguir la cuenta de los Mayorales ↗</a>}
             </div>
           </section>
