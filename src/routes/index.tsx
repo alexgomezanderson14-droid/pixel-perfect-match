@@ -34,6 +34,33 @@ function fmtDia(d: string) {
   return new Date(d + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
 }
 
+function esPenyaCuBaTa(nombre: string) {
+  return nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^a-z0-9]/g, "").includes("cubata");
+}
+
+function CountdownFiestas() {
+  const calcular = () => {
+    const diferencia = Math.max(0, new Date(2027, 10, 7, 0, 0, 0).getTime() - Date.now());
+    return {
+      dias: Math.floor(diferencia / 86400000),
+      horas: Math.floor((diferencia % 86400000) / 3600000),
+      minutos: Math.floor((diferencia % 3600000) / 60000),
+      segundos: Math.floor((diferencia % 60000) / 1000),
+    };
+  };
+  const [restante, setRestante] = useState(calcular);
+  useEffect(() => {
+    const timer = window.setInterval(() => setRestante(calcular()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  return <div className="mb-4 inline-flex items-center gap-2 rounded-2xl border border-white/35 bg-black/35 px-3 py-2 text-center text-white shadow-lg backdrop-blur-md sm:gap-3 sm:px-4 sm:py-3" aria-label="Cuenta atrás para las fiestas del 7 de noviembre de 2027">
+    {([["dias", "DÍAS"], ["horas", "H"], ["minutos", "MIN"], ["segundos", "SEG"]] as const).map(([key, label], index) => <div key={key} className="flex min-w-[2.5rem] flex-col sm:min-w-[3.5rem]">
+      <span className="text-xl font-extrabold tabular-nums leading-none sm:text-3xl">{String(restante[key]).padStart(2, "0")}</span>
+      <span className="mt-1 text-[8px] font-bold tracking-wider text-white/80 sm:text-[10px]">{label}</span>
+    </div>)}
+  </div>;
+}
+
 function eventoSigueActivo(item: { dia?: string; hora?: string; diaSiguiente?: boolean }, now = Date.now()) {
   if (!item.dia) return true;
   const hora = String(item.hora || "").match(/(?:^|\D)([01]\d|2[0-3]):([0-5]\d)/);
@@ -363,7 +390,7 @@ function Home() {
   };
 
   return (
-    <div className="page-bg min-h-screen" style={{ "--pink": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--secondary": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--accent": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--ring": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--cat-penya": siteContent["theme_accent"] || "oklch(0.76 0.08 355)", "--background": siteContent["theme_background"] || "oklch(0.95 0.015 75)", "--gradient-page": `linear-gradient(180deg, ${siteContent["theme_background"] || "oklch(0.96 0.015 70)"}, ${siteContent["theme_background"] || "oklch(0.93 0.02 60)"})` } as React.CSSProperties}>
+    <div className="page-bg min-h-screen" style={{ "--pink": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--secondary": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--accent": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--ring": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--cat-penya": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--background": siteContent["theme_background"] || "oklch(0.975 0.012 90)", "--gradient-page": `linear-gradient(180deg, ${siteContent["theme_background"] || "oklch(0.985 0.008 90)"}, ${siteContent["theme_background"] || "oklch(0.965 0.014 90)"})` } as React.CSSProperties}>
       <nav aria-label="Navegación principal" className="fixed inset-x-2 bottom-2 z-[5000] mx-auto grid max-w-4xl grid-cols-6 items-stretch gap-1 rounded-[1.6rem] border border-white/80 bg-white/95 p-1.5 shadow-[0_8px_32px_rgba(45,32,30,0.2)] backdrop-blur-xl sm:bottom-4 sm:gap-2 sm:rounded-full sm:p-2" style={{paddingBottom:"max(0.375rem, env(safe-area-inset-bottom))"}}>
         {[
           ["home","⌂","Inicio"],
@@ -380,7 +407,7 @@ function Home() {
         <img src={heroImage || hero} alt="Fiestas en las calles de l'Alfàs del Pi" width={1920} height={1280} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-t from-brown/90 via-brown/20 to-transparent" />
         <div className="relative mx-auto w-full max-w-6xl px-4 pb-9 sm:px-5 sm:pb-16">
-          <span className="glass-dark mb-4 inline-block rounded-full px-3 py-1 text-xs">{edicion.fechas}</span>
+          <CountdownFiestas />
           <h1 className="rise text-4xl font-bold leading-[0.98] text-on-image sm:text-7xl md:text-8xl">{siteContent["hero_titulo"]?.replace(/2026/g, String(edicion.anyo)) || edicion.titulo} <span className="text-pink">{edicion.anyo}</span></h1>
           <p className="rise mt-3 max-w-xl text-sm text-on-image/85 sm:mt-4 sm:text-lg">{siteContent["hero_subtitulo"] || edicion.subtitulo}</p>
         </div>
@@ -572,6 +599,7 @@ function Home() {
                 <article id={"penya-" + p.id} key={p.id} className="glass min-w-0 overflow-hidden rounded-xl sm:rounded-3xl">
                   {p.foto && <img src={p.foto} alt={p.nombre} loading="lazy" className="h-16 w-full object-cover sm:h-44" />}
                   <div className="p-2 sm:p-6">
+                    {esPenyaCuBaTa(p.nombre) && <span className="mb-1 inline-flex items-center gap-1 rounded-full bg-[#00AAA5] px-2 py-1 text-[9px] font-extrabold tracking-wide text-white shadow-sm sm:text-xs">♛ MAYORALES 2027</span>}
                     <h3 className="line-clamp-2 text-xs font-bold leading-tight sm:text-2xl">{p.nombre}</h3>
                     {p.direccion && <p className="mt-1 line-clamp-2 text-[10px] text-muted-foreground sm:text-sm">{p.direccion}</p>}
                     <p className="mt-1 text-[10px] sm:mt-3 sm:text-sm"><strong>Música:</strong> {p.tipo_musica || "Variada"}</p>
@@ -631,8 +659,8 @@ function Home() {
           </section>
 
           <article className="glass rounded-3xl p-5 sm:p-6">
-            <div className="mb-3 flex items-center gap-3"><span className="text-3xl">👑</span><div><h3 className="text-xl font-bold text-primary">Mayorales</h3><p className="text-sm text-muted-foreground">Próxima comisión pendiente de anunciar</p></div></div>
-            <p className="text-sm">Todavía no se han anunciado los nuevos Mayorales. Cuando haya información confirmada, se publicará aquí. La peña Impakte conserva su ficha como una peña más, sin distintivo de Mayorales.</p>
+            <div className="mb-3 flex items-center gap-3"><span className="text-3xl">👑</span><div><h3 className="text-xl font-bold text-primary">Mayorales 2027 · CuBaTa</h3><p className="text-sm text-muted-foreground">Peña encargada de la mayoralía de 2027</p></div></div>
+            <p className="text-sm">La peña CuBaTa ya está confirmada como Mayorales de 2027. ¡Enhorabuena!</p>
           </article>
           <section aria-labelledby="archivo-fiestas-title" className="space-y-3">
             <div><h3 id="archivo-fiestas-title" className="text-xl font-bold text-primary">📚 Archivo de las fiestas 2026</h3><p className="mt-1 text-sm text-muted-foreground">El programa y las actividades de la edición pasada se conservan como recuerdo. No aparecen mezclados con la información de las próximas fiestas.</p></div>
