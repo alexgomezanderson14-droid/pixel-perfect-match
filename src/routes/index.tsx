@@ -252,7 +252,7 @@ async function sharePenyaCard(p: PenyaDb) {
   }
 }
 type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number | null; lng: number | null; foto: string; tipo_musica: string; tiene_evento?: boolean; instagram?: string | null };
-const normalizarBusqueda=(value:any)=>String(value||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").trim();
+const normalizarBusqueda=(value:any)=>String(value||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
 const videoEmbedUrl=(value:string)=>{try{const u=new URL(value);if(u.hostname.includes("youtube.com")){const id=u.searchParams.get("v");return id?"https://www.youtube-nocookie.com/embed/"+id:value;}if(u.hostname==="youtu.be")return "https://www.youtube-nocookie.com/embed/"+u.pathname.slice(1);if(u.hostname.includes("vimeo.com"))return "https://player.vimeo.com/video/"+u.pathname.split("/").filter(Boolean).pop();if(u.hostname.includes("instagram.com")&&/\\/(reel|p|tv)\\//.test(u.pathname))return u.origin+u.pathname.replace(/\\/$/,"")+"/embed";return "";}catch{return "";}};
 const esVideoDirecto=(value:string)=>/\\.(mp4|webm|ogg|mov)(\\?.*)?$/i.test(value);
 
@@ -303,7 +303,7 @@ function Home() {
     }).sort((a, b) => String(a.dia).localeCompare(String(b.dia)) || String(a.hora).localeCompare(String(b.hora)));
   }, [actos, now]);  const historicalPenyaEvents = useMemo(() => eventos.filter((e) => !eventoSigueActivo(e, now)), [eventos, now]);
   const searchResults = useMemo(() => {
-    const normalize = (value: any) => String(value || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "");
+    const normalize = (value: any) => String(value || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const term = normalize(searchTerm.trim());
     if (term.length < 2) return [];
     const matches = (...values: any[]) => values.some((value) => normalize(value).includes(term));
@@ -558,7 +558,7 @@ function Home() {
             <h3 className="text-2xl font-bold text-primary">Actuaciones y festes al carrer</h3>
             <p className="text-sm text-muted-foreground">Pulsa en cada evento para consultar su descripción, fecha y lugar.</p>
           </div>
-          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             {filteredActs.filter((a) => {
               if (filterDay !== "all" && !eventoSigueActivo(a, now)) return false;
               const t = String(a.titulo || "").toLocaleLowerCase("es");
@@ -601,7 +601,7 @@ function Home() {
           </div>
           <div className="mt-10 space-y-3">
             <h3 className="text-2xl font-bold text-primary">Otros eventos de las peñas</h3>
-            {!eventosActivos.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">Todavía no hay eventos de peñas publicados.</div> : <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">{filteredPenyaEvents.map((e) => {
+            {!eventosActivos.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">Todavía no hay eventos de peñas publicados.</div> : <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">{filteredPenyaEvents.map((e) => {
               const imagen = e.imagen_url || e.imagen || e.foto_url || e.foto;
               const penyaAsociada = penyes.find(p => p.id === e.penya_id) || penyes.find(p => [e.titulo, e.descripcion, e.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(p.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, ""))));
               const penyaNombre = penyaAsociada?.nombre;
@@ -635,7 +635,7 @@ function Home() {
           {!penyes.length ? (
             <div className="glass rounded-3xl p-6 text-muted-foreground">{ui.sinPenyes}</div>
           ) : (
-            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
               {visiblePenyes.map((p) => (
                 <article id={"penya-" + p.id} key={p.id} className="glass min-w-0 overflow-hidden rounded-xl sm:rounded-3xl">
                   {p.foto && <img src={p.foto} alt={p.nombre} loading="lazy" className="h-36 w-full object-cover sm:h-44" />}
@@ -738,7 +738,7 @@ function Home() {
           {visibleNews.length ? <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{visibleNews.map((n:any)=><button type="button" key={n.id} onClick={()=>{setNoticiaSeleccionada(n);window.scrollTo({top:0,behavior:"smooth"});}} className="group min-w-0 overflow-hidden rounded-3xl border border-border/70 bg-card text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
             <div className="relative aspect-[16/10] overflow-hidden bg-muted">{n.imagen_url ? <img src={n.imagen_url} alt="" loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105"/> : <div className="flex h-full items-center justify-center text-5xl text-primary/40">▤</div>}{(n.video_url||(n.galeria||[]).length>0)&&<span className="absolute bottom-3 right-3 rounded-full bg-black/75 px-3 py-1 text-xs font-bold text-white">{n.video_url?"▶ Vídeo":"▧ Galería"}</span>}<span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide text-primary shadow">{n.tipo==="externa"?"Fuente externa":n.tipo==="oficial"?"Oficial":"Peñas"}</span></div>
             <div className="p-5"><p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{new Date(n.fecha||n.created_at||Date.now()).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"})}{n.autor?" · "+n.autor:""}</p><h2 className="mt-2 text-xl font-extrabold leading-snug text-primary">{n.titulo}</h2>{n.resumen&&<p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{n.resumen}</p>}<span className="mt-4 inline-flex items-center gap-2 text-sm font-extrabold text-primary">Leer noticia →</span></div>
-          </button>)}</div> : <div className="rounded-3xl border border-dashed border-border bg-card/60 px-5 py-14 text-center"><p className="text-4xl">▤</p><h2 className="mt-3 text-xl font-bold text-primary">Todavía no hay noticias publicadas</h2><p className="mt-2 text-sm text-muted-foreground">Aquí aparecerán las últimas novedades oficiales y de las peñas.</p></div>}
+          </button>)}</div> : <div className="rounded-3xl border border-dashed border-border bg-card/60 px-5 py-14 text-center"><p className="text-4xl">▤</p><h2 className="mt-3 text-xl font-bold text-primary">{newsSearch?"No hay noticias que coincidan":"Todavía no hay noticias publicadas"}</h2><p className="mt-2 text-sm text-muted-foreground">{newsSearch?"Prueba con otras palabras.":"Aquí aparecerán las últimas novedades oficiales y de las peñas."}</p></div>}
         </>}
       </main>}
 
