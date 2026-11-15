@@ -258,7 +258,6 @@ function Home() {
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
   const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes">("all");
   const [currentPage, setCurrentPage] = useState<"home"|"noticias"|"buscar"|"programa"|"eventos"|"mapa"|"penyes"|"info">("home");
-  const [publicDataLoaded, setPublicDataLoaded] = useState(false);
   const [avisos, setAvisos] = useState<any[]>([]);
   const [mapPoints, setMapPoints] = useState<Lugar[]>([]);
   const [cat, setCat] = useState<Categoria | null>(null);
@@ -346,7 +345,6 @@ function Home() {
       const legacyPenyes = await supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,tiene_evento").eq("estado","aprobada").order("nombre");
       data = legacyPenyes.data?.map((p) => ({ ...p, instagram: "" })) ?? null;
     }
-    setPublicDataLoaded(Array.isArray(actosData) && Array.isArray(eventosData));
     const filas = actosData ?? [];
     // Los actos guardados se conservan en la base de datos. El programa de 2026
     // queda disponible en el archivo histórico y no se mezcla con la edición futura.
