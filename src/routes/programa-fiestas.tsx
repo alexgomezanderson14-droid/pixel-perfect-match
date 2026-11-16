@@ -4,12 +4,12 @@ import SeoLandingPage from "@/components/SeoLandingPage";
 export const Route = createFileRoute("/programa-fiestas")({
   head: () => ({
     meta: [
-      { title: "Programa de fiestas de l’Alfàs del Pi 2027 | festalfàs" },
-      { name: "description", content: "Consulta el programa de las fiestas de l’Alfàs del Pi: actos, horarios, actuaciones, ubicaciones y avisos. La edición 2027 se actualizará cuando se confirme." },
-      { name: "keywords", content: "programa fiestas Alfaz del Pi 2027, programa festes l'Alfàs, horarios fiestas Alfaz, festalfàs" },
+      { title: "Programa de fiestas de l’Alfàs del Pi 2027: actos y horarios | festalfàs" },
+      { name: "description", content: "Información del programa de fiestas de l’Alfàs del Pi 2027. Consulta aquí actos, horarios, actuaciones y ubicaciones cuando la programación oficial esté confirmada." },
+      { name: "keywords", content: "programa fiestas Alfaz del Pi 2027, programa festes l'Alfàs, horarios fiestas Alfaz, actos fiestas Alfaz, festalfàs" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "Programa de fiestas de l’Alfàs del Pi 2027 | festalfàs" },
-      { property: "og:description", content: "Actos, horarios y actuaciones de las fiestas de l’Alfàs del Pi." },
+      { property: "og:description", content: "Actos, horarios, actuaciones y ubicaciones de las fiestas de l’Alfàs del Pi." },
       { property: "og:url", content: "https://festalfas.vercel.app/programa-fiestas" },
       { property: "og:type", content: "website" },
     ],
@@ -19,10 +19,17 @@ export const Route = createFileRoute("/programa-fiestas")({
 });
 
 function ProgramaPage() {
-  return <SeoLandingPage eyebrow="Fiestas 2027 · l’Alfàs del Pi" title="Programa de fiestas de l’Alfàs del Pi" description="Aquí podrás consultar la programación festiva, con los actos, horarios, actuaciones y lugares de celebración organizados para las próximas fiestas." intro="Toda la programación en un mismo sitio" sections={[
-    { title: "Actos y horarios", text: "La agenda recogerá cada actividad con su día, hora, descripción y lugar para que puedas organizarte y no perderte ningún acto." },
-    { title: "Actuaciones y música", text: "Consulta las actuaciones y propuestas musicales en cuanto se publique y confirme la programación correspondiente." },
-    { title: "Fechas de 2027", text: "Las próximas fiestas están previstas para noviembre de 2027. El calendario detallado y los horarios se publicarán cuando estén confirmados oficialmente." },
-    { title: "Información actualizada", text: "Los cambios y avisos importantes se comunicarán en la web. Comprueba siempre la información más reciente antes de desplazarte." },
-  ]} links={[{label:"Peñas",to:"/penyes"},{label:"Eventos",to:"/eventos"},{label:"Noticias",to:"/noticias"}]} />;
+  return <SeoLandingPage
+    eyebrow="Fiestas 2027 · l’Alfàs del Pi"
+    title="Programa de fiestas de l’Alfàs del Pi"
+    description="Esta página reunirá la programación de las próximas fiestas de l’Alfàs del Pi: actos, horarios, actuaciones, actividades de las peñas y lugares de celebración, con la información organizada para consultarla fácilmente desde el móvil."
+    intro="Toda la programación festiva en un mismo sitio"
+    sections={[
+      { title: "Fechas y edición 2027", text: "festalfàs prepara este espacio para la edición de 2027. Las fechas concretas y el calendario de actos se incorporarán cuando estén confirmados por las fuentes oficiales; no publicamos horarios provisionales como si fueran definitivos." },
+      { title: "Actos, horarios y ubicaciones", text: "Cuando se publique el programa, cada actividad podrá consultarse con su día, hora, descripción y lugar de celebración. Así será más sencillo localizar los actos y organizar cada jornada." },
+      { title: "Actuaciones y actividades de las peñas", text: "La programación también dará visibilidad a las actuaciones musicales y a las actividades organizadas por las peñas, diferenciando la información confirmada de los anuncios pendientes." },
+      { title: "Avisos y cambios", text: "Si se producen cambios de horario, ubicación o celebración, esta sección servirá para consultar la información actualizada. Antes de acudir a un acto, revisa siempre el aviso más reciente." },
+    ]}
+    links={[{label:"Peñas de l’Alfàs",to:"/penyes"},{label:"Agenda de eventos",to:"/eventos"},{label:"Noticias",to:"/noticias"}]}
+  />;
 }
