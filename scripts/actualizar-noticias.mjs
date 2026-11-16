@@ -41,7 +41,7 @@ function dateFrom(html) {
     const months = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
     return new Date(Number(spanish[3]), months.indexOf(spanish[2].toLowerCase()), Number(spanish[1])).toISOString().slice(0, 10);
   }
-  return new Date().toISOString().slice(0, 10);
+  return "";
 }
 function articleParagraphs(html) {
   const preferred = html.match(/<(?:article|main)\b[^>]*>([\s\S]*?)<\/(?:article|main)>/i)?.[1] || html;
@@ -58,7 +58,7 @@ async function get(url) {
   return response.text();
 }
 function tokens(item) {
-  return new Set((String(item.titulo || "") + " " + String(item.resumen || "") + " " + String(item.contenido || ""))
+  return new Set((String(item.titulo || "") + " " + String(item.resumen || ""))
     .toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9 ]/g, " ").split(/\s+/)
     .filter(word => word.length > 3 && !STOP.has(word)));
@@ -69,7 +69,7 @@ function similar(a, b) {
   const common = [...aa].filter(word => bb.has(word)).length;
   const overlap = common / Math.min(aa.size, bb.size);
   const union = common / new Set([...aa, ...bb]).size;
-  return overlap >= 0.72 && union >= 0.34;
+  return overlap >= 0.65 && union >= 0.28;
 }
 let previous = [];
 try { previous = JSON.parse(await readFile("public/noticias-automaticas.json", "utf8")); } catch { previous = []; }
