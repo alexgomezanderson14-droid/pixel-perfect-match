@@ -5,6 +5,7 @@ import { edicion, lugares as lugaresFijos, ui, type Categoria, type Lugar } from
 import { supabase } from "@/integrations/supabase/client";
 import CopyrightFooter from "@/components/CopyrightFooter";
 import { noticiaCuBaTa2027 } from "@/content/noticia-cubata-2027";
+import { noticiaCestaNavidad2027 } from "@/content/noticia-cesta-navidad-2027";
 
 const FestMap = lazy(() => import("@/components/FestMap"));
 const AddPenyaForm = lazy(() => import("@/components/AddPenyaForm"));
@@ -401,7 +402,7 @@ function Home() {
     const content = Object.fromEntries((contentData ?? []).map((x:any)=>[x.clave,x.valor]));
     setSiteContent(content);
     try { const parsed=JSON.parse(content["avisos_json"]||"[]"); setAvisos(Array.isArray(parsed)?parsed:[]); } catch { setAvisos([]); }
-    try { const parsed=JSON.parse(content["noticias_json"]||"[]"); setNoticias(Array.isArray(parsed)&&parsed.length?parsed:[noticiaCuBaTa2027]); } catch { setNoticias([noticiaCuBaTa2027]); }
+    try { const parsed=JSON.parse(content["noticias_json"]||"[]"); const guardadas=Array.isArray(parsed)?parsed:[]; const respaldo=[noticiaCestaNavidad2027,noticiaCuBaTa2027]; const combinadas=[...guardadas,...respaldo.filter((fija:any)=>!guardadas.some((guardada:any)=>String(guardada.id)===String(fija.id)))]; setNoticias(combinadas); } catch { setNoticias([noticiaCestaNavidad2027,noticiaCuBaTa2027]); }
     try { const points=JSON.parse(content["mapa_puntos_json"]||"[]"); setMapPoints(Array.isArray(points)?points.filter((p:any)=>Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))&&Number(p.lat)>=-90&&Number(p.lat)<=90&&Number(p.lng)>=-180&&Number(p.lng)<=180):[]); } catch { setMapPoints([]); }
     if (content["hero_image_path"]) {
       const { data: imageData } = supabase.storage.from("penyes").getPublicUrl(content["hero_image_path"]);
