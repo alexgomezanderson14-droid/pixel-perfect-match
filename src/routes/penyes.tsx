@@ -1,15 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import SeoLandingPage from "@/components/SeoLandingPage";
 
 export const Route = createFileRoute("/penyes")({
   head: () => ({
     meta: [
-      { title: "Peñas de l’Alfàs del Pi | festalfàs" },
-      { name: "description", content: "Descubre las peñas de las fiestas de l’Alfàs del Pi: sus fichas, ambiente, fotografías, actividades y cómo encontrarlas en festalfàs." },
-      { name: "keywords", content: "peñas Alfaz del Pi, peñas l'Alfàs del Pi, penyes Alfàs, fiestas Alfaz, festalfàs" },
+      { title: "Peñas de l’Alfàs del Pi: conoce las peñas festeras | festalfàs" },
+      { name: "description", content: "Conoce las peñas de las fiestas de l’Alfàs del Pi, sus mayorales, su historia, actividades y perfiles. CuBaTa será la mayoralía de 2027." },
+      { name: "keywords", content: "peñas Alfaz del Pi, peñas l'Alfàs del Pi, penyes Alfàs, mayorales 2027, CuBaTa, fiestas Alfaz, festalfàs" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "Peñas de l’Alfàs del Pi | festalfàs" },
-      { property: "og:description", content: "Conoce las peñas, sus actividades y el ambiente de las fiestas de l’Alfàs del Pi." },
+      { property: "og:description", content: "La comunidad festera de l’Alfàs del Pi: peñas, mayorales, actividades y actualidad." },
       { property: "og:url", content: "https://festalfas.vercel.app/penyes" },
       { property: "og:type", content: "website" },
     ],
@@ -19,10 +19,17 @@ export const Route = createFileRoute("/penyes")({
 });
 
 function PenyesPage() {
-  return <SeoLandingPage eyebrow="Comunidad festera" title="Peñas de l’Alfàs del Pi" description="Las peñas son el corazón de las fiestas: grupos de amigos, convivencia, música, creatividad y muchas ganas de compartir cada celebración." intro="Encuentra y conoce las peñas participantes" sections={[
-    { title: "Fichas de las peñas", text: "Consulta la información que cada peña comparte: presentación, fotografías, redes sociales, ubicación y próximos planes cuando estén publicados." },
-    { title: "Mayorales 2027 · CuBaTa", text: "La Penya Cobre Bario Tántalo (CuBaTa) toma el relevo como Mayorales de 2027. Las novedades de la mayoralía se irán incorporando a la actualidad festera." },
-    { title: "Ubicación y contacto", text: "La web reúne un mapa para localizar los espacios de las peñas y facilitar que vecinos y visitantes se acerquen a conocerlas." },
-    { title: "Participa", text: "Cada peña puede compartir su identidad, sus actividades y sus noticias para que la comunidad festera esté al día." },
-  ]} links={[{label:"Programa de fiestas",to:"/programa-fiestas"},{label:"Eventos",to:"/eventos"},{label:"Noticias",to:"/noticias"}]} />;
+  return <SeoLandingPage
+    eyebrow="Comunidad festera · l’Alfàs del Pi"
+    title="Peñas de l’Alfàs del Pi"
+    description="Las peñas forman una parte esencial de las fiestas de l’Alfàs del Pi. Son grupos que mantienen vivo el ambiente festero durante todo el año y participan en la preparación y celebración de los actos."
+    intro="Un espacio para descubrir a las peñas"
+    sections={[
+      { title: "Conoce cada peña", text: "Cada peña tiene su propio nombre, identidad, amistades, recuerdos y manera de vivir las fiestas. En festalfàs reunimos sus perfiles para que vecinos y visitantes puedan conocerlas y seguir sus novedades." },
+      { title: "Mayorales 2027: CuBaTa", text: "La Penya Cobre Bario Tántalo, conocida como CuBaTa, toma el relevo como Mayorales de 2027. La peña ha presentado su mayoralía con humor bajo el nombre de «Mejoralía», prometiendo unas fiestas que darán que hablar." },
+      { title: "Fotos, actividades y noticias", text: "Los perfiles de las peñas permiten reunir su presentación, fotografías, redes sociales, actividades y noticias. La información se irá ampliando conforme cada peña comparta y publique sus contenidos." },
+      { title: "Ubicación en el mapa", text: "La web dispone de un mapa festero para consultar los puntos asociados a las peñas y otros lugares de interés. Comprueba los detalles de cada ficha antes de desplazarte." },
+    ]}
+    links={[{label:"Noticias de CuBaTa 2027",to:"/noticias"},{label:"Programa de fiestas",to:"/programa-fiestas"},{label:"Eventos",to:"/eventos"}]}
+  />;
 }
