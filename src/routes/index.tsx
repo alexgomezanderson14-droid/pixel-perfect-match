@@ -14,12 +14,18 @@ const AddPenyaEventForm = lazy(() => import("@/components/AddPenyaEventForm"));
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Fiestas de l'Alfàs del Pi · Peñas y noticias" },
-      { name: "description", content: "Últimas noticias oficiales y de las peñas, programa, mapa e información de las fiestas de l'Alfàs del Pi." },
-      { property: "og:title", content: "Fiestas de l'Alfàs del Pi" },
-      { property: "og:description", content: "Programa oficial, mapa interactivo y peñas de las fiestas." },
+      { title: "festalfàs | Fiestas de l'Alfàs del Pi, peñas, programa y noticias" },
+      { name: "description", content: "Descubre festalfàs: programa de fiestas de l'Alfàs del Pi, peñas, eventos, mapa, actualidad y noticias de las fiestas." },
+      { name: "keywords", content: "festalfàs, festalfas, fiestas l'Alfàs del Pi, fiestas Alfaz del Pi, peñas Alfaz del Pi, programa fiestas Alfaz, eventos Alfaz del Pi" },
+      { name: "robots", content: "index, follow, max-image-preview:large" },
+      { property: "og:title", content: "festalfàs | Fiestas de l'Alfàs del Pi" },
+      { property: "og:description", content: "Programa de fiestas, peñas, eventos, mapa y noticias de l'Alfàs del Pi." },
+      { property: "og:url", content: "https://festalfas.vercel.app/" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://festalfas.vercel.app/" },
     ],
   }),
   component: Home,
