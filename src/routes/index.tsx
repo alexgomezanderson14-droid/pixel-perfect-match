@@ -381,7 +381,7 @@ function Home() {
   useEffect(() => {
     const openPenyaFromHash = () => {
       const match = window.location.hash.match(/^#penya-(.+)$/);
-      if (!match) return;
+      if (!match?.[1]) return;
       const id = decodeURIComponent(match[1]);
       const found = penyes.find((item) => item.id === id);
       if (found) {

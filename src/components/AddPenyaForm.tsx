@@ -2,6 +2,7 @@ import { lazy, Suspense, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadPublicPhoto } from "@/lib/public-upload.functions";
 
 const FestMap = lazy(() => import("@/components/FestMap"));
 
@@ -76,11 +77,10 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
     try {
       let fotoPath: string | null = null;
       if (foto) {
-        const ext = (foto.type.split("/")[1] ?? "jpg").replace("jpeg", "jpg");
-        const path = "penyes/" + crypto.randomUUID() + "." + ext;
-        const upload = await supabase.storage.from("penyes").upload(path, foto, { contentType: foto.type });
-        if (upload.error) throw new Error("No se pudo subir la foto: " + upload.error.message);
-        fotoPath = path;
+        const fd = new FormData();
+        fd.append("file", foto);
+        fd.append("folder", "penyes");
+        fotoPath = (await uploadPublicPhoto({ data: fd })).path;
       }
 
       const { error: insertError } = await supabase.from("penyes").insert({

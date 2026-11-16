@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadPublicPhoto } from "@/lib/public-upload.functions";
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
@@ -44,10 +45,10 @@ export default function AddPenyaEventForm({ penyaId, penyaName, onClose, onSaved
         return;
       }
 
-      const ext = imagen!.type === "image/png" ? "png" : imagen!.type === "image/webp" ? "webp" : "jpg";
-      const imagePath = "eventos/" + crypto.randomUUID() + "." + ext;
-      const upload = await supabase.storage.from("penyes").upload(imagePath, imagen!, { contentType: imagen!.type });
-      if (upload.error) throw new Error("No se pudo subir la imagen: " + upload.error.message);
+      const fd = new FormData();
+      fd.append("file", imagen!);
+      fd.append("folder", "eventos");
+      const imagePath = (await uploadPublicPhoto({ data: fd })).path;
 
       const imageUrl = supabase.storage.from("penyes").getPublicUrl(imagePath).data.publicUrl;
       const { error: insertError } = await supabase.from("eventos").insert({
