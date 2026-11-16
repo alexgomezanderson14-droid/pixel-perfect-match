@@ -8,12 +8,12 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 // Lovable continues using its existing Cloudflare preview target.
 // Vercel builds need Nitro's Vercel preset to emit the Vercel Build Output API.
-const isVercel = Boolean(process.env.VERCEL && process.env.VERCEL !== "0");
+const isVercel = Boolean(process.env["VERCEL"] && process.env["VERCEL"] !== "0");
 
 export default defineConfig({
   tanstackStart: {
     // Keep the existing SSR error wrapper.
     server: { entry: "server" },
   },
-  nitro: isVercel ? { preset: "vercel" } : undefined,
+  ...(isVercel ? { nitro: { preset: "vercel" } } : {}),
 });
