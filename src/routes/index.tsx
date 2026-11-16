@@ -250,7 +250,7 @@ async function sharePenyaCard(p: PenyaDb) {
     window.alert("Plantilla de Instagram descargada. Ya puedes subirla a tus historias.");
   }
 }
-type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number | null; lng: number | null; foto: string; tipo_musica: string; tiene_evento?: boolean; instagram?: string | null };
+type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number | null; lng: number | null; foto: string; tipo_musica: string; tiene_evento?: boolean; instagram?: string | null; informacion?: string | null };
 const normalizarBusqueda=(value:any)=>String(value||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
 const videoEmbedUrl=(value:string)=>{try{const u=new URL(value);const host=u.hostname.toLowerCase();if(host==="youtube.com"||host==="www.youtube.com"){const id=u.searchParams.get("v")||(u.pathname.startsWith("/shorts/")?u.pathname.split("/")[2]:"");return id?"https://www.youtube-nocookie.com/embed/"+id:"";}if(host==="youtu.be")return "https://www.youtube-nocookie.com/embed/"+u.pathname.split("/").filter(Boolean)[0];if(host==="vimeo.com"||host==="www.vimeo.com")return "https://player.vimeo.com/video/"+u.pathname.split("/").filter(Boolean).pop();if(host==="instagram.com"||host==="www.instagram.com"){const path=u.pathname.endsWith("/")?u.pathname.slice(0,-1):u.pathname;if(path.includes("/reel/")||path.includes("/p/")||path.includes("/tv/"))return u.origin+path+"/embed";}return "";}catch{return "";}};
 const esVideoDirecto=(value:string)=>{try{const path=new URL(value).pathname.toLowerCase();return [".mp4",".webm",".ogg",".mov"].some(ext=>path.endsWith(ext));}catch{return false;}};
@@ -347,14 +347,14 @@ function Home() {
 
   const cargar = useCallback(async () => {
     const [penyaResult, { data: actosData }, { data: eventosData }, { data: contentData }] = await Promise.all([
-      supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,tiene_evento,instagram").eq("estado","aprobada").order("nombre"),
+      supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,tiene_evento,instagram,informacion").eq("estado","aprobada").order("nombre"),
       supabase.from("actos").select("*").eq("publicado",true).order("dia").order("hora"),
       supabase.from("eventos").select("*").eq("publicado",true).order("dia").order("hora"),
       supabase.from("site_content").select("clave,valor"),
     ]);
     let data: any[] | null = penyaResult.data as any[] | null;
     if (penyaResult.error) {
-      const legacyPenyes = await supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,tiene_evento").eq("estado","aprobada").order("nombre");
+      const legacyPenyes = await supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,tiene_evento,informacion").eq("estado","aprobada").order("nombre");
       data = legacyPenyes.data?.map((p) => ({ ...p, instagram: "" })) ?? null;
     }
     const filas = actosData ?? [];
@@ -430,6 +430,11 @@ function Home() {
   ], [penyes, actos, eventosActivos, mapPoints, now]);
 
   const visibles = todos.filter((l) => (!cat || l.categoria === cat) && l.nombre.toLowerCase().includes(q.toLowerCase()));
+
+  const selectedPenyaEvents = selectedPenya ? eventos.filter((e) => eventoSigueActivo(e, now) && (e.penya_id === selectedPenya.id || [e.titulo, e.descripcion, e.lugar].some((v) => normalizarBusqueda(v).includes(normalizarBusqueda(selectedPenya.nombre))))) : [];
+  const selectedPenyaActs = selectedPenya ? actos.filter((a) => eventoSigueActivo(a, now) && [a.titulo, a.descripcion, a.lugar].some((v) => normalizarBusqueda(v).includes(normalizarBusqueda(selectedPenya.nombre)))) : [];
+  const selectedPenyaNews = selectedPenya ? noticias.filter((n:any) => n.publicado && (n.penya_id === selectedPenya.id || normalizarBusqueda([n.penya_nombre, n.autor].join(" ")).includes(normalizarBusqueda(selectedPenya.nombre)))).slice().sort((a:any,b:any) => String(b.fecha||b.created_at||"").localeCompare(String(a.fecha||a.created_at||""))).slice(0,3) : [];
+  const selectedPenyaGallery = selectedPenya ? [...new Set([selectedPenya.foto, ...selectedPenyaEvents.map((e:any) => e.imagen_url || e.imagen || e.foto_url || e.foto), ...selectedPenyaActs.map((a:any) => a.imagen_url || a.imagen || a.foto_url || a.foto)].filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url)))] : [];
 
   const goMap = (id?: string) => {
     if (!id) return;
@@ -785,12 +790,29 @@ function Home() {
       {selectedPenya && (
         <div className="fixed inset-0 z-[1900] flex items-end justify-center bg-brown/70 p-3 sm:items-center" onClick={() => setSelectedPenya(null)}>
           <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className="glass max-h-[94vh] w-full max-w-2xl overflow-auto rounded-[2rem] bg-background">
-            {selectedPenya.foto && <img src={selectedPenya.foto} alt={selectedPenya.nombre} className="h-48 w-full object-cover sm:h-60" />}
-            <div className="p-5 sm:p-8">
-              <div className="flex items-start justify-between gap-4">
-                <div><p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Peña participante</p><h2 className="mt-1 text-3xl font-bold text-primary sm:text-4xl">{selectedPenya.nombre}</h2></div>
-                <button onClick={() => setSelectedPenya(null)} aria-label="Cerrar" className="glass-btn h-10 w-10 shrink-0 rounded-full">✕</button>
+            <div className="relative h-52 overflow-hidden bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37] sm:h-72">
+              {selectedPenya.foto && <img src={selectedPenya.foto} alt={selectedPenya.nombre} className="absolute inset-0 h-full w-full object-cover" />}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#102f3d]/95 via-[#102f3d]/25 to-transparent" />
+              <button onClick={() => setSelectedPenya(null)} aria-label="Cerrar ficha" className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-full border border-white/70 bg-white/95 text-lg font-bold text-[#173f52] shadow-lg">✕</button>
+              <div className="absolute inset-x-5 bottom-5 text-white sm:inset-x-8 sm:bottom-7">
+                {esPenyaCuBaTa(selectedPenya.nombre) && <span className="mb-2 inline-flex items-center gap-1 rounded-full border border-[#B8860B] bg-[#D4AF37] px-3 py-1 text-[10px] font-extrabold tracking-wide text-[#3B2A0A] sm:text-xs">♛ MAYORALES 2027</span>}
+                <p className="text-[10px] font-bold uppercase tracking-[.2em] text-white/80">Peña participante · festalfàs</p>
+                <h2 className="mt-1 text-3xl font-extrabold leading-tight sm:text-5xl">{selectedPenya.nombre}</h2>
               </div>
+            </div>
+            <div className="p-5 sm:p-8">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary">Ficha de la peña</span>
+                {selectedPenya.tipo_musica && <span className="rounded-full border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">♫ {selectedPenya.tipo_musica}</span>}
+                {misPenyes.includes(selectedPenya.id) && <span className="rounded-full bg-[#173f52] px-3 py-1 text-xs font-bold text-white">★ Mi peña</span>}
+              </div>
+              {selectedPenya.informacion?.trim() && <section className="mt-6 rounded-2xl border border-primary/15 bg-primary/[0.045] p-4 sm:p-5"><h3 className="text-lg font-extrabold text-primary">Quiénes somos</h3><p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground sm:text-base">{selectedPenya.informacion}</p></section>}
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <button onClick={() => toggleMiPenya(selectedPenya.id)} aria-pressed={misPenyes.includes(selectedPenya.id)} className="rounded-full border border-primary/20 bg-white/70 px-4 py-2 text-sm font-bold text-primary">{misPenyes.includes(selectedPenya.id) ? "★ Mi peña" : "☆ Marcar como mi peña"}</button>
+                {instagramUrl(selectedPenya.instagram) && <a className="rounded-full bg-[#173f52] px-4 py-2 text-sm font-bold text-white" href={instagramUrl(selectedPenya.instagram)!} target="_blank" rel="noreferrer">Instagram ↗</a>}
+              </div>
+              {selectedPenyaGallery.length > 0 && <section className="mt-7"><div className="mb-3 flex items-end justify-between gap-3"><div><h3 className="text-xl font-extrabold text-primary">Galería de la peña</h3><p className="text-xs text-muted-foreground">Fotos de la peña y de sus eventos publicados</p></div><span className="text-xs font-bold text-muted-foreground">{selectedPenyaGallery.length} {selectedPenyaGallery.length===1?"foto":"fotos"}</span></div><div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{selectedPenyaGallery.map((url:string,index:number)=><img key={url} src={url} alt={selectedPenya.nombre+" · foto "+(index+1)} loading="lazy" className="aspect-square w-full rounded-xl bg-muted object-cover sm:rounded-2xl" />)}</div></section>}
+              {selectedPenyaNews.length > 0 && <section className="mt-7"><h3 className="mb-3 text-xl font-extrabold text-primary">Lo último de nuestra peña</h3><div className="space-y-3">{selectedPenyaNews.map((n:any)=><button key={n.id} type="button" onClick={()=>{setSelectedPenya(null);setCurrentPage("noticias");setNoticiaSeleccionada(n);window.scrollTo({top:0,behavior:"smooth"});}} className="flex w-full items-center gap-3 rounded-2xl border border-border bg-white/75 p-3 text-left transition hover:border-primary/40 hover:shadow-sm">{n.imagen_url ? <img src={n.imagen_url} alt="" className="h-16 w-20 shrink-0 rounded-xl object-cover"/> : <span className="grid h-16 w-20 shrink-0 place-items-center rounded-xl bg-primary/10 text-2xl text-primary">▤</span>}<span className="min-w-0"><span className="block text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{new Date(n.fecha||n.created_at||Date.now()).toLocaleDateString("es-ES",{day:"numeric",month:"short"})}</span><span className="mt-1 block font-bold leading-snug text-primary">{n.titulo}</span><span className="mt-1 block text-xs font-bold text-primary">Ver publicación →</span></span></button>)}</div></section>}
 
               <div className="mt-5 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800">
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-100 text-xl">✓</span>
