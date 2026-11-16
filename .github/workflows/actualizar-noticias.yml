@@ -1,0 +1,31 @@
+name: Actualizar noticias festivas
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+permissions:
+  contents: write
+concurrency:
+  group: actualizar-noticias-festivas
+  cancel-in-progress: false
+jobs:
+  recopilar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Recopilar noticias públicas
+        run: node scripts/actualizar-noticias.mjs
+      - name: Publicar cambios
+        run: |
+          if git diff --quiet -- public/noticias-automaticas.json; then
+            echo "No hay noticias nuevas ni cambios."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/noticias-automaticas.json
+          git commit -m "Actualizar noticias festivas automáticamente"
+          git push
