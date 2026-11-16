@@ -407,7 +407,25 @@ function Home() {
     const content = Object.fromEntries((contentData ?? []).map((x:any)=>[x.clave,x.valor]));
     setSiteContent(content);
     try { const parsed=JSON.parse(content["avisos_json"]||"[]"); setAvisos(Array.isArray(parsed)?parsed:[]); } catch { setAvisos([]); }
-    try { const parsed=JSON.parse(content["noticias_json"]||"[]"); const guardadas=Array.isArray(parsed)?parsed:[]; const respaldo=[noticiaCestaNavidad2027,noticiaCuBaTa2027]; const combinadas=[...guardadas,...respaldo.filter((fija:any)=>!guardadas.some((guardada:any)=>String(guardada.id)===String(fija.id)))]; setNoticias(combinadas); } catch { setNoticias([noticiaCestaNavidad2027,noticiaCuBaTa2027]); }
+    let noticiasAutomaticas: any[] = [];
+    try {
+      const response = await fetch("/noticias-automaticas.json", { cache: "no-store" });
+      if (response.ok) {
+        const parsed = await response.json();
+        if (Array.isArray(parsed)) noticiasAutomaticas = parsed;
+      }
+    } catch { /* La web sigue mostrando las noticias guardadas si el archivo automático no está disponible. */ }
+    try {
+      const parsed=JSON.parse(content["noticias_json"]||"[]");
+      const guardadas=Array.isArray(parsed)?parsed:[];
+      const respaldo=[noticiaCestaNavidad2027,noticiaCuBaTa2027];
+      const combinadas=[...guardadas,...noticiasAutomaticas,...respaldo];
+      const unicas=combinadas.filter((noticia:any,index:number,array:any[])=>noticia?.id&&array.findIndex((otra:any)=>String(otra.id)===String(noticia.id))===index);
+      setNoticias(unicas);
+    } catch {
+      const combinadas=[...noticiasAutomaticas,noticiaCestaNavidad2027,noticiaCuBaTa2027];
+      setNoticias(combinadas.filter((noticia:any,index:number,array:any[])=>noticia?.id&&array.findIndex((otra:any)=>String(otra.id)===String(noticia.id))===index));
+    }
     try { const points=JSON.parse(content["mapa_puntos_json"]||"[]"); setMapPoints(Array.isArray(points)?points.filter((p:any)=>Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))&&Number(p.lat)>=-90&&Number(p.lat)<=90&&Number(p.lng)>=-180&&Number(p.lng)<=180):[]); } catch { setMapPoints([]); }
     if (content["hero_image_path"]) {
       const { data: imageData } = supabase.storage.from("penyes").getPublicUrl(content["hero_image_path"]);
