@@ -80,5 +80,12 @@ for (const candidate of [...candidates.values()].slice(0, 45)) {
 }
 results.sort((a, b) => b.fecha.localeCompare(a.fecha));
 const unique = [...new Map(results.map(item => [item.fuente_url, item])).values()].slice(0, 35);
-await writeFile("public/noticias-automaticas.json", JSON.stringify(unique, null, 2) + "\n");
-console.log(`Noticias festera recopiladas: ${unique.length}`);
+let finalNews = unique;
+if (unique.length === 0) {
+  try {
+    const previous = JSON.parse(await (await import("node:fs/promises")).readFile("public/noticias-automaticas.json", "utf8"));
+    if (Array.isArray(previous)) finalNews = previous;
+  } catch { /* Primera ejecución: no hay archivo anterior que conservar. */ }
+}
+await writeFile("public/noticias-automaticas.json", JSON.stringify(finalNews, null, 2) + "\n");
+console.log(`Noticias festivas disponibles: ${finalNews.length} (nuevas recopiladas: ${unique.length})`);

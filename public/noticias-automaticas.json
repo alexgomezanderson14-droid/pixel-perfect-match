@@ -1,1 +1,39 @@
-[]
+[
+  {
+    "id": "auto-ayuntamiento-fiestas-jubileo-2026-pregon",
+    "titulo": "Las Fiestas de l’Alfàs arrancan con el pregón y la participación de 42 peñas",
+    "resumen": "El Ayuntamiento anunció el inicio de las Fiestas del Jubileo y del Santísimo Cristo del Buen Acierto 2026, con cuatro días de celebraciones y la participación de 42 peñas y cerca de un millar de peñistas.",
+    "contenido": "La Penya L’Impacte asumió la Mayoralía 2026. La programación combinó música, tradiciones, actividades infantiles y actos festivos.",
+    "tipo": "oficial",
+    "autor": "Ayuntamiento de l’Alfàs del Pi",
+    "fuente": "Ayuntamiento de l’Alfàs del Pi",
+    "fuente_url": "https://www.lalfas.es/concejalias/fiestas/las-fiestas-de-lalfas-arrancan-esta-noche-con-el-pregon/",
+    "fecha": "2026-11-06",
+    "publicado": true,
+    "automatico": true
+  },
+  {
+    "id": "auto-cadena-ser-fiestas-jubileo-2026",
+    "titulo": "L’Alfàs del Pi se prepara para vivir sus Fiestas del Jubileo y del Santísimo Cristo del Buen Acierto",
+    "resumen": "La programación reunió actos tradicionales, religiosos y propuestas musicales organizadas por los Mayorales de 2026 y el Ayuntamiento, con cabalgata, ofrenda floral, charangas y conciertos.",
+    "tipo": "externa",
+    "autor": "Cadena SER · Radio Benidorm",
+    "fuente": "Cadena SER · Radio Benidorm",
+    "fuente_url": "https://cadenaser.com/comunitat-valenciana/2026/11/05/lalfas-del-pi-se-prepara-para-vivir-sus-fiestas-del-jubileo-y-del-santisimo-cristo-del-buen-acierto-del-7-al-10-de-noviembre-radio-benidorm/",
+    "fecha": "2026-11-05",
+    "publicado": true,
+    "automatico": true
+  },
+  {
+    "id": "auto-vivebenidorm-fiestas-jubileo-2026",
+    "titulo": "l’Alfàs del Pi celebra sus Fiestas del Jubileo con 42 peñas y cerca de un millar de peñistas",
+    "resumen": "ViveBenidorm avanzó los actos del 7 al 10 de noviembre, con mañaneos, tardeos, pasacalles, actividades infantiles, concursos, mascletà nocturna y correfocs.",
+    "tipo": "externa",
+    "autor": "ViveBenidorm",
+    "fuente": "ViveBenidorm",
+    "fuente_url": "https://www.vivebenidorm.com/lalfas-del-pi-celebra-del-7-al-10-de-noviembre-sus-fiestas-del-jubileo-y-del-santisimo-cristo-del-buen-acierto/",
+    "fecha": "2026-11-03",
+    "publicado": true,
+    "automatico": true
+  }
+]
