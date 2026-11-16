@@ -43,7 +43,7 @@ function fmtDia(d: string) {
 
 function esNoticiaMayorales(noticia: any) {
   const referencia = [noticia?.titulo, noticia?.autor, noticia?.penya_nombre, noticia?.fuente].filter(Boolean).join(" ");
-  return /mayorales|mejorales|cubata|cobre\\s*bario\\s*t[aá]ntalo/i.test(referencia);
+  return /mayorales|mejorales|cubata|cobre\s*bario\s*t[aá]ntalo/i.test(referencia);
 }
 
 function esPenyaCuBaTa(nombre: string) {
