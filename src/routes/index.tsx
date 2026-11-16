@@ -358,6 +358,14 @@ function Home() {
     return () => window.clearInterval(tick);
   }, []);
   useEffect(() => {
+    if (!shareReminder) return;
+    const dismiss = window.setTimeout(() => {
+      setShareReminder(false);
+      localStorage.setItem("fiestas-share-reminder-last", String(Date.now()));
+    }, 7000);
+    return () => window.clearTimeout(dismiss);
+  }, [shareReminder]);
+  useEffect(() => {
     const key = "fiestas-share-reminder-last";
     const shouldShow = () => {
       const last = Number(localStorage.getItem(key) || 0);
@@ -805,7 +813,7 @@ function Home() {
           <button onClick={() => void copyShareLink(window.location.href)} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Copiar enlace</button>
         </div>
       </footer>}
-      {currentPage==="home" && shareReminder && <aside role="status" className="fixed inset-x-4 bottom-4 z-[1800] mx-auto flex max-w-xl items-center gap-3 rounded-2xl border border-border bg-background p-4 shadow-2xl">
+      {currentPage==="home" && shareReminder && <aside role="status" aria-live="polite" className="fixed inset-x-4 top-[max(1rem,env(safe-area-inset-top))] z-[2100] mx-auto flex max-w-xl items-center gap-3 rounded-2xl border border-border bg-background p-4 shadow-2xl">
         <div className="min-w-0 flex-1"><p className="font-bold text-primary">¿Compartimos las fiestas?</p><p className="text-sm text-muted-foreground">Pasa la web a tus amigos para que nadie se pierda el programa ni los eventos.</p></div>
         <button onClick={() => { setShareReminder(false); localStorage.setItem("fiestas-share-reminder-last", String(Date.now())); }} className="shrink-0 rounded-full px-3 py-2 text-sm">Ahora no</button>
         <button onClick={() => { setShareReminder(false); void shareWebsite(); }} className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">Compartir</button>
