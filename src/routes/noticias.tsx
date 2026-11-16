@@ -51,10 +51,7 @@ function NoticiasPage() {
                   {paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
                 </div>
                 {noticia.id === noticiaCestaNavidad2027.id ? (
-                  <div className="mt-7 flex flex-wrap gap-3">
-                    <a href="mailto:cubatamajorals2027@gmail.com" className="inline-flex rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">Contactar con los Mayorales</a>
-                    <a href={noticiaCestaNavidad2027.fuente_url} target="_blank" rel="noreferrer" className="inline-flex rounded-full border border-primary/20 px-5 py-3 text-sm font-bold text-primary">Publicación original de Instagram ↗</a>
-                  </div>
+                  <a href="mailto:cubatamajorals2027@gmail.com" className="mt-7 inline-flex rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">Contactar con los Mayorales</a>
                 ) : (
                   <a href="https://www.instagram.com/penyacobrebariotantalo/" target="_blank" rel="noreferrer" className="mt-7 inline-flex rounded-full border border-primary/20 px-5 py-3 text-sm font-bold text-primary">Instagram de CuBaTa ↗</a>
                 )}
