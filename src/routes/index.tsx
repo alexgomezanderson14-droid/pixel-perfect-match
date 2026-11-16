@@ -338,6 +338,22 @@ function Home() {
     return () => { document.body.style.overflow = previousOverflow; window.removeEventListener("keydown", closeOnEscape); };
   }, [mapFullscreen]);
   useEffect(() => {
+    if (!selectedPenya || !penyaDetailFullscreen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSelectedPenya(null);
+        setPenyaDetailFullscreen(false);
+      }
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [selectedPenya, penyaDetailFullscreen]);
+  useEffect(() => {
     const tick = window.setInterval(() => setNow(Date.now()), 60_000);
     return () => window.clearInterval(tick);
   }, []);
