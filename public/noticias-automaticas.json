@@ -13,30 +13,6 @@
     "automatico": true
   },
   {
-    "id": "auto-ayuntamiento-un-millar-rock-seguridad-social",
-    "titulo": "Un millar de personas disfrutan del concierto de Seguridad Social en las fiestas de l’Alfàs",
-    "resumen": "La música y el rock español protagonizaron una de las noches de las Fiestas del Jubileo y del Santísimo Cristo del Buen Acierto 2026.",
-    "tipo": "oficial",
-    "autor": "Ayuntamiento de l’Alfàs del Pi",
-    "fuente": "Ayuntamiento de l’Alfàs del Pi",
-    "fuente_url": "https://www.lalfas.es/fiestas/",
-    "fecha": "2026-11-09",
-    "publicado": true,
-    "automatico": true
-  },
-  {
-    "id": "auto-ayuntamiento-desfile-humor-penas",
-    "titulo": "28 peñas llenan de color las calles de l’Alfàs en el tradicional Desfile del Humor",
-    "resumen": "El Desfile del Humor reunió a 28 peñas y a la Asociación de Amas de Casa en uno de los actos más participativos de las fiestas.",
-    "tipo": "oficial",
-    "autor": "Ayuntamiento de l’Alfàs del Pi",
-    "fuente": "Ayuntamiento de l’Alfàs del Pi",
-    "fuente_url": "https://www.lalfas.es/fiestas/",
-    "fecha": "2026-11-09",
-    "publicado": true,
-    "automatico": true
-  },
-  {
     "id": "auto-cadena-ser-fiestas-jubileo-2026",
     "titulo": "L’Alfàs del Pi se prepara para vivir sus Fiestas del Jubileo y del Santísimo Cristo del Buen Acierto",
     "resumen": "La programación reunió actos tradicionales, religiosos y propuestas musicales organizadas por los Mayorales de 2026 y el Ayuntamiento, con cabalgata, ofrenda floral, charangas y conciertos.",
