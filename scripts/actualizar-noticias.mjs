@@ -10,12 +10,11 @@ const TERMS = /fiest|peñ|pena|mayoral|mejoral|jubileo|cristo|festes|carnaval|ca
 const clean = (value = "") => decode(value.replace(/<[^>]*>/g, " ").replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&quot;/gi, '"').replace(/&#0*39;/gi, "'").replace(/&#x([\da-f]+);/gi, (_, hex) => String.fromCodePoint(parseInt(hex, 16))).replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n))).replace(/\s+/g, " ").trim());
 function decode(value) { return value; }
 function meta(html, key) {
-  const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const patterns = [
-    new RegExp('<meta[^>]+(?:property|name)=["\\']' + escaped + '["\\'][^>]+content=["\\']([^"\\']*)', "i"),
-    new RegExp('<meta[^>]+content=["\\']([^"\\']*)["\\'][^>]+(?:property|name)=["\\']' + escaped + '["\\']', "i"),
-  ];
-  for (const pattern of patterns) { const match = html.match(pattern); if (match) return clean(match[1]); }
+  const tags = html.match(/<meta\\b[^>]*>/gi) || [];
+  for (const tag of tags) {
+    const attributes = Object.fromEntries([...tag.matchAll(/([a-z-]+)\\s*=\\s*["']([^"']*)["']/gi)].map(match => [match[1].toLowerCase(), match[2]]));
+    if (attributes.property === key || attributes.name === key) return clean(attributes.content || "");
+  }
   return "";
 }
 function dateFrom(html) {
