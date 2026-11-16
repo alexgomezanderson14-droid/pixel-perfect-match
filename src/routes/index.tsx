@@ -379,6 +379,22 @@ function Home() {
   }, []);
   useEffect(() => { cargar(); }, [cargar]);
   useEffect(() => {
+    const openPenyaFromHash = () => {
+      const match = window.location.hash.match(/^#penya-(.+)$/);
+      if (!match) return;
+      const id = decodeURIComponent(match[1]);
+      const found = penyes.find((item) => item.id === id);
+      if (found) {
+        setCurrentPage("penyes");
+        setSelectedPenya(found);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    };
+    openPenyaFromHash();
+    window.addEventListener("hashchange", openPenyaFromHash);
+    return () => window.removeEventListener("hashchange", openPenyaFromHash);
+  }, [penyes]);
+  useEffect(() => {
     if (!noticias.length || typeof window === "undefined") return;
     const openFromHash = () => {
       const match = window.location.hash.match(/^#noticia=(.+)$/);
@@ -642,6 +658,7 @@ function Home() {
                     <h3 className="line-clamp-2 text-xs font-bold leading-tight sm:text-2xl">{p.nombre}</h3>
                     {p.direccion && <p className="mt-1 line-clamp-2 text-[10px] text-muted-foreground sm:text-sm">{p.direccion}</p>}
                     <p className="mt-1 text-[10px] sm:mt-3 sm:text-sm"><strong>Música:</strong> {p.tipo_musica || "Variada"}</p>
+                    {p.informacion?.trim() && <p className="mt-2 line-clamp-3 text-[10px] leading-relaxed text-muted-foreground sm:text-sm">{p.informacion}</p>}
                     
                     {eventos.filter((e) => eventoSigueActivo(e,now) && (e.penya_id === p.id || [e.titulo, e.descripcion, e.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(p.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, ""))))).map((e) => <p key={"evento-" + e.id} className="mt-2 rounded-lg bg-pink/20 px-2 py-1 text-[10px] leading-snug text-[#173f52] sm:text-sm"><strong>Plan:</strong> {e.titulo} · {fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p>)}{actos.filter((a) => eventoSigueActivo(a,now) && [a.titulo, a.descripcion, a.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(p.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "")))).map((a) => <p key={"acto-" + a.id} className="mt-2 rounded-lg bg-pink/20 px-2 py-1 text-[10px] leading-snug text-[#173f52] sm:text-sm"><strong>Plan:</strong> {a.titulo} · {fmtDia(a.dia)}{a.hora ? " · " + a.hora : ""}</p>)}
                     <div className="mt-2 flex flex-wrap gap-1 sm:mt-3 sm:gap-2"><button onClick={() => toggleMiPenya(p.id)} aria-pressed={misPenyes.includes(p.id)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-3 sm:py-2 sm:text-sm">{misPenyes.includes(p.id) ? "★ Mi peña" : "☆ Marcar mi peña"}</button><button onClick={() => setSelectedPenya(p)} className="rounded-full bg-pink px-2 py-1 text-[10px] font-bold text-brown sm:px-4 sm:py-2 sm:text-sm">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">📍 {ui.verMapa}</button><button onClick={() => void sharePenyaCard(p)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">↗ Crear historia</button><button onClick={() => setEventFormPenya(p)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">{p.tiene_evento ? "Añadir evento" : "+ Añadir evento"}</button></div>
@@ -823,6 +840,7 @@ function Home() {
                   className="flex min-h-14 items-center justify-center gap-2 rounded-full bg-[#173f52] px-5 py-3 text-center font-bold text-white transition hover:-translate-y-0.5"
                 >📍 Cómo llegar</a>
                 <button onClick={() => void sharePenyaCard(selectedPenya)} className="flex min-h-14 items-center justify-center gap-2 rounded-full border border-primary/20 bg-white/70 px-5 py-3 font-bold text-primary transition hover:-translate-y-0.5">↗ Compartir</button>
+                <button onClick={() => void copyShareLink(window.location.origin + "/#penya-" + selectedPenya.id)} className="flex min-h-14 items-center justify-center gap-2 rounded-full border border-primary/20 bg-white/70 px-5 py-3 font-bold text-primary transition hover:-translate-y-0.5">🔗 Copiar enlace de la ficha</button>
               </div>
               <div className="mt-4 flex flex-wrap gap-3 text-sm">
                 {instagramUrl(selectedPenya.instagram) && <a className="font-semibold text-primary underline" href={instagramUrl(selectedPenya.instagram)!} target="_blank" rel="noreferrer">{'Instagram · @' + selectedPenya.instagram?.replace(/^@/, "")}</a>}
