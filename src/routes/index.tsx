@@ -637,7 +637,7 @@ function Home() {
                 <article id={"penya-" + p.id} key={p.id} className="glass min-w-0 overflow-hidden rounded-xl sm:rounded-3xl">
                   {p.foto && <img src={p.foto} alt={p.nombre} loading="lazy" className="h-36 w-full object-cover sm:h-44" />}
                   <div className="p-4 sm:p-6">
-                    {esPenyaCuBaTa(p.nombre) && <span className="mb-1 inline-flex items-center gap-1 rounded-full bg-[#00AAA5] px-2 py-1 text-[9px] font-extrabold tracking-wide text-white shadow-sm sm:text-xs">♛ MAYORALES 2027</span>}
+                    {esPenyaCuBaTa(p.nombre) && <span className="mb-1 inline-flex items-center gap-1 rounded-full border border-[#B8860B] bg-[#D4AF37] px-2 py-1 text-[9px] font-extrabold tracking-wide text-[#3B2A0A] shadow-sm sm:text-xs">♛ MAYORALES 2027</span>}
                     {misPenyes.includes(p.id) && <span className="mb-1 ml-1 inline-flex items-center rounded-full bg-[#173f52] px-2 py-1 text-[9px] font-extrabold tracking-wide text-white shadow-sm sm:text-xs">★ MI PEÑA</span>}
                     <h3 className="line-clamp-2 text-xs font-bold leading-tight sm:text-2xl">{p.nombre}</h3>
                     {p.direccion && <p className="mt-1 line-clamp-2 text-[10px] text-muted-foreground sm:text-sm">{p.direccion}</p>}
