@@ -1,15 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
-import SeoLandingPage from "@/components/SeoLandingPage";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import CopyrightFooter from "@/components/CopyrightFooter";
+import { noticiaCuBaTa2027 } from "@/content/noticia-cubata-2027";
 
 export const Route = createFileRoute("/noticias")({
   head: () => ({
     meta: [
       { title: "Noticias de las fiestas de l’Alfàs del Pi | festalfàs" },
-      { name: "description", content: "Últimas noticias y actualidad de las fiestas de l’Alfàs del Pi: comunicados, novedades de las peñas, información municipal y publicaciones de otras fuentes." },
-      { name: "keywords", content: "noticias Alfaz del Pi, actualidad fiestas l'Alfàs, noticias peñas Alfaz, festalfàs" },
+      { name: "description", content: "Noticias y actualidad festera de l’Alfàs del Pi. Lee el anuncio de CuBaTa como Mayorales 2027 y sigue las novedades de las peñas y las fiestas." },
+      { name: "keywords", content: "noticias Alfaz del Pi, actualidad fiestas l'Alfàs, noticias peñas Alfaz, CuBaTa Mayorales 2027, festalfàs" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "Noticias de las fiestas de l’Alfàs del Pi | festalfàs" },
-      { property: "og:description", content: "Actualidad festera, comunicados y noticias de las peñas de l’Alfàs del Pi." },
+      { property: "og:description", content: "Actualidad festera, noticias de las peñas y novedades de Mayorales 2027." },
       { property: "og:url", content: "https://festalfas.vercel.app/noticias" },
       { property: "og:type", content: "website" },
     ],
@@ -19,10 +20,39 @@ export const Route = createFileRoute("/noticias")({
 });
 
 function NoticiasPage() {
-  return <SeoLandingPage eyebrow="Actualidad festera" title="Noticias de las fiestas de l’Alfàs del Pi" description="Sigue la actualidad de las fiestas: novedades de las peñas, comunicados oficiales, información municipal y noticias publicadas por otros medios y fuentes." intro="La actualidad de las fiestas, reunida" sections={[
-    { title: "Noticias de las peñas", text: "Conoce los anuncios, actividades y novedades que comparten las peñas participantes, incluida la información de la mayoralía." },
-    { title: "Información oficial y municipal", text: "Consulta comunicados y avisos relevantes. Cuando una noticia proceda de otra entidad o medio, se identificará su fuente y se enlazará la publicación original." },
-    { title: "CuBaTa · Mayorales 2027", text: "La Penya Cobre Bario Tántalo será la mayoralía de 2027. Su anuncio marca el inicio de los preparativos para las próximas fiestas." },
-    { title: "Fotos y vídeos", text: "Las publicaciones podrán incluir galerías de fotografías y vídeos para compartir los momentos más destacados de las fiestas." },
-  ]} links={[{label:"Peñas",to:"/penyes"},{label:"Programa de fiestas",to:"/programa-fiestas"},{label:"Eventos",to:"/eventos"}]} />;
+  const paragraphs = noticiaCuBaTa2027.contenido.split("\n\n").filter(Boolean);
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="border-b border-border/70 bg-card/80">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+          <Link to="/" className="text-lg font-extrabold tracking-tight text-primary">festalfàs</Link>
+          <Link to="/" className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">Ir a la web</Link>
+        </div>
+      </header>
+      <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
+        <nav aria-label="Migas de pan" className="mb-7 text-sm text-muted-foreground">
+          <Link to="/" className="underline underline-offset-4">Inicio</Link><span aria-hidden="true"> / </span><span>Noticias</span>
+        </nav>
+        <p className="text-xs font-extrabold uppercase tracking-[.2em] text-primary">Actualidad festera · Mayorales 2027</p>
+        <h1 className="mt-3 text-3xl font-extrabold leading-tight text-primary sm:text-5xl">Noticias de las fiestas de l’Alfàs del Pi</h1>
+        <p className="mt-4 text-lg leading-relaxed text-muted-foreground">Novedades de las peñas, anuncios de la mayoralía e información relacionada con las fiestas de l’Alfàs del Pi.</p>
+        <article className="mt-9 rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-8">
+          <img src={noticiaCuBaTa2027.imagen_url} alt="Emblema de Mayorales 2027 de CuBaTa" className="mb-6 max-h-64 w-full rounded-2xl object-contain" />
+          <p className="text-sm font-semibold text-muted-foreground">{new Date(noticiaCuBaTa2027.fecha + "T12:00:00").toLocaleDateString("es-ES", {day:"numeric",month:"long",year:"numeric"})} · {noticiaCuBaTa2027.autor}</p>
+          <h2 className="mt-3 text-2xl font-extrabold leading-tight text-primary sm:text-3xl">{noticiaCuBaTa2027.titulo}</h2>
+          <p className="mt-4 text-lg leading-relaxed">{noticiaCuBaTa2027.resumen}</p>
+          <div className="mt-6 space-y-4 text-base leading-relaxed">
+            {paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+          </div>
+          <a href="https://www.instagram.com/penyacobrebariotantalo/" target="_blank" rel="noreferrer" className="mt-7 inline-flex rounded-full border border-primary/20 px-5 py-3 text-sm font-bold text-primary">Instagram de CuBaTa</a>
+        </article>
+        <nav aria-label="Otras secciones" className="mt-9 flex flex-wrap gap-3">
+          <Link to="/penyes" className="rounded-full border border-primary/20 px-4 py-2 text-sm font-bold text-primary">Peñas</Link>
+          <Link to="/programa-fiestas" className="rounded-full border border-primary/20 px-4 py-2 text-sm font-bold text-primary">Programa de fiestas</Link>
+          <Link to="/eventos" className="rounded-full border border-primary/20 px-4 py-2 text-sm font-bold text-primary">Eventos</Link>
+        </nav>
+      </main>
+      <footer className="border-t border-border/70 bg-card px-4 py-8 text-center"><p className="mb-4 text-sm font-semibold text-muted-foreground">Fiestas de l’Alfàs del Pi · festalfàs</p><Link to="/" className="text-sm font-bold text-primary underline underline-offset-4">Volver a la portada</Link><CopyrightFooter /></footer>
+    </div>
+  );
 }
