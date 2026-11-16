@@ -1,7 +1,6 @@
 import { createFileRoute, ClientOnly } from "@tanstack/react-router";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import hero from "@/assets/hero-fiestas.jpg";
 import { edicion, lugares as lugaresFijos, ui, type Categoria, type Lugar } from "@/content/fiestas";
 import { supabase } from "@/integrations/supabase/client";
 import CopyrightFooter from "@/components/CopyrightFooter";
@@ -302,6 +301,7 @@ function Home() {
   const filteredPenyaEvents = useMemo(()=>eventos.filter((e)=>matchesDay(e) && (filterCategory==="all" || filterCategory==="penyes") && (!eventsSearch.trim() || normalizarBusqueda([e.titulo,e.descripcion,e.lugar,penyes.find(p=>p.id===e.penya_id)?.nombre].join(" ")).includes(normalizarBusqueda(eventsSearch)))), [eventos,filterDay,filterCategory,now,eventsSearch,penyes]);
   const visiblePenyes = useMemo(()=>[...penyes].filter(p=>!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica].join(" ")).includes(normalizarBusqueda(penyaSearch))).sort((a,b)=>Number(esPenyaCuBaTa(b.nombre))-Number(esPenyaCuBaTa(a.nombre))||Number(misPenyes.includes(b.id))-Number(misPenyes.includes(a.id))||a.nombre.localeCompare(b.nombre,"es")),[penyes,penyaSearch,misPenyes]);
   const visibleNews = useMemo(()=>noticias.filter((n:any)=>n.publicado&&(!newsSearch.trim()||normalizarBusqueda([n.titulo,n.resumen,n.contenido,n.autor,n.fuente].join(" ")).includes(normalizarBusqueda(newsSearch)))).slice().sort((x:any,y:any)=>String(y.fecha||y.created_at||"").localeCompare(String(x.fecha||x.created_at||""))),[noticias,newsSearch]);
+  const proximasActividades = useMemo(() => [...actos.filter((a:any)=>!a._officialOnly).map((a:any)=>({...a,_origen:"programa"})), ...eventos.map((e:any)=>({...e,_origen:"penya"}))].filter((item:any)=>item.dia && eventoSigueActivo(item,now)).sort((a:any,b:any)=>new Date(String(a.dia).slice(0,10)+"T"+String(a.hora||"23:59")).getTime()-new Date(String(b.dia).slice(0,10)+"T"+String(b.hora||"23:59")).getTime()).slice(0,3),[actos,eventos,now]);
   const avisosVisibles = avisos.filter((aviso:any)=>aviso.activo && (!aviso.publicar_en || new Date(aviso.publicar_en).getTime()<=now));
   const searchResults = useMemo(() => {
     const normalize = (value: any) => String(value || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -366,6 +366,9 @@ function Home() {
     return () => window.clearTimeout(dismiss);
   }, [shareReminder]);
   useEffect(() => {
+    try { const cachedHero = localStorage.getItem("festalfas-hero-image"); if (cachedHero) setHeroImage(cachedHero); } catch { /* Se recupera la portada desde el contenido del sitio. */ }
+  }, []);
+  useEffect(() => {
     const key = "fiestas-share-reminder-last";
     const shouldShow = () => {
       const last = Number(localStorage.getItem(key) || 0);
@@ -401,8 +404,10 @@ function Home() {
     if (content["hero_image_path"]) {
       const { data: imageData } = supabase.storage.from("penyes").getPublicUrl(content["hero_image_path"]);
       setHeroImage(imageData.publicUrl);
+      try { localStorage.setItem("festalfas-hero-image", imageData.publicUrl); } catch { /* La portada sigue disponible desde el servidor. */ }
     } else {
       setHeroImage("");
+      try { localStorage.removeItem("festalfas-hero-image"); } catch { /* Sin caché local. */ }
     }
     if (!data) return;
     const urls = data.map((p) => p.foto_url ? supabase.storage.from("penyes").getPublicUrl(p.foto_url).data.publicUrl : "");
@@ -493,7 +498,7 @@ function Home() {
 
       {currentPage==="home" && <>
       <section className="relative flex min-h-[76vh] items-end overflow-hidden sm:min-h-[92vh]">
-        <img src={heroImage || hero} alt="Fiestas en las calles de l'Alfàs del Pi" width={1920} height={1280} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center" />
+        {heroImage ? <img src={heroImage} alt="Portada de las fiestas de l'Alfàs del Pi" width={1920} height={1280} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center" /> : <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37]" />}
         <div className="absolute inset-0 bg-gradient-to-t from-brown/90 via-brown/20 to-transparent" />
         <div className="relative mx-auto w-full max-w-6xl xl:max-w-[min(96vw,1600px)] px-4 pb-9 sm:px-5 sm:pb-16">
           <CountdownFiestas />
@@ -504,6 +509,18 @@ function Home() {
 
 
       <main className="mx-auto max-w-6xl xl:max-w-[min(96vw,1600px)] px-3 pb-28 pt-8 sm:px-5">
+        {proximasActividades.length > 0 && <section aria-labelledby="proxima-actividad-title" className="mb-7 overflow-hidden rounded-[1.75rem] border border-primary/15 bg-card shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-primary/10 px-4 py-4 sm:px-6">
+            <div><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-primary">Apunta la fecha</p><h2 id="proxima-actividad-title" className="mt-1 text-xl font-extrabold text-primary sm:text-2xl">Lo próximo en las fiestas</h2></div>
+            <button type="button" onClick={() => { setCurrentPage("programa"); window.scrollTo({top:0,behavior:"smooth"}); }} className="rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-foreground sm:text-sm">Ver programa completo →</button>
+          </div>
+          <div className="grid gap-2 p-3 sm:grid-cols-3 sm:gap-3 sm:p-4">
+            {proximasActividades.map((item:any)=><button type="button" key={item._origen+"-"+item.id} onClick={() => { setCurrentPage(item._origen==="penya"?"eventos":"programa"); if(item._origen==="programa") setDia(item.dia); setFilterDay("all"); window.scrollTo({top:0,behavior:"smooth"}); }} className="flex min-w-0 items-center gap-3 rounded-2xl bg-primary/[.045] p-3 text-left transition hover:bg-primary/10">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-primary text-sm font-extrabold text-primary-foreground">{item.hora||"★"}</span>
+              <span className="min-w-0"><span className="block text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{fmtDia(item.dia)} · {item._origen==="penya"?"Plan de una peña":"Programa oficial"}</span><span className="mt-1 block line-clamp-2 text-sm font-extrabold leading-snug text-primary">{item.titulo}</span>{item.lugar&&<span className="mt-1 block truncate text-[11px] text-muted-foreground">📍 {item.lugar}</span>}</span>
+            </button>)}
+          </div>
+        </section>}
         <section id="mapa" className="scroll-mt-24">
           <SectionTitle>Mapa de peñas y fiestas</SectionTitle>
           <div className="glass grid grid-cols-1 gap-3 rounded-[1.5rem] p-2 sm:gap-4 sm:rounded-[2rem] sm:p-3">
@@ -687,8 +704,8 @@ function Home() {
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
               {visiblePenyes.map((p) => (
-                <article id={"penya-" + p.id} key={p.id} tabIndex={0} aria-label={`Abrir ficha de ${p.nombre}`} onClick={() => { setPenyaDetailFullscreen(true); setSelectedPenya(p); }} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setPenyaDetailFullscreen(true); setSelectedPenya(p); } }} className="glass min-w-0 cursor-pointer overflow-hidden rounded-xl transition hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:rounded-3xl">
-                  {p.foto && <img src={p.foto} alt={p.nombre} loading="lazy" className="h-36 w-full object-cover sm:h-44" />}
+                <article id={"penya-" + p.id} key={p.id} tabIndex={0} aria-label={`Abrir ficha de ${p.nombre}`} onClick={() => { setPenyaDetailFullscreen(true); setSelectedPenya(p); }} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setPenyaDetailFullscreen(true); setSelectedPenya(p); } }} className="glass group min-w-0 cursor-pointer overflow-hidden rounded-xl transition hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:rounded-3xl">
+                  <div className="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37]">{p.foto ? <img src={p.foto} alt={p.nombre} loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]" /> : <div className="grid h-full place-items-center text-5xl font-extrabold text-white/85">{p.nombre.trim().charAt(0).toLocaleUpperCase("es")}</div>}</div>
                   <div className="p-4 sm:p-6">
                     {esPenyaCuBaTa(p.nombre) && <span className="mb-1 inline-flex items-center gap-1 rounded-full border border-[#B8860B] bg-[#D4AF37] px-2 py-1 text-[9px] font-extrabold tracking-wide text-[#3B2A0A] shadow-sm sm:text-xs">♛ MAYORALES 2027</span>}
                     {misPenyes.includes(p.id) && <span className="mb-1 ml-1 inline-flex items-center rounded-full bg-[#173f52] px-2 py-1 text-[9px] font-extrabold tracking-wide text-white shadow-sm sm:text-xs">★ MI PEÑA</span>}
@@ -773,8 +790,8 @@ function Home() {
         </article> : <>
           <header className="mb-5"><p className="text-xs font-extrabold uppercase tracking-[.2em] text-primary">Actualidad festera</p><h1 className="mt-2 text-4xl font-extrabold text-primary sm:text-5xl">Noticias</h1><p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">Toda la actualidad de las fiestas: comunicados oficiales, novedades y noticias de nuestras peñas y otras fuentes.</p><label className="mt-4 block"><span className="sr-only">Buscar noticias</span><input type="search" value={newsSearch} onChange={e=>setNewsSearch(e.target.value)} placeholder="Buscar noticias, peñas o fuentes…" className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-base shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"/></label></header>
           {visibleNews.length ? <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{visibleNews.map((n:any)=><button type="button" key={n.id} onClick={()=>{setNoticiaSeleccionada(n);window.scrollTo({top:0,behavior:"smooth"});}} className="group min-w-0 overflow-hidden rounded-3xl border border-border/70 bg-card text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-            <div className="relative aspect-[16/10] overflow-hidden bg-muted">{n.imagen_url ? <img src={n.imagen_url} alt="" loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105"/> : <div className="flex h-full items-center justify-center text-5xl text-primary/40">▤</div>}{(n.video_url||(n.galeria||[]).length>0)&&<span className="absolute bottom-3 right-3 rounded-full bg-black/75 px-3 py-1 text-xs font-bold text-white">{n.video_url?"▶ Vídeo":"▧ Galería"}</span>}<span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide text-primary shadow">{n.tipo==="externa"?"Fuente externa":n.tipo==="oficial"?"Oficial":"Peñas"}</span></div>
-            <div className="p-5"><p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{new Date(n.fecha||n.created_at||Date.now()).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"})}{n.autor?" · "+n.autor:""}</p><h2 className="mt-2 text-xl font-extrabold leading-snug text-primary">{n.titulo}</h2>{n.resumen&&<p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{n.resumen}</p>}<span className="mt-4 inline-flex items-center gap-2 text-sm font-extrabold text-primary">Leer noticia →</span></div>
+            <div className="relative aspect-[16/10] overflow-hidden bg-muted">{n.imagen_url ? <img src={n.imagen_url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-500 group-hover:scale-105"/> : <div className="flex h-full items-center justify-center text-5xl text-primary/40">▤</div>}{(n.video_url||(n.galeria||[]).length>0)&&<span className="absolute bottom-3 right-3 rounded-full bg-black/75 px-3 py-1 text-xs font-bold text-white">{n.video_url?"▶ Vídeo":"▧ Galería"}</span>}<span className={`absolute left-3 top-3 rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide shadow ${n.tipo==="externa"?"bg-amber-100 text-amber-900":n.tipo==="oficial"?"bg-sky-100 text-sky-900":"bg-white/95 text-primary"}`}>{n.tipo==="externa"?"Medio externo":n.tipo==="oficial"?"Fuente oficial":"Peñas"}</span></div>
+            <div className="p-5"><p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{new Date(n.fecha||n.created_at||Date.now()).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"})}{n.autor?" · "+n.autor:""}{n.fuente?" · "+n.fuente:""}</p><h2 className="mt-2 text-xl font-extrabold leading-snug text-primary">{n.titulo}</h2>{n.resumen&&<p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{n.resumen}</p>}<span className="mt-4 inline-flex items-center gap-2 text-sm font-extrabold text-primary">Leer noticia →</span></div>
           </button>)}</div> : <div className="rounded-3xl border border-dashed border-border bg-card/60 px-5 py-14 text-center"><p className="text-4xl">▤</p><h2 className="mt-3 text-xl font-bold text-primary">{newsSearch?"No hay noticias que coincidan":"Todavía no hay noticias publicadas"}</h2><p className="mt-2 text-sm text-muted-foreground">{newsSearch?"Prueba con otras palabras.":"Aquí aparecerán las últimas novedades oficiales y de las peñas."}</p></div>}
         </>}
       </main>}
