@@ -23,7 +23,7 @@ export default function AddCommunityEventForm({ onClose, onSaved }: { onClose: (
       const { error: insertError } = await supabase.from("eventos").insert({
         penya_id: null,
         titulo: titulo.trim(),
-        descripcion: [descripcion.trim(), "Organiza: " + organizador.trim()].filter(Boolean).join("\\n\\n"),
+        descripcion: [descripcion.trim(), "Organiza: " + organizador.trim()].filter(Boolean).join("\n\n"),
         dia,
         hora,
         lugar: lugar.trim(),
