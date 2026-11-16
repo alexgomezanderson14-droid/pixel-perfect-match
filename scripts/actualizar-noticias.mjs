@@ -43,6 +43,7 @@ for (const source of SOURCES) {
       if (!source.prefixes.some(prefix => url.startsWith(prefix)) || url === source.archive) continue;
       const title = clean(match[2]);
       if (title.length < 18 || title.length > 220 || !TERMS.test(title)) continue;
+      if (source.name === "ViveBenidorm" && !/l.?alf[aà]s|alfaz/i.test(title + " " + url)) continue;
       if (/\/tag\/|\/category\/|\/author\/|\/page\/\d+/i.test(url)) continue;
       const key = url.replace(/\/$/, "");
       if (!candidates.has(key)) candidates.set(key, { url, title, source });
