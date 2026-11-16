@@ -14,8 +14,6 @@ Desde los Mayorales agradecen de antemano la colaboración y el cariño de todos
   tipo: "penya",
   autor: "Mayorales 2027 · CuBaTa",
   fecha: "2026-11-16",
-  imagen_url: "/cubata-logo.svg",
   publicado: true,
   created_at: "2026-11-16T15:59:53.000Z",
-  fuente_url: "https://www.instagram.com/p/Dfztaf9InmE/?utm_source=ig_web_copy_link&cplk=NTc4MTIwNjQ2YQ==",
 };
