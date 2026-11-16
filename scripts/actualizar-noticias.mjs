@@ -54,7 +54,7 @@ function articleParagraphs(html) {
 }
 async function get(url) {
   const response = await fetch(url, { headers: { "user-agent": "festalfas-newsbot/1.0 (public news aggregation; contact: festalfas.vercel.app)", "accept": "text/html,application/rss+xml,application/xml" }, signal: AbortSignal.timeout(18000) });
-  if (!response.ok) throw new Error(\`HTTP \${response.status} en \${url}\`);
+  if (!response.ok) throw new Error(`HTTP ${response.status} en ${url}`);
   return response.text();
 }
 function tokens(item) {
@@ -148,4 +148,4 @@ for (const item of byUrl) {
 }
 const finalNews = unique.slice(0, 35);
 await writeFile("public/noticias-automaticas.json", JSON.stringify(finalNews, null, 2) + "\n");
-console.log(\`Noticias festivas disponibles: \${finalNews.length} (recopiladas: \${results.length}; tras eliminar duplicadas: \${unique.length})\`);
+console.log(`Noticias festivas disponibles: ${finalNews.length} (recopiladas: ${results.length}; tras eliminar duplicadas: ${unique.length})`);
