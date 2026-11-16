@@ -9,6 +9,7 @@ import { noticiaCuBaTa2027 } from "@/content/noticia-cubata-2027";
 const FestMap = lazy(() => import("@/components/FestMap"));
 const AddPenyaForm = lazy(() => import("@/components/AddPenyaForm"));
 const AddPenyaEventForm = lazy(() => import("@/components/AddPenyaEventForm"));
+const AddCommunityEventForm = lazy(() => import("@/components/AddCommunityEventForm"));
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -288,6 +289,7 @@ function Home() {
   const [selectedPenya, setSelectedPenya] = useState<PenyaDb | null>(null);
   const [penyaDetailFullscreen, setPenyaDetailFullscreen] = useState(false);
   const [eventFormPenya, setEventFormPenya] = useState<PenyaDb | null>(null);
+  const [communityEventForm, setCommunityEventForm] = useState(false);
   const [mapFullscreen, setMapFullscreen] = useState(false);
   const dias = useMemo(() => [...new Set(actos.filter((a) => eventoSigueActivo(a, now)).map((a) => a.dia))].sort(), [actos, now]);
   const [dia, setDia] = useState<string | undefined>();
@@ -608,6 +610,7 @@ function Home() {
       {currentPage==="eventos" && <main className="mx-auto min-h-[75vh] max-w-6xl xl:max-w-[min(96vw,1600px)] px-3 pb-32 pt-8 sm:px-5">
         <section id="eventos" className="scroll-mt-24">
           <SectionTitle>Eventos</SectionTitle>
+          <div className="mb-5 flex flex-col gap-3 rounded-3xl border border-primary/15 bg-primary/[.045] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"><div><h3 className="text-lg font-extrabold text-primary">¿Organizas algo en l’Alfàs?</h3><p className="text-sm text-muted-foreground">Propón una fiesta, concierto, encuentro o actividad para incluirla en la agenda festera.</p></div><button type="button" onClick={() => setCommunityEventForm(true)} className="shrink-0 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">＋ Proponer evento</button></div>
           <label className="mb-4 block"><span className="sr-only">Buscar eventos</span><input type="search" value={eventsSearch} onChange={e=>setEventsSearch(e.target.value)} placeholder="Buscar eventos por nombre, peña o lugar…" className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-base shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"/></label>
           <details className="glass mb-5 rounded-2xl p-3 sm:p-4">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-bold text-primary">
@@ -931,6 +934,8 @@ function Home() {
       {eventFormPenya && (
         <ClientOnly><Suspense fallback={null}><AddPenyaEventForm penyaId={eventFormPenya.id} penyaName={eventFormPenya.nombre} onClose={() => setEventFormPenya(null)} onSaved={(organizaEvento) => { setEventFormPenya(null); void cargar(); window.alert(organizaEvento ? "¡Evento enviado! Aparecerá en la web cuando sea aprobado." : "Se ha guardado que esta peña no organiza ningún evento."); }} /></Suspense></ClientOnly>
       )}
+
+      {communityEventForm && <ClientOnly><Suspense fallback={null}><AddCommunityEventForm onClose={() => setCommunityEventForm(false)} onSaved={() => { setCommunityEventForm(false); void cargar(); window.alert("¡Propuesta enviada! Se revisará antes de publicarse en la agenda."); }} /></Suspense></ClientOnly>}
 
       {form && (
         <ClientOnly>
