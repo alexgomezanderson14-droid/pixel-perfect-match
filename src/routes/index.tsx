@@ -287,6 +287,7 @@ function Home() {
   const [shareReminder, setShareReminder] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [selectedPenya, setSelectedPenya] = useState<PenyaDb | null>(null);
+  const [penyaDetailFullscreen, setPenyaDetailFullscreen] = useState(false);
   const [eventFormPenya, setEventFormPenya] = useState<PenyaDb | null>(null);
   const [mapFullscreen, setMapFullscreen] = useState(false);
   const dias = useMemo(() => [...new Set(actos.filter((a) => eventoSigueActivo(a, now)).map((a) => a.dia))].sort(), [actos, now]);
@@ -308,7 +309,7 @@ function Home() {
     if (term.length < 2) return [];
     const matches = (...values: any[]) => values.some((value) => normalize(value).includes(term));
     const results: any[] = [];
-    penyes.filter((p) => matches(p.nombre, p.direccion)).forEach((p) => results.push({ key: "penya:" + p.id, label: p.nombre, kind: "Peña", sub: p.direccion || "Ficha de la peña", onSelect: () => { setCurrentPage("penyes"); setSelectedPenya(p); window.scrollTo({top:0,behavior:"smooth"}); } }));
+    penyes.filter((p) => matches(p.nombre, p.direccion)).forEach((p) => results.push({ key: "penya:" + p.id, label: p.nombre, kind: "Peña", sub: p.direccion || "Ficha de la peña", onSelect: () => { setCurrentPage("penyes"); setPenyaDetailFullscreen(true); setSelectedPenya(p); window.scrollTo({top:0,behavior:"smooth"}); } }));
     eventos.filter((e) => eventoSigueActivo(e,now) && matches(e.titulo, e.descripcion, e.lugar)).forEach((e) => results.push({ key: "evento:" + e.id, label: e.titulo, kind: "Evento de peña", sub: [e.dia, e.hora, e.lugar].filter(Boolean).join(" · "), onSelect: () => { setCurrentPage("eventos"); setFilterDay("all"); setFilterCategory("penyes"); window.scrollTo({top:0,behavior:"smooth"}); } }));
     actos.filter((a) => !a._officialOnly && eventoSigueActivo(a,now) && matches(a.titulo, a.descripcion, a.lugar)).forEach((a) => results.push({ key: "acto:" + a.id, label: a.titulo, kind: a.tipo === "actuacion" ? "Actuación" : "Programa oficial", sub: [a.dia, a.hora, a.lugar].filter(Boolean).join(" · "), onSelect: () => { const isAct = a.tipo === "actuacion" || /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/i.test(a.titulo || ""); setCurrentPage(isAct ? "eventos" : "programa"); if (!isAct) setDia(a.dia); setFilterDay("all"); setFilterCategory(isAct ? "actuaciones" : "all"); window.scrollTo({top:0,behavior:"smooth"}); } }));
     mapPoints.filter((p) => matches(p.nombre, p.descripcion)).forEach((p) => results.push({ key: "lugar:" + p.id, label: p.nombre, kind: "Ubicación", sub: p.descripcion || "Punto de interés", onSelect: () => { setCurrentPage("home"); setCat(null); setQ(""); setFocus(null); requestAnimationFrame(() => setFocus(p.id)); window.scrollTo({top:0,behavior:"smooth"}); } }));
@@ -336,6 +337,22 @@ function Home() {
     window.addEventListener("keydown", closeOnEscape);
     return () => { document.body.style.overflow = previousOverflow; window.removeEventListener("keydown", closeOnEscape); };
   }, [mapFullscreen]);
+  useEffect(() => {
+    if (!selectedPenya || !penyaDetailFullscreen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSelectedPenya(null);
+        setPenyaDetailFullscreen(false);
+      }
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [selectedPenya, penyaDetailFullscreen]);
   useEffect(() => {
     const tick = window.setInterval(() => setNow(Date.now()), 60_000);
     return () => window.clearInterval(tick);
@@ -392,6 +409,7 @@ function Home() {
       const found = penyes.find((item) => item.id === id);
       if (found) {
         setCurrentPage("penyes");
+        setPenyaDetailFullscreen(true);
         setSelectedPenya(found);
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -469,7 +487,7 @@ function Home() {
       <section className="relative flex min-h-[76vh] items-end overflow-hidden sm:min-h-[92vh]">
         <img src={heroImage || hero} alt="Fiestas en las calles de l'Alfàs del Pi" width={1920} height={1280} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-t from-brown/90 via-brown/20 to-transparent" />
-        <div className="relative mx-auto w-full max-w-6xl px-4 pb-9 sm:px-5 sm:pb-16">
+        <div className="relative mx-auto w-full max-w-6xl xl:max-w-[min(96vw,1600px)] px-4 pb-9 sm:px-5 sm:pb-16">
           <CountdownFiestas />
           <h1 className="rise text-4xl font-bold leading-[0.98] text-on-image sm:text-7xl md:text-8xl">{siteContent["hero_titulo"]?.replace(/2026/g, String(edicion.anyo)) || edicion.titulo} <span className="text-pink">{edicion.anyo}</span></h1>
           <p className="rise mt-3 max-w-xl text-sm text-on-image/85 sm:mt-4 sm:text-lg">{siteContent["hero_subtitulo"] || edicion.subtitulo}</p>
@@ -477,7 +495,7 @@ function Home() {
       </section>
 
 
-      <main className="mx-auto max-w-6xl px-3 pb-28 pt-8 sm:px-5">
+      <main className="mx-auto max-w-6xl xl:max-w-[min(96vw,1600px)] px-3 pb-28 pt-8 sm:px-5">
         <section id="mapa" className="scroll-mt-24">
           <SectionTitle>Mapa de peñas y fiestas</SectionTitle>
           <div className="glass grid grid-cols-1 gap-3 rounded-[1.5rem] p-2 sm:gap-4 sm:rounded-[2rem] sm:p-3">
@@ -495,7 +513,7 @@ function Home() {
               <button type="button" onClick={() => setMapFullscreen(true)} aria-label="Ampliar mapa a pantalla completa" className="absolute right-3 top-3 z-[1200] rounded-full border border-white/70 bg-white/95 px-4 py-2 text-sm font-bold text-[#173f52] shadow-lg">⛶ Pantalla completa</button>
               <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
                 <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}>
-                  <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => setSelectedPenya(penyes.find((p) => p.id === id) ?? null)} onItemClick={(id)=>{setCurrentPage("eventos");setFilterDay("all");setFilterCategory(id.startsWith("acto-")?"actuaciones":"penyes");window.scrollTo({top:0,behavior:"smooth"});}} />
+                  <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => { setPenyaDetailFullscreen(false); setSelectedPenya(penyes.find((p) => p.id === id) ?? null); }} onItemClick={(id)=>{setCurrentPage("eventos");setFilterDay("all");setFilterCategory(id.startsWith("acto-")?"actuaciones":"penyes");window.scrollTo({top:0,behavior:"smooth"});}} />
                 </Suspense>
               </ClientOnly>
             </div>}
@@ -513,7 +531,7 @@ function Home() {
         </section>
       </main>
       </>}
-      {currentPage==="programa" && <main className="mx-auto min-h-[75vh] max-w-6xl px-3 pb-32 pt-8 sm:px-5">
+      {currentPage==="programa" && <main className="mx-auto min-h-[75vh] max-w-6xl xl:max-w-[min(96vw,1600px)] px-3 pb-32 pt-8 sm:px-5">
         <section id="programa" className="scroll-mt-24">
           <SectionTitle>{ui.nav.programa}</SectionTitle>
           {!dias.length ? (
@@ -562,7 +580,7 @@ function Home() {
           )}
         </section>
       </main>}
-      {currentPage==="eventos" && <main className="mx-auto min-h-[75vh] max-w-6xl px-3 pb-32 pt-8 sm:px-5">
+      {currentPage==="eventos" && <main className="mx-auto min-h-[75vh] max-w-6xl xl:max-w-[min(96vw,1600px)] px-3 pb-32 pt-8 sm:px-5">
         <section id="eventos" className="scroll-mt-24">
           <SectionTitle>Eventos</SectionTitle>
           <label className="mb-4 block"><span className="sr-only">Buscar eventos</span><input type="search" value={eventsSearch} onChange={e=>setEventsSearch(e.target.value)} placeholder="Buscar eventos por nombre, peña o lugar…" className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-base shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"/></label>
@@ -648,7 +666,7 @@ function Home() {
             })}</div>}
           </div>
         </section>
-      </main>}      {currentPage==="penyes" && <main className="mx-auto min-h-[75vh] max-w-6xl px-3 pb-32 pt-8 sm:px-5">
+      </main>}      {currentPage==="penyes" && <main className="mx-auto min-h-[75vh] max-w-6xl xl:max-w-[min(96vw,1600px)] px-3 pb-32 pt-8 sm:px-5">
         <section id="penyes" className="scroll-mt-24">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2 sm:mb-8 sm:gap-4">
             <h2 className="text-2xl font-bold text-primary sm:text-5xl">{ui.nav.penyes}</h2>
@@ -672,7 +690,7 @@ function Home() {
                     {p.informacion?.trim() && <p className="mt-2 line-clamp-3 text-[10px] leading-relaxed text-muted-foreground sm:text-sm">{p.informacion}</p>}
                     
                     {eventos.filter((e) => eventoSigueActivo(e,now) && (e.penya_id === p.id || [e.titulo, e.descripcion, e.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(p.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, ""))))).map((e) => <p key={"evento-" + e.id} className="mt-2 rounded-lg bg-pink/20 px-2 py-1 text-[10px] leading-snug text-[#173f52] sm:text-sm"><strong>Plan:</strong> {e.titulo} · {fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p>)}{actos.filter((a) => eventoSigueActivo(a,now) && [a.titulo, a.descripcion, a.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(p.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "")))).map((a) => <p key={"acto-" + a.id} className="mt-2 rounded-lg bg-pink/20 px-2 py-1 text-[10px] leading-snug text-[#173f52] sm:text-sm"><strong>Plan:</strong> {a.titulo} · {fmtDia(a.dia)}{a.hora ? " · " + a.hora : ""}</p>)}
-                    <div className="mt-2 flex flex-wrap gap-1 sm:mt-3 sm:gap-2"><button onClick={() => toggleMiPenya(p.id)} aria-pressed={misPenyes.includes(p.id)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-3 sm:py-2 sm:text-sm">{misPenyes.includes(p.id) ? "★ Mi peña" : "☆ Marcar mi peña"}</button><button onClick={() => setSelectedPenya(p)} className="rounded-full bg-pink px-2 py-1 text-[10px] font-bold text-brown sm:px-4 sm:py-2 sm:text-sm">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">📍 {ui.verMapa}</button><button onClick={() => void sharePenyaCard(p)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">↗ Crear historia</button><button onClick={() => setEventFormPenya(p)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">{p.tiene_evento ? "Añadir evento" : "+ Añadir evento"}</button></div>
+                    <div className="mt-2 flex flex-wrap gap-1 sm:mt-3 sm:gap-2"><button onClick={() => toggleMiPenya(p.id)} aria-pressed={misPenyes.includes(p.id)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-3 sm:py-2 sm:text-sm">{misPenyes.includes(p.id) ? "★ Mi peña" : "☆ Marcar mi peña"}</button><button onClick={() => { setPenyaDetailFullscreen(true); setSelectedPenya(p); }} className="rounded-full bg-pink px-2 py-1 text-[10px] font-bold text-brown sm:px-4 sm:py-2 sm:text-sm">Ver peña</button><button onClick={() => goMap(p.id)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">📍 {ui.verMapa}</button><button onClick={() => void sharePenyaCard(p)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">↗ Crear historia</button><button onClick={() => setEventFormPenya(p)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">{p.tiene_evento ? "Añadir evento" : "+ Añadir evento"}</button></div>
                     <div className="mt-2 flex flex-wrap gap-2 text-xs sm:mt-3 sm:gap-3 sm:text-sm">{instagramUrl(p.instagram) && <a className="font-semibold text-primary underline" href={instagramUrl(p.instagram)!} target="_blank" rel="noreferrer">{`↗ @${p.instagram?.replace(/^@/, "") || "Instagram"}`}</a>}</div>
                   </div>
                 </article>
@@ -733,7 +751,7 @@ function Home() {
         </section>
       </main>}
       {currentPage!=="home" && avisosVisibles.length>0 && <section aria-label="Avisos importantes" className="mx-auto mb-8 max-w-5xl space-y-2 px-4 sm:px-5">{avisosVisibles.map((aviso:any)=><article key={aviso.id} className={`rounded-2xl border p-3 sm:p-4 ${aviso.importante?"border-amber-400 bg-amber-50 text-amber-950 shadow-md":"border-border bg-background/80 text-foreground"}`}><div className="flex items-start gap-3"><span className="text-xl">{aviso.importante?"⚠️":"📢"}</span><div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-wide">{aviso.importante?"Aviso importante":"Comunicado"}</p><h2 className="font-bold">{aviso.titulo}</h2><p className="mt-1 text-sm">{aviso.descripcion}</p></div></div></article>)}</section>}
-      {currentPage==="noticias" && <main className="mx-auto min-h-[85vh] max-w-6xl px-4 pb-32 pt-8 sm:px-5">
+      {currentPage==="noticias" && <main className="mx-auto min-h-[85vh] max-w-6xl xl:max-w-[min(96vw,1600px)] px-4 pb-32 pt-8 sm:px-5">
         {noticiaSeleccionada ? <article className="mx-auto max-w-4xl">
           <button type="button" onClick={()=>setNoticiaSeleccionada(null)} className="mb-5 rounded-full border border-primary/20 bg-background/80 px-4 py-2 text-sm font-bold text-primary">← Volver a noticias</button>
           {noticiaSeleccionada.imagen_url && <div className="relative mb-5 flex max-h-[72vh] w-full items-center justify-center overflow-hidden rounded-3xl bg-muted shadow-lg"><img src={noticiaSeleccionada.imagen_url} alt={noticiaSeleccionada.titulo} className="max-h-[72vh] w-full object-contain" /></div>}{Array.isArray(noticiaSeleccionada.galeria)&&noticiaSeleccionada.galeria.length>0&&<div className="mb-7 grid grid-cols-2 gap-2 sm:grid-cols-3">{noticiaSeleccionada.galeria.map((media:any,i:number)=><img key={media.url||i} src={typeof media==="string"?media:media.url} alt={noticiaSeleccionada.titulo+" · foto "+(i+1)} loading="lazy" className="aspect-square w-full rounded-2xl bg-muted object-cover"/>)}</div>}
@@ -768,7 +786,7 @@ function Home() {
           <div className="absolute inset-0">
             <ClientOnly fallback={<div className="h-full w-full animate-pulse bg-muted" />}>
               <Suspense fallback={<div className="h-full w-full animate-pulse bg-muted" />}>
-                <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => setSelectedPenya(penyes.find((p) => p.id === id) ?? null)} onItemClick={(id)=>{setMapFullscreen(false);setCurrentPage("eventos");setFilterDay("all");setFilterCategory(id.startsWith("acto-")?"actuaciones":"penyes");window.scrollTo({top:0,behavior:"smooth"});}} />
+                <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => { setMapFullscreen(false); setPenyaDetailFullscreen(false); setSelectedPenya(penyes.find((p) => p.id === id) ?? null); }} onItemClick={(id)=>{setMapFullscreen(false);setCurrentPage("eventos");setFilterDay("all");setFilterCategory(id.startsWith("acto-")?"actuaciones":"penyes");window.scrollTo({top:0,behavior:"smooth"});}} />
               </Suspense>
             </ClientOnly>
           </div>
@@ -794,19 +812,19 @@ function Home() {
       </aside>}
 
       {selectedPenya && (
-        <div className="fixed inset-0 z-[1900] flex items-end justify-center bg-brown/70 p-3 sm:items-center" onClick={() => setSelectedPenya(null)}>
-          <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className="glass max-h-[94vh] w-full max-w-2xl overflow-auto rounded-[2rem] bg-background">
+        <div className={`fixed inset-0 z-[1900] flex justify-center bg-brown/80 ${penyaDetailFullscreen ? "items-stretch p-0" : "items-end p-3 sm:items-center"}`} onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }}>
+          <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className={`glass w-full overflow-auto bg-background ${penyaDetailFullscreen ? "h-[100dvh] max-h-[100dvh] max-w-none rounded-none" : "max-h-[94vh] max-w-2xl rounded-[2rem]"}`}>
             <div className="relative h-52 overflow-hidden bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37] sm:h-72">
               {selectedPenya.foto && <img src={selectedPenya.foto} alt={selectedPenya.nombre} className="absolute inset-0 h-full w-full object-cover" />}
               <div className="absolute inset-0 bg-gradient-to-t from-[#102f3d]/95 via-[#102f3d]/25 to-transparent" />
-              <button onClick={() => setSelectedPenya(null)} aria-label="Cerrar ficha" className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-full border border-white/70 bg-white/95 text-lg font-bold text-[#173f52] shadow-lg">✕</button>
+              <button onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }} aria-label="Cerrar ficha" className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-full border border-white/70 bg-white/95 text-lg font-bold text-[#173f52] shadow-lg">✕</button>
               <div className="absolute inset-x-5 bottom-5 text-white sm:inset-x-8 sm:bottom-7">
                 {esPenyaCuBaTa(selectedPenya.nombre) && <span className="mb-2 inline-flex items-center gap-1 rounded-full border border-[#B8860B] bg-[#D4AF37] px-3 py-1 text-[10px] font-extrabold tracking-wide text-[#3B2A0A] sm:text-xs">♛ MAYORALES 2027</span>}
                 <p className="text-[10px] font-bold uppercase tracking-[.2em] text-white/80">Peña participante · festalfàs</p>
                 <h2 className="mt-1 text-3xl font-extrabold leading-tight sm:text-5xl">{selectedPenya.nombre}</h2>
               </div>
             </div>
-            <div className="p-5 sm:p-8">
+            <div className="p-5 sm:p-8 lg:px-12">
               <nav aria-label="Apartados de la ficha" className="sticky top-0 z-20 -mx-5 mb-5 flex gap-2 overflow-x-auto border-b border-border/60 bg-background/95 px-5 py-3 backdrop-blur sm:-mx-8 sm:px-8">
                 <a href="#ficha-presentacion" className="shrink-0 rounded-full bg-primary/10 px-3 py-2 text-xs font-bold text-primary">La peña</a>
                 {selectedPenyaGallery.length > 0 && <a href="#ficha-galeria" className="shrink-0 rounded-full border border-border px-3 py-2 text-xs font-bold text-primary">Fotos</a>}
