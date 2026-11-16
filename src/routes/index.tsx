@@ -450,7 +450,7 @@ function Home() {
   }, [noticias]);
   useEffect(() => {
     if (!noticias.length || typeof window === "undefined" || sessionStorage.getItem("festalfas-news-popup-seen")) return;
-    const latest = noticias.filter((item:any) => item.publicado).slice().sort((a:any,b:any) => String(b.fecha||b.created_at||"").localeCompare(String(a.fecha||a.created_at||""))).slice(0,2);
+    const latest = noticias.filter((item:any) => item.publicado).slice().sort((a:any,b:any) => String(b.fecha||b.created_at||"").localeCompare(String(a.fecha||a.created_at||""))).slice(0,1);
     if (!latest.length) return;
     const showTimer = window.setTimeout(() => {
       setNewsPopup(latest);
