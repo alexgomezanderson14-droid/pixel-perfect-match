@@ -121,7 +121,7 @@ function bestSrcsetValue(value = "") {
 }
 function originalWordPressImageUrl(value) {
   const url = absoluteImage(value, "https://www.lalfas.es/");
-  if (!url || !/lalfas\.es$/i.test(new URL(url).hostname)) return url;
+  if (!url || !/\/wp-content\/uploads\//i.test(new URL(url).pathname)) return url;
   // WordPress crea miniaturas como foto-400x284.jpg. Se recupera el archivo original.
   return url.replace(/-\d{2,4}x\d{2,4}(?=\.(?:avif|webp|png|jpe?g|gif|tiff?)(?:[?#]|$))/i, "");
 }
