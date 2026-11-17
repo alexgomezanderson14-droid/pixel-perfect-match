@@ -23,7 +23,21 @@ const decode = (value = "") => value
   .replace(/&#0*39;|&apos;/gi, "'").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">")
   .replace(/&#x([\da-f]+);/gi, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
   .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)));
-const clean = (value = "") => decode(value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim());
+const clean = (value = "") => {
+  let text = decode(String(value || ""));
+  text = text.replace(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, (_, href, label) => {
+    const labelText = decode(String(label).replace(/<[^>]*>/g, " ")).replace(/\s+/g, " ").trim();
+    const target = decode(href).trim();
+    return labelText && /^https?:\/\//i.test(target) ? labelText + " (" + target + ")" : labelText;
+  });
+  text = text.replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<(script|style|noscript|template|svg|iframe)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, " ")
+    .replace(/if\s*\(\s*typeof\s+wppas_ga[\s\S]*?\}\s*\)\s*;?\s*\}/gi, " ")
+    .replace(/\{vendor_count\}|Gestionar\s+proveedores|Leer más sobre estos propósitos/gi, " ")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ").trim();
+  return text;
+};
 function meta(html, key) {
   const tags = html.match(/<meta\b[^>]*>/gi) || [];
   for (const tag of tags) {
