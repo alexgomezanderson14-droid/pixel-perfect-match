@@ -133,6 +133,43 @@ function extractArticleLinks(source, pageUrl) {
   return [...new Map(links.map(link => [link.url, link])).values()].slice(0, 12);
 }
 
+
+function editorialOfficialText(value = "") {
+  let text = String(value || "").replace(/\r/g, "\n");
+  text = text
+    .replace(/^(?:lunes|martes|miércoles|jueves|viernes|sábado|domingo)\s*,?\s+\d{1,2}\s+(?:de\s+)?(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+20\d{2}\s*,?\s+\d{1,2}:\d{2}\s*/i, "")
+    .replace(/Gobierno Municipal\s+Saluda del Alcalde\s+Portal de Transparencia Institucional\s+Servicios Municipales\s+Bienestar Social/gi, " ")
+    .replace(/(?:BANDO BENESTAR ANIMAL FESTES 2026|BANDO FESTES STM CRIST 2026)(?:\s*[•·-]\s*\d+\s*KB\s*\d{2}\.\d{2}\.\d{4})*/gi, " ")
+    .replace(/DESCARGA LA PROGRAMACIÓN DE LAS FIESTAS DE L['’]ALFÀS:\s*L['’]ALFA[SÀ]\s+PROGRAMA FESTES 2026/gi, " ")
+    .replace(/Aquí te puedes descargar el libro de las Fiestas del jubileo 2026:\s*/gi, " ");
+  const navigationLabels = new Set([
+    "gobierno municipal", "saluda del alcalde", "portal de transparencia institucional",
+    "servicios municipales", "bienestar social", "inicio", "contacto", "mapa web"
+  ]);
+  const blocks = text.split(/\n{1,}/).map(part => part.trim()).filter(Boolean)
+    .filter(part => !navigationLabels.has(part.toLocaleLowerCase("es")));
+  text = blocks.join(" ").replace(/\s+([,.;:!?])/g, "$1").replace(/([,;:])(?=\S)/g, "$1 ")
+    .replace(/\s{2,}/g, " ").trim();
+  return text;
+}
+function editorialParagraphs(value = "") {
+  const text = editorialOfficialText(value);
+  if (!text) return "";
+  const sentences = text.match(/[^.!?]+(?:[.!?]+["”’»)]*|$)/g) || [text];
+  const normalized = sentences.map(part => part.trim()).filter(Boolean);
+  const groups = [];
+  for (let i = 0; i < normalized.length; i += 3) groups.push(normalized.slice(i, i + 3).join(" ").trim());
+  return groups.join("\n\n");
+}
+function editorialSummary(value = "") {
+  const text = editorialOfficialText(value).replace(/\n+/g, " ");
+  if (!text) return "";
+  const sentences = text.match(/[^.!?]+(?:[.!?]+["”’»)]*|$)/g) || [text];
+  let summary = sentences.slice(0, 2).join(" ").trim();
+  if (summary.length > 360) summary = summary.slice(0, 357).replace(/\s+\S*$/, "") + "…";
+  return summary;
+}
+
 function articleContent(html, pageUrl, structured = []) {
   const sourceHtml = stripNonArticleHtml(html);
   const containers = [];
@@ -332,14 +369,18 @@ for (const candidate of [...candidates.values()].slice(0, 180)) {
       ? wp.paragraphs : article.paragraphs;
     const title = wp?.title || meta(html, "og:title") || meta(html, "twitter:title") || candidate.title || candidate.previous?.titulo || "";
     const description = wp?.description || meta(html, "og:description") || meta(html, "description") || meta(html, "twitter:description") || "";
-    const summaryParts = paragraphs.length ? paragraphs.slice(0, 3) : [description].filter(Boolean);
-    const summary = summaryParts.join(" ").slice(0, 1100) ||
-      (candidate.previous?.resumen && !/consulta la publicaci[oó]n original/i.test(candidate.previous.resumen) ? candidate.previous.resumen : "");
-    // Las noticias oficiales se muestran con el texto completo. En medios externos se ofrece
-    // una síntesis editorial y el enlace/crédito al artículo original, sin republicar su texto íntegro.
-    const body = candidate.source.type === "externa"
-      ? (summary || description || "")
+    const rawBody = paragraphs.length ? paragraphs.join("\n\n") : (candidate.previous?.contenido || description || "");
+    const body = candidate.source.type === "oficial"
+      ? editorialParagraphs(rawBody)
       : (paragraphs.length ? paragraphs.join("\n\n") : (candidate.previous?.contenido || description || ""));
+    const summaryParts = paragraphs.length ? paragraphs.slice(0, 3) : [description].filter(Boolean);
+    const summary = candidate.source.type === "oficial"
+      ? editorialSummary(body || description)
+      : (summaryParts.join(" ").slice(0, 1100) ||
+        (candidate.previous?.resumen && !/consulta la publicaci[oó]n original/i.test(candidate.previous.resumen) ? candidate.previous.resumen : ""));
+    // Las noticias oficiales se presentan con formato editorial legible. En medios externos se ofrece
+    // una síntesis y el enlace/crédito al artículo original, sin republicar su texto íntegro.
+
     const image = wp?.featuredImage || imageFrom(html, candidate.url, structured) || candidate.previous?.imagen_url || "";
     const allImages = [...new Set([...(wp?.images || []), ...galleryImagesFrom(html, candidate.url)])];
     const imagenes_url = allImages.filter(url => url && url !== image);
