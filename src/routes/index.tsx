@@ -531,10 +531,16 @@ function Home() {
         {heroImage ? <img src={heroImage} alt="Portada de las fiestas de l'Alfàs del Pi" width={1920} height={1280} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center" /> : <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37]" />}
         <div className="absolute inset-0 bg-gradient-to-t from-brown/90 via-brown/20 to-transparent" />
         <div className="relative mx-auto w-full max-w-6xl xl:max-w-[min(96vw,1600px)] px-4 pb-9 sm:px-5 sm:pb-16">
-          <div className="mb-3"><p className="rise text-xs font-extrabold uppercase tracking-[.28em] text-white/90 sm:text-sm">Festes 2027</p><p className="rise mt-1 text-[10px] font-medium tracking-wide text-white/75 sm:text-xs">Cuenta atrás para el comienzo de las fiestas</p></div>
+          <div className="max-w-full">
+            <h1 className="rise inline-block max-w-full font-sans text-6xl font-black lowercase leading-[0.88] tracking-[-0.085em] text-white drop-shadow-[0_4px_22px_rgba(0,0,0,0.28)] sm:text-8xl md:text-9xl">festalfàs</h1>
+            <div aria-hidden="true" className="rise mt-3 h-1.5 w-16 rounded-full bg-secondary shadow-sm sm:mt-4 sm:h-2 sm:w-24" />
+          </div>
+          <p className="rise mt-3 max-w-xl text-sm font-medium text-on-image/90 sm:mt-4 sm:text-lg">{siteContent["hero_subtitulo"] || edicion.subtitulo}</p>
+          <div className="mt-6 mb-2">
+            <p className="rise text-xs font-extrabold uppercase tracking-[.22em] text-white sm:text-sm">Festes 2027</p>
+            <p className="rise mt-1 text-[10px] font-medium tracking-wide text-white/75 sm:text-xs">Cuenta atrás para el comienzo de las fiestas</p>
+          </div>
           <CountdownFiestas />
-          <h1 className="rise text-5xl font-extrabold leading-[0.95] tracking-tight text-on-image sm:text-7xl md:text-8xl">FESTALFÀS</h1>
-          <p className="rise mt-3 max-w-xl text-sm text-on-image/85 sm:mt-4 sm:text-lg">{siteContent["hero_subtitulo"] || edicion.subtitulo}</p>
         </div>
       </section>
 
