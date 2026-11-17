@@ -232,3 +232,15 @@ img { -webkit-user-drag: none; }
     transition-duration: .01ms !important;
   }
 }
+
+
+/* Mobile readability: compact navigation, article width and safe-area spacing. */
+@media (max-width: 639px) {
+  nav[aria-label="Navegación principal"] { bottom: max(0.35rem, env(safe-area-inset-bottom)); gap: .2rem; padding: .35rem; }
+  nav[aria-label="Navegación principal"] button { min-height: 3.5rem; border-radius: 1rem; }
+  nav[aria-label="Navegación principal"] button span:first-child { font-size: 1.15rem; }
+  nav[aria-label="Navegación principal"] button span:last-child { font-size: .625rem; letter-spacing: -.01em; }
+  main { scroll-margin-top: 1rem; }
+  article p { overflow-wrap: anywhere; }
+  input, select, textarea { max-width: 100%; }
+}
