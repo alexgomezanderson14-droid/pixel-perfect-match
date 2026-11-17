@@ -1,12 +1,22 @@
 import { readFile, writeFile } from "node:fs/promises";
 
+const MIN_DATE = "2026-10-01";
 const SOURCES = [
-  { name: "Ayuntamiento de l’Alfàs del Pi", type: "oficial", archive: "https://www.lalfas.es/concejalias/fiestas/", prefixes: ["https://www.lalfas.es/concejalias/"] },
+  { name: "Ayuntamiento de l’Alfàs del Pi", type: "oficial", archive: "https://www.lalfas.es/concejalias/fiestas/", prefixes: ["https://www.lalfas.es/"] },
   { name: "Ayuntamiento de l’Alfàs del Pi", type: "oficial", archive: "https://www.lalfas.es/fiestas/", prefixes: ["https://www.lalfas.es/"] },
+  { name: "Ayuntamiento de l’Alfàs del Pi", type: "oficial", archive: "https://www.lalfas.es/concejalias/seguridad-ciudadana/", prefixes: ["https://www.lalfas.es/"] },
+  { name: "Ayuntamiento de l’Alfàs del Pi", type: "oficial", archive: "https://www.lalfas.es/concejalias/sanidad/", prefixes: ["https://www.lalfas.es/"] },
+  { name: "Ayuntamiento de l’Alfàs del Pi", type: "oficial", archive: "https://www.lalfas.es/concejalias/cultura/", prefixes: ["https://www.lalfas.es/"] },
+  { name: "Ayuntamiento de l’Alfàs del Pi", type: "oficial", archive: "https://www.lalfas.es/concejalias/alcaldia/", prefixes: ["https://www.lalfas.es/"] },
+  { name: "Ayuntamiento de l’Alfàs del Pi", type: "oficial", archive: "https://www.lalfas.es/concejalias/juventud/", prefixes: ["https://www.lalfas.es/"] },
   { name: "Cadena SER · Radio Benidorm", type: "externa", archive: "https://cadenaser.com/tag/lalfas_del_pi/a/", prefixes: ["https://cadenaser.com/comunitat-valenciana/"] },
   { name: "ViveBenidorm", type: "externa", archive: "https://www.vivebenidorm.com/", prefixes: ["https://www.vivebenidorm.com/"] },
+  { name: "Marina Baixa Digital", type: "externa", archive: "https://marinabaixadigital.es/sec/fiestas", prefixes: ["https://marinabaixadigital.es/"] },
+  { name: "Información", type: "externa", archive: "https://www.informacion.es/benidorm/", prefixes: ["https://www.informacion.es/benidorm/"] },
+  { name: "Portada Valencia", type: "externa", archive: "https://portadavalencia.com/es/la-marina-baixa/lalfas-del-pi/", prefixes: ["https://portadavalencia.com/"] },
 ];
-const TERMS = /fiest|peñ|pena|mayoral|mejoral|jubileo|cristo|festes|carnaval|cabalgata|romer[ií]a|tradici[oó]n|desfile|correfoc|moros|navidad|san\s+jose|sant[ií]sim/i;
+const TERMS = /fiest|peñ|pena|mayoral|majoral|jubileo|cristo|festes|carnaval|cabalgata|romer[ií]a|tradici[oó]n|desfile|correfoc|moros|navidad|san\s+jose|sant[ií]sim|9\s*d.?octubre|festiv|fester|festero|festa/i;
+const SEED_URLS = [{"url":"https://www.lalfas.es/concejalias/fiestas/deporte-y-fiestas-se-dan-la-mano-en-el-torneo-de-padel-de-los-mayorales-de-sant-josep/","title":"Deporte y fiestas se dan la mano en el torneo de pádel de los Mayorales de Sant Josep","date":"2026-10-05","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/la-parroquia-de-san-jose-de-lalfas-del-pi-recupera-el-expositor-del-santisimo-sacramento-con-motivo-de-las-celebraciones-jubilares/","title":"La Parroquia de San José recupera el expositor del Santísimo Sacramento con motivo de las celebraciones jubilares","date":"2026-10-05","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/un-libro-sobre-la-serra-gelada-y-una-ruta-literaria-abren-manana-la-programacion-del-9-doctubre-en-lalfas/","title":"Un libro sobre la Serra Gelada y una ruta literaria abren la programación del 9 d’Octubre","date":"2026-10-06","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/los-actos-del-9-doctubre-continuan-manana-jueves-con-juegos-populares-gastronomia-y-musica/","title":"Los actos del 9 d’Octubre continúan con juegos populares, gastronomía y música","date":"2026-10-07","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/lalfas-del-pi-celebra-manana-su-jornada-principal-del-9-doctubre-con-tradicion-y-actividades-para-toda-la-familia/","title":"L’Alfàs celebra la jornada principal del 9 d’Octubre con tradición y actividades para toda la familia","date":"2026-10-08","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/lalfas-del-pi-cierra-la-programacion-del-9-doctubre-con-una-amplia-participacion-en-las-actividades/","title":"L’Alfàs cierra la programación del 9 d’Octubre con amplia participación","date":"2026-10-10","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/el-9-doctubre-en-imagenes/","title":"El 9 d’Octubre en imágenes","date":"2026-10-10","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/sanidad/lalfas-reta-a-sus-penas-festeras-a-sumarse-a-la-campana-de-donacion-de-sangre/","title":"L’Alfàs reta a sus peñas festeras a sumarse a la campaña de donación de sangre","date":"2026-10-23","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/seguridad-ciudadana/la-junta-de-seguridad-ciudadana-planifica-el-dispositivo-para-las-fiestas-de-lalfas-del-pi/","title":"La Junta de Seguridad Ciudadana planifica el dispositivo para las fiestas de l’Alfàs","date":"2026-10-26","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/seguridad-ciudadana/dos-bandos-municipales-recuerdan-las-normas-de-convivencia-y-seguridad-durante-las-fiestas-del-jubileo/","title":"Dos bandos municipales recuerdan las normas de convivencia y seguridad durante las Fiestas del Jubileo","date":"2026-11-03","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/lalfas-del-pi-habilita-un-autobus-gratuito-nocturno-durante-las-fiestas-del-cristo/","title":"L’Alfàs habilita un autobús gratuito nocturno durante las Fiestas del Cristo","date":"2026-11-04","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/el-libro-de-fiestas-del-jubileo-de-lalfas-2026-ya-esta-en-la-calle/","title":"El Libro de Fiestas del Jubileo de l’Alfàs 2026 ya está en la calle","date":"2026-11-05","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/ya-esta-operativo-el-dispositivo-especial-de-seguridad-para-las-fiestas-del-jubileo-de-lalfas/","title":"Ya está operativo el dispositivo especial de seguridad para las Fiestas del Jubileo","date":"2026-11-06","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/el-espectaculo-de-fuego-de-los-dimonis-rafolins-pone-el-broche-a-los-actos-liturgicos-del-jubileo-de-lalfas/","title":"El espectáculo de fuego de los Dimonis Rafolins pone el broche al Jubileo","date":"2026-11-10","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/unas-fiestas-libres-de-violencia-lalfas-instala-un-punto-violeta-y-arco-iris-durante-el-jubileo/","title":"L’Alfàs instala un Punto Violeta y Arco Iris durante el Jubileo","date":"2026-11-09","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/las-actividades-infantiles-tambien-han-tenido-su-espacio-en-las-fiestas-del-jubileo-de-lalfas/","title":"Las actividades infantiles también han tenido su espacio en las Fiestas del Jubileo","date":"2026-11-09","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/28-penas-llenan-de-color-las-calles-de-lalfas-en-el-tradicional-desfile-del-humor/","title":"28 peñas llenan de color las calles de l’Alfàs en el tradicional Desfile del Humor","date":"2026-11-09","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/flores-tradicion-y-devocion-en-la-ofrenda-al-santisimo-cristo-del-buen-acierto/","title":"Flores, tradición y devoción en la ofrenda al Santísimo Cristo del Buen Acierto","date":"2026-11-09","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/un-millar-de-personas-disfrutan-del-mejor-rock-con-la-mitica-banda-seguridad-social-en-las-fiestas-de-lalfas/","title":"Un millar de personas disfrutan del mejor rock con Seguridad Social en las fiestas de l’Alfàs","date":"2026-11-09","type":"oficial"},{"url":"https://www.informacion.es/benidorm/2026/11/03/tradiciones-traspasan-fronteras-importa-vengas-bc-136028162.html","title":"Nuestras tradiciones traspasan fronteras, no importa de dónde vengas para sentirte parte de l’Alfàs","date":"2026-11-03","type":"externa","sourceName":"Información"},{"url":"https://marinabaixadigital.es/art/7483/lalfas-presenta-libro-fiestas-jubileo-2026","title":"L’Alfàs presenta el Libro de Fiestas del Jubileo 2026 con 44 peñas","date":"2026-11-05","type":"externa","sourceName":"Marina Baixa Digital"},{"url":"https://portadavalencia.com/es/la-marina-baixa/lalfas-del-pi/lalfas-del-pi-presenta-el-libro-de-las-fiestas-del-jubileo-y-del-santisimo-cristo-del-buen-acierto-2026","title":"L’Alfàs presenta el libro de las Fiestas del Jubileo 2026","date":"2026-11-05","type":"externa","sourceName":"Portada Valencia"}];
 const STOP = new Set("de la el los las un una unos unas y o en del al con por para que se su sus es son vivir vive celebra celebrar celebraràn celebraran prepara preparan lalfas alfàs alfaz pi fiestas fiesta festes".split(" "));
 const decode = (value = "") => value
   .replace(/&nbsp;|&#160;/gi, " ").replace(/&amp;/gi, "&").replace(/&quot;/gi, '"')
@@ -106,6 +116,27 @@ function articleContent(html, pageUrl, structured = []) {
   }).filter((url, index, all) => url && all.indexOf(url) === index && !/logo|avatar|icon|pixel|sprite|tracking/i.test(url));
   return { paragraphs, images };
 }
+function dateFrom(html, structured = []) {
+  const candidates = [
+    ...structured.flatMap(item => [item.datePublished, item.dateCreated, item.dateModified]),
+    meta(html, "article:published_time"), meta(html, "article:modified_time"),
+    meta(html, "datePublished"), meta(html, "pubdate"), meta(html, "publish-date"),
+    meta(html, "DC.date.issued"),
+    html.match(/<time\b[^>]*datetime=["']([^"']+)["']/i)?.[1] || "",
+    html.match(/(?:lunes|martes|miércoles|jueves|viernes|sábado|domingo)?\s*,?\s*(\d{1,2})\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+(?:de\s+)?(20\d{2})/i)?.[0] || "",
+  ].filter(Boolean);
+  const months = { enero:"01", febrero:"02", marzo:"03", abril:"04", mayo:"05", junio:"06", julio:"07", agosto:"08", septiembre:"09", octubre:"10", noviembre:"11", diciembre:"12" };
+  for (const raw of candidates) {
+    const value = String(raw).trim();
+    const iso = value.match(/(20\d{2})[-/](\d{1,2})[-/](\d{1,2})/);
+    if (iso) return iso[1] + "-" + iso[2].padStart(2,"0") + "-" + iso[3].padStart(2,"0");
+    const numeric = value.match(/(\d{1,2})[/. -](\d{1,2})[/. -](20\d{2})/);
+    if (numeric) return numeric[3] + "-" + numeric[2].padStart(2,"0") + "-" + numeric[1].padStart(2,"0");
+    const spanish = value.match(/(\d{1,2})\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+(?:de\s+)?(20\d{2})/i);
+    if (spanish) return spanish[3] + "-" + months[spanish[2].toLowerCase()] + "-" + spanish[1].padStart(2,"0");
+  }
+  return "";
+}
 async function get(url) {
   const response = await fetch(url, { headers: { "user-agent": "festalfas-newsbot/1.0 (public news aggregation; contact: festalfas.vercel.app)", "accept": "text/html,application/rss+xml,application/xml" }, signal: AbortSignal.timeout(18000) });
   if (!response.ok) throw new Error(`HTTP ${response.status} en ${url}`);
@@ -130,6 +161,27 @@ try { previous = JSON.parse(await readFile("public/noticias-automaticas.json", "
 if (!Array.isArray(previous)) previous = [];
 
 const candidates = new Map();
+const officialSource = SOURCES.find(source => source.name.startsWith("Ayuntamiento"));
+const sourceForUrl = (url, preferredName = "") =>
+  SOURCES.find(source => preferredName && source.name === preferredName) ||
+  SOURCES.find(source => source.prefixes.some(prefix => url.startsWith(prefix))) ||
+  officialSource;
+for (const seed of SEED_URLS) {
+  const source = sourceForUrl(seed.url, seed.sourceName);
+  const previousItem = {
+    id: "auto-" + seed.url.replace(/\/$/, "").split("/").pop().replace(/[^a-z0-9-]/gi, "-").toLowerCase(),
+    titulo: seed.title, resumen: "", contenido: "", tipo: seed.type,
+    autor: source.name, fuente: source.name, fuente_url: seed.url,
+    imagen_url: "", imagenes_url: [], fecha: seed.date, publicado: true, automatico: true,
+  };
+  candidates.set(seed.url.replace(/\/$/, ""), { url: seed.url, title: seed.title, source, previous: previousItem });
+}
+for (const item of previous) {
+  if (!item?.fuente_url || (item.fecha && String(item.fecha).slice(0,10) < MIN_DATE)) continue;
+  const key = item.fuente_url.replace(/\/$/, "");
+  const source = sourceForUrl(item.fuente_url, item.fuente);
+  if (!candidates.has(key)) candidates.set(key, { url: item.fuente_url, title: item.titulo || "", source, previous: item });
+}
 for (const source of SOURCES) {
   try {
     const html = await get(source.archive);
@@ -140,23 +192,16 @@ for (const source of SOURCES) {
       if (!source.prefixes.some(prefix => url.startsWith(prefix)) || url === source.archive) continue;
       const title = clean(match[2]);
       if (title.length < 18 || title.length > 220 || !TERMS.test(title)) continue;
-      if (source.name === "ViveBenidorm" && !/l.?alf[aà]s|alfaz/i.test(title + " " + url)) continue;
+      if (source.name === "Marina Baixa Digital" && !/l.?alf[aà]s|alfaz/i.test(title + " " + url)) continue;
+      if (source.name === "Marina Baixa Digital" && !/l.?alf[aà]s|alfaz/i.test(title + " " + url)) continue;
       if (/\/tag\/|\/category\/|\/author\/|\/page\/\d+/i.test(url)) continue;
       const key = url.replace(/\/$/, "");
       if (!candidates.has(key)) candidates.set(key, { url, title, source });
     }
   } catch (error) { console.warn("No se pudo consultar", source.archive, error.message); }
 }
-// Volver a consultar las noticias ya guardadas permite completar imágenes y resúmenes,
-// aunque el medio haya retirado la noticia de su portada o archivo reciente.
-for (const item of previous) {
-  if (!item?.fuente_url || candidates.has(item.fuente_url.replace(/\/$/, ""))) continue;
-  const source = SOURCES.find(entry => item.fuente_url.startsWith(entry.prefixes[0])) ||
-    SOURCES.find(entry => item.fuente_url.startsWith(entry.prefixes[0].replace("/concejalias/", "/")));
-  if (source) candidates.set(item.fuente_url.replace(/\/$/, ""), { url: item.fuente_url, title: item.titulo || "", source, previous: item });
-}
 const results = [];
-for (const candidate of [...candidates.values()].slice(0, 55)) {
+for (const candidate of [...candidates.values()].slice(0, 180)) {
   try {
     const html = await get(candidate.url);
     const title = meta(html, "og:title") || meta(html, "twitter:title") || candidate.title || candidate.previous?.titulo || "";
@@ -167,10 +212,12 @@ for (const candidate of [...candidates.values()].slice(0, 55)) {
     const summaryParts = paragraphs.length ? paragraphs.slice(0, 2) : [description].filter(Boolean);
     const summary = summaryParts.join(" ").slice(0, 1100) || candidate.previous?.resumen || description || title;
     // Guardar el texto público completo que ofrece la página, sin limitarlo a seis párrafos.
-    const body = paragraphs.length ? paragraphs.join("\n\n") : (candidate.previous?.contenido || description || summary);
+    const body = candidate.source.type === "externa" ? (summary || description || title) : (paragraphs.length ? paragraphs.join("\n\n") : (candidate.previous?.contenido || description || summary));
     const image = imageFrom(html, candidate.url, structured) || candidate.previous?.imagen_url || "";
     const imagenes_url = [...new Set([...article.images, ...(candidate.previous?.imagenes_url || [])])].filter(url => url !== image);
-    const date = dateFrom(html);
+    const date = dateFrom(html, structured) || candidate.previous?.fecha || "";
+    const publishedDate = String(date).slice(0,10);
+    if (!publishedDate || publishedDate < MIN_DATE) continue;
     const slug = candidate.url.replace(/\/$/, "").split("/").pop().replace(/[^a-z0-9-]/gi, "-").toLowerCase();
     results.push({
       id: "auto-" + slug,
@@ -183,7 +230,7 @@ for (const candidate of [...candidates.values()].slice(0, 55)) {
       fuente_url: candidate.url,
       imagen_url: image,
       imagenes_url,
-      fecha: date || candidate.previous?.fecha,
+      fecha: publishedDate,
       publicado: true,
       automatico: true,
     });
@@ -193,18 +240,28 @@ for (const candidate of [...candidates.values()].slice(0, 55)) {
   }
 }
 results.sort((a, b) => String(b.fecha || "").localeCompare(String(a.fecha || "")));
-const byUrl = [...new Map(results.map(item => [item.fuente_url, item])).values()];
+const byUrl = [...new Map(results.filter(item => item.fuente_url && String(item.fecha || "").slice(0,10) >= MIN_DATE).map(item => [item.fuente_url.replace(/\/$/, ""), item])).values()];
 const unique = [];
+const normalizedTitle = value => String(value || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
 for (const item of byUrl) {
-  const duplicateIndex = unique.findIndex(existing => similar(item, existing));
+  const title = normalizedTitle(item.titulo);
+  const titleWords = new Set(title.split(" ").filter(word => word.length > 2));
+  const duplicateIndex = unique.findIndex(existing => {
+    const other = normalizedTitle(existing.titulo);
+    if (other === title) return true;
+    const otherWords = new Set(other.split(" ").filter(word => word.length > 2));
+    const common = [...titleWords].filter(word => otherWords.has(word)).length;
+    return titleWords.size > 0 && otherWords.size > 0 &&
+      common / Math.min(titleWords.size, otherWords.size) >= 0.88 &&
+      common / new Set([...titleWords, ...otherWords]).size >= 0.72;
+  });
   if (duplicateIndex === -1) unique.push(item);
   else {
-    // Conservar el artículo más completo; si empatan, priorizar el resumen más largo.
     const existing = unique[duplicateIndex];
     const score = value => (value.imagen_url ? 300 : 0) + String(value.contenido || "").length + String(value.resumen || "").length;
     if (score(item) > score(existing)) unique[duplicateIndex] = item;
   }
 }
-const finalNews = unique.slice(0, 35);
+const finalNews = unique.sort((a,b) => String(b.fecha).localeCompare(String(a.fecha)));
 await writeFile("public/noticias-automaticas.json", JSON.stringify(finalNews, null, 2) + "\n");
-console.log(`Noticias festivas disponibles: ${finalNews.length} (recopiladas: ${results.length}; tras eliminar duplicadas: ${unique.length})`);
+console.log("Noticias festivas desde " + MIN_DATE + ": " + finalNews.length + " (recopiladas: " + results.length + "; sin duplicados: " + unique.length + ")");
