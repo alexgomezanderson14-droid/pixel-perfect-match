@@ -44,10 +44,10 @@ function fmtDia(d: string) {
   return new Date(d + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
 }
 
-const fechaMinimaNoticias = "2026-10-01";
+const fechaMinimaNoticias = "2026-10-20";
 const tematicaFestiva = /fiest|fiesta|festes|peñ|penya|mayoral|majoral|jubileo|cristo del buen acierto|desfile del humor|preg[oó]n|ofrenda|masclet[aà]|pirotecnia|actos lit[uú]rgicos|romer[ií]a|carnaval|fester|festera|9\s*d.?octubre/i;
 function esNoticiaFestivaLocal(noticia: any) {
-  const fecha = String(noticia?.fecha || noticia?.created_at || "").slice(0, 10);
+  const fecha = String(noticia?.fecha || "").slice(0, 10);
   if (!fecha || fecha < fechaMinimaNoticias) return false;
   const texto = [noticia?.titulo, noticia?.resumen, noticia?.contenido, noticia?.autor, noticia?.fuente, noticia?.penya_nombre, noticia?.fuente_url].filter(Boolean).join(" ");
   if (!tematicaFestiva.test(texto)) return false;
@@ -343,7 +343,9 @@ function Home() {
   const filteredActs = useMemo(()=>actos.filter((a)=>matchesDay(a) && (filterCategory==="all" || (filterCategory==="programa" && a.tipo==="evento") || (filterCategory==="actuaciones" && (a.tipo==="evento" || a.tipo==="actuacion" || /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/i.test(a.titulo||"")))) && (!eventsSearch.trim() || normalizarBusqueda([a.titulo,a.descripcion,a.lugar].join(" ")).includes(normalizarBusqueda(eventsSearch)))), [actos,filterDay,filterCategory,now,eventsSearch]);
   const filteredPenyaEvents = useMemo(()=>eventos.filter((e)=>matchesDay(e) && (filterCategory==="all" || filterCategory==="penyes") && (!eventsSearch.trim() || normalizarBusqueda([e.titulo,e.descripcion,e.lugar,penyes.find(p=>p.id===e.penya_id)?.nombre].join(" ")).includes(normalizarBusqueda(eventsSearch)))), [eventos,filterDay,filterCategory,now,eventsSearch,penyes]);
   const visiblePenyes = useMemo(()=>[...penyes].filter(p=>!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica].join(" ")).includes(normalizarBusqueda(penyaSearch))).sort((a,b)=>Number(esPenyaCuBaTa(b.nombre))-Number(esPenyaCuBaTa(a.nombre))||Number(misPenyes.includes(b.id))-Number(misPenyes.includes(a.id))||a.nombre.localeCompare(b.nombre,"es")),[penyes,penyaSearch,misPenyes]);
-  const visibleNews = useMemo(()=>noticias.filter((n:any)=>n.publicado&&(!newsSearch.trim()||normalizarBusqueda([n.titulo,n.resumen,n.contenido,n.autor,n.fuente].join(" ")).includes(normalizarBusqueda(newsSearch)))).slice().sort((x:any,y:any)=>Number(Boolean(y.destacada))-Number(Boolean(x.destacada))||Number(/desfile del humor/i.test(y.titulo||""))-Number(/desfile del humor/i.test(x.titulo||""))||String(y.fecha||y.created_at||"").localeCompare(String(x.fecha||x.created_at||""))),[noticias,newsSearch]);
+  const visibleNews = useMemo(()=>noticias.filter((n:any)=>n.publicado&&(!newsSearch.trim()||normalizarBusqueda([n.titulo,n.resumen,n.contenido,n.autor,n.fuente].join(" ")).includes(normalizarBusqueda(newsSearch)))).slice().sort((x:any,y:any)=>new Date(String(y.fecha||y.created_at||"").slice(0,10)+"T12:00:00").getTime()-new Date(String(x.fecha||x.created_at||"").slice(0,10)+"T12:00:00").getTime()),[noticias,newsSearch]);
+  const featuredNews = visibleNews.filter((n:any)=>n.destacada);
+  const regularNews = visibleNews.filter((n:any)=>!n.destacada);
   const proximasActividades = useMemo(() => [...actos.filter((a:any)=>!a._officialOnly).map((a:any)=>({...a,_origen:"programa"})), ...eventos.map((e:any)=>({...e,_origen:"penya"}))].filter((item:any)=>item.dia && eventoSigueActivo(item,now)).sort((a:any,b:any)=>new Date(String(a.dia).slice(0,10)+"T"+String(a.hora||"23:59")).getTime()-new Date(String(b.dia).slice(0,10)+"T"+String(b.hora||"23:59")).getTime()).slice(0,3),[actos,eventos,now]);
   const avisosVisibles = avisos.filter((aviso:any)=>aviso.activo && (!aviso.publicar_en || new Date(aviso.publicar_en).getTime()<=now));
   const searchResults = useMemo(() => {
@@ -450,18 +452,15 @@ function Home() {
         if (Array.isArray(parsed)) noticiasAutomaticas = parsed;
       }
     } catch { /* La web sigue mostrando las noticias guardadas si el archivo automático no está disponible. */ }
-    try {
-      const parsed=JSON.parse(content["noticias_json"]||"[]");
-      const guardadas=Array.isArray(parsed)?parsed:[];
-      const respaldo=[noticiaCestaNavidad2027,noticiaCuBaTa2027,noticiaDesfileHumor2026];
-      const guardadasSinVersionAntigua=guardadas.filter((noticia:any)=>noticia?.id!=="desfile-humor-lalfas-2026-video");
-      const combinadas=[...guardadasSinVersionAntigua,...noticiasAutomaticas,...respaldo];
-      const unicas=combinadas.filter((noticia:any,index:number,array:any[])=>noticia?.id&&array.findIndex((otra:any)=>String(otra.id)===String(noticia.id))===index);
-      setNoticias(unicas.filter(esNoticiaFestivaLocal));
-    } catch {
-      const combinadas=[...noticiasAutomaticas,noticiaCestaNavidad2027,noticiaCuBaTa2027,noticiaDesfileHumor2026];
-      setNoticias(combinadas.filter((noticia:any,index:number,array:any[])=>noticia?.id&&array.findIndex((otra:any)=>String(otra.id)===String(noticia.id))===index).filter(esNoticiaFestivaLocal));
-    }
+    let idsDestacadas: string[] = [];
+    try { const ids = JSON.parse(content["noticias_destacadas_json"] || "[]"); if (Array.isArray(ids)) idsDestacadas = ids.map((id:any) => String(id)); } catch { idsDestacadas = []; }
+    let guardadas: any[] = [];
+    try { const parsed=JSON.parse(content["noticias_json"]||"[]"); guardadas=Array.isArray(parsed)?parsed:[]; } catch { guardadas=[]; }
+    const respaldo=[noticiaCestaNavidad2027,noticiaCuBaTa2027,noticiaDesfileHumor2026];
+    const guardadasSinVersionAntigua=guardadas.filter((noticia:any)=>noticia?.id!=="desfile-humor-lalfas-2026-video");
+    const combinadas=[...guardadasSinVersionAntigua,...noticiasAutomaticas,...respaldo];
+    const unicas=combinadas.filter((noticia:any,index:number,array:any[])=>noticia?.id&&array.findIndex((otra:any)=>String(otra.id)===String(noticia.id))===index);
+    setNoticias(unicas.filter(esNoticiaFestivaLocal).map((noticia:any)=>({...noticia,destacada:idsDestacadas.includes(String(noticia.id))})));
     try { const points=JSON.parse(content["mapa_puntos_json"]||"[]"); setMapPoints(Array.isArray(points)?points.filter((p:any)=>Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))&&Number(p.lat)>=-90&&Number(p.lat)<=90&&Number(p.lng)>=-180&&Number(p.lng)<=180):[]); } catch { setMapPoints([]); }
     if (content["hero_image_path"]) {
       const { data: imageData } = supabase.storage.from("penyes").getPublicUrl(content["hero_image_path"]);
