@@ -119,20 +119,25 @@ function articleContent(html, pageUrl, structured = []) {
 function galleryImagesFrom(html, pageUrl) {
   const galleryBlocks = [];
   const openingTags = [...html.matchAll(/<(div|section|figure|ul)\b[^>]*>/gi)];
-  const galleryClass = /(?:wp-block-gallery|blocks-gallery-grid|gallery(?:[-_ ](?:container|wrapper|inner|items|item|image|images|photos))?|image[-_ ]gallery|photo[-_ ]gallery|article[-_ ]gallery|post[-_ ]gallery|ngg-galleryoverview|foogallery|envira-gallery|jetpack-tiled-gallery)/i;
+  // Solo contenedores inequívocos de una galería fotográfica; nunca la clase genérica "gallery".
+  const galleryClass = /(?:wp-block-gallery|blocks-gallery-grid|elementor-image-gallery|image[-_ ]gallery|photo[-_ ]gallery|article[-_ ]gallery|post[-_ ]gallery|gallery[-_ ](?:container|wrapper|inner|items|images|photos)|ngg-galleryoverview|foogallery|envira-gallery|jetpack-tiled-gallery|fotorama|photoswipe)/i;
+  const forbiddenMedia = /(?:union[-_ ]?europea|european[-_ ]?union|sede[-_ ]?electronica|sede[-_ ]?electr[oó]nica|logo(?:type)?|logotipo|favicon|icon(?:o)?|sprite|banner|accesibilidad|accessibility|cabecera|header|footer|menu|men[uú])/i;
   for (const opening of openingTags) {
     if (!galleryClass.test(opening[0])) continue;
     const block = extractElement(html, opening);
     if (block) galleryBlocks.push(block);
   }
-  const urls = galleryBlocks.flatMap(block => [...block.matchAll(/<(?:img|source)\b[^>]*>/gi)].map(match => {
-    const attrs = Object.fromEntries([...match[0].matchAll(/([a-z:-]+)\s*=\s*["']([^"']*)["']/gi)].map(item => [item[1].toLowerCase(), decode(item[2])]));
+  const urls = galleryBlocks.flatMap(block => [...block.matchAll(/<(?:img|source)\\b[^>]*>/gi)].map(match => {
+    const attrs = Object.fromEntries([...match[0].matchAll(/([a-z:-]+)\\s*=\\s*["']([^"']*)["']/gi)].map(item => [item[1].toLowerCase(), decode(item[2])]));
     const raw = attrs["data-full-url"] || attrs["data-orig-file"] || attrs["data-large-file"] || attrs["data-src"] || attrs["data-lazy-src"] || attrs["data-original"] || attrs.src ||
-      attrs["data-srcset"]?.split(",").pop()?.trim().split(/\s+/)[0] ||
-      attrs.srcset?.split(",").pop()?.trim().split(/\s+/)[0] || "";
-    return absoluteImage(raw, pageUrl);
+      attrs["data-srcset"]?.split(",").pop()?.trim().split(/\\s+/)[0] ||
+      attrs.srcset?.split(",").pop()?.trim().split(/\\s+/)[0] || "";
+    const url = absoluteImage(raw, pageUrl);
+    const descriptiveAttrs = [attrs.alt, attrs.title, attrs.class, attrs.id, attrs["aria-label"], attrs.src, attrs["data-src"]].filter(Boolean).join(" ");
+    if (forbiddenMedia.test(descriptiveAttrs) || (url && forbiddenMedia.test(url))) return "";
+    return url;
   }));
-  return [...new Set(urls)].filter(url => url && !/logo|avatar|icon|pixel|sprite|tracking|banner/i.test(url));
+  return [...new Set(urls)].filter(url => url && !/logo|avatar|icon|pixel|sprite|tracking|banner|union[-_]?europea|sede[-_]?electronica/i.test(url));
 }
 function dateFrom(html, structured = []) {
   const candidates = [
