@@ -1,6 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
 
-const MIN_DATE = "2026-10-01";
+const MIN_DATE = "2026-10-20";
 const SOURCES = [
   { name: "Ayuntamiento de l’Alfàs del Pi", type: "oficial", archive: "https://www.lalfas.es/concejalias/fiestas/", prefixes: ["https://www.lalfas.es/"] },
   { name: "Ayuntamiento de l’Alfàs del Pi", type: "oficial", archive: "https://www.lalfas.es/fiestas/", prefixes: ["https://www.lalfas.es/"] },
@@ -169,7 +169,7 @@ function editorialOfficialText(value = "") {
   let text = String(value || "").replace(/\r/g, "\n");
   text = text
     .replace(/^(?:lunes|martes|miércoles|jueves|viernes|sábado|domingo)\s*,?\s+\d{1,2}\s+(?:de\s+)?(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+20\d{2}\s*,?\s+\d{1,2}:\d{2}\s*/i, "")
-    .replace(/Gobierno Municipal\s+Saluda del Alcalde\s+Portal de Transparencia Institucional\s+Servicios Municipales\s+Bienestar Social/gi, " ")
+    .replace(/(?:Gobierno Municipal|Saluda del Alcalde|Portal de Transparencia Institucional|Servicios Municipales|Bienestar Social|Inicio|Contacto|Mapa web)/gi, " ")
     .replace(/(?:BANDO BENESTAR ANIMAL FESTES 2026|BANDO FESTES STM CRIST 2026)(?:\s*[•·-]\s*\d+\s*KB\s*\d{2}\.\d{2}\.\d{4})*/gi, " ")
     .replace(/https?\s*:\s*\/\/[\s\S]{0,500}?\.(?:pdf|docx?|xlsx?|pptx?|zip|rar|jpe?g|png|gif|webp|avif|tiff?)(?:[?#][^\s)]*)?/gi, " ")
     .replace(/(?:[\wÀ-ÿ ._()-]+)\.(?:pdf|docx?|xlsx?|pptx?|zip|rar)(?=\s|$|[•·])/gi, " ")
@@ -220,7 +220,7 @@ function articleContent(html, pageUrl, structured = []) {
   const cleanParagraphs = (source) => [...source.matchAll(/<(?:p|h2|h3|h4|blockquote|li|figcaption|td|th|dt|dd)\b[^>]*>([\s\S]*?)<\/(?:p|h2|h3|h4|blockquote|li|figcaption|td|th|dt|dd)>/gi)]
     .map(match => clean(match[1]))
     .filter(text => text.length >= 28 &&
-      !/cookies?|pol[ií]tica de privacidad|suscr[ií]bete|leer m[aá]s noticias|publicidad|compartir esta noticia|aceptar todas|iniciar sesi[oó]n|art[ií]culos relacionados|noticias relacionadas|gobierno municipal|saluda del alcalde|portal de transparencia|servicios municipales|bienestar social|wppas_ga|vendor_count|leer m[aá]s sobre estos prop[oó]sitos/i.test(text))
+      !/cookies?|pol[ií]tica de privacidad|suscr[ií]bete|leer m[aá]s noticias|publicidad|compartir esta noticia|aceptar todas|iniciar sesi[oó]n|art[ií]culos relacionados|noticias relacionadas|gobierno municipal|saluda del alcalde|portal de transparencia|servicios municipales|bienestar social|wppas_ga|vendor_count|leer m[aá]s sobre estos prop[oó]sitos|reg[ií]strate|portada|edici[oó]n impresa|suscr[ií]bete|hemeroteca|publicidad|aviso legal/i.test(text))
     .filter((text, index, all) => all.indexOf(text) === index);
   const ranked = candidates.map(source => ({ source, paragraphs: cleanParagraphs(source) }))
     .sort((a, b) => b.paragraphs.join("\n\n").length - a.paragraphs.join("\n\n").length);
@@ -346,6 +346,7 @@ const sourceForUrl = (url, preferredName = "") =>
   SOURCES.find(source => source.prefixes.some(prefix => url.startsWith(prefix))) ||
   officialSource;
 for (const seed of SEED_URLS) {
+  if (String(seed.date || "").slice(0, 10) < MIN_DATE) continue;
   const source = sourceForUrl(seed.url, seed.sourceName);
   const previousItem = {
     id: "auto-" + seed.url.replace(/\/$/, "").split("/").pop().replace(/[^a-z0-9-]/gi, "-").toLowerCase(),
@@ -411,7 +412,7 @@ for (const candidate of [...candidates.values()].slice(0, 180)) {
 
     const image = wp?.featuredImage || imageFrom(html, candidate.url, structured) || candidate.previous?.imagen_url || "";
     const allImages = [...new Set([...(wp?.images || []), ...galleryImagesFrom(html, candidate.url)])];
-    const imagenes_url = allImages.filter(url => url && url !== image);
+    const imagenes_url = allImages.filter((url, index) => url && url !== image && allImages.indexOf(url) === index && !/(?:logo|avatar|icon|pixel|sprite|tracking|banner|menu|header|footer|social|share)/i.test(url));
     const enlaces = [...new Map([...(wp?.links || []), ...(article.links || []), ...(candidate.previous?.enlaces || [])]
       .filter(link => link?.url && /^https?:\/\//i.test(link.url))
       .map(link => [link.url, link])).values()].slice(0, 12);
