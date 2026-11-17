@@ -43,14 +43,21 @@ function dateFrom(html) {
   }
   return "";
 }
-function articleParagraphs(html) {
-  const preferred = html.match(/<(?:article|main)\b[^>]*>([\s\S]*?)<\/(?:article|main)>/i)?.[1] || html;
-  const withoutNoise = preferred.replace(/<(script|style|nav|header|footer|aside|form)\b[\s\S]*?<\/\1>/gi, " ");
-  return [...withoutNoise.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)]
+function articleContent(html, pageUrl) {
+  const article = html.match(/<article\\b[^>]*>([\\s\\S]*?)<\\/article>/i)?.[1];
+  const main = html.match(/<main\\b[^>]*>([\\s\\S]*?)<\\/main>/i)?.[1];
+  const preferred = article || main || html;
+  const withoutNoise = preferred.replace(/<(script|style|nav|header|footer|aside|form|noscript)\\b[\\s\\S]*?<\\/\\1>/gi, " ");
+  const paragraphs = [...withoutNoise.matchAll(/<(?:p|h2|h3|blockquote)\\b[^>]*>([\\s\\S]*?)<\\/(?:p|h2|h3|blockquote)>/gi)]
     .map(match => clean(match[1]))
-    .filter(text => text.length >= 55 && !/cookies?|pol[ií]tica de privacidad|suscr[ií]bete|leer m[aá]s noticias|publicidad|compartir esta noticia/i.test(text))
-    .filter((text, index, all) => all.indexOf(text) === index)
-    .slice(0, 7);
+    .filter(text => text.length >= 35 && !/cookies?|pol[ií]tica de privacidad|suscr[ií]bete|leer m[aá]s noticias|publicidad|compartir esta noticia|aceptar todas/i.test(text))
+    .filter((text, index, all) => all.indexOf(text) === index);
+  const images = [...withoutNoise.matchAll(/<img\\b[^>]*>/gi)].map(match => {
+    const attrs = Object.fromEntries([...match[0].matchAll(/([a-z:-]+)\\s*=\\s*["']([^"']*)["']/gi)].map(item => [item[1].toLowerCase(), decode(item[2])]));
+    const raw = attrs.src || attrs["data-src"] || attrs["data-lazy-src"] || attrs["data-original"] || attrs.srcset?.split(",").pop()?.trim().split(/\\s+/)[0] || "";
+    try { const url = new URL(raw, pageUrl); return /^https?:$/.test(url.protocol) ? url.href : ""; } catch { return ""; }
+  }).filter((url, index, all) => url && all.indexOf(url) === index && !/logo|avatar|icon|pixel|sprite/i.test(url));
+  return { paragraphs, images };
 }
 async function get(url) {
   const response = await fetch(url, { headers: { "user-agent": "festalfas-newsbot/1.0 (public news aggregation; contact: festalfas.vercel.app)", "accept": "text/html,application/rss+xml,application/xml" }, signal: AbortSignal.timeout(18000) });
@@ -107,11 +114,14 @@ for (const candidate of [...candidates.values()].slice(0, 55)) {
     const html = await get(candidate.url);
     const title = meta(html, "og:title") || meta(html, "twitter:title") || candidate.title || candidate.previous?.titulo || "";
     const description = meta(html, "og:description") || meta(html, "description") || meta(html, "twitter:description") || "";
-    const paragraphs = articleParagraphs(html);
-    const summaryParts = paragraphs.length ? paragraphs.slice(0, 3) : [description].filter(Boolean);
-    const summary = summaryParts.join(" ").slice(0, 720) || candidate.previous?.resumen || description || title;
-    const body = paragraphs.length ? paragraphs.slice(0, 6).join("\n\n").slice(0, 2400) : (description || candidate.previous?.contenido || summary).slice(0, 1200);
+    const article = articleContent(html, candidate.url);
+    const paragraphs = article.paragraphs;
+    const summaryParts = paragraphs.length ? paragraphs.slice(0, 2) : [description].filter(Boolean);
+    const summary = summaryParts.join(" ").slice(0, 1100) || candidate.previous?.resumen || description || title;
+    // Guardar el texto público completo que ofrece la página, sin limitarlo a seis párrafos.
+    const body = paragraphs.length ? paragraphs.join("\n\n").slice(0, 18000) : (description || candidate.previous?.contenido || summary).slice(0, 3000);
     const image = imageFrom(html, candidate.url) || candidate.previous?.imagen_url || "";
+    const imagenes_url = article.images.filter(url => url !== image).slice(0, 24);
     const date = dateFrom(html);
     const slug = candidate.url.replace(/\/$/, "").split("/").pop().replace(/[^a-z0-9-]/gi, "-").toLowerCase();
     results.push({
@@ -124,6 +134,7 @@ for (const candidate of [...candidates.values()].slice(0, 55)) {
       fuente: candidate.source.name,
       fuente_url: candidate.url,
       imagen_url: image,
+      imagenes_url,
       fecha: date || candidate.previous?.fecha,
       publicado: true,
       automatico: true,
