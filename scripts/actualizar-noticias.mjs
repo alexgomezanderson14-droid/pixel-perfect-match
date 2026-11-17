@@ -96,6 +96,20 @@ function extractElement(html, openingMatch) {
   return "";
 }
 
+
+function stripNonArticleHtml(html = "") {
+  let output = String(html || "")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<(script|style|noscript|template|svg|iframe|form)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, " ");
+  const openings = [...output.matchAll(/<(div|section|aside|nav|footer|header)\b[^>]*>/gi)].reverse();
+  for (const opening of openings) {
+    if (!/(?:wppas|advert|adzone|banner|cookie|social|related|share|menu|navigation|widget)/i.test(opening[0])) continue;
+    const block = extractElement(output, opening);
+    if (block) output = output.replace(block, " ");
+  }
+  return output;
+}
+
 function bestSrcsetValue(value = "") {
   const candidates = String(value).split(",").map(part => {
     const bits = part.trim().split(/\s+/);
@@ -120,21 +134,22 @@ function extractArticleLinks(source, pageUrl) {
 }
 
 function articleContent(html, pageUrl, structured = []) {
+  const sourceHtml = stripNonArticleHtml(html);
   const containers = [];
-  const openingTags = [...html.matchAll(/<(article|main|section|div)\b[^>]*>/gi)];
+  const openingTags = [...sourceHtml.matchAll(/<(article|main|section|div)\b[^>]*>/gi)];
   for (const opening of openingTags) {
     const tag = opening[1].toLowerCase();
     const attrs = opening[0];
     const preferredDiv = tag === "div" && /class=["'][^"']*(?:article[-_ ]?(?:body|content|text)|entry[-_ ]content|post[-_ ]content|story[-_ ]body|news[-_ ]content|content[-_ ]article|nota[-_ ]content)[^"']*["']/i.test(attrs);
     if (tag !== "article" && tag !== "main" && !preferredDiv) continue;
-    const block = extractElement(html, opening);
+    const block = extractElement(sourceHtml, opening);
     if (block) containers.push(block);
   }
-  const candidates = [...containers, html];
+  const candidates = [...containers, sourceHtml];
   const cleanParagraphs = (source) => [...source.matchAll(/<(?:p|h2|h3|h4|blockquote|li|figcaption|td|th|dt|dd)\b[^>]*>([\s\S]*?)<\/(?:p|h2|h3|h4|blockquote|li|figcaption|td|th|dt|dd)>/gi)]
     .map(match => clean(match[1]))
     .filter(text => text.length >= 28 &&
-      !/cookies?|pol[ií]tica de privacidad|suscr[ií]bete|leer m[aá]s noticias|publicidad|compartir esta noticia|aceptar todas|iniciar sesi[oó]n|art[ií]culos relacionados|noticias relacionadas/i.test(text))
+      !/cookies?|pol[ií]tica de privacidad|suscr[ií]bete|leer m[aá]s noticias|publicidad|compartir esta noticia|aceptar todas|iniciar sesi[oó]n|art[ií]culos relacionados|noticias relacionadas|gobierno municipal|saluda del alcalde|portal de transparencia|servicios municipales|bienestar social|wppas_ga|vendor_count|leer m[aá]s sobre estos prop[oó]sitos/i.test(text))
     .filter((text, index, all) => all.indexOf(text) === index);
   const ranked = candidates.map(source => ({ source, paragraphs: cleanParagraphs(source) }))
     .sort((a, b) => b.paragraphs.join("\n\n").length - a.paragraphs.join("\n\n").length);
@@ -144,7 +159,7 @@ function articleContent(html, pageUrl, structured = []) {
     const structuredParagraphs = structuredBody.split(/\n{2,}|(?<=[.!?])\s{2,}/).map(value => clean(value)).filter(value => value.length >= 28);
     if (structuredParagraphs.join("\n\n").length > paragraphs.join("\n\n").length) paragraphs = structuredParagraphs;
   }
-  const imageSource = ranked[0]?.source || html;
+  const imageSource = ranked[0]?.source || sourceHtml;
   const links = extractArticleLinks(imageSource, pageUrl);
   const images = [...imageSource.matchAll(/<(?:img|source)\b[^>]*>/gi)].map(match => {
     const attrs = Object.fromEntries([...match[0].matchAll(/([a-z:-]+)\s*=\s*["']([^"']*)["']/gi)].map(item => [item[1].toLowerCase(), decode(item[2])]));
@@ -168,9 +183,9 @@ function galleryImagesFrom(html, pageUrl) {
   }
   const urls = galleryBlocks.flatMap(block => [...block.matchAll(/<(?:img|source)\b[^>]*>/gi)].map(match => {
     const attrs = Object.fromEntries([...match[0].matchAll(/([a-z:-]+)\s*=\s*["']([^"']*)["']/gi)].map(item => [item[1].toLowerCase(), decode(item[2])]));
-    const raw = attrs["data-full-url"] || attrs["data-orig-file"] || attrs["data-large-file"] || attrs["data-src"] || attrs["data-lazy-src"] || attrs["data-original"] || attrs.src ||
-      attrs["data-srcset"]?.split(",").pop()?.trim().split(/\s+/)[0] ||
-      attrs.srcset?.split(",").pop()?.trim().split(/\s+/)[0] || "";
+    const raw = attrs["data-full-url"] || attrs["data-orig-file"] || attrs["data-large-file"] ||
+      attrs["data-src"] || attrs["data-lazy-src"] || attrs["data-original"] ||
+      bestSrcsetValue(attrs["data-srcset"] || attrs.srcset || "") || attrs.src || "";
     const url = absoluteImage(raw, pageUrl);
     const descriptiveAttrs = [attrs.alt, attrs.title, attrs.class, attrs.id, attrs["aria-label"], attrs.src, attrs["data-src"]].filter(Boolean).join(" ");
     if (forbiddenMedia.test(descriptiveAttrs) || (url && forbiddenMedia.test(url))) return "";
