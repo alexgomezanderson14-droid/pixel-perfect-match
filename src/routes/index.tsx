@@ -283,7 +283,8 @@ const limpiarTextoNoticia=(value:any)=>String(value||"")
   .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi," ")
   .replace(/if\s*\(\s*typeof\s+wppas_ga[\s\S]*?nonInteraction\s*:\s*true\s*\}\s*\)\s*;?\s*\}/gi," ")
   .replace(/\{vendor_count\}|Gestionar\s+proveedores|Leer más sobre estos propósitos/gi," ")
-  .replace(/^(?:lunes|martes|miércoles|jueves|viernes|sábado|domingo)\s*,?\s+\d{1,2}\s+(?:de\s+)?(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+20\\d{2}\s*,?\s+\d{1,2}:\d{2}\s*/i," ")\n  .replace(/Gobierno Municipal\\s+Saluda del Alcalde\\s+Portal de Transparencia Institucional\\s+Servicios Municipales\\s+Bienestar Social/gi," ")
+  .replace(/^(?:lunes|martes|miércoles|jueves|viernes|sábado|domingo)\s*,?\s+\d{1,2}\s+(?:de\s+)?(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+20\d{2}\s*,?\s+\d{1,2}:\d{2}\s*/i," ")
+  .replace(/Gobierno Municipal\s+Saluda del Alcalde\s+Portal de Transparencia Institucional\s+Servicios Municipales\s+Bienestar Social/gi," ")
   .replace(/[ \t]+/g," ").replace(/\n[ \t]*/g,"\n").trim();
 
 const videoEmbedUrl=(value:string)=>{try{const u=new URL(value);const host=u.hostname.toLowerCase();if(host==="youtube.com"||host==="www.youtube.com"){const id=u.searchParams.get("v")||(u.pathname.startsWith("/shorts/")?u.pathname.split("/")[2]:"");return id?"https://www.youtube-nocookie.com/embed/"+id:"";}if(host==="youtu.be")return "https://www.youtube-nocookie.com/embed/"+u.pathname.split("/").filter(Boolean)[0];if(host==="vimeo.com"||host==="www.vimeo.com")return "https://player.vimeo.com/video/"+u.pathname.split("/").filter(Boolean).pop();if(host==="instagram.com"||host==="www.instagram.com"){const path=u.pathname.endsWith("/")?u.pathname.slice(0,-1):u.pathname;if(path.includes("/reel/")||path.includes("/p/")||path.includes("/tv/"))return u.origin+path+"/embed";}return "";}catch{return "";}};
@@ -532,17 +533,26 @@ function Home() {
   const selectedPenyaActs = selectedPenya ? actos.filter((a) => eventoSigueActivo(a, now) && [a.titulo, a.descripcion, a.lugar].some((v) => normalizarBusqueda(v).includes(normalizarBusqueda(selectedPenya.nombre)))) : [];
   const selectedPenyaNews = selectedPenya ? noticias.filter((n:any) => n.publicado && (n.penya_id === selectedPenya.id || normalizarBusqueda([n.penya_nombre, n.autor].join(" ")).includes(normalizarBusqueda(selectedPenya.nombre)))).slice().sort((a:any,b:any) => String(b.fecha||b.created_at||"").localeCompare(String(a.fecha||a.created_at||""))).slice(0,3) : [];
   const selectedPenyaGallery = selectedPenya ? [...new Set([...selectedPenyaEvents.map((e:any) => e.imagen_url || e.imagen || e.foto_url || e.foto), ...selectedPenyaActs.map((a:any) => a.imagen_url || a.imagen || a.foto_url || a.foto)].filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url) && url !== selectedPenya.foto))] : [];
-  const noticiaImagenes = noticiaSeleccionada ? [...new Set(
-    // Las noticias automáticas solo pueden usar la lista creada por el extractor de galerías.
-    // No se aceptan los campos heredados "galeria"/"imagenes", que podían contener logos del sitio.
-    (noticiaSeleccionada.automatico
+  // Las noticias automáticas solo pueden usar la lista creada por el extractor de galerías.
+  // No se aceptan los campos heredados "galeria"/"imagenes", que podían contener logos del sitio.
+  const noticiaImagenes: string[] = (() => {
+    if (!noticiaSeleccionada) return [];
+    const fuentes: unknown[] = noticiaSeleccionada.automatico
       ? (Array.isArray(noticiaSeleccionada.imagenes_url) ? noticiaSeleccionada.imagenes_url : [])
-      : [...(Array.isArray(noticiaSeleccionada.galeria) ? noticiaSeleccionada.galeria : []), ...(Array.isArray(noticiaSeleccionada.imagenes) ? noticiaSeleccionada.imagenes : []), ...(Array.isArray(noticiaSeleccionada.imagenes_url) ? noticiaSeleccionada.imagenes_url : [])]
-    ).map((media:any) => typeof media === "string" ? media : media?.url || media?.src || media?.imagen_url)
-      .filter((url:any): url is string => typeof url === "string" && /^https?:\/\//i.test(url) &&
-        url !== noticiaSeleccionada.imagen_url &&
-        !/(?:union[-_ ]?europea|european[-_ ]?union|sede[-_ ]?electr[oó]nica|sede[-_ ]?electronica|logo(?:type)?|logotipo|favicon|icon(?:o)?|sprite|banner|accesibilidad|accessibility|cabecera|header|footer|menu)/i.test(url))
-  )] : [];
+      : [...(Array.isArray(noticiaSeleccionada.galeria) ? noticiaSeleccionada.galeria : []), ...(Array.isArray(noticiaSeleccionada.imagenes) ? noticiaSeleccionada.imagenes : []), ...(Array.isArray(noticiaSeleccionada.imagenes_url) ? noticiaSeleccionada.imagenes_url : [])];
+    const vistas = new Set<string>();
+    for (const media of fuentes) {
+      const bruta = typeof media === "string" ? media : (media as { url?: unknown; src?: unknown; imagen_url?: unknown } | null)?.url
+        || (media as { src?: unknown } | null)?.src
+        || (media as { imagen_url?: unknown } | null)?.imagen_url;
+      if (typeof bruta !== "string") continue;
+      if (!/^https?:\/\//i.test(bruta)) continue;
+      if (bruta === noticiaSeleccionada.imagen_url) continue;
+      if (/(?:union[-_ ]?europea|european[-_ ]?union|sede[-_ ]?electr[oó]nica|sede[-_ ]?electronica|logo(?:type)?|logotipo|favicon|icon(?:o)?|sprite|banner|accesibilidad|accessibility|cabecera|header|footer|menu)/i.test(bruta)) continue;
+      vistas.add(bruta);
+    }
+    return [...vistas];
+  })();
 
   const goMap = (id?: string) => {
     if (!id) return;
