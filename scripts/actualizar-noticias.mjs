@@ -83,7 +83,7 @@ function articleContent(html, pageUrl, structured = []) {
     if (block) containers.push(block);
   }
   const candidates = [...containers, html];
-  const cleanParagraphs = (source) => [...source.matchAll(/<(?:p|h2|h3|h4|blockquote|li)\b[^>]*>([\s\S]*?)<\/(?:p|h2|h3|h4|blockquote|li)>/gi)]
+  const cleanParagraphs = (source) => [...source.matchAll(/<(?:p|h2|h3|h4|blockquote|li|figcaption|td|th|dt|dd)\b[^>]*>([\s\S]*?)<\/(?:p|h2|h3|h4|blockquote|li|figcaption|td|th|dt|dd)>/gi)]
     .map(match => clean(match[1]))
     .filter(text => text.length >= 28 &&
       !/cookies?|pol[ií]tica de privacidad|suscr[ií]bete|leer m[aá]s noticias|publicidad|compartir esta noticia|aceptar todas|iniciar sesi[oó]n|art[ií]culos relacionados|noticias relacionadas/i.test(text))
