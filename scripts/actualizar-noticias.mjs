@@ -44,17 +44,17 @@ function dateFrom(html) {
   return "";
 }
 function articleContent(html, pageUrl) {
-  const article = html.match(/<article\\b[^>]*>([\\s\\S]*?)<\\/article>/i)?.[1];
-  const main = html.match(/<main\\b[^>]*>([\\s\\S]*?)<\\/main>/i)?.[1];
+  const article = html.match(/<article\b[^>]*>([\s\S]*?)<\/article>/i)?.[1];
+  const main = html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i)?.[1];
   const preferred = article || main || html;
-  const withoutNoise = preferred.replace(/<(script|style|nav|header|footer|aside|form|noscript)\\b[\\s\\S]*?<\\/\\1>/gi, " ");
-  const paragraphs = [...withoutNoise.matchAll(/<(?:p|h2|h3|blockquote)\\b[^>]*>([\\s\\S]*?)<\\/(?:p|h2|h3|blockquote)>/gi)]
+  const withoutNoise = preferred.replace(/<(script|style|nav|header|footer|aside|form|noscript)\b[\s\S]*?<\/\1>/gi, " ");
+  const paragraphs = [...withoutNoise.matchAll(/<(?:p|h2|h3|blockquote)\b[^>]*>([\s\S]*?)<\/(?:p|h2|h3|blockquote)>/gi)]
     .map(match => clean(match[1]))
     .filter(text => text.length >= 35 && !/cookies?|pol[ií]tica de privacidad|suscr[ií]bete|leer m[aá]s noticias|publicidad|compartir esta noticia|aceptar todas/i.test(text))
     .filter((text, index, all) => all.indexOf(text) === index);
-  const images = [...withoutNoise.matchAll(/<img\\b[^>]*>/gi)].map(match => {
-    const attrs = Object.fromEntries([...match[0].matchAll(/([a-z:-]+)\\s*=\\s*["']([^"']*)["']/gi)].map(item => [item[1].toLowerCase(), decode(item[2])]));
-    const raw = attrs.src || attrs["data-src"] || attrs["data-lazy-src"] || attrs["data-original"] || attrs.srcset?.split(",").pop()?.trim().split(/\\s+/)[0] || "";
+  const images = [...withoutNoise.matchAll(/<img\b[^>]*>/gi)].map(match => {
+    const attrs = Object.fromEntries([...match[0].matchAll(/([a-z:-]+)\s*=\s*["']([^"']*)["']/gi)].map(item => [item[1].toLowerCase(), decode(item[2])]));
+    const raw = attrs.src || attrs["data-src"] || attrs["data-lazy-src"] || attrs["data-original"] || attrs.srcset?.split(",").pop()?.trim().split(/\s+/)[0] || "";
     try { const url = new URL(raw, pageUrl); return /^https?:$/.test(url.protocol) ? url.href : ""; } catch { return ""; }
   }).filter((url, index, all) => url && all.indexOf(url) === index && !/logo|avatar|icon|pixel|sprite/i.test(url));
   return { paragraphs, images };
