@@ -13,6 +13,55 @@ import { useEffect, useState, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
+
+function MotionEffects() {
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const selector = "main > section, main article, main details, main .glass, .copyright-footer";
+    const observed = new WeakSet<Element>();
+    let observer: IntersectionObserver | null = null;
+    const reveal = (scope: ParentNode = document) => {
+      scope.querySelectorAll<HTMLElement>(selector).forEach((element, index) => {
+        if (observed.has(element)) return;
+        observed.add(element);
+        element.classList.add("motion-reveal");
+        element.style.setProperty("--motion-delay", `${Math.min(index % 5, 4) * 65}ms`);
+        if (observer) observer.observe(element);
+        else element.classList.add("is-visible");
+      });
+    };
+
+    if ("IntersectionObserver" in window) {
+      observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-visible");
+          observer?.unobserve(entry.target);
+        });
+      }, { threshold: 0.08, rootMargin: "0px 0px -32px 0px" });
+    }
+
+    reveal();
+    const mutations = new MutationObserver((records) => {
+      records.forEach((record) => record.addedNodes.forEach((node) => {
+        if (node instanceof HTMLElement) {
+          if (node.matches(selector)) reveal(node.parentNode || document);
+          else reveal(node);
+        }
+      }));
+    });
+    mutations.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      mutations.disconnect();
+      observer?.disconnect();
+    };
+  }, []);
+
+  return null;
+}
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -115,7 +164,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>\n      <MotionEffects />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <div className="min-h-screen" onContextMenu={(event) => { if ((event.target as HTMLElement).closest('img, picture, video')) event.preventDefault(); }} onDragStart={(event) => { if ((event.target as HTMLElement).closest('img, picture')) event.preventDefault(); }}>
         <Outlet />
