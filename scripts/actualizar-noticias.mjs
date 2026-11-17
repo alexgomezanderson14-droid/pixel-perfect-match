@@ -142,6 +142,35 @@ async function get(url) {
   if (!response.ok) throw new Error(`HTTP ${response.status} en ${url}`);
   return response.text();
 }
+
+async function wordpressArticle(pageUrl) {
+  const parsed = new URL(pageUrl);
+  if (parsed.hostname !== "www.lalfas.es" && parsed.hostname !== "lalfas.es") return null;
+  const slug = parsed.pathname.split("/").filter(Boolean).pop();
+  if (!slug) return null;
+  const endpoint = new URL("/wp-json/wp/v2/posts", parsed.origin);
+  endpoint.searchParams.set("slug", slug);
+  endpoint.searchParams.set("_embed", "1");
+  const response = await fetch(endpoint, {
+    headers: { "user-agent": "festalfas-newsbot/1.0", "accept": "application/json" },
+    signal: AbortSignal.timeout(12000),
+  });
+  if (!response.ok) return null;
+  const records = await response.json();
+  const post = Array.isArray(records) ? records[0] : null;
+  if (!post) return null;
+  const rendered = post.content?.rendered || "";
+  const embeddedImage = post._embedded?.["wp:featuredmedia"]?.[0]?.source_url || "";
+  const body = articleContent(rendered, pageUrl, []);
+  return {
+    title: clean(post.title?.rendered || ""),
+    description: clean(post.excerpt?.rendered || ""),
+    paragraphs: body.paragraphs,
+    images: body.images,
+    featuredImage: absoluteImage(embeddedImage, pageUrl),
+    date: post.date || "",
+  };
+}
 function tokens(item) {
   return new Set((String(item.titulo || "") + " " + String(item.resumen || ""))
     .toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -204,20 +233,36 @@ const results = [];
 for (const candidate of [...candidates.values()].slice(0, 180)) {
   try {
     const html = await get(candidate.url);
-    const title = meta(html, "og:title") || meta(html, "twitter:title") || candidate.title || candidate.previous?.titulo || "";
-    const description = meta(html, "og:description") || meta(html, "description") || meta(html, "twitter:description") || "";
     const structured = structuredArticleData(html);
+    const wp = await wordpressArticle(candidate.url).catch(error => {
+      console.warn("No se pudo consultar WordPress para", candidate.url, error.message);
+      return null;
+    });
     const article = articleContent(html, candidate.url, structured);
-    const paragraphs = article.paragraphs;
-    const summaryParts = paragraphs.length ? paragraphs.slice(0, 2) : [description].filter(Boolean);
-    const summary = summaryParts.join(" ").slice(0, 1100) || candidate.previous?.resumen || description || title;
-    // Guardar el texto público completo que ofrece la página, sin limitarlo a seis párrafos.
-    const body = candidate.source.type === "externa" ? (summary || description || title) : (paragraphs.length ? paragraphs.join("\n\n") : (candidate.previous?.contenido || description || summary));
-    const image = imageFrom(html, candidate.url, structured) || candidate.previous?.imagen_url || "";
-    const imagenes_url = [...new Set([...article.images, ...(candidate.previous?.imagenes_url || [])])].filter(url => url !== image);
-    const date = dateFrom(html, structured) || candidate.previous?.fecha || "";
+    const paragraphs = (wp?.paragraphs?.join("\n\n").length || 0) > article.paragraphs.join("\n\n").length
+      ? wp.paragraphs : article.paragraphs;
+    const title = wp?.title || meta(html, "og:title") || meta(html, "twitter:title") || candidate.title || candidate.previous?.titulo || "";
+    const description = wp?.description || meta(html, "og:description") || meta(html, "description") || meta(html, "twitter:description") || "";
+    const summaryParts = paragraphs.length ? paragraphs.slice(0, 3) : [description].filter(Boolean);
+    const summary = summaryParts.join(" ").slice(0, 1100) ||
+      (candidate.previous?.resumen && !/consulta la publicaci[oó]n original/i.test(candidate.previous.resumen) ? candidate.previous.resumen : "");
+    // Las noticias oficiales se muestran con el texto completo. En medios externos se ofrece
+    // una síntesis editorial y el enlace/crédito al artículo original, sin republicar su texto íntegro.
+    const body = candidate.source.type === "externa"
+      ? (summary || description || "")
+      : (paragraphs.length ? paragraphs.join("\n\n") : (candidate.previous?.contenido || description || ""));
+    const image = wp?.featuredImage || imageFrom(html, candidate.url, structured) || candidate.previous?.imagen_url || "";
+    const allImages = [...new Set([...(wp?.images || []), ...article.images, ...(candidate.previous?.imagenes_url || [])])];
+    const imagenes_url = allImages.filter(url => url && url !== image);
+    const date = (wp?.date ? dateFrom("", [{ datePublished: wp.date }]) : "") || dateFrom(html, structured) || candidate.previous?.fecha || "";
     const publishedDate = String(date).slice(0,10);
     if (!publishedDate || publishedDate < MIN_DATE) continue;
+    // No publicar fichas vacías ni textos provisionales: esperar a poder extraer información real.
+    if (String(body || "").trim().length < 120) {
+      if (candidate.previous?.contenido && candidate.previous.contenido.length >= 120) results.push(candidate.previous);
+      console.warn("Noticia omitida por falta de contenido legible:", candidate.url);
+      continue;
+    }
     const slug = candidate.url.replace(/\/$/, "").split("/").pop().replace(/[^a-z0-9-]/gi, "-").toLowerCase();
     results.push({
       id: "auto-" + slug,
