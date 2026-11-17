@@ -164,7 +164,7 @@ function editorialParagraphs(value = "") {
 function editorialSummary(value = "") {
   const text = editorialOfficialText(value).replace(/\n+/g, " ");
   if (!text) return "";
-  const sentences = text.match(/[^.!?]+(?:[.!?]+["”’»)]*|$)/g) || [text];
+  const sentences = (text.match(/[^.!?]+(?:[.!?]+["”’»)]*|$)/g) || [text]).map(part => part.trim()).filter(Boolean);
   let summary = sentences.slice(0, 2).join(" ").trim();
   if (summary.length > 360) summary = summary.slice(0, 357).replace(/\s+\S*$/, "") + "…";
   return summary;
