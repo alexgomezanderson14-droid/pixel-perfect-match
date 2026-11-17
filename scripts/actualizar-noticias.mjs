@@ -118,11 +118,14 @@ function bestSrcsetValue(value = "") {
   }).filter(item => item.url);
   return candidates.sort((a, b) => b.score - a.score)[0]?.url || "";
 }
+function originalWordPressImageUrl(value) {
+  const url = absoluteImage(value, "https://www.lalfas.es/");
+  if (!url || !/lalfas\.es$/i.test(new URL(url).hostname)) return url;
+  // WordPress crea miniaturas como foto-400x284.jpg. Se recupera el archivo original.
+  return url.replace(/-\d{2,4}x\d{2,4}(?=\.(?:avif|webp|png|jpe?g|gif|tiff?)(?:[?#]|$))/i, "");
+}
 function bestGalleryImageUrl(tag, html, index, pageUrl) {
-  const attrs = Object.fromEntries([...String(tag || "").matchAll(/([a-z:-]+)\s*=\s*["']([^"']*)["']/gi)]
-    .map(item => [item[1].toLowerCase(), decode(item[2])]));
-  // En muchas webs la etiqueta <img> apunta a una miniatura, mientras que el enlace
-  // que la envuelve lleva al archivo original de la fotografía.
+  const attrs = Object.fromEntries([...String(tag || "").matchAll(/([a-z:-]+)\s*=\s*["']([^"']*)["']/gi)].map(item => [item[1].toLowerCase(), decode(item[2])]));
   let linkedOriginal = "";
   const anchorStart = String(html || "").lastIndexOf("<a", index);
   const anchorEnd = String(html || "").lastIndexOf("</a>", index);
@@ -131,20 +134,9 @@ function bestGalleryImageUrl(tag, html, index, pageUrl) {
     const href = anchor.match(/\bhref\s*=\s*["']([^"']+)["']/i)?.[1] || "";
     if (/\.(?:avif|webp|png|jpe?g|gif|tiff?)(?:[?#]|$)/i.test(href)) linkedOriginal = href;
   }
-  const candidates = [
-    linkedOriginal,
-    attrs["data-orig-file"],
-    attrs["data-full-url"],
-    attrs["data-large-file"],
-    bestSrcsetValue(attrs["data-srcset"] || ""),
-    bestSrcsetValue(attrs.srcset || ""),
-    attrs["data-original"],
-    attrs["data-lazy-src"],
-    attrs["data-src"],
-    attrs.src,
-  ].filter(Boolean);
+  const candidates = [linkedOriginal, attrs["data-orig-file"], attrs["data-full-url"], attrs["data-large-file"], bestSrcsetValue(attrs["data-srcset"] || ""), bestSrcsetValue(attrs.srcset || ""), attrs["data-original"], attrs["data-lazy-src"], attrs["data-src"], attrs.src].filter(Boolean);
   for (const candidate of candidates) {
-    const resolved = absoluteImage(candidate, pageUrl);
+    const resolved = originalWordPressImageUrl(candidate);
     if (resolved) return resolved;
   }
   return "";
