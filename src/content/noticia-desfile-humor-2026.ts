@@ -14,7 +14,7 @@ La Penya Guirigall obtuvo el primer premio del certamen, en el que se repartiero
   fuente: "Ayuntamiento de l’Alfàs del Pi",
   fuente_url: "https://alfas.es/desfile-del-humor-festeslalfas-2026/",
   fecha: "2026-11-17",
-  imagen_url: "https://img.youtube.com/vi/x052gd-n39Q/hqdefault.jpg",
+  imagen_url: "https://img.youtube.com/vi/x052gd-n39Q/maxresdefault.jpg",
   video_url: "https://youtu.be/x052gd-n39Q?si=A79c6U5Eu4L5STit",
   publicado: true,
   created_at: "2026-11-17T13:15:00.000Z",
