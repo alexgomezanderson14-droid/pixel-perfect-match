@@ -28,6 +28,7 @@ const clean = (value = "") => {
   text = text.replace(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, (_, href, label) => {
     const labelText = decode(String(label).replace(/<[^>]*>/g, " ")).replace(/\s+/g, " ").trim();
     const target = decode(href).trim();
+    if (/\.(?:pdf|docx?|xlsx?|pptx?|zip|rar|jpe?g|png|gif|webp|avif|tiff?)(?:[?#]|$)/i.test(target)) return "";
     return labelText && /^https?:\/\//i.test(target) ? labelText + " (" + target + ")" : labelText;
   });
   text = text.replace(/<!--[\s\S]*?-->/g, " ")
@@ -142,6 +143,12 @@ function bestGalleryImageUrl(tag, html, index, pageUrl) {
   return "";
 }
 
+function linkedImageUrls(source, pageUrl) {
+  return [...String(source || "").matchAll(/<a\\b[^>]*href=["']([^"']+\\.(?:avif|webp|png|jpe?g|gif|tiff?)(?:[?#][^"']*)?)["'][^>]*>/gi)]
+    .map(match => originalWordPressImageUrl(match[1]))
+    .filter((url, index, all) => url && all.indexOf(url) === index && !/logo|avatar|icon|pixel|sprite|tracking|banner/i.test(url));
+}
+
 function extractArticleLinks(source, pageUrl) {
   const links = [...String(source || "").matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)]
     .map(match => {
@@ -164,6 +171,9 @@ function editorialOfficialText(value = "") {
     .replace(/^(?:lunes|martes|miércoles|jueves|viernes|sábado|domingo)\s*,?\s+\d{1,2}\s+(?:de\s+)?(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+20\d{2}\s*,?\s+\d{1,2}:\d{2}\s*/i, "")
     .replace(/Gobierno Municipal\s+Saluda del Alcalde\s+Portal de Transparencia Institucional\s+Servicios Municipales\s+Bienestar Social/gi, " ")
     .replace(/(?:BANDO BENESTAR ANIMAL FESTES 2026|BANDO FESTES STM CRIST 2026)(?:\s*[•·-]\s*\d+\s*KB\s*\d{2}\.\d{2}\.\d{4})*/gi, " ")
+    .replace(/https?\\s*:\\s*\\/\\/[\\s\\S]{0,500}?\\.(?:pdf|docx?|xlsx?|pptx?|zip|rar|jpe?g|png|gif|webp|avif|tiff?)(?:[?#][^\\s)]*)?/gi, " ")
+    .replace(/(?:[\\wÀ-ÿ ._()-]+)\\.(?:pdf|docx?|xlsx?|pptx?|zip|rar)(?=\\s|$|[•·])/gi, " ")
+    .replace(/(?:[•·]\\s*)?\\d+\\s*KB\\s+\\d{1,2}\\.\\s*\\d{1,2}\\.\\s*20\\d{2}/gi, " ")
     .replace(/DESCARGA LA PROGRAMACIÓN DE LAS FIESTAS DE L['’]ALFÀS:\s*L['’]ALFA[SÀ]\s+PROGRAMA FESTES 2026/gi, " ")
     .replace(/Aquí te puedes descargar el libro de las Fiestas del jubileo 2026:\s*/gi, " ");
   const navigationLabels = new Set([
@@ -222,10 +232,10 @@ function articleContent(html, pageUrl, structured = []) {
   }
   const imageSource = ranked[0]?.source || sourceHtml;
   const links = extractArticleLinks(imageSource, pageUrl);
-  const images = [...imageSource.matchAll(/<(?:img|source)\b[^>]*>/gi)].map(match => {
-    const attrs = Object.fromEntries([...match[0].matchAll(/([a-z:-]+)\s*=\s*["']([^"']*)["']/gi)].map(item => [item[1].toLowerCase(), decode(item[2])]));
-    return bestGalleryImageUrl(match[0], source, match.index, pageUrl);
-  }).filter((url, index, all) => url && all.indexOf(url) === index && !/logo|avatar|icon|pixel|sprite|tracking/i.test(url));
+  const images = [
+    ...[...imageSource.matchAll(/<(?:img|source)\\b[^>]*>/gi)].map(match => bestGalleryImageUrl(match[0], imageSource, match.index, pageUrl)),
+    ...linkedImageUrls(imageSource, pageUrl)
+  ].filter((url, index, all) => url && all.indexOf(url) === index && !/logo|avatar|icon|pixel|sprite|tracking/i.test(url));
   return { paragraphs, images, links };
 }
 function galleryImagesFrom(html, pageUrl) {
@@ -246,7 +256,7 @@ function galleryImagesFrom(html, pageUrl) {
     if (forbiddenMedia.test(descriptiveAttrs) || (url && forbiddenMedia.test(url))) return "";
     return url;
   }));
-  return [...new Set(urls)].filter(url => url && !/logo|avatar|icon|pixel|sprite|tracking|banner|union[-_]?europea|sede[-_]?electronica/i.test(url));
+  return [...new Set([...urls, ...galleryBlocks.flatMap(block => linkedImageUrls(block, pageUrl))])].filter(url => url && !/logo|avatar|icon|pixel|sprite|tracking|banner|union[-_]?europea|sede[-_]?electronica/i.test(url));
 }
 function dateFrom(html, structured = []) {
   const candidates = [
