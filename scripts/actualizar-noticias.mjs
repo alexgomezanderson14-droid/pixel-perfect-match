@@ -212,10 +212,12 @@ for (const candidate of [...candidates.values()].slice(0, 180)) {
     const summaryParts = paragraphs.length ? paragraphs.slice(0, 2) : [description].filter(Boolean);
     const summary = summaryParts.join(" ").slice(0, 1100) || candidate.previous?.resumen || description || title;
     // Guardar el texto público completo que ofrece la página, sin limitarlo a seis párrafos.
-    const body = paragraphs.length ? paragraphs.join("\n\n") : (candidate.previous?.contenido || description || summary);
+    const body = candidate.source.type === "externa" ? (summary || description || title) : (paragraphs.length ? paragraphs.join("\n\n") : (candidate.previous?.contenido || description || summary));
     const image = imageFrom(html, candidate.url, structured) || candidate.previous?.imagen_url || "";
     const imagenes_url = [...new Set([...article.images, ...(candidate.previous?.imagenes_url || [])])].filter(url => url !== image);
     const date = dateFrom(html, structured) || candidate.previous?.fecha || "";
+    const publishedDate = String(date).slice(0,10);
+    if (!publishedDate || publishedDate < MIN_DATE) continue;
     const slug = candidate.url.replace(/\/$/, "").split("/").pop().replace(/[^a-z0-9-]/gi, "-").toLowerCase();
     results.push({
       id: "auto-" + slug,
