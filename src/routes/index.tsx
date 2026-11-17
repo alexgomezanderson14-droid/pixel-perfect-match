@@ -44,6 +44,18 @@ function fmtDia(d: string) {
   return new Date(d + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
 }
 
+const fechaMinimaNoticias = "2026-10-20";
+const tematicaFestiva = /fiest|fiesta|festes|peñ|penya|mayoral|majoral|jubileo|cristo del buen acierto|desfile del humor|preg[oó]n|ofrenda|masclet[aà]|pirotecnia|actos lit[uú]rgicos|romer[ií]a|carnaval|fester|festera/i;
+function esNoticiaFestivaLocal(noticia: any) {
+  const fecha = String(noticia?.fecha || noticia?.created_at || "").slice(0, 10);
+  if (!fecha || fecha < fechaMinimaNoticias) return false;
+  const texto = [noticia?.titulo, noticia?.resumen, noticia?.contenido, noticia?.autor, noticia?.fuente, noticia?.penya_nombre, noticia?.fuente_url].filter(Boolean).join(" ");
+  if (!tematicaFestiva.test(texto)) return false;
+  const ubicacionLocal = /l.?alf[aà]s|alfaz|l.?albir|albir|cubata|cobre\s*bario\s*t[aá]ntalo|mayorales|mejorales|penya|peña/i.test(texto);
+  const fuenteMunicipal = /(?:^|\.)lalfas\.es\//i.test(String(noticia?.fuente_url || ""));
+  return ubicacionLocal || fuenteMunicipal;
+}
+
 function esNoticiaMayorales(noticia: any) {
   const referencia = [noticia?.titulo, noticia?.autor, noticia?.penya_nombre, noticia?.fuente].filter(Boolean).join(" ");
   return /mayorales|mejorales|cubata|cobre\s*bario\s*t[aá]ntalo/i.test(referencia);
@@ -57,7 +69,7 @@ function esPenyaCuBaTa(nombre: string) {
 
 function CountdownFiestas() {
   const calcular = () => {
-    const diferencia = Math.max(0, new Date(2027, 10, 7, 0, 0, 0).getTime() - Date.now());
+    const diferencia = Math.max(0, new Date(2027, 10, 6, 13, 0, 0).getTime() - Date.now());
     return {
       dias: Math.floor(diferencia / 86400000),
       horas: Math.floor((diferencia % 86400000) / 3600000),
@@ -70,7 +82,7 @@ function CountdownFiestas() {
     const timer = window.setInterval(() => setRestante(calcular()), 1000);
     return () => window.clearInterval(timer);
   }, []);
-  return <div className="mb-4 inline-flex items-center gap-2 rounded-2xl border border-white/35 bg-black/35 px-3 py-2 text-center text-white shadow-lg backdrop-blur-md sm:gap-3 sm:px-4 sm:py-3" aria-label="Cuenta atrás para las fiestas del 7 de noviembre de 2027">
+  return <div className="mb-4 inline-flex items-center gap-2 rounded-2xl border border-white/35 bg-black/35 px-3 py-2 text-center text-white shadow-lg backdrop-blur-md sm:gap-3 sm:px-4 sm:py-3" aria-label="Cuenta atrás hasta el anuncio oficial del comienzo de las fiestas: 6 de noviembre de 2027 a las 13:00">
     {([["dias", "DÍAS"], ["horas", "H"], ["minutos", "MIN"], ["segundos", "SEG"]] as const).map(([key, label], index) => <div key={key} className="flex min-w-[2.5rem] flex-col sm:min-w-[3.5rem]">
       <span className="text-xl font-extrabold tabular-nums leading-none sm:text-3xl">{String(restante[key]).padStart(2, "0")}</span>
       <span className="mt-1 text-[8px] font-bold tracking-wider text-white/80 sm:text-[10px]">{label}</span>
@@ -425,10 +437,10 @@ function Home() {
       const guardadasSinVersionAntigua=guardadas.filter((noticia:any)=>noticia?.id!=="desfile-humor-lalfas-2026-video");
       const combinadas=[...guardadasSinVersionAntigua,...noticiasAutomaticas,...respaldo];
       const unicas=combinadas.filter((noticia:any,index:number,array:any[])=>noticia?.id&&array.findIndex((otra:any)=>String(otra.id)===String(noticia.id))===index);
-      setNoticias(unicas);
+      setNoticias(unicas.filter(esNoticiaFestivaLocal));
     } catch {
       const combinadas=[...noticiasAutomaticas,noticiaCestaNavidad2027,noticiaCuBaTa2027,noticiaDesfileHumor2026];
-      setNoticias(combinadas.filter((noticia:any,index:number,array:any[])=>noticia?.id&&array.findIndex((otra:any)=>String(otra.id)===String(noticia.id))===index));
+      setNoticias(combinadas.filter((noticia:any,index:number,array:any[])=>noticia?.id&&array.findIndex((otra:any)=>String(otra.id)===String(noticia.id))===index).filter(esNoticiaFestivaLocal));
     }
     try { const points=JSON.parse(content["mapa_puntos_json"]||"[]"); setMapPoints(Array.isArray(points)?points.filter((p:any)=>Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))&&Number(p.lat)>=-90&&Number(p.lat)<=90&&Number(p.lng)>=-180&&Number(p.lng)<=180):[]); } catch { setMapPoints([]); }
     if (content["hero_image_path"]) {
