@@ -213,10 +213,9 @@ for (const seed of SEED_URLS) {
   candidates.set(seed.url.replace(/\/$/, ""), { url: seed.url, title: seed.title, source, previous: previousItem });
 }
 for (const item of previous) {
-  if (!item?.fuente_url || (item.fecha && String(item.fecha).slice(0,10) < MIN_DATE)) continue;
+  if (!item?.fuente_url || !item.fecha || String(item.fecha).slice(0,10) < MIN_DATE) continue;
+  if (String(item.contenido || "").trim().length < 120 || !isLocalFestiveNews(item)) continue;
   if (/marinabaixadigital\.es\/sec\//i.test(item.fuente_url)) continue;
-  if (!TERMS.test(item.titulo || "")) continue;
-  if (item.tipo === "externa" && !/l.?alf[aà]s|alfaz/i.test(String(item.titulo || "") + " " + item.fuente_url)) continue;
   const key = item.fuente_url.replace(/\/$/, "");
   const source = sourceForUrl(item.fuente_url, item.fuente);
   if (!candidates.has(key)) candidates.set(key, { url: item.fuente_url, title: item.titulo || "", source, previous: item });
@@ -294,7 +293,7 @@ for (const candidate of [...candidates.values()].slice(0, 180)) {
     });
   } catch (error) {
     console.warn("No se pudo leer", candidate.url, error.message);
-    if (candidate.previous && String(candidate.previous.fecha || "").slice(0,10) >= MIN_DATE && isLocalFestiveNews(candidate.previous)) results.push(candidate.previous);
+    if (candidate.previous && String(candidate.previous.fecha || "").slice(0,10) >= MIN_DATE && String(candidate.previous.contenido || "").trim().length >= 120 && isLocalFestiveNews(candidate.previous)) results.push(candidate.previous);
   }
 }
 results.sort((a, b) => String(b.fecha || "").localeCompare(String(a.fecha || "")));
