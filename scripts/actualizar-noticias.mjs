@@ -127,11 +127,11 @@ function galleryImagesFrom(html, pageUrl) {
     const block = extractElement(html, opening);
     if (block) galleryBlocks.push(block);
   }
-  const urls = galleryBlocks.flatMap(block => [...block.matchAll(/<(?:img|source)\\b[^>]*>/gi)].map(match => {
-    const attrs = Object.fromEntries([...match[0].matchAll(/([a-z:-]+)\\s*=\\s*["']([^"']*)["']/gi)].map(item => [item[1].toLowerCase(), decode(item[2])]));
+  const urls = galleryBlocks.flatMap(block => [...block.matchAll(/<(?:img|source)\b[^>]*>/gi)].map(match => {
+    const attrs = Object.fromEntries([...match[0].matchAll(/([a-z:-]+)\s*=\s*["']([^"']*)["']/gi)].map(item => [item[1].toLowerCase(), decode(item[2])]));
     const raw = attrs["data-full-url"] || attrs["data-orig-file"] || attrs["data-large-file"] || attrs["data-src"] || attrs["data-lazy-src"] || attrs["data-original"] || attrs.src ||
-      attrs["data-srcset"]?.split(",").pop()?.trim().split(/\\s+/)[0] ||
-      attrs.srcset?.split(",").pop()?.trim().split(/\\s+/)[0] || "";
+      attrs["data-srcset"]?.split(",").pop()?.trim().split(/\s+/)[0] ||
+      attrs.srcset?.split(",").pop()?.trim().split(/\s+/)[0] || "";
     const url = absoluteImage(raw, pageUrl);
     const descriptiveAttrs = [attrs.alt, attrs.title, attrs.class, attrs.id, attrs["aria-label"], attrs.src, attrs["data-src"]].filter(Boolean).join(" ");
     if (forbiddenMedia.test(descriptiveAttrs) || (url && forbiddenMedia.test(url))) return "";
