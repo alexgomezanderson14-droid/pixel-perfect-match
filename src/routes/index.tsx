@@ -302,6 +302,16 @@ function Home() {
   const [noticias, setNoticias] = useState<any[]>([]);
   const [noticiaSeleccionada, setNoticiaSeleccionada] = useState<any | null>(null);
   const [fotoAmpliada, setFotoAmpliada] = useState<number | null>(null);
+  useEffect(() => {
+    if (fotoAmpliada === null) return;
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setFotoAmpliada(null);
+      if (event.key === "ArrowRight") setFotoAmpliada(current => current === null ? null : (current + 1) % noticiaImagenes.length);
+      if (event.key === "ArrowLeft") setFotoAmpliada(current => current === null ? null : (current - 1 + noticiaImagenes.length) % noticiaImagenes.length);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [fotoAmpliada, noticiaSeleccionada]);
   const [newsPopup, setNewsPopup] = useState<any[]>([]);
   const [siteContent, setSiteContent] = useState<Record<string,string>>({});
   const [heroImage, setHeroImage] = useState("");
