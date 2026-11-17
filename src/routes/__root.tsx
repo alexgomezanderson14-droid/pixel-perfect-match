@@ -114,13 +114,6 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
-  return () => {
-      window.removeEventListener("scroll", updateColor, true);
-      window.removeEventListener("resize", updateColor);
-      observer.disconnect();
-    };
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
