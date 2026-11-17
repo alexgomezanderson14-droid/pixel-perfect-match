@@ -525,8 +525,9 @@ function Home() {
           ["info","ⓘ","Info"],
         ].map(([page,icon,label])=><button key={page} type="button" aria-current={currentPage===page?"page":undefined} onClick={()=>{setMapFullscreen(false);setSelectedPenya(null);setPenyaDetailFullscreen(false);setEventFormPenya(null);setForm(false);setNewsPopup([]);setShareReminder(false);setNoticiaSeleccionada(null);setCurrentPage(page as any);window.scrollTo({top:0,behavior:"smooth"});}} className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-0.5 py-2 text-center transition sm:flex-row sm:gap-2 sm:rounded-full sm:px-4 sm:py-3 ${currentPage===page?"bg-pink/20 text-primary":"text-muted-foreground hover:bg-glass"}`}><span className="text-xl leading-none sm:text-lg">{icon}</span><span className="whitespace-nowrap text-[9px] font-bold leading-tight sm:text-sm">{label}</span></button>)}
       </nav>
-      <div aria-label="festalfàs" className={`pointer-events-none fixed right-4 top-3 z-[10000] select-none text-sm font-extrabold tracking-tight sm:right-6 sm:top-4 sm:text-base ${currentPage === "home" ? "text-white" : "text-black"}`}>
-        festalfàs
+      <div aria-label="festalfàs" className="pointer-events-none fixed right-4 top-3 z-[10000] isolate select-none text-sm font-extrabold tracking-tight text-white sm:right-6 sm:top-4 sm:text-base">
+        <span aria-hidden="true" className="absolute -inset-x-3 -inset-y-2 -z-10 rounded-full bg-gradient-to-r from-[#173f52]/95 via-[#236579]/85 to-[#3986a0]/80 blur-md" />
+        <span className="relative drop-shadow-[0_1px_3px_rgba(0,0,0,0.35)]">festalfàs</span>
       </div>
 
       {currentPage==="home" && <>
