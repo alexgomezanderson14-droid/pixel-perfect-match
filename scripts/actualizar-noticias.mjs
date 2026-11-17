@@ -118,6 +118,38 @@ function bestSrcsetValue(value = "") {
   }).filter(item => item.url);
   return candidates.sort((a, b) => b.score - a.score)[0]?.url || "";
 }
+function bestGalleryImageUrl(tag, html, index, pageUrl) {
+  const attrs = Object.fromEntries([...String(tag || "").matchAll(/([a-z:-]+)\s*=\s*["']([^"']*)["']/gi)]
+    .map(item => [item[1].toLowerCase(), decode(item[2])]));
+  // En muchas webs la etiqueta <img> apunta a una miniatura, mientras que el enlace
+  // que la envuelve lleva al archivo original de la fotografía.
+  let linkedOriginal = "";
+  const anchorStart = String(html || "").lastIndexOf("<a", index);
+  const anchorEnd = String(html || "").lastIndexOf("</a>", index);
+  if (anchorStart > anchorEnd) {
+    const anchor = String(html).slice(anchorStart, String(html).indexOf(">", anchorStart) + 1);
+    const href = anchor.match(/\bhref\s*=\s*["']([^"']+)["']/i)?.[1] || "";
+    if (/\.(?:avif|webp|png|jpe?g|gif|tiff?)(?:[?#]|$)/i.test(href)) linkedOriginal = href;
+  }
+  const candidates = [
+    linkedOriginal,
+    attrs["data-orig-file"],
+    attrs["data-full-url"],
+    attrs["data-large-file"],
+    bestSrcsetValue(attrs["data-srcset"] || ""),
+    bestSrcsetValue(attrs.srcset || ""),
+    attrs["data-original"],
+    attrs["data-lazy-src"],
+    attrs["data-src"],
+    attrs.src,
+  ].filter(Boolean);
+  for (const candidate of candidates) {
+    const resolved = absoluteImage(candidate, pageUrl);
+    if (resolved) return resolved;
+  }
+  return "";
+}
+
 function extractArticleLinks(source, pageUrl) {
   const links = [...String(source || "").matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)]
     .map(match => {
@@ -200,10 +232,7 @@ function articleContent(html, pageUrl, structured = []) {
   const links = extractArticleLinks(imageSource, pageUrl);
   const images = [...imageSource.matchAll(/<(?:img|source)\b[^>]*>/gi)].map(match => {
     const attrs = Object.fromEntries([...match[0].matchAll(/([a-z:-]+)\s*=\s*["']([^"']*)["']/gi)].map(item => [item[1].toLowerCase(), decode(item[2])]));
-    const raw = attrs["data-full-url"] || attrs["data-orig-file"] || attrs["data-large-file"] ||
-      attrs["data-src"] || attrs["data-lazy-src"] || attrs["data-original"] ||
-      bestSrcsetValue(attrs["data-srcset"] || attrs.srcset || "") || attrs.src || "";
-    return absoluteImage(raw, pageUrl);
+    return bestGalleryImageUrl(match[0], source, match.index, pageUrl);
   }).filter((url, index, all) => url && all.indexOf(url) === index && !/logo|avatar|icon|pixel|sprite|tracking/i.test(url));
   return { paragraphs, images, links };
 }
@@ -220,10 +249,7 @@ function galleryImagesFrom(html, pageUrl) {
   }
   const urls = galleryBlocks.flatMap(block => [...block.matchAll(/<(?:img|source)\b[^>]*>/gi)].map(match => {
     const attrs = Object.fromEntries([...match[0].matchAll(/([a-z:-]+)\s*=\s*["']([^"']*)["']/gi)].map(item => [item[1].toLowerCase(), decode(item[2])]));
-    const raw = attrs["data-full-url"] || attrs["data-orig-file"] || attrs["data-large-file"] ||
-      attrs["data-src"] || attrs["data-lazy-src"] || attrs["data-original"] ||
-      bestSrcsetValue(attrs["data-srcset"] || attrs.srcset || "") || attrs.src || "";
-    const url = absoluteImage(raw, pageUrl);
+    const url = bestGalleryImageUrl(match[0], block, match.index, pageUrl);
     const descriptiveAttrs = [attrs.alt, attrs.title, attrs.class, attrs.id, attrs["aria-label"], attrs.src, attrs["data-src"]].filter(Boolean).join(" ");
     if (forbiddenMedia.test(descriptiveAttrs) || (url && forbiddenMedia.test(url))) return "";
     return url;
