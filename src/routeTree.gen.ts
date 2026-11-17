@@ -11,6 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as EventosRouteImport } from './routes/eventos'
+import { Route as NoticiasRouteImport } from './routes/noticias'
+import { Route as PenyesRouteImport } from './routes/penyes'
+import { Route as ProgramaFiestasRouteImport } from './routes/programa-fiestas'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +27,98 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventosRoute = EventosRouteImport.update({
+  id: '/eventos',
+  path: '/eventos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NoticiasRoute = NoticiasRouteImport.update({
+  id: '/noticias',
+  path: '/noticias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PenyesRoute = PenyesRouteImport.update({
+  id: '/penyes',
+  path: '/penyes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProgramaFiestasRoute = ProgramaFiestasRouteImport.update({
+  id: '/programa-fiestas',
+  path: '/programa-fiestas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/eventos': typeof EventosRoute
+  '/noticias': typeof NoticiasRoute
+  '/penyes': typeof PenyesRoute
+  '/programa-fiestas': typeof ProgramaFiestasRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/eventos': typeof EventosRoute
+  '/noticias': typeof NoticiasRoute
+  '/penyes': typeof PenyesRoute
+  '/programa-fiestas': typeof ProgramaFiestasRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/eventos': typeof EventosRoute
+  '/noticias': typeof NoticiasRoute
+  '/penyes': typeof PenyesRoute
+  '/programa-fiestas': typeof ProgramaFiestasRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/eventos'
+    | '/noticias'
+    | '/penyes'
+    | '/programa-fiestas'
+    | '/sitemap.xml'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin'
-  id: '__root__' | '/' | '/admin'
+  to:
+    | '/'
+    | '/admin'
+    | '/eventos'
+    | '/noticias'
+    | '/penyes'
+    | '/programa-fiestas'
+    | '/sitemap.xml'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/eventos'
+    | '/noticias'
+    | '/penyes'
+    | '/programa-fiestas'
+    | '/sitemap.xml'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  EventosRoute: typeof EventosRoute
+  NoticiasRoute: typeof NoticiasRoute
+  PenyesRoute: typeof PenyesRoute
+  ProgramaFiestasRoute: typeof ProgramaFiestasRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +137,52 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/eventos': {
+      id: '/eventos'
+      path: '/eventos'
+      fullPath: '/eventos'
+      preLoaderRoute: typeof EventosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/noticias': {
+      id: '/noticias'
+      path: '/noticias'
+      fullPath: '/noticias'
+      preLoaderRoute: typeof NoticiasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/penyes': {
+      id: '/penyes'
+      path: '/penyes'
+      fullPath: '/penyes'
+      preLoaderRoute: typeof PenyesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/programa-fiestas': {
+      id: '/programa-fiestas'
+      path: '/programa-fiestas'
+      fullPath: '/programa-fiestas'
+      preLoaderRoute: typeof ProgramaFiestasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  EventosRoute: EventosRoute,
+  NoticiasRoute: NoticiasRoute,
+  PenyesRoute: PenyesRoute,
+  ProgramaFiestasRoute: ProgramaFiestasRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
