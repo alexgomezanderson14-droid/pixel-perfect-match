@@ -95,6 +95,30 @@ function extractElement(html, openingMatch) {
   }
   return "";
 }
+
+function bestSrcsetValue(value = "") {
+  const candidates = String(value).split(",").map(part => {
+    const bits = part.trim().split(/\s+/);
+    const amount = Number.parseFloat(bits[1] || "1");
+    return { url: bits[0] || "", score: Number.isFinite(amount) ? amount : 0 };
+  }).filter(item => item.url);
+  return candidates.sort((a, b) => b.score - a.score)[0]?.url || "";
+}
+function extractArticleLinks(source, pageUrl) {
+  const links = [...String(source || "").matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)]
+    .map(match => {
+      let url = "";
+      try { url = new URL(decode(match[1]), pageUrl).href; } catch { return null; }
+      const title = clean(match[2]).replace(/\s*\(https?:\/\/[^)]*\)\s*$/i, "").trim();
+      if (!/^https?:\/\//i.test(url) || !title || title.length < 2 ||
+        /^(leer más|ver más|compartir|facebook|instagram|twitter|x|whatsapp|anterior|siguiente)$/i.test(title) ||
+        /(?:facebook\.com|instagram\.com|twitter\.com|x\.com|pinterest\.com)/i.test(url) ||
+        /(?:wppas|banner|adzone|publicidad|cookie|politica-de-privacidad)/i.test(url)) return null;
+      return { titulo: title.slice(0, 140), url };
+    }).filter(Boolean);
+  return [...new Map(links.map(link => [link.url, link])).values()].slice(0, 12);
+}
+
 function articleContent(html, pageUrl, structured = []) {
   const containers = [];
   const openingTags = [...html.matchAll(/<(article|main|section|div)\b[^>]*>/gi)];
@@ -121,14 +145,15 @@ function articleContent(html, pageUrl, structured = []) {
     if (structuredParagraphs.join("\n\n").length > paragraphs.join("\n\n").length) paragraphs = structuredParagraphs;
   }
   const imageSource = ranked[0]?.source || html;
+  const links = extractArticleLinks(imageSource, pageUrl);
   const images = [...imageSource.matchAll(/<(?:img|source)\b[^>]*>/gi)].map(match => {
     const attrs = Object.fromEntries([...match[0].matchAll(/([a-z:-]+)\s*=\s*["']([^"']*)["']/gi)].map(item => [item[1].toLowerCase(), decode(item[2])]));
-    const raw = attrs.src || attrs["data-src"] || attrs["data-lazy-src"] || attrs["data-original"] ||
-      attrs["data-srcset"]?.split(",").pop()?.trim().split(/\s+/)[0] ||
-      attrs.srcset?.split(",").pop()?.trim().split(/\s+/)[0] || "";
+    const raw = attrs["data-full-url"] || attrs["data-orig-file"] || attrs["data-large-file"] ||
+      attrs["data-src"] || attrs["data-lazy-src"] || attrs["data-original"] ||
+      bestSrcsetValue(attrs["data-srcset"] || attrs.srcset || "") || attrs.src || "";
     return absoluteImage(raw, pageUrl);
   }).filter((url, index, all) => url && all.indexOf(url) === index && !/logo|avatar|icon|pixel|sprite|tracking/i.test(url));
-  return { paragraphs, images };
+  return { paragraphs, images, links };
 }
 function galleryImagesFrom(html, pageUrl) {
   const galleryBlocks = [];
@@ -204,6 +229,7 @@ async function wordpressArticle(pageUrl) {
     description: clean(post.excerpt?.rendered || ""),
     paragraphs: body.paragraphs,
     images: galleryImagesFrom(rendered, pageUrl),
+    links: body.links,
     featuredImage: absoluteImage(embeddedImage, pageUrl),
     date: post.date || "",
   };
@@ -302,6 +328,9 @@ for (const candidate of [...candidates.values()].slice(0, 180)) {
     const image = wp?.featuredImage || imageFrom(html, candidate.url, structured) || candidate.previous?.imagen_url || "";
     const allImages = [...new Set([...(wp?.images || []), ...galleryImagesFrom(html, candidate.url)])];
     const imagenes_url = allImages.filter(url => url && url !== image);
+    const enlaces = [...new Map([...(wp?.links || []), ...(article.links || []), ...(candidate.previous?.enlaces || [])]
+      .filter(link => link?.url && /^https?:\/\//i.test(link.url))
+      .map(link => [link.url, link])).values()].slice(0, 12);
     const date = (wp?.date ? dateFrom("", [{ datePublished: wp.date }]) : "") || dateFrom(html, structured) || candidate.previous?.fecha || "";
     const publishedDate = String(date).slice(0,10);
     if (!publishedDate || publishedDate < MIN_DATE) continue;
@@ -324,6 +353,7 @@ for (const candidate of [...candidates.values()].slice(0, 180)) {
       fuente_url: candidate.url,
       imagen_url: image,
       imagenes_url,
+      enlaces,
       fecha: publishedDate,
       publicado: true,
       automatico: true,
