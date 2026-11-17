@@ -23,7 +23,21 @@ const decode = (value = "") => value
   .replace(/&#0*39;|&apos;/gi, "'").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">")
   .replace(/&#x([\da-f]+);/gi, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
   .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)));
-const clean = (value = "") => decode(value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim());
+const clean = (value = "") => {
+  let text = decode(String(value || ""));
+  text = text.replace(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, (_, href, label) => {
+    const labelText = decode(String(label).replace(/<[^>]*>/g, " ")).replace(/\s+/g, " ").trim();
+    const target = decode(href).trim();
+    return labelText && /^https?:\/\//i.test(target) ? labelText + " (" + target + ")" : labelText;
+  });
+  text = text.replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<(script|style|noscript|template|svg|iframe)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, " ")
+    .replace(/if\s*\(\s*typeof\s+wppas_ga[\s\S]*?\}\s*\)\s*;?\s*\}/gi, " ")
+    .replace(/\{vendor_count\}|Gestionar\s+proveedores|Leer más sobre estos propósitos/gi, " ")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ").trim();
+  return text;
+};
 function meta(html, key) {
   const tags = html.match(/<meta\b[^>]*>/gi) || [];
   for (const tag of tags) {
@@ -81,22 +95,61 @@ function extractElement(html, openingMatch) {
   }
   return "";
 }
+
+
+function stripNonArticleHtml(html = "") {
+  let output = String(html || "")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<(script|style|noscript|template|svg|iframe|form)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, " ");
+  const openings = [...output.matchAll(/<(div|section|aside|nav|footer|header)\b[^>]*>/gi)].reverse();
+  for (const opening of openings) {
+    if (!/(?:wppas|advert|adzone|banner|cookie|social|related|share|menu|navigation|widget)/i.test(opening[0])) continue;
+    const block = extractElement(output, opening);
+    if (block) output = output.replace(block, " ");
+  }
+  return output;
+}
+
+function bestSrcsetValue(value = "") {
+  const candidates = String(value).split(",").map(part => {
+    const bits = part.trim().split(/\s+/);
+    const amount = Number.parseFloat(bits[1] || "1");
+    return { url: bits[0] || "", score: Number.isFinite(amount) ? amount : 0 };
+  }).filter(item => item.url);
+  return candidates.sort((a, b) => b.score - a.score)[0]?.url || "";
+}
+function extractArticleLinks(source, pageUrl) {
+  const links = [...String(source || "").matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)]
+    .map(match => {
+      let url = "";
+      try { url = new URL(decode(match[1]), pageUrl).href; } catch { return null; }
+      const title = clean(match[2]).replace(/\s*\(https?:\/\/[^)]*\)\s*$/i, "").trim();
+      if (!/^https?:\/\//i.test(url) || !title || title.length < 2 ||
+        /^(leer más|ver más|compartir|facebook|instagram|twitter|x|whatsapp|anterior|siguiente)$/i.test(title) ||
+        /(?:facebook\.com|instagram\.com|twitter\.com|x\.com|pinterest\.com)/i.test(url) ||
+        /(?:wppas|banner|adzone|publicidad|cookie|politica-de-privacidad)/i.test(url)) return null;
+      return { titulo: title.slice(0, 140), url };
+    }).filter(Boolean);
+  return [...new Map(links.map(link => [link.url, link])).values()].slice(0, 12);
+}
+
 function articleContent(html, pageUrl, structured = []) {
+  const sourceHtml = stripNonArticleHtml(html);
   const containers = [];
-  const openingTags = [...html.matchAll(/<(article|main|section|div)\b[^>]*>/gi)];
+  const openingTags = [...sourceHtml.matchAll(/<(article|main|section|div)\b[^>]*>/gi)];
   for (const opening of openingTags) {
     const tag = opening[1].toLowerCase();
     const attrs = opening[0];
     const preferredDiv = tag === "div" && /class=["'][^"']*(?:article[-_ ]?(?:body|content|text)|entry[-_ ]content|post[-_ ]content|story[-_ ]body|news[-_ ]content|content[-_ ]article|nota[-_ ]content)[^"']*["']/i.test(attrs);
     if (tag !== "article" && tag !== "main" && !preferredDiv) continue;
-    const block = extractElement(html, opening);
+    const block = extractElement(sourceHtml, opening);
     if (block) containers.push(block);
   }
-  const candidates = [...containers, html];
+  const candidates = [...containers, sourceHtml];
   const cleanParagraphs = (source) => [...source.matchAll(/<(?:p|h2|h3|h4|blockquote|li|figcaption|td|th|dt|dd)\b[^>]*>([\s\S]*?)<\/(?:p|h2|h3|h4|blockquote|li|figcaption|td|th|dt|dd)>/gi)]
     .map(match => clean(match[1]))
     .filter(text => text.length >= 28 &&
-      !/cookies?|pol[ií]tica de privacidad|suscr[ií]bete|leer m[aá]s noticias|publicidad|compartir esta noticia|aceptar todas|iniciar sesi[oó]n|art[ií]culos relacionados|noticias relacionadas/i.test(text))
+      !/cookies?|pol[ií]tica de privacidad|suscr[ií]bete|leer m[aá]s noticias|publicidad|compartir esta noticia|aceptar todas|iniciar sesi[oó]n|art[ií]culos relacionados|noticias relacionadas|gobierno municipal|saluda del alcalde|portal de transparencia|servicios municipales|bienestar social|wppas_ga|vendor_count|leer m[aá]s sobre estos prop[oó]sitos/i.test(text))
     .filter((text, index, all) => all.indexOf(text) === index);
   const ranked = candidates.map(source => ({ source, paragraphs: cleanParagraphs(source) }))
     .sort((a, b) => b.paragraphs.join("\n\n").length - a.paragraphs.join("\n\n").length);
@@ -106,15 +159,16 @@ function articleContent(html, pageUrl, structured = []) {
     const structuredParagraphs = structuredBody.split(/\n{2,}|(?<=[.!?])\s{2,}/).map(value => clean(value)).filter(value => value.length >= 28);
     if (structuredParagraphs.join("\n\n").length > paragraphs.join("\n\n").length) paragraphs = structuredParagraphs;
   }
-  const imageSource = ranked[0]?.source || html;
+  const imageSource = ranked[0]?.source || sourceHtml;
+  const links = extractArticleLinks(imageSource, pageUrl);
   const images = [...imageSource.matchAll(/<(?:img|source)\b[^>]*>/gi)].map(match => {
     const attrs = Object.fromEntries([...match[0].matchAll(/([a-z:-]+)\s*=\s*["']([^"']*)["']/gi)].map(item => [item[1].toLowerCase(), decode(item[2])]));
-    const raw = attrs.src || attrs["data-src"] || attrs["data-lazy-src"] || attrs["data-original"] ||
-      attrs["data-srcset"]?.split(",").pop()?.trim().split(/\s+/)[0] ||
-      attrs.srcset?.split(",").pop()?.trim().split(/\s+/)[0] || "";
+    const raw = attrs["data-full-url"] || attrs["data-orig-file"] || attrs["data-large-file"] ||
+      attrs["data-src"] || attrs["data-lazy-src"] || attrs["data-original"] ||
+      bestSrcsetValue(attrs["data-srcset"] || attrs.srcset || "") || attrs.src || "";
     return absoluteImage(raw, pageUrl);
   }).filter((url, index, all) => url && all.indexOf(url) === index && !/logo|avatar|icon|pixel|sprite|tracking/i.test(url));
-  return { paragraphs, images };
+  return { paragraphs, images, links };
 }
 function galleryImagesFrom(html, pageUrl) {
   const galleryBlocks = [];
@@ -129,9 +183,9 @@ function galleryImagesFrom(html, pageUrl) {
   }
   const urls = galleryBlocks.flatMap(block => [...block.matchAll(/<(?:img|source)\b[^>]*>/gi)].map(match => {
     const attrs = Object.fromEntries([...match[0].matchAll(/([a-z:-]+)\s*=\s*["']([^"']*)["']/gi)].map(item => [item[1].toLowerCase(), decode(item[2])]));
-    const raw = attrs["data-full-url"] || attrs["data-orig-file"] || attrs["data-large-file"] || attrs["data-src"] || attrs["data-lazy-src"] || attrs["data-original"] || attrs.src ||
-      attrs["data-srcset"]?.split(",").pop()?.trim().split(/\s+/)[0] ||
-      attrs.srcset?.split(",").pop()?.trim().split(/\s+/)[0] || "";
+    const raw = attrs["data-full-url"] || attrs["data-orig-file"] || attrs["data-large-file"] ||
+      attrs["data-src"] || attrs["data-lazy-src"] || attrs["data-original"] ||
+      bestSrcsetValue(attrs["data-srcset"] || attrs.srcset || "") || attrs.src || "";
     const url = absoluteImage(raw, pageUrl);
     const descriptiveAttrs = [attrs.alt, attrs.title, attrs.class, attrs.id, attrs["aria-label"], attrs.src, attrs["data-src"]].filter(Boolean).join(" ");
     if (forbiddenMedia.test(descriptiveAttrs) || (url && forbiddenMedia.test(url))) return "";
@@ -190,6 +244,7 @@ async function wordpressArticle(pageUrl) {
     description: clean(post.excerpt?.rendered || ""),
     paragraphs: body.paragraphs,
     images: galleryImagesFrom(rendered, pageUrl),
+    links: body.links,
     featuredImage: absoluteImage(embeddedImage, pageUrl),
     date: post.date || "",
   };
@@ -288,6 +343,9 @@ for (const candidate of [...candidates.values()].slice(0, 180)) {
     const image = wp?.featuredImage || imageFrom(html, candidate.url, structured) || candidate.previous?.imagen_url || "";
     const allImages = [...new Set([...(wp?.images || []), ...galleryImagesFrom(html, candidate.url)])];
     const imagenes_url = allImages.filter(url => url && url !== image);
+    const enlaces = [...new Map([...(wp?.links || []), ...(article.links || []), ...(candidate.previous?.enlaces || [])]
+      .filter(link => link?.url && /^https?:\/\//i.test(link.url))
+      .map(link => [link.url, link])).values()].slice(0, 12);
     const date = (wp?.date ? dateFrom("", [{ datePublished: wp.date }]) : "") || dateFrom(html, structured) || candidate.previous?.fecha || "";
     const publishedDate = String(date).slice(0,10);
     if (!publishedDate || publishedDate < MIN_DATE) continue;
@@ -310,6 +368,7 @@ for (const candidate of [...candidates.values()].slice(0, 180)) {
       fuente_url: candidate.url,
       imagen_url: image,
       imagenes_url,
+      enlaces,
       fecha: publishedDate,
       publicado: true,
       automatico: true,
