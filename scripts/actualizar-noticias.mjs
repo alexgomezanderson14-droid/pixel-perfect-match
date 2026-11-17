@@ -1,6 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
 
-const MIN_DATE = "2026-10-01";
+const MIN_DATE = "2026-10-20";
 const SOURCES = [
   { name: "Ayuntamiento de l’Alfàs del Pi", type: "oficial", archive: "https://www.lalfas.es/concejalias/fiestas/", prefixes: ["https://www.lalfas.es/"] },
   { name: "Ayuntamiento de l’Alfàs del Pi", type: "oficial", archive: "https://www.lalfas.es/fiestas/", prefixes: ["https://www.lalfas.es/"] },
@@ -15,7 +15,7 @@ const SOURCES = [
   { name: "Información", type: "externa", archive: "https://www.informacion.es/benidorm/", prefixes: ["https://www.informacion.es/benidorm/"] },
   { name: "Portada Valencia", type: "externa", archive: "https://portadavalencia.com/es/la-marina-baixa/lalfas-del-pi/", prefixes: ["https://portadavalencia.com/"] },
 ];
-const TERMS = /fiest|fiesta|peñ|pena|mayoral|majoral|jubil|cristo|festes|carnaval|cabalgata|romer[ií]a|desfile|correfoc|moros|san\s+jose|sant[ií]sim|9\s*d.?octubre|preg[oó]n|albaes|ofrenda|masclet[aà]|procesi[oó]n|fester|festera/i;
+const TERMS = /fiest|fiesta|festes|peñ|pena|penya|mayoral|majoral|jubileo|cristo del buen acierto|desfile del humor|preg[oó]n|ofrenda|masclet[aà]|pirotecnia|actos lit[uú]rgicos|romer[ií]a|carnaval|fester|festera/i;
 const SEED_URLS = [{"url":"https://www.lalfas.es/concejalias/fiestas/deporte-y-fiestas-se-dan-la-mano-en-el-torneo-de-padel-de-los-mayorales-de-sant-josep/","title":"Deporte y fiestas se dan la mano en el torneo de pádel de los Mayorales de Sant Josep","date":"2026-10-05","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/la-parroquia-de-san-jose-de-lalfas-del-pi-recupera-el-expositor-del-santisimo-sacramento-con-motivo-de-las-celebraciones-jubilares/","title":"La Parroquia de San José recupera el expositor del Santísimo Sacramento con motivo de las celebraciones jubilares","date":"2026-10-05","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/un-libro-sobre-la-serra-gelada-y-una-ruta-literaria-abren-manana-la-programacion-del-9-doctubre-en-lalfas/","title":"Un libro sobre la Serra Gelada y una ruta literaria abren la programación del 9 d’Octubre","date":"2026-10-06","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/los-actos-del-9-doctubre-continuan-manana-jueves-con-juegos-populares-gastronomia-y-musica/","title":"Los actos del 9 d’Octubre continúan con juegos populares, gastronomía y música","date":"2026-10-07","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/lalfas-del-pi-celebra-manana-su-jornada-principal-del-9-doctubre-con-tradicion-y-actividades-para-toda-la-familia/","title":"L’Alfàs celebra la jornada principal del 9 d’Octubre con tradición y actividades para toda la familia","date":"2026-10-08","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/lalfas-del-pi-cierra-la-programacion-del-9-doctubre-con-una-amplia-participacion-en-las-actividades/","title":"L’Alfàs cierra la programación del 9 d’Octubre con amplia participación","date":"2026-10-10","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/el-9-doctubre-en-imagenes/","title":"El 9 d’Octubre en imágenes","date":"2026-10-10","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/sanidad/lalfas-reta-a-sus-penas-festeras-a-sumarse-a-la-campana-de-donacion-de-sangre/","title":"L’Alfàs reta a sus peñas festeras a sumarse a la campaña de donación de sangre","date":"2026-10-23","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/seguridad-ciudadana/la-junta-de-seguridad-ciudadana-planifica-el-dispositivo-para-las-fiestas-de-lalfas-del-pi/","title":"La Junta de Seguridad Ciudadana planifica el dispositivo para las fiestas de l’Alfàs","date":"2026-10-26","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/seguridad-ciudadana/dos-bandos-municipales-recuerdan-las-normas-de-convivencia-y-seguridad-durante-las-fiestas-del-jubileo/","title":"Dos bandos municipales recuerdan las normas de convivencia y seguridad durante las Fiestas del Jubileo","date":"2026-11-03","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/lalfas-del-pi-habilita-un-autobus-gratuito-nocturno-durante-las-fiestas-del-cristo/","title":"L’Alfàs habilita un autobús gratuito nocturno durante las Fiestas del Cristo","date":"2026-11-04","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/el-libro-de-fiestas-del-jubileo-de-lalfas-2026-ya-esta-en-la-calle/","title":"El Libro de Fiestas del Jubileo de l’Alfàs 2026 ya está en la calle","date":"2026-11-05","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/ya-esta-operativo-el-dispositivo-especial-de-seguridad-para-las-fiestas-del-jubileo-de-lalfas/","title":"Ya está operativo el dispositivo especial de seguridad para las Fiestas del Jubileo","date":"2026-11-06","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/el-espectaculo-de-fuego-de-los-dimonis-rafolins-pone-el-broche-a-los-actos-liturgicos-del-jubileo-de-lalfas/","title":"El espectáculo de fuego de los Dimonis Rafolins pone el broche al Jubileo","date":"2026-11-10","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/unas-fiestas-libres-de-violencia-lalfas-instala-un-punto-violeta-y-arco-iris-durante-el-jubileo/","title":"L’Alfàs instala un Punto Violeta y Arco Iris durante el Jubileo","date":"2026-11-09","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/las-actividades-infantiles-tambien-han-tenido-su-espacio-en-las-fiestas-del-jubileo-de-lalfas/","title":"Las actividades infantiles también han tenido su espacio en las Fiestas del Jubileo","date":"2026-11-09","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/28-penas-llenan-de-color-las-calles-de-lalfas-en-el-tradicional-desfile-del-humor/","title":"28 peñas llenan de color las calles de l’Alfàs en el tradicional Desfile del Humor","date":"2026-11-09","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/flores-tradicion-y-devocion-en-la-ofrenda-al-santisimo-cristo-del-buen-acierto/","title":"Flores, tradición y devoción en la ofrenda al Santísimo Cristo del Buen Acierto","date":"2026-11-09","type":"oficial"},{"url":"https://www.lalfas.es/concejalias/fiestas/un-millar-de-personas-disfrutan-del-mejor-rock-con-la-mitica-banda-seguridad-social-en-las-fiestas-de-lalfas/","title":"Un millar de personas disfrutan del mejor rock con Seguridad Social en las fiestas de l’Alfàs","date":"2026-11-09","type":"oficial"},{"url":"https://www.informacion.es/benidorm/2026/11/03/tradiciones-traspasan-fronteras-importa-vengas-bc-136028162.html","title":"Nuestras tradiciones traspasan fronteras, no importa de dónde vengas para sentirte parte de l’Alfàs","date":"2026-11-03","type":"externa","sourceName":"Información"},{"url":"https://marinabaixadigital.es/art/7483/lalfas-presenta-libro-fiestas-jubileo-2026","title":"L’Alfàs presenta el Libro de Fiestas del Jubileo 2026 con 44 peñas","date":"2026-11-05","type":"externa","sourceName":"Marina Baixa Digital"},{"url":"https://portadavalencia.com/es/la-marina-baixa/lalfas-del-pi/lalfas-del-pi-presenta-el-libro-de-las-fiestas-del-jubileo-y-del-santisimo-cristo-del-buen-acierto-2026","title":"L’Alfàs presenta el libro de las Fiestas del Jubileo 2026","date":"2026-11-05","type":"externa","sourceName":"Portada Valencia"}];
 const STOP = new Set("de la el los las un una unos unas y o en del al con por para que se su sus es son vivir vive celebra celebrar celebraràn celebraran prepara preparan lalfas alfàs alfaz pi fiestas fiesta festes".split(" "));
 const decode = (value = "") => value
@@ -171,6 +171,13 @@ async function wordpressArticle(pageUrl) {
     date: post.date || "",
   };
 }
+function isLocalFestiveNews(item = {}) {
+  const text = [item.titulo, item.resumen, item.contenido, item.autor, item.fuente, item.fuente_url].filter(Boolean).join(" ");
+  if (!TERMS.test(text)) return false;
+  const local = /l.?alf[aà]s|alfaz|l.?albir|albir|cubata|cobre\s*bario\s*t[aá]ntalo|mayorales|mejorales|penya|peña/i.test(text);
+  const municipal = /(?:^|\.)lalfas\.es\//i.test(String(item.fuente_url || ""));
+  return local || municipal;
+}
 function tokens(item) {
   return new Set((String(item.titulo || "") + " " + String(item.resumen || ""))
     .toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -206,10 +213,9 @@ for (const seed of SEED_URLS) {
   candidates.set(seed.url.replace(/\/$/, ""), { url: seed.url, title: seed.title, source, previous: previousItem });
 }
 for (const item of previous) {
-  if (!item?.fuente_url || (item.fecha && String(item.fecha).slice(0,10) < MIN_DATE)) continue;
+  if (!item?.fuente_url || !item.fecha || String(item.fecha).slice(0,10) < MIN_DATE) continue;
+  if (String(item.contenido || "").trim().length < 120 || !isLocalFestiveNews(item)) continue;
   if (/marinabaixadigital\.es\/sec\//i.test(item.fuente_url)) continue;
-  if (!TERMS.test(item.titulo || "")) continue;
-  if (item.tipo === "externa" && !/l.?alf[aà]s|alfaz/i.test(String(item.titulo || "") + " " + item.fuente_url)) continue;
   const key = item.fuente_url.replace(/\/$/, "");
   const source = sourceForUrl(item.fuente_url, item.fuente);
   if (!candidates.has(key)) candidates.set(key, { url: item.fuente_url, title: item.titulo || "", source, previous: item });
@@ -225,6 +231,7 @@ for (const source of SOURCES) {
       if (/\/sec\//i.test(url)) continue;
       const title = clean(match[2]);
       if (title.length < 18 || title.length > 220 || !TERMS.test(title)) continue;
+      if (source.type === "externa" && !/l.?alf[aà]s|alfaz|l.?albir|albir/i.test(title + " " + url)) continue;
       if (source.name === "Marina Baixa Digital" && !/l.?alf[aà]s|alfaz/i.test(title + " " + url)) continue;
       if (source.name === "Marina Baixa Digital" && !/l.?alf[aà]s|alfaz/i.test(title + " " + url)) continue;
       if (/\/tag\/|\/category\/|\/author\/|\/page\/\d+/i.test(url)) continue;
@@ -261,6 +268,7 @@ for (const candidate of [...candidates.values()].slice(0, 180)) {
     const date = (wp?.date ? dateFrom("", [{ datePublished: wp.date }]) : "") || dateFrom(html, structured) || candidate.previous?.fecha || "";
     const publishedDate = String(date).slice(0,10);
     if (!publishedDate || publishedDate < MIN_DATE) continue;
+    if (!isLocalFestiveNews({ titulo: title, resumen: summary, contenido: body, fuente: candidate.source.name, fuente_url: candidate.url })) continue;
     // No publicar fichas vacías ni textos provisionales: esperar a poder extraer información real.
     if (String(body || "").trim().length < 120) {
       if (candidate.previous?.contenido && candidate.previous.contenido.length >= 120) results.push(candidate.previous);
@@ -285,11 +293,11 @@ for (const candidate of [...candidates.values()].slice(0, 180)) {
     });
   } catch (error) {
     console.warn("No se pudo leer", candidate.url, error.message);
-    if (candidate.previous) results.push(candidate.previous);
+    if (candidate.previous && String(candidate.previous.fecha || "").slice(0,10) >= MIN_DATE && String(candidate.previous.contenido || "").trim().length >= 120 && isLocalFestiveNews(candidate.previous)) results.push(candidate.previous);
   }
 }
 results.sort((a, b) => String(b.fecha || "").localeCompare(String(a.fecha || "")));
-const byUrl = [...new Map(results.filter(item => item.fuente_url && String(item.fecha || "").slice(0,10) >= MIN_DATE).map(item => [item.fuente_url.replace(/\/$/, ""), item])).values()];
+const byUrl = [...new Map(results.filter(item => item.fuente_url && String(item.fecha || "").slice(0,10) >= MIN_DATE && isLocalFestiveNews(item)).map(item => [item.fuente_url.replace(/\/$/, ""), item])).values()];
 const unique = [];
 const normalizedTitle = value => String(value || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
 for (const item of byUrl) {
