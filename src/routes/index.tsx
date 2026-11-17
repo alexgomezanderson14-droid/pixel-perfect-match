@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import CopyrightFooter from "@/components/CopyrightFooter";
 import { noticiaCuBaTa2027 } from "@/content/noticia-cubata-2027";
 import { noticiaCestaNavidad2027 } from "@/content/noticia-cesta-navidad-2027";
+import { noticiaDesfileHumor2026 } from "@/content/noticia-desfile-humor-2026";
 
 const FestMap = lazy(() => import("@/components/FestMap"));
 const AddPenyaForm = lazy(() => import("@/components/AddPenyaForm"));
@@ -418,12 +419,12 @@ function Home() {
     try {
       const parsed=JSON.parse(content["noticias_json"]||"[]");
       const guardadas=Array.isArray(parsed)?parsed:[];
-      const respaldo=[noticiaCestaNavidad2027,noticiaCuBaTa2027];
+      const respaldo=[noticiaDesfileHumor2026,noticiaCestaNavidad2027,noticiaCuBaTa2027];
       const combinadas=[...guardadas,...noticiasAutomaticas,...respaldo];
       const unicas=combinadas.filter((noticia:any,index:number,array:any[])=>noticia?.id&&array.findIndex((otra:any)=>String(otra.id)===String(noticia.id))===index);
       setNoticias(unicas);
     } catch {
-      const combinadas=[...noticiasAutomaticas,noticiaCestaNavidad2027,noticiaCuBaTa2027];
+      const combinadas=[...noticiasAutomaticas,noticiaDesfileHumor2026,noticiaCestaNavidad2027,noticiaCuBaTa2027];
       setNoticias(combinadas.filter((noticia:any,index:number,array:any[])=>noticia?.id&&array.findIndex((otra:any)=>String(otra.id)===String(noticia.id))===index));
     }
     try { const points=JSON.parse(content["mapa_puntos_json"]||"[]"); setMapPoints(Array.isArray(points)?points.filter((p:any)=>Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))&&Number(p.lat)>=-90&&Number(p.lat)<=90&&Number(p.lng)>=-180&&Number(p.lng)<=180):[]); } catch { setMapPoints([]); }
