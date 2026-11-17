@@ -284,7 +284,7 @@ const limpiarTextoNoticia=(value:any)=>String(value||"")
   .replace(/if\s*\(\s*typeof\s+wppas_ga[\s\S]*?nonInteraction\s*:\s*true\s*\}\s*\)\s*;?\s*\}/gi," ")
   .replace(/\{vendor_count\}|Gestionar\s+proveedores|Leer más sobre estos propósitos/gi," ")
   .replace(/Gobierno Municipal\s+Saluda del Alcalde\s+Portal de Transparencia Institucional\s+Servicios Municipales\s+Bienestar Social/gi," ")
-  .replace(/\s+/g," ").trim();
+  .replace(/[ \t]+/g," ").replace(/\n[ \t]*/g,"\n").trim();
 
 const videoEmbedUrl=(value:string)=>{try{const u=new URL(value);const host=u.hostname.toLowerCase();if(host==="youtube.com"||host==="www.youtube.com"){const id=u.searchParams.get("v")||(u.pathname.startsWith("/shorts/")?u.pathname.split("/")[2]:"");return id?"https://www.youtube-nocookie.com/embed/"+id:"";}if(host==="youtu.be")return "https://www.youtube-nocookie.com/embed/"+u.pathname.split("/").filter(Boolean)[0];if(host==="vimeo.com"||host==="www.vimeo.com")return "https://player.vimeo.com/video/"+u.pathname.split("/").filter(Boolean).pop();if(host==="instagram.com"||host==="www.instagram.com"){const path=u.pathname.endsWith("/")?u.pathname.slice(0,-1):u.pathname;if(path.includes("/reel/")||path.includes("/p/")||path.includes("/tv/"))return u.origin+path+"/embed";}return "";}catch{return "";}};
 const esVideoDirecto=(value:string)=>{try{const path=new URL(value).pathname.toLowerCase();return [".mp4",".webm",".ogg",".mov"].some(ext=>path.endsWith(ext));}catch{return false;}};
