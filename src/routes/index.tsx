@@ -525,6 +525,9 @@ function Home() {
           ["info","ⓘ","Info"],
         ].map(([page,icon,label])=><button key={page} type="button" aria-current={currentPage===page?"page":undefined} onClick={()=>{setMapFullscreen(false);setSelectedPenya(null);setPenyaDetailFullscreen(false);setEventFormPenya(null);setForm(false);setNewsPopup([]);setShareReminder(false);setNoticiaSeleccionada(null);setCurrentPage(page as any);window.scrollTo({top:0,behavior:"smooth"});}} className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-0.5 py-2 text-center transition sm:flex-row sm:gap-2 sm:rounded-full sm:px-4 sm:py-3 ${currentPage===page?"bg-pink/20 text-primary":"text-muted-foreground hover:bg-glass"}`}><span className="text-xl leading-none sm:text-lg">{icon}</span><span className="whitespace-nowrap text-[9px] font-bold leading-tight sm:text-sm">{label}</span></button>)}
       </nav>
+      <div aria-label="festalfàs" className={`pointer-events-none fixed right-4 top-3 z-[10000] select-none text-sm font-extrabold tracking-tight sm:right-6 sm:top-4 sm:text-base ${currentPage === "home" ? "text-white" : "text-black"}`}>
+        festalfàs
+      </div>
 
       {currentPage==="home" && <>
       <section className="relative flex min-h-[76vh] items-end overflow-hidden sm:min-h-[92vh]">
