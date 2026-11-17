@@ -22,41 +22,88 @@ function meta(html, key) {
   }
   return "";
 }
-function imageFrom(html, pageUrl) {
+function structuredArticleData(html) {
+  const records = [];
+  for (const match of html.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+    try {
+      const parsed = JSON.parse(match[1].replace(/^\s*<!--|-->\s*$/g, ""));
+      const visit = (value) => {
+        if (!value || typeof value !== "object") return;
+        if (Array.isArray(value)) return value.forEach(visit);
+        const type = [value["@type"]].flat().join(" ").toLowerCase();
+        if (/article|newsarticle|reportage|blogposting/.test(type) || value.articleBody) records.push(value);
+        Object.values(value).forEach(visit);
+      };
+      visit(parsed);
+    } catch { /* JSON-LD inválido: se continúa con el HTML visible. */ }
+  }
+  return records.sort((a, b) => String(b.articleBody || "").length - String(a.articleBody || "").length);
+}
+function absoluteImage(raw, pageUrl) {
+  if (!raw || typeof raw !== "string") return "";
+  try {
+    const url = new URL(decode(raw.trim().split(/\s+/)[0]), pageUrl);
+    return /^https?:$/.test(url.protocol) ? url.href : "";
+  } catch { return ""; }
+}
+function imageFrom(html, pageUrl, structured = []) {
+  const structuredImage = structured.flatMap(item => {
+    const image = item.image || item.thumbnailUrl || [];
+    return (Array.isArray(image) ? image : [image]).map(value => typeof value === "string" ? value : value?.url || value?.contentUrl || "");
+  }).map(value => absoluteImage(value, pageUrl)).find(Boolean);
   const raw = meta(html, "og:image:secure_url") || meta(html, "og:image") ||
     meta(html, "twitter:image") || meta(html, "twitter:image:src") ||
     html.match(/<link\b[^>]*rel=["']image_src["'][^>]*href=["']([^"']+)/i)?.[1] ||
     html.match(/<article\b[\s\S]{0,5000}?<img\b[^>]*(?:src|data-src)=["']([^"']+)/i)?.[1] || "";
-  if (!raw) return "";
-  try {
-    const url = new URL(decode(raw), pageUrl);
-    return /^https?:$/.test(url.protocol) ? url.href : "";
-  } catch { return ""; }
+  return structuredImage || absoluteImage(raw, pageUrl);
 }
-function dateFrom(html) {
-  const iso = html.match(/<time[^>]+datetime=["']([^"']+)/i)?.[1] || html.match(/"datePublished"\s*:\s*"([^"]+)/i)?.[1];
-  if (iso && !Number.isNaN(Date.parse(iso))) return new Date(iso).toISOString().slice(0, 10);
-  const spanish = html.match(/(\d{1,2})[\s/-]+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)[\s/-]+(\d{4})/i);
-  if (spanish) {
-    const months = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-    return new Date(Number(spanish[3]), months.indexOf(spanish[2].toLowerCase()), Number(spanish[1])).toISOString().slice(0, 10);
+function extractElement(html, openingMatch) {
+  const tag = openingMatch[1].toLowerCase();
+  const from = openingMatch.index;
+  const token = new RegExp("<\\/?"+tag+"\\b[^>]*>", "gi");
+  token.lastIndex = from;
+  let depth = 0;
+  let match;
+  while ((match = token.exec(html))) {
+    if (/^<\//.test(match[0])) depth--;
+    else if (!/\/>$/.test(match[0])) depth++;
+    if (depth === 0) return html.slice(from, token.lastIndex);
   }
   return "";
 }
-function articleContent(html, pageUrl) {
-  const article = html.match(/<article\b[^>]*>([\s\S]*?)<\/article>/i)?.[1];
-  const main = html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i)?.[1];
-  const preferred = article || main || html;
-  const withoutNoise = preferred.replace(/<(script|style|nav|header|footer|aside|form|noscript)\b[\s\S]*?<\/\1>/gi, " ");
-  const paragraphs = [...withoutNoise.matchAll(/<(?:p|h2|h3|blockquote)\b[^>]*>([\s\S]*?)<\/(?:p|h2|h3|blockquote)>/gi)]
+function articleContent(html, pageUrl, structured = []) {
+  const containers = [];
+  const openingTags = [...html.matchAll(/<(article|main|section|div)\b[^>]*>/gi)];
+  for (const opening of openingTags) {
+    const tag = opening[1].toLowerCase();
+    const attrs = opening[0];
+    const preferredDiv = tag === "div" && /class=["'][^"']*(?:article[-_ ]?(?:body|content|text)|entry[-_ ]content|post[-_ ]content|story[-_ ]body|news[-_ ]content|content[-_ ]article|nota[-_ ]content)[^"']*["']/i.test(attrs);
+    if (tag !== "article" && tag !== "main" && !preferredDiv) continue;
+    const block = extractElement(html, opening);
+    if (block) containers.push(block);
+  }
+  const candidates = [...containers, html];
+  const cleanParagraphs = (source) => [...source.matchAll(/<(?:p|h2|h3|h4|blockquote|li)\b[^>]*>([\s\S]*?)<\/(?:p|h2|h3|h4|blockquote|li)>/gi)]
     .map(match => clean(match[1]))
-    .filter(text => text.length >= 35 && !/cookies?|pol[ií]tica de privacidad|suscr[ií]bete|leer m[aá]s noticias|publicidad|compartir esta noticia|aceptar todas/i.test(text))
+    .filter(text => text.length >= 28 &&
+      !/cookies?|pol[ií]tica de privacidad|suscr[ií]bete|leer m[aá]s noticias|publicidad|compartir esta noticia|aceptar todas|iniciar sesi[oó]n|art[ií]culos relacionados|noticias relacionadas/i.test(text))
     .filter((text, index, all) => all.indexOf(text) === index);
-  const images = [...withoutNoise.matchAll(/<img\b[^>]*>/gi)].map(match => {
+  const ranked = candidates.map(source => ({ source, paragraphs: cleanParagraphs(source) }))
+    .sort((a, b) => b.paragraphs.join("\n\n").length - a.paragraphs.join("\n\n").length);
+  let paragraphs = ranked[0]?.paragraphs || [];
+  const structuredBody = structured.map(item => item.articleBody).find(value => typeof value === "string" && value.trim().length > 150);
+  if (structuredBody) {
+    const structuredParagraphs = structuredBody.split(/\n{2,}|(?<=[.!?])\s{2,}/).map(value => clean(value)).filter(value => value.length >= 28);
+    if (structuredParagraphs.join("\n\n").length > paragraphs.join("\n\n").length) paragraphs = structuredParagraphs;
+  }
+  const imageSource = ranked[0]?.source || html;
+  const images = [...imageSource.matchAll(/<(?:img|source)\b[^>]*>/gi)].map(match => {
     const attrs = Object.fromEntries([...match[0].matchAll(/([a-z:-]+)\s*=\s*["']([^"']*)["']/gi)].map(item => [item[1].toLowerCase(), decode(item[2])]));
-    const raw = attrs.src || attrs["data-src"] || attrs["data-lazy-src"] || attrs["data-original"] || attrs.srcset?.split(",").pop()?.trim().split(/\s+/)[0] || "";
-    try { const url = new URL(raw, pageUrl); return /^https?:$/.test(url.protocol) ? url.href : ""; } catch { return ""; }
-  }).filter((url, index, all) => url && all.indexOf(url) === index && !/logo|avatar|icon|pixel|sprite/i.test(url));
+    const raw = attrs.src || attrs["data-src"] || attrs["data-lazy-src"] || attrs["data-original"] ||
+      attrs["data-srcset"]?.split(",").pop()?.trim().split(/\s+/)[0] ||
+      attrs.srcset?.split(",").pop()?.trim().split(/\s+/)[0] || "";
+    return absoluteImage(raw, pageUrl);
+  }).filter((url, index, all) => url && all.indexOf(url) === index && !/logo|avatar|icon|pixel|sprite|tracking/i.test(url));
   return { paragraphs, images };
 }
 async function get(url) {
@@ -114,14 +161,15 @@ for (const candidate of [...candidates.values()].slice(0, 55)) {
     const html = await get(candidate.url);
     const title = meta(html, "og:title") || meta(html, "twitter:title") || candidate.title || candidate.previous?.titulo || "";
     const description = meta(html, "og:description") || meta(html, "description") || meta(html, "twitter:description") || "";
-    const article = articleContent(html, candidate.url);
+    const structured = structuredArticleData(html);
+    const article = articleContent(html, candidate.url, structured);
     const paragraphs = article.paragraphs;
     const summaryParts = paragraphs.length ? paragraphs.slice(0, 2) : [description].filter(Boolean);
     const summary = summaryParts.join(" ").slice(0, 1100) || candidate.previous?.resumen || description || title;
     // Guardar el texto público completo que ofrece la página, sin limitarlo a seis párrafos.
-    const body = paragraphs.length ? paragraphs.join("\n\n").slice(0, 18000) : (description || candidate.previous?.contenido || summary).slice(0, 3000);
-    const image = imageFrom(html, candidate.url) || candidate.previous?.imagen_url || "";
-    const imagenes_url = article.images.filter(url => url !== image).slice(0, 24);
+    const body = paragraphs.length ? paragraphs.join("\n\n") : (description || candidate.previous?.contenido || summary);
+    const image = imageFrom(html, candidate.url, structured) || candidate.previous?.imagen_url || "";
+    const imagenes_url = [...new Set([...article.images, ...(candidate.previous?.imagenes_url || [])])].filter(url => url !== image).slice(0, 60);
     const date = dateFrom(html);
     const slug = candidate.url.replace(/\/$/, "").split("/").pop().replace(/[^a-z0-9-]/gi, "-").toLowerCase();
     results.push({
