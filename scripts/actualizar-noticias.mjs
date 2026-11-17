@@ -116,6 +116,24 @@ function articleContent(html, pageUrl, structured = []) {
   }).filter((url, index, all) => url && all.indexOf(url) === index && !/logo|avatar|icon|pixel|sprite|tracking/i.test(url));
   return { paragraphs, images };
 }
+function galleryImagesFrom(html, pageUrl) {
+  const galleryBlocks = [];
+  const openingTags = [...html.matchAll(/<(div|section|figure|ul)\b[^>]*>/gi)];
+  const galleryClass = /(?:wp-block-gallery|blocks-gallery-grid|gallery(?:[-_ ](?:container|wrapper|inner|items|item|image|images|photos))?|image[-_ ]gallery|photo[-_ ]gallery|article[-_ ]gallery|post[-_ ]gallery|ngg-galleryoverview|foogallery|envira-gallery|jetpack-tiled-gallery)/i;
+  for (const opening of openingTags) {
+    if (!galleryClass.test(opening[0])) continue;
+    const block = extractElement(html, opening);
+    if (block) galleryBlocks.push(block);
+  }
+  const urls = galleryBlocks.flatMap(block => [...block.matchAll(/<(?:img|source)\b[^>]*>/gi)].map(match => {
+    const attrs = Object.fromEntries([...match[0].matchAll(/([a-z:-]+)\s*=\s*["']([^"']*)["']/gi)].map(item => [item[1].toLowerCase(), decode(item[2])]));
+    const raw = attrs["data-full-url"] || attrs["data-orig-file"] || attrs["data-large-file"] || attrs["data-src"] || attrs["data-lazy-src"] || attrs["data-original"] || attrs.src ||
+      attrs["data-srcset"]?.split(",").pop()?.trim().split(/\s+/)[0] ||
+      attrs.srcset?.split(",").pop()?.trim().split(/\s+/)[0] || "";
+    return absoluteImage(raw, pageUrl);
+  }));
+  return [...new Set(urls)].filter(url => url && !/logo|avatar|icon|pixel|sprite|tracking|banner/i.test(url));
+}
 function dateFrom(html, structured = []) {
   const candidates = [
     ...structured.flatMap(item => [item.datePublished, item.dateCreated, item.dateModified]),
@@ -166,7 +184,7 @@ async function wordpressArticle(pageUrl) {
     title: clean(post.title?.rendered || ""),
     description: clean(post.excerpt?.rendered || ""),
     paragraphs: body.paragraphs,
-    images: body.images,
+    images: galleryImagesFrom(rendered, pageUrl),
     featuredImage: absoluteImage(embeddedImage, pageUrl),
     date: post.date || "",
   };
@@ -263,7 +281,7 @@ for (const candidate of [...candidates.values()].slice(0, 180)) {
       ? (summary || description || "")
       : (paragraphs.length ? paragraphs.join("\n\n") : (candidate.previous?.contenido || description || ""));
     const image = wp?.featuredImage || imageFrom(html, candidate.url, structured) || candidate.previous?.imagen_url || "";
-    const allImages = [...new Set([...(wp?.images || []), ...article.images, ...(candidate.previous?.imagenes_url || [])])];
+    const allImages = [...new Set([...(wp?.images || []), ...galleryImagesFrom(html, candidate.url)])];
     const imagenes_url = allImages.filter(url => url && url !== image);
     const date = (wp?.date ? dateFrom("", [{ datePublished: wp.date }]) : "") || dateFrom(html, structured) || candidate.previous?.fecha || "";
     const publishedDate = String(date).slice(0,10);
