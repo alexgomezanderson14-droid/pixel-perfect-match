@@ -41,9 +41,10 @@ function NoticiasPage() {
         <div className="mt-9 space-y-7">
           {noticias.map((noticia) => {
             const paragraphs = noticia.contenido.split("\n\n").filter(Boolean);
+            const imagen = (noticia as { imagen_url?: string }).imagen_url || "";
             return (
               <article key={noticia.id} className="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-8">
-                <img src={noticia.imagen_url} alt={noticia.id === noticiaCestaNavidad2027.id ? "CuBaTa, Mayorales 2027" : "Emblema de Mayorales 2027 de CuBaTa"} className="mb-6 max-h-64 w-full rounded-2xl object-contain" />
+                {imagen && <img src={imagen} alt={noticia.id === noticiaCestaNavidad2027.id ? "CuBaTa, Mayorales 2027" : "Emblema de Mayorales 2027 de CuBaTa"} className="mb-6 max-h-64 w-full rounded-2xl object-contain" />}
                 <p className="text-sm font-semibold text-muted-foreground">{new Date(noticia.fecha + "T12:00:00").toLocaleDateString("es-ES", {day:"numeric",month:"long",year:"numeric"})} · {noticia.autor}</p>
                 <h2 className="mt-3 text-2xl font-extrabold leading-tight text-primary sm:text-3xl">{noticia.titulo}</h2>
                 <p className="mt-4 text-lg leading-relaxed">{noticia.resumen}</p>
