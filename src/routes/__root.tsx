@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
@@ -113,6 +114,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -121,7 +123,7 @@ function RootComponent() {
         <Outlet />
         <div
           aria-label="festalfàs"
-          className="pointer-events-none fixed right-4 top-3 z-[10000] select-none text-sm font-extrabold tracking-tight text-white mix-blend-difference sm:right-6 sm:top-4 sm:text-base"
+          className={`pointer-events-none fixed right-4 top-3 z-[10000] select-none text-sm font-extrabold tracking-tight sm:right-6 sm:top-4 sm:text-base ${pathname === "/" ? "text-white" : "text-black"}`}
         >
           festalfàs
         </div>
