@@ -422,11 +422,11 @@ function Home() {
       const parsed=JSON.parse(content["noticias_json"]||"[]");
       const guardadas=Array.isArray(parsed)?parsed:[];
       const respaldo=[noticiaDesfileHumor2026,noticiaCestaNavidad2027,noticiaCuBaTa2027];
-      const combinadas=[...guardadas,...noticiasAutomaticas,...respaldo];
+      const combinadas=[...guardadas,...noticiasAutomaticas,...respaldo].map((noticia:any)=>String(noticia?.id)==="desfile-humor-lalfas-2026-video"?{...noticia,video_url:"",imagen_url:""}:noticia);
       const unicas=combinadas.filter((noticia:any,index:number,array:any[])=>noticia?.id&&array.findIndex((otra:any)=>String(otra.id)===String(noticia.id))===index);
       setNoticias(unicas);
     } catch {
-      const combinadas=[...noticiasAutomaticas,noticiaDesfileHumor2026,noticiaCestaNavidad2027,noticiaCuBaTa2027];
+      const combinadas=[...noticiasAutomaticas,noticiaDesfileHumor2026,noticiaCestaNavidad2027,noticiaCuBaTa2027].map((noticia:any)=>String(noticia?.id)==="desfile-humor-lalfas-2026-video"?{...noticia,video_url:"",imagen_url:""}:noticia);
       setNoticias(combinadas.filter((noticia:any,index:number,array:any[])=>noticia?.id&&array.findIndex((otra:any)=>String(otra.id)===String(noticia.id))===index));
     }
     try { const points=JSON.parse(content["mapa_puntos_json"]||"[]"); setMapPoints(Array.isArray(points)?points.filter((p:any)=>Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))&&Number(p.lat)>=-90&&Number(p.lat)<=90&&Number(p.lng)>=-180&&Number(p.lng)<=180):[]); } catch { setMapPoints([]); }
