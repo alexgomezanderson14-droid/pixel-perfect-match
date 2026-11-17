@@ -514,7 +514,17 @@ function Home() {
   const selectedPenyaActs = selectedPenya ? actos.filter((a) => eventoSigueActivo(a, now) && [a.titulo, a.descripcion, a.lugar].some((v) => normalizarBusqueda(v).includes(normalizarBusqueda(selectedPenya.nombre)))) : [];
   const selectedPenyaNews = selectedPenya ? noticias.filter((n:any) => n.publicado && (n.penya_id === selectedPenya.id || normalizarBusqueda([n.penya_nombre, n.autor].join(" ")).includes(normalizarBusqueda(selectedPenya.nombre)))).slice().sort((a:any,b:any) => String(b.fecha||b.created_at||"").localeCompare(String(a.fecha||a.created_at||""))).slice(0,3) : [];
   const selectedPenyaGallery = selectedPenya ? [...new Set([...selectedPenyaEvents.map((e:any) => e.imagen_url || e.imagen || e.foto_url || e.foto), ...selectedPenyaActs.map((a:any) => a.imagen_url || a.imagen || a.foto_url || a.foto)].filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url) && url !== selectedPenya.foto))] : [];
-  const noticiaImagenes = noticiaSeleccionada ? [...new Set([...(Array.isArray(noticiaSeleccionada.galeria) ? noticiaSeleccionada.galeria : []), ...(Array.isArray(noticiaSeleccionada.imagenes) ? noticiaSeleccionada.imagenes : []), ...(Array.isArray(noticiaSeleccionada.imagenes_url) ? noticiaSeleccionada.imagenes_url : [])].map((media:any) => typeof media === "string" ? media : media?.url || media?.src || media?.imagen_url).filter((url:any): url is string => typeof url === "string" && /^https?:\/\//i.test(url) && url !== noticiaSeleccionada.imagen_url))] : [];
+  const noticiaImagenes = noticiaSeleccionada ? [...new Set(
+    // Las noticias automáticas solo pueden usar la lista creada por el extractor de galerías.
+    // No se aceptan los campos heredados "galeria"/"imagenes", que podían contener logos del sitio.
+    (noticiaSeleccionada.automatico
+      ? (Array.isArray(noticiaSeleccionada.imagenes_url) ? noticiaSeleccionada.imagenes_url : [])
+      : [...(Array.isArray(noticiaSeleccionada.galeria) ? noticiaSeleccionada.galeria : []), ...(Array.isArray(noticiaSeleccionada.imagenes) ? noticiaSeleccionada.imagenes : []), ...(Array.isArray(noticiaSeleccionada.imagenes_url) ? noticiaSeleccionada.imagenes_url : [])]
+    ).map((media:any) => typeof media === "string" ? media : media?.url || media?.src || media?.imagen_url)
+      .filter((url:any): url is string => typeof url === "string" && /^https?:\/\//i.test(url) &&
+        url !== noticiaSeleccionada.imagen_url &&
+        !/(?:union[-_ ]?europea|european[-_ ]?union|sede[-_ ]?electr[oó]nica|sede[-_ ]?electronica|logo(?:type)?|logotipo|favicon|icon(?:o)?|sprite|banner|accesibilidad|accessibility|cabecera|header|footer|menu)/i.test(url))
+  )] : [];
 
   const goMap = (id?: string) => {
     if (!id) return;
