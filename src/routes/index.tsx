@@ -18,11 +18,11 @@ const AddCommunityEventForm = lazy(() => import("@/components/AddCommunityEventF
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "festalfàs | Fiestas de l'Alfàs del Pi, peñas, programa y noticias" },
+      { title: "FESTALFÀS" },
       { name: "description", content: "Descubre festalfàs: programa de fiestas de l'Alfàs del Pi, peñas, eventos, mapa, actualidad y noticias de las fiestas." },
       { name: "keywords", content: "festalfàs, festalfas, fiestas l'Alfàs del Pi, fiestas Alfaz del Pi, peñas Alfaz del Pi, programa fiestas Alfaz, eventos Alfaz del Pi" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
-      { property: "og:title", content: "festalfàs | Fiestas de l'Alfàs del Pi" },
+      { property: "og:title", content: "FESTALFÀS" },
       { property: "og:description", content: "Programa de fiestas, peñas, eventos, mapa y noticias de l'Alfàs del Pi." },
       { property: "og:url", content: "https://festalfas.vercel.app/" },
       { property: "og:type", content: "website" },
@@ -531,8 +531,9 @@ function Home() {
         {heroImage ? <img src={heroImage} alt="Portada de las fiestas de l'Alfàs del Pi" width={1920} height={1280} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center" /> : <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37]" />}
         <div className="absolute inset-0 bg-gradient-to-t from-brown/90 via-brown/20 to-transparent" />
         <div className="relative mx-auto w-full max-w-6xl xl:max-w-[min(96vw,1600px)] px-4 pb-9 sm:px-5 sm:pb-16">
+          <div className="mb-3"><p className="rise text-xs font-extrabold uppercase tracking-[.28em] text-white/90 sm:text-sm">Festes 2027</p><p className="rise mt-1 text-[10px] font-medium tracking-wide text-white/75 sm:text-xs">Cuenta atrás para el comienzo de las fiestas</p></div>
           <CountdownFiestas />
-          <h1 className="rise text-4xl font-bold leading-[0.98] text-on-image sm:text-7xl md:text-8xl">{siteContent["hero_titulo"]?.replace(/2026/g, String(edicion.anyo)) || edicion.titulo} <span className="text-pink">{edicion.anyo}</span></h1>
+          <h1 className="rise text-5xl font-extrabold leading-[0.95] tracking-tight text-on-image sm:text-7xl md:text-8xl">FESTALFÀS</h1>
           <p className="rise mt-3 max-w-xl text-sm text-on-image/85 sm:mt-4 sm:text-lg">{siteContent["hero_subtitulo"] || edicion.subtitulo}</p>
         </div>
       </section>
