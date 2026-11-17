@@ -859,7 +859,7 @@ function Home() {
         </div>, document.body
       )}
       {<footer className="space-y-4 px-5 pb-32 text-center text-sm text-muted-foreground">
-        <p>{edicion.titulo} · {edicion.anyo}</p>
+        <p>festalfàs · {new Date().getFullYear()}</p>
         <button onClick={() => void shareWebsite()} className="glass-btn rounded-full px-6 py-3 font-bold text-primary">↗ Compartir la web</button>
         <div className="flex flex-wrap justify-center gap-2">
           <button onClick={() => shareOn("whatsapp", window.location.href, "Fiestas de l'Alfàs del Pi", "Consulta las peñas y las últimas noticias de las fiestas.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">WhatsApp</button>
