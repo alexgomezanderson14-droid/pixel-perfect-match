@@ -45,7 +45,7 @@ function fmtDia(d: string) {
 }
 
 const fechaMinimaNoticias = "2026-10-01";
-const tematicaFestiva = /fiest|fiesta|festes|peñ|penya|mayoral|majoral|jubileo|cristo del buen acierto|desfile del humor|preg[oó]n|ofrenda|masclet[aà]|pirotecnia|actos lit[uú]rgicos|romer[ií]a|carnaval|fester|festera|9\\s*d.?octubre/i;
+const tematicaFestiva = /fiest|fiesta|festes|peñ|penya|mayoral|majoral|jubileo|cristo del buen acierto|desfile del humor|preg[oó]n|ofrenda|masclet[aà]|pirotecnia|actos lit[uú]rgicos|romer[ií]a|carnaval|fester|festera|9\s*d.?octubre/i;
 function esNoticiaFestivaLocal(noticia: any) {
   const fecha = String(noticia?.fecha || noticia?.created_at || "").slice(0, 10);
   if (!fecha || fecha < fechaMinimaNoticias) return false;
