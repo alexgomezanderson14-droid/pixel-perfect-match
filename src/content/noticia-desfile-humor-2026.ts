@@ -1,6 +1,6 @@
 export const noticiaDesfileHumor2026 = {
   id: "desfile-humor-lalfas-2026-video",
-  titulo: "El Desfile del Humor 2026 llena de color y creatividad las calles de l’Alfàs",
+  titulo: "🎬 Vídeo: así fue el Desfile del Humor 2026",
   resumen: "Revive en vídeo uno de los actos más participativos de las Fiestas del Jubileo 2026. Un total de 28 peñas y la Asociación de Amas de Casa recorrieron las calles con disfraces, parodias y originales puestas en escena.",
   contenido: `El Desfile del Humor volvió a ser uno de los grandes momentos de las Fiestas del Jubileo y del Santísimo Cristo del Buen Acierto 2026. El sábado 7 de noviembre, 28 peñas y la Asociación de Amas de Casa de l’Alfàs llenaron las principales calles del municipio de imaginación, ingenio y mucho sentido del humor.
 
@@ -9,7 +9,7 @@ Las personas participantes sorprendieron con disfraces y representaciones inspir
 Ahora puedes volver a disfrutar del desfile completo en este vídeo. ¡Busca a tu peña, comparte el recuerdo y revive uno de los momentos más divertidos de las fiestas!
 
 La Penya Guirigall obtuvo el primer premio del certamen, en el que se repartieron 3.000 euros entre las propuestas destacadas.`,
-  tipo: "oficial",
+  tipo: "video",
   autor: "festalfàs · Vídeo del Desfile del Humor",
   fuente: "Ayuntamiento de l’Alfàs del Pi",
   fuente_url: "https://alfas.es/desfile-del-humor-festeslalfas-2026/",
