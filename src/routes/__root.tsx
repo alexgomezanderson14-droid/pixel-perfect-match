@@ -111,55 +111,8 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
-function getWordmarkColor(): "white" | "black" {
-  const x = Math.max(0, window.innerWidth - 32);
-  const y = 20;
-  let element = document.elementFromPoint(x, y) as HTMLElement | null;
-
-  while (element) {
-    const style = window.getComputedStyle(element);
-    const background = style.backgroundColor;
-    const match = background.match(/rgba?\((\d+)[, ]+\s*(\d+)[, ]+\s*(\d+)/);
-
-    if (match && Number(style.opacity) > 0) {
-      const [, red = 0, green = 0, blue = 0] = match.map(Number);
-      const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
-      return luminance > 0.5 ? "black" : "white";
-    }
-
-    // Las imágenes y fondos fotográficos suelen llevar una capa oscura encima.
-    if (style.backgroundImage !== "none" || element instanceof HTMLImageElement) {
-      return "white";
-    }
-    element = element.parentElement;
-  }
-
-  const bodyBackground = window.getComputedStyle(document.body).backgroundColor;
-  const bodyMatch = bodyBackground.match(/rgba?\((\d+)[, ]+\s*(\d+)[, ]+\s*(\d+)/);
-  if (bodyMatch) {
-    const [, red = 0, green = 0, blue = 0] = bodyMatch.map(Number);
-    return (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255 > 0.5 ? "black" : "white";
-  }
-  return "black";
-}
-
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const [wordmarkColor, setWordmarkColor] = useState<"white" | "black">("black");
-
-  useEffect(() => {
-    const updateColor = () => setWordmarkColor(getWordmarkColor());
-    updateColor();
-    window.addEventListener("scroll", updateColor, true);
-    window.addEventListener("resize", updateColor);
-    const observer = new MutationObserver(updateColor);
-    observer.observe(document.body, { attributes: true, childList: true, subtree: true });
-    return () => {
-      window.removeEventListener("scroll", updateColor, true);
-      window.removeEventListener("resize", updateColor);
-      observer.disconnect();
-    };
-  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -168,7 +121,7 @@ function RootComponent() {
         <Outlet />
         <div
           aria-label="festalfàs"
-          className={`pointer-events-none fixed right-4 top-3 z-[10000] select-none text-sm font-extrabold tracking-tight sm:right-6 sm:top-4 sm:text-base ${wordmarkColor === "white" ? "text-white" : "text-black"}`}
+          className="pointer-events-none fixed right-4 top-3 z-[10000] select-none text-sm font-extrabold tracking-tight text-white mix-blend-difference sm:right-6 sm:top-4 sm:text-base"
         >
           festalfàs
         </div>
