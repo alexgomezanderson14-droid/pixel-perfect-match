@@ -66,7 +66,11 @@ function NoticiasPage() {
           <Link to="/eventos" className="rounded-full border border-primary/20 px-4 py-2 text-sm font-bold text-primary">Eventos</Link>
         </nav>
       </main>
-      <footer className="border-t border-border/70 bg-card px-4 py-8 text-center"><p className="mb-4 text-sm font-semibold text-muted-foreground">Fiestas de l’Alfàs del Pi · festalfàs</p><Link to="/" className="text-sm font-bold text-primary underline underline-offset-4">Volver a la portada</Link><CopyrightFooter /></footer>
+      <div className="border-t border-border/70 bg-card px-4 py-8 text-center">
+        <p className="mb-4 text-sm font-semibold text-muted-foreground">festalfàs · {new Date().getFullYear()}</p>
+        <Link to="/" className="text-sm font-bold text-primary underline underline-offset-4">Volver a la portada</Link>
+      </div>
+      <CopyrightFooter />
     </div>
   );
 }

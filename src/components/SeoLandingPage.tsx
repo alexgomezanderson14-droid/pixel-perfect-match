@@ -46,11 +46,11 @@ export default function SeoLandingPage({ eyebrow, title, description, intro, sec
         </nav>
         <p className="mt-8 text-sm leading-relaxed text-muted-foreground">festalfàs es un espacio informativo dedicado a las fiestas de l’Alfàs del Pi, sus peñas, actividades y actualidad. Las fechas, horarios y actividades se actualizarán cuando exista información confirmada.</p>
       </main>
-      <footer className="border-t border-border/70 bg-card px-4 py-8 text-center">
-        <p className="mb-4 text-sm font-semibold text-muted-foreground">Fiestas de l’Alfàs del Pi · festalfàs</p>
+      <div className="border-t border-border/70 bg-card px-4 py-8 text-center">
+        <p className="mb-4 text-sm font-semibold text-muted-foreground">festalfàs · {new Date().getFullYear()}</p>
         <Link to="/" className="text-sm font-bold text-primary underline underline-offset-4">Volver a la portada</Link>
-        <CopyrightFooter />
-      </footer>
+      </div>
+      <CopyrightFooter />
     </div>
   );
 }
