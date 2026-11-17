@@ -18,11 +18,11 @@ const AddCommunityEventForm = lazy(() => import("@/components/AddCommunityEventF
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "FESTALFÀS" },
+      { title: "festalfàs" },
       { name: "description", content: "Descubre festalfàs: programa de fiestas de l'Alfàs del Pi, peñas, eventos, mapa, actualidad y noticias de las fiestas." },
       { name: "keywords", content: "festalfàs, festalfas, fiestas l'Alfàs del Pi, fiestas Alfaz del Pi, peñas Alfaz del Pi, programa fiestas Alfaz, eventos Alfaz del Pi" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
-      { property: "og:title", content: "FESTALFÀS" },
+      { property: "og:title", content: "festalfàs" },
       { property: "og:description", content: "Programa de fiestas, peñas, eventos, mapa y noticias de l'Alfàs del Pi." },
       { property: "og:url", content: "https://festalfas.vercel.app/" },
       { property: "og:type", content: "website" },
@@ -525,11 +525,6 @@ function Home() {
           ["info","ⓘ","Info"],
         ].map(([page,icon,label])=><button key={page} type="button" aria-current={currentPage===page?"page":undefined} onClick={()=>{setMapFullscreen(false);setSelectedPenya(null);setPenyaDetailFullscreen(false);setEventFormPenya(null);setForm(false);setNewsPopup([]);setShareReminder(false);setNoticiaSeleccionada(null);setCurrentPage(page as any);window.scrollTo({top:0,behavior:"smooth"});}} className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-0.5 py-2 text-center transition sm:flex-row sm:gap-2 sm:rounded-full sm:px-4 sm:py-3 ${currentPage===page?"bg-pink/20 text-primary":"text-muted-foreground hover:bg-glass"}`}><span className="text-xl leading-none sm:text-lg">{icon}</span><span className="whitespace-nowrap text-[9px] font-bold leading-tight sm:text-sm">{label}</span></button>)}
       </nav>
-      <div aria-label="festalfàs" className="pointer-events-none fixed right-4 top-3 z-[10000] isolate select-none text-sm font-extrabold tracking-tight text-white sm:right-6 sm:top-4 sm:text-base">
-        <span aria-hidden="true" className="absolute -inset-x-3 -inset-y-2 -z-10 rounded-full bg-gradient-to-r from-[#173f52]/95 via-[#236579]/85 to-[#3986a0]/80 blur-md" />
-        <span className="relative drop-shadow-[0_1px_3px_rgba(0,0,0,0.35)]">festalfàs</span>
-      </div>
-
       {currentPage==="home" && <>
       <section className="relative flex min-h-[76vh] items-end overflow-hidden sm:min-h-[92vh]">
         {heroImage ? <img src={heroImage} alt="Portada de las fiestas de l'Alfàs del Pi" width={1920} height={1280} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center" /> : <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37]" />}
