@@ -245,7 +245,16 @@ const unique = [];
 const normalizedTitle = value => String(value || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
 for (const item of byUrl) {
   const title = normalizedTitle(item.titulo);
-  const duplicateIndex = unique.findIndex(existing => normalizedTitle(existing.titulo) === title);
+  const titleWords = new Set(title.split(" ").filter(word => word.length > 2));
+  const duplicateIndex = unique.findIndex(existing => {
+    const other = normalizedTitle(existing.titulo);
+    if (other === title) return true;
+    const otherWords = new Set(other.split(" ").filter(word => word.length > 2));
+    const common = [...titleWords].filter(word => otherWords.has(word)).length;
+    return titleWords.size > 0 && otherWords.size > 0 &&
+      common / Math.min(titleWords.size, otherWords.size) >= 0.88 &&
+      common / new Set([...titleWords, ...otherWords]).size >= 0.72;
+  });
   if (duplicateIndex === -1) unique.push(item);
   else {
     const existing = unique[duplicateIndex];
