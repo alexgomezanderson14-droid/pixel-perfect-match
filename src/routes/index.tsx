@@ -317,59 +317,61 @@ const esVideoVertical=(value:string)=>{try{const u=new URL(value);return /\/shor
 
 function AnnualFestCalendar({ items, onEventClick }: { items: any[]; onEventClick: (item: any) => void }) {
   const [activeDate, setActiveDate] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
-  const activeMonth = activeDate.getMonth();
   const year = activeDate.getFullYear();
-  const monthNames = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-  const monthItems = items.filter((item) => {
-    const date = new Date(String(item.dia || "").slice(0, 10) + "T12:00:00");
-    return !Number.isNaN(date.getTime()) && date.getFullYear() === year && date.getMonth() === activeMonth;
-  }).sort((a,b) => String(a.dia).localeCompare(String(b.dia)) || String(a.hora || "").localeCompare(String(b.hora || "")));
-  const firstDay = new Date(year, activeMonth, 1).getDay();
-  const offset = (firstDay + 6) % 7;
-  const days = new Date(year, activeMonth + 1, 0).getDate();
-  const eventDays = new Set(monthItems.map((item) => Number(String(item.dia).slice(8,10))));
-  const previousMonth = (activeMonth + 11) % 12;
-  const nextMonth = (activeMonth + 1) % 12;
-  const shift = (delta: number) => setActiveDate((current) => new Date(current.getFullYear(), current.getMonth() + delta, 1));
-  return <section aria-labelledby="annual-calendar-title" className="mt-7 overflow-hidden rounded-[1.8rem] border border-primary/15 bg-[#102f3d] text-white shadow-xl">
-    <div className="relative overflow-hidden px-4 pb-5 pt-6 sm:px-7 sm:pb-7 sm:pt-8">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-30" style={{backgroundImage:"radial-gradient(circle at 15% 20%, rgba(255,255,255,.2), transparent 35%), radial-gradient(circle at 90% 80%, rgba(212,175,55,.25), transparent 32%)"}} />
-      <div className="relative z-10 flex items-end justify-between gap-3">
-        <div><p className="text-[10px] font-extrabold uppercase tracking-[.22em] text-white/65">Agenda de todo el año</p><h2 id="annual-calendar-title" className="mt-1 text-2xl font-extrabold sm:text-3xl">Calendario festero</h2><p className="mt-1 text-xs text-white/65">Todos los planes de l’Alfàs, mes a mes</p></div>
-        <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold">{year}</span>
-      </div>
-      <div className="relative z-10 mt-6 flex items-center justify-center gap-2 sm:gap-4">
-        <button type="button" onClick={() => shift(-1)} aria-label="Mes anterior" className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/25 bg-white/10 text-2xl transition hover:bg-white/20">‹</button>
-        <button type="button" onClick={() => shift(-1)} className="hidden min-w-0 flex-1 rounded-2xl border border-white/10 bg-white/[.06] px-2 py-4 text-center text-sm font-semibold text-white/45 transition hover:bg-white/10 sm:block">{monthNames[previousMonth]}</button>
-        <div className="min-w-0 flex-[1.35] rounded-[1.4rem] border border-white/30 bg-white/[.13] px-4 py-4 text-center shadow-2xl backdrop-blur-xl sm:px-6 sm:py-5">
-          <p className="text-[9px] font-extrabold uppercase tracking-[.24em] text-white/65">Mes seleccionado</p><p className="mt-1 font-display text-3xl font-bold leading-none sm:text-5xl">{monthNames[activeMonth]}</p><p className="mt-2 text-[10px] font-semibold text-white/70">{monthItems.length ? monthItems.length + (monthItems.length===1?" acto publicado":" actos publicados") : "Agenda por anunciar"}</p>
-        </div>
-        <button type="button" onClick={() => shift(1)} className="hidden min-w-0 flex-1 rounded-2xl border border-white/10 bg-white/[.06] px-2 py-4 text-center text-sm font-semibold text-white/45 transition hover:bg-white/10 sm:block">{monthNames[nextMonth]}</button>
-        <button type="button" onClick={() => shift(1)} aria-label="Mes siguiente" className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/25 bg-white/10 text-2xl transition hover:bg-white/20">›</button>
-      </div>
-      <div className="relative z-10 mt-5 rounded-2xl border border-white/15 bg-black/15 p-3 sm:p-5">
-        <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-extrabold uppercase tracking-wider text-white/55 sm:gap-2 sm:text-xs">{["L","M","X","J","V","S","D"].map((day)=><span key={day} className="py-1">{day}</span>)}</div>
-        <div className="mt-2 grid grid-cols-7 gap-1 sm:gap-2">
-          {Array.from({length:offset},(_,i)=><span key={"blank-"+i} />)}
-          {Array.from({length:days},(_,i)=>i+1).map((day)=>{
-            const hasEvent=eventDays.has(day);
-            const isToday=year===new Date().getFullYear()&&activeMonth===new Date().getMonth()&&day===new Date().getDate();
-            const dayItems=monthItems.filter((item)=>Number(String(item.dia).slice(8,10))===day);
-            return <button key={day} type="button" disabled={!hasEvent} onClick={()=>dayItems[0]&&onEventClick(dayItems[0])} aria-label={day+" de "+monthNames[activeMonth]+(hasEvent?", con actos":", sin actos publicados")} className={`relative flex aspect-square min-w-0 flex-col items-center justify-center rounded-xl text-xs font-semibold transition sm:text-sm ${hasEvent?"bg-[#d5b45b] text-[#17313b] shadow-md hover:scale-105":isToday?"border border-white/70 bg-white/15 text-white":"text-white/75 hover:bg-white/10"}`}>
-              {day}{hasEvent&&<span className="mt-0.5 h-1 w-1 rounded-full bg-[#17313b] sm:h-1.5 sm:w-1.5" />}{isToday&&!hasEvent&&<span className="absolute bottom-1 h-1 w-1 rounded-full bg-white" />}
-            </button>;
-          })}
-        </div>
-      </div>
-      <div className="relative z-10 mt-4">
-        <div className="mb-3 flex items-center justify-between gap-3"><h3 className="text-sm font-extrabold">Actos de {monthNames[activeMonth].toLocaleLowerCase("es")}</h3><span className="text-[10px] text-white/55">Selecciona un acto para ver detalles</span></div>
-        {monthItems.length ? <div className="grid gap-2 sm:grid-cols-2">{monthItems.map((item)=><button key={String(item.id)} type="button" onClick={()=>onEventClick(item)} className="flex min-w-0 items-center gap-3 rounded-xl border border-white/15 bg-white/[.08] p-3 text-left transition hover:bg-white/[.15]"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#d5b45b] text-sm font-extrabold text-[#17313b]">{String(item.dia).slice(8,10)}</span><span className="min-w-0"><span className="block text-[10px] font-bold uppercase tracking-wide text-white/55">{item.hora || "Hora por confirmar"} · {item._origen==="penya"?"Actividad de peña":"Programa oficial"}</span><span className="mt-1 block truncate text-sm font-bold">{item.titulo}</span></span></button>)}</div> : <p className="rounded-xl border border-dashed border-white/20 px-4 py-5 text-center text-xs text-white/60">Todavía no hay actos publicados para este mes. Cuando se anuncien, aparecerán aquí.</p>}
-      </div>
-      <div className="relative z-10 mt-5 flex items-center justify-between border-t border-white/15 pt-4"><button type="button" onClick={()=>setActiveDate(new Date(new Date().getFullYear(),new Date().getMonth(),1))} className="text-xs font-bold text-white/75 underline underline-offset-4">Volver al mes actual</button><span className="text-[10px] text-white/50">Desliza con las flechas para explorar el año</span></div>
+  const month = activeDate.getMonth();
+  const names = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  const shift = (delta:number) => setActiveDate(d => new Date(d.getFullYear(),d.getMonth()+delta,1));
+  const cards = [-1,0,1].map(delta => {
+    const date = new Date(year,month+delta,1);
+    const y = date.getFullYear(), m = date.getMonth();
+    const monthItems = items.filter(item => {
+      const d = new Date(String(item.dia||"").slice(0,10)+"T12:00:00");
+      return !Number.isNaN(d.getTime()) && d.getFullYear()===y && d.getMonth()===m;
+    }).sort((x,b)=>String(x.dia).localeCompare(String(b.dia)) || String(x.hora||"").localeCompare(String(b.hora||"")));
+    const first = (new Date(y,m,1).getDay()+6)%7;
+    const count = new Date(y,m+1,0).getDate();
+    return {delta,y,m,monthItems,first,count};
+  });
+  const active = cards[1];
+  return <section aria-labelledby="annual-calendar-title" className="relative mt-7 overflow-hidden rounded-[2rem] border border-primary/15 bg-[#102f3d] px-3 py-5 text-white shadow-xl sm:px-6 sm:py-7">
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-30" style={{backgroundImage:"radial-gradient(circle at 12% 15%, rgba(255,255,255,.2), transparent 35%), radial-gradient(circle at 90% 85%, rgba(212,175,55,.22), transparent 32%)"}}/>
+    <div className="relative z-10 mx-auto flex max-w-5xl items-center justify-between gap-3">
+      <div><p className="text-[9px] font-extrabold uppercase tracking-[.22em] text-white/60">Agenda anual</p><h2 id="annual-calendar-title" className="mt-1 text-xl font-extrabold sm:text-2xl">Calendario festero</h2></div>
+      <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-bold">{year}</span>
     </div>
+    <div className="relative z-10 mx-auto mt-5 flex max-w-5xl items-center justify-center gap-2 sm:gap-4">
+      <button type="button" onClick={()=>shift(-1)} aria-label="Mes anterior" className="z-20 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/25 bg-white/10 text-xl transition hover:bg-white/20">‹</button>
+      <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,.72fr)_minmax(0,1.35fr)_minmax(0,.72fr)] items-center gap-2 sm:gap-4">
+        {cards.map(card=><button key={card.y+"-"+card.m} type="button" onClick={()=>setActiveDate(new Date(card.y,card.m,1))} aria-label={"Ver "+names[card.m]+" "+card.y} className={`min-w-0 rounded-[1.25rem] border text-left transition-all duration-300 ${card.delta===0?"scale-100 border-white/35 bg-white/[.14] p-2.5 shadow-2xl backdrop-blur-md sm:p-4":"scale-[.94] border-white/10 bg-white/[.055] p-1.5 opacity-55 sm:p-3"}`}>
+          <div className="mb-2 text-center"><p className={`truncate font-display font-bold leading-none ${card.delta===0?"text-lg sm:text-3xl":"text-[10px] sm:text-base"}`}>{names[card.m]}</p><p className="mt-1 text-[8px] text-white/55 sm:text-[10px]">{card.y}</p></div>
+          <div className="grid grid-cols-7 gap-[2px] text-center text-[6px] font-bold text-white/45 sm:gap-1 sm:text-[9px]">{["L","M","X","J","V","S","D"].map(d=><span key={d}>{d}</span>)}</div>
+          <div className="mt-1 grid grid-cols-7 gap-x-[2px] gap-y-1 sm:gap-x-1 sm:gap-y-1.5">
+            {Array.from({length:card.first},(_,i)=><span key={"blank"+i}/>)}
+            {Array.from({length:card.count},(_,i)=>i+1).map(day=>{
+              const dayItems=card.monthItems.filter(item=>Number(String(item.dia).slice(8,10))===day);
+              const today=card.y===new Date().getFullYear()&&card.m===new Date().getMonth()&&day===new Date().getDate();
+              return <span key={day} className="flex min-h-[25px] min-w-0 flex-col items-center justify-start sm:min-h-[34px]">
+                <span className={`grid h-4 w-4 place-items-center rounded-full text-[7px] leading-none sm:h-6 sm:w-6 sm:text-[10px] ${dayItems.length?"bg-[#d5b45b] font-extrabold text-[#17313b]":today?"border border-white/70 text-white":"text-white/75"}`}>{day}</span>
+                {dayItems.length>0&&<span className="mt-[2px] h-[2px] w-3 rounded-full bg-[#d5b45b] sm:w-5"/>}
+                {card.delta===0&&dayItems.slice(0,1).map((item:any)=><span key={String(item.id)} className="mt-[2px] block w-full truncate text-center text-[5px] font-semibold leading-tight text-white/85 sm:text-[8px]" title={item.titulo}>{item.titulo}</span>)}
+              </span>;
+            })}
+          </div>
+          <p className={`mt-2 text-center text-[8px] font-semibold text-white/55 sm:text-[10px]`}>{card.monthItems.length?card.monthItems.length+" actos":"Sin actos publicados"}</p>
+        </button>)}
+      </div>
+      <button type="button" onClick={()=>shift(1)} aria-label="Mes siguiente" className="z-20 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/25 bg-white/10 text-xl transition hover:bg-white/20">›</button>
+    </div>
+    <div className="relative z-10 mx-auto mt-3 flex max-w-5xl items-center justify-between px-1">
+      <button type="button" onClick={()=>setActiveDate(new Date(new Date().getFullYear(),new Date().getMonth(),1))} className="text-[10px] font-bold text-white/65 underline underline-offset-4">Ir al mes actual</button>
+      <p className="text-[9px] text-white/45">Desliza o usa las flechas para cambiar de mes</p>
+    </div>
+    {active.monthItems.length>0&&<div className="relative z-10 mx-auto mt-3 max-w-5xl border-t border-white/15 pt-3">
+      <p className="mb-2 text-[10px] font-extrabold uppercase tracking-wider text-white/60">Próximos actos de {names[active.m]}</p>
+      <div className="flex flex-wrap gap-2">{active.monthItems.slice(0,4).map((item:any)=><button key={String(item.id)} type="button" onClick={()=>onEventClick(item)} className="max-w-full rounded-full border border-white/15 bg-white/[.08] px-3 py-1.5 text-left text-[10px] font-semibold text-white/85 transition hover:bg-white/15"><span className="text-[#e4c875]">{String(item.dia).slice(8,10)}</span> · {item.titulo}</button>)}</div>
+    </div>}
   </section>;
 }
-
 function Home() {
   const [q, setQ] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -1037,9 +1039,9 @@ function Home() {
           </div>
         </article> : <>
           <header className="mb-5"><p className="text-xs font-extrabold uppercase tracking-[.2em] text-primary">Actualidad festera</p><h1 className="mt-2 text-3xl font-extrabold text-primary sm:text-5xl">Noticias</h1><p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">Toda la actualidad de las fiestas: comunicados oficiales, novedades y noticias de nuestras peñas y otras fuentes.</p><label className="mt-4 block"><span className="sr-only">Buscar noticias</span><input type="search" value={newsSearch} onChange={e=>setNewsSearch(e.target.value)} placeholder="Buscar noticias, peñas o fuentes…" className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-base shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"/></label></header>
-          {visibleNews.length ? <div className="space-y-8">
-            {featuredNews.length>0&&<section aria-labelledby="featured-news-title" className="sticky top-0 z-0 left-1/2 mb-10 w-screen max-w-none -translate-x-1/2 overflow-hidden"><div className="relative min-h-[68svh] overflow-hidden bg-[#102f3d] sm:min-h-[82vh] lg:min-h-[88vh]">{featuredNews[0].imagen_url?<img src={featuredNews[0].imagen_url} alt={featuredNews[0].titulo} fetchPriority="high" className="absolute inset-0 h-full w-full object-cover object-center"/>:<div className="absolute inset-0 bg-gradient-to-br from-[#173f52] via-[#236579] to-[#102f3d]"/>}<div className="absolute inset-0 bg-gradient-to-t from-[#102f3d] via-[#102f3d]/45 to-[#102f3d]/10"/><div className="relative z-10 mx-auto flex min-h-[68svh] max-w-6xl flex-col justify-end px-5 pb-10 pt-28 sm:min-h-[82vh] sm:px-8 sm:pb-16 lg:min-h-[88vh]"><span className="mb-4 inline-flex w-fit rounded-full bg-[#d5b45b] px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-[#17313b]">{esNoticiaMayorales(featuredNews[0])?"Mayorales 2027":featuredNews[0].tipo==="oficial"?"Información oficial":featuredNews[0].tipo==="externa"?(featuredNews[0].fuente||"Medio externo"):"Actualidad festera"}</span><h2 id="featured-news-title" className="max-w-4xl text-3xl font-extrabold leading-[1.05] text-white drop-shadow-lg sm:text-5xl lg:text-7xl">{featuredNews[0].titulo}</h2>{featuredNews[0].resumen&&<p className="mt-4 max-w-2xl text-sm font-medium leading-relaxed text-white/90 sm:text-lg">{featuredNews[0].resumen}</p>}<div className="mt-5 flex flex-wrap items-center gap-3 text-xs font-semibold text-white/75"><span>{new Date(featuredNews[0].fecha||featuredNews[0].created_at||Date.now()).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"})}</span>{featuredNews[0].fuente&&<span>· {featuredNews[0].fuente}</span>}</div><button type="button" onClick={()=>{setNoticiaSeleccionada(featuredNews[0]);window.scrollTo({top:0,behavior:"smooth"});}} className="mt-6 w-fit rounded-full bg-white px-5 py-3 text-sm font-extrabold text-[#173f52] shadow-lg transition hover:-translate-y-0.5">Leer noticia completa →</button></div><div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-background"/></div></section>}
-            {(regularNews.length>0||featuredNews.length>1)&&<section aria-labelledby="latest-news-title" className="relative z-10 -mt-5 rounded-t-[2rem] bg-background px-1 pt-7 sm:-mt-8 sm:px-3 sm:pt-9"><div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-primary">Sigue al día</p><h2 id="latest-news-title" className="text-xl font-extrabold text-primary sm:text-2xl">Más noticias</h2></div><span className="text-xs text-muted-foreground">{regularNews.length+Math.max(0,featuredNews.length-1)} publicaciones</span></div>{featuredNews.length>1&&<div className="mb-4 grid gap-4 sm:grid-cols-2">{featuredNews.slice(1).map(renderFeaturedNewsCard)}</div>}<div className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">{regularNews.map(renderNewsCard)}</div></section>}
+          {visibleNews.length ? <div className="relative isolate space-y-8">
+            {featuredNews.length>0&&<section aria-labelledby="featured-news-title" className="relative z-0 mb-8 -mx-4 w-auto max-w-full overflow-hidden sm:-mx-6 lg:-mx-8"><div className="relative min-h-[68svh] overflow-hidden bg-[#102f3d] sm:min-h-[82vh] lg:min-h-[88vh]">{featuredNews[0].imagen_url?<img src={featuredNews[0].imagen_url} alt={featuredNews[0].titulo} fetchPriority="high" className="absolute inset-0 h-full w-full object-cover object-center"/>:<div className="absolute inset-0 bg-gradient-to-br from-[#173f52] via-[#236579] to-[#102f3d]"/>}<div className="absolute inset-0 bg-gradient-to-t from-[#102f3d] via-[#102f3d]/45 to-[#102f3d]/10"/><div className="relative z-10 mx-auto flex min-h-[68svh] max-w-6xl flex-col justify-end px-5 pb-10 pt-28 sm:min-h-[82vh] sm:px-8 sm:pb-16 lg:min-h-[88vh]"><span className="mb-4 inline-flex w-fit rounded-full bg-[#d5b45b] px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-[#17313b]">{esNoticiaMayorales(featuredNews[0])?"Mayorales 2027":featuredNews[0].tipo==="oficial"?"Información oficial":featuredNews[0].tipo==="externa"?(featuredNews[0].fuente||"Medio externo"):"Actualidad festera"}</span><h2 id="featured-news-title" className="max-w-4xl text-3xl font-extrabold leading-[1.05] text-white drop-shadow-lg sm:text-5xl lg:text-7xl">{featuredNews[0].titulo}</h2>{featuredNews[0].resumen&&<p className="mt-4 max-w-2xl text-sm font-medium leading-relaxed text-white/90 sm:text-lg">{featuredNews[0].resumen}</p>}<div className="mt-5 flex flex-wrap items-center gap-3 text-xs font-semibold text-white/75"><span>{new Date(featuredNews[0].fecha||featuredNews[0].created_at||Date.now()).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"})}</span>{featuredNews[0].fuente&&<span>· {featuredNews[0].fuente}</span>}</div><button type="button" onClick={()=>{setNoticiaSeleccionada(featuredNews[0]);window.scrollTo({top:0,behavior:"smooth"});}} className="mt-6 w-fit rounded-full bg-white px-5 py-3 text-sm font-extrabold text-[#173f52] shadow-lg transition hover:-translate-y-0.5">Leer noticia completa →</button></div><div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-background"/></div></section>}
+            {(regularNews.length>0||featuredNews.length>1)&&<section aria-labelledby="latest-news-title" className="relative z-10 -mt-10 rounded-t-[2rem] bg-background px-1 pt-8 sm:-mt-14 sm:px-3 sm:pt-10"><div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-primary">Sigue al día</p><h2 id="latest-news-title" className="text-xl font-extrabold text-primary sm:text-2xl">Más noticias</h2></div><span className="text-xs text-muted-foreground">{regularNews.length+Math.max(0,featuredNews.length-1)} publicaciones</span></div>{featuredNews.length>1&&<div className="mb-4 grid gap-4 sm:grid-cols-2">{featuredNews.slice(1).map(renderFeaturedNewsCard)}</div>}<div className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">{regularNews.map(renderNewsCard)}</div></section>}
           </div> : <div className="rounded-3xl border border-dashed border-border bg-card/60 px-5 py-14 text-center"><p className="text-4xl">▤</p><h2 className="mt-3 text-xl font-bold text-primary">{newsSearch?"No hay noticias que coincidan":"Todavía no hay noticias publicadas"}</h2><p className="mt-2 text-sm text-muted-foreground">{newsSearch?"Prueba con otras palabras.":"Aquí aparecerán las últimas novedades oficiales y de las peñas."}</p></div>}
         </>}
       </main>}
