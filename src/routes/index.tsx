@@ -606,7 +606,7 @@ function Home() {
 
   const goMap = (id?: string) => {
     if (!id) return;
-    setCurrentPage("mapa");
+    setCurrentPage("home");
     setCat(null);
     setQ("");
     setFocus(null);
@@ -866,7 +866,7 @@ function Home() {
 
           <div className="mb-7 flex flex-wrap items-center justify-between gap-3">
             <div><h3 className="text-xl font-extrabold text-primary sm:text-2xl">Directorio de peñas</h3><p className="mt-1 text-xs text-muted-foreground sm:text-sm">Abre cualquier ficha para ver fotos, planes, noticias y cómo llegar.</p></div>
-            <button onClick={()=>{setCurrentPage("mapa");setCat("penya");window.scrollTo({top:0,behavior:"smooth"});}} className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2.5 text-xs font-bold text-primary transition hover:bg-primary/10">📍 Ver todas en el mapa</button>
+            <button onClick={()=>{setCurrentPage("home");setCat("penya");window.scrollTo({top:0,behavior:"smooth"});}} className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2.5 text-xs font-bold text-primary transition hover:bg-primary/10">📍 Ver todas en el mapa</button>
           </div>
 
           {!penyes.length ? (
