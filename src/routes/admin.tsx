@@ -1,6 +1,7 @@
 import {useEffect,useState,lazy,Suspense} from "react";import{createFileRoute,Link,ClientOnly}from"@tanstack/react-router";import{supabase}from"@/integrations/supabase/client";import AdminPenyaEditor from "@/components/AdminPenyaEditor";import { programaOficial2026 } from "@/content/programa-oficial-2026";import CopyrightFooter from "@/components/CopyrightFooter";
 import { noticiaCuBaTa2027 } from "@/content/noticia-cubata-2027";
 import { noticiaCestaNavidad2027 } from "@/content/noticia-cesta-navidad-2027";
+import { noticiaDesfileHumor2026 } from "@/content/noticia-desfile-humor-2026";
 const videoCover=(url?:string)=>{if(!url)return "";const match=url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/))([\w-]{11})/i);return match?"https://img.youtube.com/vi/"+match[1]+"/hqdefault.jpg":"";};
 
 const FestMap=lazy(()=>import("@/components/FestMap"));
