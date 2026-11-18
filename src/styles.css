@@ -183,6 +183,14 @@ img { -webkit-user-drag: none; }
 
 /* Mobile-first refinements: comfortable touch targets and readable cards. */
 @media (max-width: 639px) {
+  /* Never hide page content behind scroll-triggered reveals on mobile Safari. */
+  .motion-reveal, .motion-reveal.is-visible, .motion-reveal.is-visible:hover {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    transition-delay: 0ms !important;
+    will-change: auto !important;
+  }
   input[type="search"] { min-height: 48px; font-size: 16px; }
   button, a { -webkit-tap-highlight-color: transparent; }
   main { padding-left: max(0.75rem, env(safe-area-inset-left)); padding-right: max(0.75rem, env(safe-area-inset-right)); }
