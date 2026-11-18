@@ -32,7 +32,7 @@ El esquema es una propuesta inicial y debe contrastarse con la estructura real e
 2. Crear D1 en Cloudflare y un bucket B2 en Backblaze; guardar las claves como secretos de despliegue y el nombre del bucket como variable, nunca en Git. La clave restringida al bucket permite obtener su ID durante la autorización.
 3. Aplicar y revisar el esquema D1; importar datos y archivos; comparar recuentos y referencias con el origen.
 4. Desplegar Worker con autenticación, validación, moderación, límites anti-spam y endpoints de compatibilidad.
-5. Conectar la base D1 al Worker con el binding `DB` y aplicar `cloudflare/migrations/0001_initial.sql` en un entorno de pruebas.
+5. Conectar la base D1 al Worker con el binding `DB` y aplicar `cloudflare/migrations/0001_initial.sql` en la base vacía de destino. Verificar tablas e índices antes de importar registros.
 6. Importar noticias y probar `GET /noticia/:id`: los rastreadores sociales reciben HTML con Open Graph/Twitter Card; los visitantes normales se redirigen a la ruta hash existente de la SPA.
 7. Cambiar la web por módulos (primero noticias, después peñas/eventos/administración), manteniendo Supabase como origen de lectura hasta validar cada módulo.
 8. Verificar las vistas previas con las herramientas de depuración de WhatsApp/Facebook y con Telegram; comprobar que `og:image` coincide con `imagen_url` de cada noticia.
