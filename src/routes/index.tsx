@@ -712,7 +712,7 @@ function Home() {
       <section className="relative flex min-h-[76vh] items-end overflow-hidden sm:min-h-[92vh]">
         {heroImage ? <img src={heroImage} alt="Portada de las fiestas de l'Alfàs del Pi" width={1920} height={1280} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center" /> : <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37]" />}
         <div className="absolute inset-0 bg-gradient-to-t from-brown/90 via-brown/20 to-transparent" />
-        <div className="relative mx-auto w-full max-w-6xl xl:max-w-[min(96vw,1600px)] px-4 pb-9 sm:px-5 sm:pb-16">
+        <div className="relative mx-auto w-full max-w-[min(96vw,1600px)] px-4 pb-9 sm:px-5 sm:pb-16">
           <div className="max-w-full">
             <h1 className="rise inline-block max-w-full font-sans text-6xl font-black lowercase leading-[0.88] tracking-[-0.085em] text-white drop-shadow-[0_4px_22px_rgba(0,0,0,0.28)] sm:text-8xl md:text-9xl">festalfàs</h1>
             <div aria-hidden="true" className="rise mt-3 h-1.5 w-16 rounded-full bg-secondary shadow-sm sm:mt-4 sm:h-2 sm:w-24" />
@@ -727,7 +727,7 @@ function Home() {
       </section>
 
 
-      <main className="mx-auto max-w-6xl xl:max-w-[min(96vw,1600px)] px-3 pb-28 pt-8 sm:px-5">
+      <main className="mx-auto w-full max-w-[min(96vw,1600px)] px-3 pb-28 pt-8 sm:px-5">
         {proximasActividades.length > 0 && <section aria-labelledby="proxima-actividad-title" className="mb-7 overflow-hidden rounded-[1.75rem] border border-primary/15 bg-card shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-primary/10 px-4 py-4 sm:px-6">
             <div><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-primary">Apunta la fecha</p><h2 id="proxima-actividad-title" className="mt-1 text-xl font-extrabold text-primary sm:text-2xl">Lo próximo en las fiestas</h2></div>
@@ -776,7 +776,7 @@ function Home() {
         </section>
       </main>
       </>}
-      {currentPage==="programa" && <main className="mx-auto min-h-[75vh] max-w-6xl xl:max-w-[min(96vw,1600px)] px-3 pb-32 pt-8 sm:px-5">
+      {currentPage==="programa" && <main className="mx-auto min-h-[75vh] w-full max-w-[min(96vw,1600px)] px-3 pb-32 pt-8 sm:px-5">
         <section id="programa" className="scroll-mt-24">
           <SectionTitle>{ui.nav.programa}</SectionTitle>
           {!dias.length ? (
@@ -825,7 +825,7 @@ function Home() {
           )}
         </section>
       </main>}
-      {currentPage==="eventos" && <main className="mx-auto min-h-[75vh] max-w-6xl xl:max-w-[min(96vw,1600px)] px-3 pb-32 pt-8 sm:px-5">
+      {currentPage==="eventos" && <main className="mx-auto min-h-[75vh] w-full max-w-[min(96vw,1600px)] px-3 pb-32 pt-8 sm:px-5">
         <section id="eventos" className="scroll-mt-24">
           <SectionTitle>Eventos</SectionTitle>
           <div className="mb-5 flex flex-col gap-3 rounded-3xl border border-primary/15 bg-primary/[.045] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"><div><h3 className="text-lg font-extrabold text-primary">¿Organizas algo en l’Alfàs?</h3><p className="text-sm text-muted-foreground">Propón una fiesta, concierto, encuentro o actividad para incluirla en la agenda festera.</p></div><button type="button" onClick={() => setCommunityEventForm(true)} className="shrink-0 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">＋ Proponer evento</button></div>
@@ -912,7 +912,7 @@ function Home() {
             })}</div>}
           </div>
         </section>
-      </main>}      {currentPage==="penyes" && <main className="mx-auto min-h-[75vh] max-w-6xl xl:max-w-[min(96vw,1600px)] px-3 pb-32 pt-8 sm:px-5">
+      </main>}      {currentPage==="penyes" && <main className="mx-auto min-h-[75vh] w-full max-w-[min(96vw,1600px)] px-3 pb-32 pt-8 sm:px-5">
         <section id="penyes" className="scroll-mt-24">
           <div className="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-[#173f52] via-[#236579] to-[#2c7180] px-5 py-7 text-white shadow-lg sm:mb-8 sm:px-8 sm:py-9">
             <div className="pointer-events-none absolute -right-10 -top-12 h-48 w-48 rounded-full border-[22px] border-white/10"/>
@@ -988,7 +988,7 @@ function Home() {
         </section>
       </main>}
       
-{currentPage==="info" && <main className="mx-auto min-h-[75vh] max-w-5xl px-4 pb-32 pt-8 sm:px-5">
+{currentPage==="info" && <main className="mx-auto min-h-[75vh] w-full max-w-[min(96vw,1600px)] px-3 pb-32 pt-8 sm:px-5">
         <section id="info" className="scroll-mt-24 space-y-6">
           <div>
             <SectionTitle>{ui.nav.info}</SectionTitle>
@@ -1039,7 +1039,7 @@ function Home() {
           <p className="text-xs text-muted-foreground">Los teléfonos y horarios pueden cambiar. Comprueba la información con el servicio correspondiente. Esta página es informativa y no sustituye a los servicios oficiales de emergencia.</p>
         </section>
       </main>}
-      {currentPage!=="home" && avisosVisibles.length>0 && <section aria-label="Avisos importantes" className="mx-auto mb-8 max-w-5xl space-y-2 px-4 sm:px-5">{avisosVisibles.map((aviso:any)=><article key={aviso.id} className={`rounded-2xl border p-3 sm:p-4 ${aviso.importante?"border-amber-400 bg-amber-50 text-amber-950 shadow-md":"border-border bg-background/80 text-foreground"}`}><div className="flex items-start gap-3"><span className="text-xl">{aviso.importante?"⚠️":"📢"}</span><div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-wide">{aviso.importante?"Aviso importante":"Comunicado"}</p><h2 className="font-bold">{aviso.titulo}</h2><p className="mt-1 text-sm">{aviso.descripcion}</p></div></div></article>)}</section>}
+      {currentPage!=="home" && avisosVisibles.length>0 && <section aria-label="Avisos importantes" className="mx-auto mb-8 w-full max-w-[min(96vw,1600px)] space-y-2 px-3 sm:px-5">{avisosVisibles.map((aviso:any)=><article key={aviso.id} className={`rounded-2xl border p-3 sm:p-4 ${aviso.importante?"border-amber-400 bg-amber-50 text-amber-950 shadow-md":"border-border bg-background/80 text-foreground"}`}><div className="flex items-start gap-3"><span className="text-xl">{aviso.importante?"⚠️":"📢"}</span><div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-wide">{aviso.importante?"Aviso importante":"Comunicado"}</p><h2 className="font-bold">{aviso.titulo}</h2><p className="mt-1 text-sm">{aviso.descripcion}</p></div></div></article>)}</section>}
       {currentPage==="noticias" && <main className={noticiaSeleccionada ? "w-full min-h-[85vh] px-0 pb-32 pt-0" : "mx-auto min-h-[85vh] max-w-6xl xl:max-w-[min(96vw,1600px)] px-4 pb-32 pt-8 sm:px-5"}>
         {noticiaSeleccionada ? <article className="w-full max-w-none">
           <section className="relative left-1/2 mb-6 isolate flex min-h-[48svh] w-screen max-w-none -translate-x-1/2 items-end overflow-hidden rounded-t-none rounded-b-3xl border-0 bg-[#173f52] shadow-none sm:min-h-[76vh] lg:min-h-[82vh]">
