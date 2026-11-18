@@ -32,7 +32,7 @@ let cachedB2Authorization: { value: B2Authorization; expiresAt: number } | null 
 
 async function authorizeB2(env: CloudflareEnv & B2Env): Promise<B2Authorization> {
   if (cachedB2Authorization && cachedB2Authorization.expiresAt > Date.now()) return cachedB2Authorization.value;
-  if (!env.B2_APPLICATION_KEY_ID || !env.B2_APPLICATION_KEY || !env.B2_BUCKET_ID || !env.B2_BUCKET_NAME) {
+  if (!env.B2_APPLICATION_KEY_ID || !env.B2_APPLICATION_KEY) {
     throw new Error("El almacenamiento de archivos no está configurado en Cloudflare.");
   }
   const credentials = btoa(env.B2_APPLICATION_KEY_ID + ":" + env.B2_APPLICATION_KEY);
@@ -42,7 +42,7 @@ async function authorizeB2(env: CloudflareEnv & B2Env): Promise<B2Authorization>
   if (!response.ok) throw new Error("No se pudo autenticar con el almacenamiento de archivos.");
   const data = await response.json() as {
     authorizationToken: string;
-    apiInfo?: { storageApi?: { apiUrl?: string; downloadUrl?: string } };
+    apiInfo?: { storageApi?: { apiUrl?: string; downloadUrl?: string; allowed?: { buckets?: Array<{ id?: string; name?: string | null }> } } };
   };
   const apiUrl = data.apiInfo?.storageApi?.apiUrl;
   const downloadUrl = data.apiInfo?.storageApi?.downloadUrl;
@@ -98,7 +98,7 @@ async function handleB2Request(request: Request, env: CloudflareEnv & B2Env): Pr
       if (file.size <= 0 || file.size > maxBytes) return jsonResponse({ error: isVideo ? "El vídeo no puede superar los 100 MB." : "La imagen no puede superar los 5 MB." }, 413);
 
       const authorization = await authorizeB2(env);
-      const uploadUrlResponse = await fetch(authorization.apiUrl + "/b2api/v4/b2_get_upload_url?bucketId=" + encodeURIComponent(env.B2_BUCKET_ID!), {
+      const uploadUrlResponse = await fetch(authorization.apiUrl + "/b2api/v4/b2_get_upload_url?bucketId=" + encodeURIComponent(authorization.bucketId), {
         headers: { Authorization: authorization.authorizationToken },
       });
       if (!uploadUrlResponse.ok) throw new Error("No se pudo preparar la subida del archivo.");
@@ -137,7 +137,7 @@ async function handleB2Request(request: Request, env: CloudflareEnv & B2Env): Pr
       const path = url.pathname.slice("/media/".length).split("/").map((part) => decodeURIComponent(part)).join("/");
       if (!path || path.split("/").some((part) => !part || part === "." || part === ".." || part.includes("\\"))) return new Response("Archivo no encontrado", { status: 404 });
       const authorization = await authorizeB2(env);
-      const fileUrl = authorization.downloadUrl.replace(/\/$/, "") + "/file/" + encodeURIComponent(env.B2_BUCKET_NAME!) + "/" + path.split("/").map(encodeURIComponent).join("/");
+      const fileUrl = authorization.downloadUrl.replace(/\/$/, "") + "/file/" + encodeURIComponent(authorization.bucketName) + "/" + path.split("/").map(encodeURIComponent).join("/");
       const headers = new Headers({ Authorization: authorization.authorizationToken });
       const range = request.headers.get("range");
       if (range) headers.set("Range", range);
