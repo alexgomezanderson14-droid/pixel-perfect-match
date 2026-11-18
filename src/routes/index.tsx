@@ -317,6 +317,8 @@ function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [newsSearch, setNewsSearch] = useState("");
   const [penyaSearch, setPenyaSearch] = useState("");
+  const [penyaMusicFilter, setPenyaMusicFilter] = useState("Todas");
+  const [penyaOnlyMine, setPenyaOnlyMine] = useState(false);
   const [eventsSearch, setEventsSearch] = useState("");
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
   const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes">("all");
@@ -364,7 +366,8 @@ function Home() {
   const matchesDay = (item:any) => eventoSigueActivo(item,now) && (filterDay==="all" || (filterDay==="upcoming" ? true : String(item.dia||"").slice(0,10)===(filterDay==="today"?todayKey:tomorrowKey)));
   const filteredActs = useMemo(()=>actos.filter((a)=>matchesDay(a) && (filterCategory==="all" || (filterCategory==="programa" && a.tipo==="evento") || (filterCategory==="actuaciones" && (a.tipo==="evento" || a.tipo==="actuacion" || /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/i.test(a.titulo||"")))) && (!eventsSearch.trim() || normalizarBusqueda([a.titulo,a.descripcion,a.lugar].join(" ")).includes(normalizarBusqueda(eventsSearch)))), [actos,filterDay,filterCategory,now,eventsSearch]);
   const filteredPenyaEvents = useMemo(()=>eventos.filter((e)=>matchesDay(e) && (filterCategory==="all" || filterCategory==="penyes") && (!eventsSearch.trim() || normalizarBusqueda([e.titulo,e.descripcion,e.lugar,penyes.find(p=>p.id===e.penya_id)?.nombre].join(" ")).includes(normalizarBusqueda(eventsSearch)))), [eventos,filterDay,filterCategory,now,eventsSearch,penyes]);
-  const visiblePenyes = useMemo(()=>[...penyes].filter(p=>!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica].join(" ")).includes(normalizarBusqueda(penyaSearch))).sort((a,b)=>Number(esPenyaCuBaTa(b.nombre))-Number(esPenyaCuBaTa(a.nombre))||Number(misPenyes.includes(b.id))-Number(misPenyes.includes(a.id))||a.nombre.localeCompare(b.nombre,"es")),[penyes,penyaSearch,misPenyes]);
+  const penyaMusicOptions = useMemo(()=>["Todas",...Array.from(new Set(penyes.map(p=>String(p.tipo_musica||"").trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b,"es"))],[penyes]);
+  const visiblePenyes = useMemo(()=>[...penyes].filter(p=>(!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica,p.informacion].join(" ")).includes(normalizarBusqueda(penyaSearch)))&&(penyaMusicFilter==="Todas"||String(p.tipo_musica||"").trim()===penyaMusicFilter)&&(!penyaOnlyMine||misPenyes.includes(p.id))).sort((a,b)=>Number(esPenyaCuBaTa(b.nombre))-Number(esPenyaCuBaTa(a.nombre))||Number(misPenyes.includes(b.id))-Number(misPenyes.includes(a.id))||a.nombre.localeCompare(b.nombre,"es")),[penyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,misPenyes]);
   const visibleNews = useMemo(()=>noticias.filter((n:any)=>n.publicado&&(!newsSearch.trim()||normalizarBusqueda([n.titulo,n.resumen,n.contenido,n.autor,n.fuente].join(" ")).includes(normalizarBusqueda(newsSearch)))).slice().sort((x:any,y:any)=>new Date(String(y.fecha||y.created_at||"").slice(0,10)+"T12:00:00").getTime()-new Date(String(x.fecha||x.created_at||"").slice(0,10)+"T12:00:00").getTime()),[noticias,newsSearch]);
   const featuredNews = visibleNews.filter((n:any)=>n.destacada);
   const regularNews = visibleNews.filter((n:any)=>!n.destacada);
@@ -815,38 +818,81 @@ function Home() {
         </section>
       </main>}      {currentPage==="penyes" && <main className="mx-auto min-h-[75vh] max-w-6xl xl:max-w-[min(96vw,1600px)] px-3 pb-32 pt-8 sm:px-5">
         <section id="penyes" className="scroll-mt-24">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2 sm:mb-8 sm:gap-4">
-            <h2 className="text-2xl font-bold text-primary sm:text-5xl">{ui.nav.penyes}</h2>
-            <label className="w-full"><span className="sr-only">Buscar peñas</span><input type="search" value={penyaSearch} onChange={e=>setPenyaSearch(e.target.value)} placeholder="Buscar peña por nombre, música o ubicación…" className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-base shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"/></label>
-            <p className="w-full text-xs text-muted-foreground sm:text-sm">Marca tus peñas para tenerlas identificadas y verlas destacadas en este dispositivo. Los Mayorales 2027 aparecen siempre en primer lugar.</p>
-            <button onClick={() => setForm(true)} className="rounded-full bg-pink px-6 py-3 font-bold text-brown transition hover:-translate-y-0.5">+ {ui.addPenya}</button>
+          <div className="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-[#173f52] via-[#236579] to-[#2c7180] px-5 py-7 text-white shadow-lg sm:mb-8 sm:px-8 sm:py-9">
+            <div className="pointer-events-none absolute -right-10 -top-12 h-48 w-48 rounded-full border-[22px] border-white/10"/>
+            <div className="relative z-10 max-w-3xl">
+              <p className="text-[10px] font-extrabold uppercase tracking-[.24em] text-white/70 sm:text-xs">La vida festera de l'Alfàs del Pi</p>
+              <h2 className="mt-2 text-3xl font-extrabold leading-tight sm:text-5xl">Nuestras peñas</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/85 sm:text-base">Descubre quién está detrás de cada peña, conoce su música y su ambiente, encuentra sus próximas actividades y guarda tus favoritas.</p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-bold">{penyes.length} {penyes.length===1?"peña":"peñas"} participantes</span>
+                <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-bold">{penyes.filter(p=>p.lat!=null&&p.lng!=null).length} ubicaciones en el mapa</span>
+                <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-bold">{misPenyes.length} favoritas</span>
+              </div>
+            </div>
           </div>
+
+          <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+            <label className="relative block"><span className="sr-only">Buscar peñas</span><span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">⌕</span><input type="search" value={penyaSearch} onChange={e=>setPenyaSearch(e.target.value)} placeholder="Buscar por nombre, música, dirección o descripción…" className="w-full rounded-2xl border border-border bg-card py-3 pl-11 pr-4 text-sm shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 sm:text-base"/></label>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={()=>{setPenyaMusicFilter("Todas");setPenyaOnlyMine(false);setPenyaSearch("");}} className="rounded-full border border-border px-4 py-2 text-xs font-bold text-primary transition hover:bg-primary/5">Limpiar filtros</button>
+              <button onClick={() => setForm(true)} className="rounded-full bg-pink px-5 py-2.5 text-sm font-bold text-brown transition hover:-translate-y-0.5">+ {ui.addPenya}</button>
+            </div>
+          </div>
+
+          <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-border/70 bg-card/70 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+            <div className="min-w-0">
+              <p className="text-xs font-extrabold uppercase tracking-wider text-primary">Encuentra tu ambiente</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {penyaMusicOptions.map(tipo=><button key={tipo} onClick={()=>setPenyaMusicFilter(tipo)} aria-pressed={penyaMusicFilter===tipo} className={`rounded-full border px-3 py-1.5 text-xs font-bold transition ${penyaMusicFilter===tipo?"border-primary bg-primary text-primary-foreground":"border-border bg-background text-muted-foreground hover:border-primary/40"}`}>{tipo}</button>)}
+              </div>
+            </div>
+            <button onClick={()=>setPenyaOnlyMine(v=>!v)} aria-pressed={penyaOnlyMine} className={`shrink-0 rounded-full border px-4 py-2 text-xs font-bold transition ${penyaOnlyMine?"border-[#173f52] bg-[#173f52] text-white":"border-border bg-background text-primary"}`}>{penyaOnlyMine?"★ Mostrando mis peñas":"☆ Ver solo mis peñas"}</button>
+          </div>
+
+          <div className="mb-7 flex flex-wrap items-center justify-between gap-3">
+            <div><h3 className="text-xl font-extrabold text-primary sm:text-2xl">Directorio de peñas</h3><p className="mt-1 text-xs text-muted-foreground sm:text-sm">Abre cualquier ficha para ver fotos, planes, noticias y cómo llegar.</p></div>
+            <button onClick={()=>{setCurrentPage("mapa");setCat("penya");window.scrollTo({top:0,behavior:"smooth"});}} className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2.5 text-xs font-bold text-primary transition hover:bg-primary/10">📍 Ver todas en el mapa</button>
+          </div>
+
           {!penyes.length ? (
             <div className="glass rounded-3xl p-6 text-muted-foreground">{ui.sinPenyes}</div>
+          ) : visiblePenyes.length===0 ? (
+            <div className="glass rounded-3xl p-8 text-center"><p className="font-bold text-primary">No encontramos peñas con esos filtros</p><p className="mt-1 text-sm text-muted-foreground">Prueba con otra búsqueda o limpia los filtros.</p><button onClick={()=>{setPenyaSearch("");setPenyaMusicFilter("Todas");setPenyaOnlyMine(false);}} className="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">Mostrar todas las peñas</button></div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {visiblePenyes.map((p) => (
-                <article id={"penya-" + p.id} key={p.id} tabIndex={0} aria-label={`Abrir ficha de ${p.nombre}`} onClick={() => { setPenyaDetailFullscreen(true); setSelectedPenya(p); }} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setPenyaDetailFullscreen(true); setSelectedPenya(p); } }} className="glass group min-w-0 cursor-pointer overflow-hidden rounded-xl transition hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:rounded-3xl">
-                  <div className="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37]">{p.foto ? <img src={p.foto} alt={p.nombre} loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]" /> : <div className="grid h-full place-items-center text-5xl font-extrabold text-white/85">{p.nombre.trim().charAt(0).toLocaleUpperCase("es")}</div>}</div>
-                  <div className="p-4 sm:p-6">
-                    {esPenyaCuBaTa(p.nombre) && <span className="mb-1 inline-flex items-center gap-1 rounded-full border border-[#B8860B] bg-[#D4AF37] px-2 py-1 text-[9px] font-extrabold tracking-wide text-[#3B2A0A] shadow-sm sm:text-xs">♛ MAYORALES 2027</span>}
-                    {misPenyes.includes(p.id) && <span className="mb-1 ml-1 inline-flex items-center rounded-full bg-[#173f52] px-2 py-1 text-[9px] font-extrabold tracking-wide text-white shadow-sm sm:text-xs">★ MI PEÑA</span>}
-                    <h3 className="line-clamp-2 text-xs font-bold leading-tight sm:text-2xl">{p.nombre}</h3>
-                    {p.direccion && <p className="mt-1 line-clamp-2 text-[10px] text-muted-foreground sm:text-sm">{p.direccion}</p>}
-                    <p className="mt-1 text-[10px] sm:mt-3 sm:text-sm"><strong>Música:</strong> {p.tipo_musica || "Variada"}</p>
-                    {p.informacion?.trim() && <p className="mt-2 line-clamp-3 text-[10px] leading-relaxed text-muted-foreground sm:text-sm">{p.informacion}</p>}
-                    
-                    {eventos.filter((e) => eventoSigueActivo(e,now) && (e.penya_id === p.id || [e.titulo, e.descripcion, e.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(p.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, ""))))).map((e) => <p key={"evento-" + e.id} className="mt-2 rounded-lg bg-pink/20 px-2 py-1 text-[10px] leading-snug text-[#173f52] sm:text-sm"><strong>Plan:</strong> {e.titulo} · {fmtDia(e.dia)}{e.hora ? " · " + e.hora : ""}</p>)}{actos.filter((a) => eventoSigueActivo(a,now) && [a.titulo, a.descripcion, a.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(p.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "")))).map((a) => <p key={"acto-" + a.id} className="mt-2 rounded-lg bg-pink/20 px-2 py-1 text-[10px] leading-snug text-[#173f52] sm:text-sm"><strong>Plan:</strong> {a.titulo} · {fmtDia(a.dia)}{a.hora ? " · " + a.hora : ""}</p>)}
-                    <div className="mt-2 flex flex-wrap gap-1 sm:mt-3 sm:gap-2"><button onClick={(e) => { e.stopPropagation(); toggleMiPenya(p.id); }} aria-pressed={misPenyes.includes(p.id)} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-3 sm:py-2 sm:text-sm">{misPenyes.includes(p.id) ? "★ Mi peña" : "☆ Marcar mi peña"}</button><button onClick={(e) => { e.stopPropagation(); goMap(p.id); }} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">📍 {ui.verMapa}</button><button onClick={(e) => { e.stopPropagation(); void sharePenyaCard(p); }} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">↗ Crear historia</button><button onClick={(e) => { e.stopPropagation(); setEventFormPenya(p); }} className="glass-btn px-2 py-1 text-[10px] font-bold sm:px-4 sm:py-2 sm:text-sm">{p.tiene_evento ? "Añadir evento" : "+ Añadir evento"}</button></div>
-                    <div className="mt-2 flex flex-wrap gap-2 text-xs sm:mt-3 sm:gap-3 sm:text-sm">{instagramUrl(p.instagram) && <a onClick={(e) => e.stopPropagation()} className="font-semibold text-primary underline" href={instagramUrl(p.instagram)!} target="_blank" rel="noreferrer">{`↗ @${p.instagram?.replace(/^@/, "") || "Instagram"}`}</a>}</div>
+                <article id={"penya-" + p.id} key={p.id} tabIndex={0} aria-label={`Abrir ficha de ${p.nombre}`} onClick={() => { setPenyaDetailFullscreen(true); setSelectedPenya(p); }} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setPenyaDetailFullscreen(true); setSelectedPenya(p); } }} className="glass group min-w-0 cursor-pointer overflow-hidden rounded-2xl transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:rounded-3xl">
+                  <div className="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37]">{p.foto ? <img src={p.foto} alt={p.nombre} loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /> : <div className="grid h-full place-items-center text-5xl font-extrabold text-white/85">{p.nombre.trim().charAt(0).toLocaleUpperCase("es")}</div>}
+                    <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center gap-2 bg-gradient-to-t from-black/70 to-transparent px-4 pb-3 pt-8">{esPenyaCuBaTa(p.nombre)&&<span className="rounded-full bg-[#D4AF37] px-2.5 py-1 text-[9px] font-extrabold tracking-wide text-[#3B2A0A]">♛ MAYORALES 2027</span>}{misPenyes.includes(p.id)&&<span className="rounded-full bg-white/90 px-2.5 py-1 text-[9px] font-extrabold text-[#173f52]">★ MI PEÑA</span>}</div>
+                  </div>
+                  <div className="p-4 sm:p-5">
+                    <h3 className="line-clamp-2 text-lg font-extrabold leading-tight text-primary sm:text-xl">{p.nombre}</h3>
+                    {p.direccion&&<p className="mt-2 line-clamp-1 text-xs text-muted-foreground">📍 {p.direccion}</p>}
+                    <div className="mt-3 flex flex-wrap gap-2"><span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">♫ {p.tipo_musica||"Música variada"}</span>{p.lat!=null&&p.lng!=null&&<span className="rounded-full border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">Ubicación disponible</span>}</div>
+                    {p.informacion?.trim()&&<p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{p.informacion}</p>}
+                    {(()=>{const plans=eventosActivos.filter(e=>e.penya_id===p.id);return plans.length>0?<div className="mt-3 rounded-xl bg-pink/20 px-3 py-2 text-xs leading-relaxed text-[#173f52]"><strong>Próximo plan:</strong> {plans[0].titulo}{plans[0].dia?" · "+fmtDia(plans[0].dia):""}</div>:null;})()}
+                    <div className="mt-4 flex flex-wrap gap-2 border-t border-border/70 pt-3">
+                      <button onClick={e=>{e.stopPropagation();toggleMiPenya(p.id);}} aria-pressed={misPenyes.includes(p.id)} className="rounded-full border border-primary/20 px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5">{misPenyes.includes(p.id)?"★ Guardada":"☆ Mi peña"}</button>
+                      <button onClick={e=>{e.stopPropagation();goMap(p.id);}} className="rounded-full border border-border px-3 py-2 text-xs font-bold text-muted-foreground transition hover:border-primary/40 hover:text-primary">📍 Mapa</button>
+                      <button onClick={e=>{e.stopPropagation();setEventFormPenya(p);}} className="rounded-full bg-[#173f52] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#236579]">+ Proponer plan</button>
+                    </div>
+                    {instagramUrl(p.instagram)&&<a onClick={e=>e.stopPropagation()} className="mt-3 inline-block text-xs font-semibold text-primary underline" href={instagramUrl(p.instagram)!} target="_blank" rel="noreferrer">Instagram ↗</a>}
+                    <button onClick={e=>{e.stopPropagation();setSelectedPenya(p);setPenyaDetailFullscreen(true);}} className="mt-3 w-full rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition hover:opacity-90">Ver ficha completa →</button>
                   </div>
                 </article>
               ))}
             </div>
           )}
+
+          <div className="mt-10 rounded-3xl border border-border/70 bg-card/70 p-5 sm:p-7">
+            <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-primary">Agenda festera</p><h3 className="mt-1 text-xl font-extrabold text-primary sm:text-2xl">Planes de las peñas</h3><p className="mt-1 text-sm text-muted-foreground">Actividades publicadas por las peñas y próximas citas.</p></div><button onClick={()=>{setCurrentPage("eventos");setFilterCategory("penyes");setFilterDay("upcoming");window.scrollTo({top:0,behavior:"smooth"});}} className="text-xs font-bold text-primary underline">Ver agenda completa →</button></div>
+            {eventosActivos.length===0?<p className="mt-4 rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">Todavía no hay actividades de peñas publicadas. Cuando se anuncien, aparecerán aquí.</p>:<div className="mt-4 grid gap-3 md:grid-cols-2">{eventosActivos.slice(0,4).map(e=>{const owner=penyes.find(p=>p.id===e.penya_id);return <button key={e.id} onClick={()=>{if(owner){setSelectedPenya(owner);setPenyaDetailFullscreen(true);}else{setCurrentPage("eventos");setFilterCategory("penyes");}}} className="rounded-2xl border border-border bg-background/80 p-4 text-left transition hover:border-primary/40 hover:shadow-md"><p className="text-[10px] font-extrabold uppercase tracking-wider text-primary">{owner?.nombre||"Actividad de peñas"}{e.dia?" · "+fmtDia(e.dia):""}</p><p className="mt-2 font-bold text-foreground">{e.titulo}</p>{e.lugar&&<p className="mt-1 text-xs text-muted-foreground">📍 {e.lugar}</p>}</button>;})}</div>}
+          </div>
         </section>
       </main>}
-      {currentPage==="info" && <main className="mx-auto min-h-[75vh] max-w-5xl px-4 pb-32 pt-8 sm:px-5">
+      
+{currentPage==="info" && <main className="mx-auto min-h-[75vh] max-w-5xl px-4 pb-32 pt-8 sm:px-5">
         <section id="info" className="scroll-mt-24 space-y-6">
           <div>
             <SectionTitle>{ui.nav.info}</SectionTitle>
