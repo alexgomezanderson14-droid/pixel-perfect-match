@@ -1,7 +1,7 @@
 # Plan de migración de festalfàs a Cloudflare
 
 ## Objetivo
-Adoptar una infraestructura común y ampliable con Cloudflare Workers (API), D1 (datos relacionales) y R2 (fotografías y documentos). La migración debe ser gradual y sin rehacer el diseño de la web.
+Adoptar una infraestructura común y ampliable con Cloudflare Workers (API), D1 (datos relacionales) y Backblaze B2 (fotografías y documentos), manteniendo el bucket privado y sirviendo los archivos a través del Worker. La migración debe ser gradual y sin rehacer el diseño de la web.
 
 ## Estado real
 - La web actual depende de Supabase para autenticación de administración, lectura/escritura de peñas, actos, eventos, contenido y almacenamiento.
@@ -13,7 +13,7 @@ Adoptar una infraestructura común y ampliable con Cloudflare Workers (API), D1 
 ## Arquitectura objetivo
 1. **Workers:** API única para operaciones de lectura/escritura, validación, permisos, moderación y límites anti-spam.
 2. **D1:** peñas, programa, eventos, noticias, ajustes, likes, comentarios, miembros y roles.
-3. **R2:** imágenes de peñas, carteles, fotos de noticias y portada. Guardar claves de objeto en D1, no blobs en las filas.
+3. **Backblaze B2:** imágenes de peñas, carteles, fotos de noticias, vídeos y portada. El bucket permanece privado; el Worker valida subidas y sirve los archivos por `/media/*`. Guardar rutas/URLs de medios en los datos, no blobs en D1.
 4. **Identidad:** definir el proveedor de autenticación antes de habilitar cuentas públicas. La sesión y los roles deben validarse en el Worker; nunca confiar en un rol enviado desde el navegador.
 5. **Compartir noticias:** endpoint público de vista previa por noticia, con Open Graph/Twitter Card generado en servidor a partir de la imagen principal asignada. Un cambio de metadatos en React no basta para WhatsApp/Facebook, porque sus rastreadores no ejecutan la aplicación cliente.
 
@@ -29,7 +29,7 @@ El esquema es una propuesta inicial y debe contrastarse con la estructura real e
 
 ## Orden seguro de implantación
 1. Obtener y verificar exportación de Supabase: tablas, registros, usuarios necesarios y archivos del bucket `penyes`.
-2. Crear D1 y R2 en una cuenta Cloudflare del propietario; guardar identificadores y secretos como variables/secretos de despliegue, nunca en Git.
+2. Crear D1 en Cloudflare y un bucket B2 en Backblaze; guardar el ID del bucket y las claves como variables/secretos de despliegue, nunca en Git.
 3. Aplicar y revisar el esquema D1; importar datos y archivos; comparar recuentos y referencias con el origen.
 4. Desplegar Worker con autenticación, validación, moderación, límites anti-spam y endpoints de compatibilidad.
 5. Conectar la base D1 al Worker con el binding `DB` y aplicar `cloudflare/migrations/0001_initial.sql` en un entorno de pruebas.
