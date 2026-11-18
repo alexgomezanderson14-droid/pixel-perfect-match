@@ -617,17 +617,17 @@ function Home() {
 
   return (
     <div className="page-bg min-h-screen" style={{ "--pink": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--secondary": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--accent": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--ring": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--cat-penya": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--background": siteContent["theme_background"] || "oklch(0.975 0.012 90)", "--gradient-page": `linear-gradient(180deg, ${siteContent["theme_background"] || "oklch(0.985 0.008 90)"}, ${siteContent["theme_background"] || "oklch(0.965 0.014 90)"})` } as React.CSSProperties}>
-      <nav aria-label="Navegación principal" className="fixed left-1/2 top-[calc(env(safe-area-inset-top)+7px)] z-[5000] grid h-[44px] w-[min(calc(100vw-64px),300px)] -translate-x-1/2 grid-cols-6 items-center gap-0 overflow-hidden rounded-full border border-white/85 bg-[rgba(245,248,250,.92)] px-1 py-0.5 shadow-[0_4px_14px_rgba(20,39,52,.14),0_1px_4px_rgba(255,255,255,.95)_inset] backdrop-blur-2xl [backdrop-filter:blur(24px)_saturate(155%)] sm:h-[52px] sm:w-[min(calc(100vw-64px),540px)] sm:px-1.5 sm:py-1">
+      <nav aria-label="Navegación principal" className="fixed left-1/2 top-[calc(env(safe-area-inset-top)+8px)] z-[5000] flex h-[52px] w-[calc(100vw-32px)] max-w-[540px] -translate-x-1/2 items-center justify-between gap-0 overflow-hidden rounded-full border border-white/85 bg-[rgba(245,248,250,.94)] px-1 shadow-[0_5px_18px_rgba(20,39,52,.16),0_1px_4px_rgba(255,255,255,.95)_inset] backdrop-blur-2xl [backdrop-filter:blur(24px)_saturate(155%)]">
         {(["home","eventos","penyes","programa","noticias","info"] as const).map((page,index)=>{
           const labels={home:"Inicio",eventos:"Eventos",penyes:"Peñas",programa:"Programa",noticias:"Noticias",info:"Info"};
           const active=currentPage===page;
-          return <button key={page} type="button" aria-current={active?"page":undefined} onClick={()=>{setMapFullscreen(false);setSelectedPenya(null);setPenyaDetailFullscreen(false);setEventFormPenya(null);setForm(false);setNewsPopup([]);setShareReminder(false);setNoticiaSeleccionada(null);setCurrentPage(page);window.scrollTo({top:0,behavior:"smooth"});}} className={"relative z-10 flex h-full min-w-0 flex-col items-center justify-center gap-0 overflow-hidden rounded-full px-0 py-0 text-center leading-none transition-colors duration-200 "+(active?"text-white":"text-primary/75 hover:text-primary")}>
-            <span className="grid h-[18px] w-[18px] shrink-0 place-items-center leading-none">
-              <svg viewBox="0 0 24 24" aria-hidden="true" className="block h-[15px] w-[15px] shrink-0 sm:h-[16px] sm:w-[16px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          return <button key={page} type="button" aria-current={active?"page":undefined} onClick={()=>{setMapFullscreen(false);setSelectedPenya(null);setPenyaDetailFullscreen(false);setEventFormPenya(null);setForm(false);setNewsPopup([]);setShareReminder(false);setNoticiaSeleccionada(null);setCurrentPage(page);window.scrollTo({top:0,behavior:"smooth"});}} className={"relative z-10 flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-0 overflow-hidden rounded-full px-0 py-0 text-center leading-none transition-colors duration-200 "+(active?"text-white":"text-primary/75 hover:text-primary")}>
+            <span className="grid h-[20px] w-[20px] shrink-0 place-items-center leading-none">
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="block h-[17px] w-[17px] shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 {page==="home"?<><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></>:page==="eventos"?<><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M8 2.8v4M16 2.8v4M3 9h18M8 13h3M8 16.5h6"/></>:page==="penyes"?<><circle cx="9" cy="8" r="3.2"/><path d="M2.8 20c.4-3.5 2.5-5.4 6.2-5.4s5.8 1.9 6.2 5.4M16 5.2a3 3 0 0 1 0 5.7M17 14.8c2.4.5 3.7 2.2 4.1 5.2"/></>:page==="programa"?<><rect x="3" y="3.5" width="18" height="17" rx="2.5"/><path d="M7 8h10M7 12h3M7 16h10M14 12h3"/></>:page==="noticias"?<><path d="M5 4h14a2 2 0 0 1 2 2v14H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M7 8h4v4H7zM14 8h4M14 12h4M7 16h11"/></>:<><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5h.01"/></>}
               </svg>
             </span>
-            <span className={"mt-0.5 block max-w-full shrink-0 whitespace-nowrap text-[7px] leading-[8px] sm:mt-0.5 sm:text-[8px] sm:leading-[10px] "+(active?"font-bold":"font-medium")}>{labels[page]}</span>
+            <span className={"mt-0.5 block max-w-full shrink-0 whitespace-nowrap text-[8px] leading-[9px] "+(active?"font-bold":"font-medium")}>{labels[page]}</span>
           </button>;
         })}
         <span aria-hidden="true" className="pointer-events-none absolute inset-y-1 left-1 z-0 w-[calc((100%-8px)/6)] rounded-full border border-white/25 bg-[linear-gradient(145deg,rgba(25,43,55,.78),rgba(25,43,55,.58))] shadow-[0_5px_18px_rgba(18,35,47,.22),0_1px_4px_rgba(255,255,255,.22)_inset] backdrop-blur-2xl transition-transform duration-300 ease-[cubic-bezier(.22,.61,.36,1)]" style={{transform:"translateX(calc("+(["home","eventos","penyes","programa","noticias","info"].indexOf(currentPage)*100)+"%))"}}/>
@@ -711,7 +711,7 @@ function Home() {
         </section>
       </main>
       </>}
-      {currentPage==="programa" && <main className="mx-auto min-h-[75vh] w-full max-w-[min(96vw,1600px)] px-3 pb-32 pt-8 sm:px-5">
+      {currentPage==="programa" && <main className="mx-auto min-h-[75vh] w-full min-w-0 max-w-[1600px] overflow-x-clip px-4 pb-32 pt-6 sm:px-5 sm:pt-8">
         <section id="programa" className="scroll-mt-24">
           <SectionTitle>{ui.nav.programa}</SectionTitle>
           {!dias.length ? (
@@ -849,11 +849,11 @@ function Home() {
         </section>
       </main>}      {currentPage==="penyes" && <main className="mx-auto min-h-[75vh] w-full max-w-[min(96vw,1600px)] px-3 pb-32 pt-8 sm:px-5">
         <section id="penyes" className="scroll-mt-24">
-          <div className="relative mb-6 overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#173f52] via-[#236579] to-[#2c7180] px-5 py-7 text-white shadow-[0_18px_45px_rgba(23,63,82,.18)] sm:mb-8 sm:px-8 sm:py-9">
+          <div className="relative mb-5 min-w-0 overflow-hidden rounded-2xl bg-gradient-to-br from-[#173f52] via-[#236579] to-[#2c7180] px-4 py-5 text-white shadow-[0_18px_45px_rgba(23,63,82,.18)] sm:mb-8 sm:rounded-[1.75rem] sm:px-8 sm:py-9">
             <div className="pointer-events-none absolute -right-10 -top-12 h-48 w-48 rounded-full border-[22px] border-white/10"/>
             <div className="relative z-10 max-w-3xl">
               <p className="text-[10px] font-extrabold uppercase tracking-[.24em] text-white/70 sm:text-xs">La vida festera de l'Alfàs del Pi</p>
-              <h2 className="mt-2 text-3xl font-extrabold leading-tight sm:text-5xl">Nuestras peñas</h2><p className="mt-1 text-sm font-semibold text-white/85">43 peñas en total en l’Alfàs del Pi</p>
+              <h2 className="mt-2 break-words text-[2rem] font-extrabold leading-tight sm:text-5xl">Nuestras peñas</h2><p className="mt-1 text-sm font-semibold text-white/85">43 peñas en total en l’Alfàs del Pi</p>
               <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/85 sm:text-base">Descubre quién está detrás de cada peña, conoce su música y su ambiente, encuentra sus próximas actividades y guarda tus favoritas.</p>
               <div className="mt-5 flex flex-wrap gap-2">
                 <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-bold">{penyes.length} {penyes.length===1?"peña":"peñas"} registradas</span>
@@ -863,15 +863,15 @@ function Home() {
             </div>
           </div>
 
-          <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+          <div className="mb-4 grid min-w-0 grid-cols-1 gap-3 sm:mb-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
             <label className="relative block"><span className="sr-only">Buscar peñas</span><span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">⌕</span><input type="search" value={penyaSearch} onChange={e=>setPenyaSearch(e.target.value)} placeholder="Buscar por nombre, música, dirección o descripción…" className="w-full rounded-2xl border border-border bg-card py-3 pl-11 pr-4 text-sm shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 sm:text-base"/></label>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               <button onClick={()=>{setPenyaMusicFilter("Todas");setPenyaOnlyMine(false);setPenyaSearch("");}} className="rounded-full border border-border px-4 py-2 text-xs font-bold text-primary transition hover:bg-primary/5">Limpiar filtros</button>
               <button onClick={() => setForm(true)} className="rounded-full bg-pink px-5 py-2.5 text-sm font-bold text-brown transition hover:-translate-y-0.5">+ {ui.addPenya}</button>
             </div>
           </div>
 
-          <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-border/70 bg-card/70 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+          <div className="mb-5 flex min-w-0 flex-col gap-3 rounded-2xl border border-border/70 bg-card/70 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
             <div className="min-w-0">
               <p className="text-xs font-extrabold uppercase tracking-wider text-primary">Encuentra tu ambiente</p>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -891,7 +891,7 @@ function Home() {
           ) : visiblePenyes.length===0 ? (
             <div className="glass rounded-3xl p-8 text-center"><p className="font-bold text-primary">No encontramos peñas con esos filtros</p><p className="mt-1 text-sm text-muted-foreground">Prueba con otra búsqueda o limpia los filtros.</p><button onClick={()=>{setPenyaSearch("");setPenyaMusicFilter("Todas");setPenyaOnlyMine(false);}} className="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">Mostrar todas las peñas</button></div>
           ) : (
-            <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid min-w-0 grid-cols-1 items-stretch gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
               {visiblePenyes.map((p) => (
                 <article id={"penya-" + p.id} key={p.id} tabIndex={0} aria-label={`Abrir ficha de ${p.nombre}`} onClick={() => { setPenyaDetailFullscreen(true); setSelectedPenya(p); }} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setPenyaDetailFullscreen(true); setSelectedPenya(p); } }} className="glass group min-w-0 cursor-pointer overflow-hidden rounded-2xl transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:rounded-3xl">
                   <div className="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37]">{p.foto ? <img src={p.foto} alt={p.nombre} loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /> : <div className="grid h-full place-items-center text-5xl font-extrabold text-white/85">{p.nombre.trim().charAt(0).toLocaleUpperCase("es")}</div>}
@@ -903,10 +903,10 @@ function Home() {
                     <div className="mt-3 flex flex-wrap gap-2"><span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">♫ {p.tipo_musica||"Música variada"}</span>{p.lat!=null&&p.lng!=null&&<span className="rounded-full border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">Ubicación disponible</span>}</div>
                     {p.informacion?.trim()&&<p className="mt-3 line-clamp-3 break-words text-sm leading-relaxed text-muted-foreground">{p.informacion}</p>}
                     {(()=>{const plans=eventosActivos.filter(e=>e.penya_id===p.id);return plans.length>0?<div className="mt-3 rounded-xl bg-pink/20 px-3 py-2 text-xs leading-relaxed text-[#173f52]"><strong>Próximo plan:</strong> {plans[0].titulo}{plans[0].dia?" · "+fmtDia(plans[0].dia):""}</div>:null;})()}
-                    <div className="mt-auto flex flex-wrap gap-2 border-t border-border/70 pt-3">
+                    <div className="mt-auto grid grid-cols-2 gap-2 border-t border-border/70 pt-3 sm:flex sm:flex-wrap">
                       <button onClick={e=>{e.stopPropagation();toggleMiPenya(p.id);}} aria-pressed={misPenyes.includes(p.id)} className="rounded-full border border-primary/20 px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5">{misPenyes.includes(p.id)?"★ Guardada":"☆ Mi peña"}</button>
                       <button onClick={e=>{e.stopPropagation();goMap(p.id);}} className="rounded-full border border-border px-3 py-2 text-xs font-bold text-muted-foreground transition hover:border-primary/40 hover:text-primary">📍 Mapa</button>
-                      <button onClick={e=>{e.stopPropagation();setEventFormPenya(p);}} className="rounded-full bg-[#173f52] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#236579]">+ Proponer plan</button>
+                      <button onClick={e=>{e.stopPropagation();setEventFormPenya(p);}} className="col-span-2 rounded-full bg-[#173f52] px-3 py-2.5 text-xs font-bold text-white transition hover:bg-[#236579] sm:col-span-1">+ Proponer plan</button>
                     </div>
                     {instagramUrl(p.instagram)&&<a onClick={e=>e.stopPropagation()} className="mt-3 inline-block text-xs font-semibold text-primary underline" href={instagramUrl(p.instagram)!} target="_blank" rel="noreferrer">Instagram ↗</a>}
                     <button onClick={e=>{e.stopPropagation();setSelectedPenya(p);setPenyaDetailFullscreen(true);}} className="mt-3 w-full rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition hover:opacity-90">Ver ficha completa →</button>
