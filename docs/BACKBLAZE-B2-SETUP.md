@@ -17,7 +17,7 @@ En el Worker/Pages que publica festalfàs, abre Settings → Variables and Secre
 
 No guardes las claves en Git, archivos `.env` versionados, código del navegador ni mensajes. La clave de aplicación debe limitarse al bucket `festalfas-media` y tener permisos de lectura y escritura de archivos.
 
-El endpoint S3 no se utiliza en esta integración porque el Worker usa la API nativa de B2. Se conserva como dato informativo: `s3.us-east-005.backblazeb2.com`.
+El endpoint S3 no se utiliza en esta integración porque el Worker usa la API nativa de B2. El ID del bucket se obtiene automáticamente de la autorización si la clave está limitada a `festalfas-media`; si la clave da acceso a varios buckets, se puede configurar también `B2_BUCKET_ID` para seleccionar el correcto. El endpoint que has encontrado (`s3.us-east-005.backblazeb2.com`) se conserva como dato informativo.
 
 ## Rutas
 
