@@ -4,7 +4,7 @@ export async function uploadMediaFile(file: File, folder: string): Promise<Uploa
   const form = new FormData();
   form.append("file", file);
   form.append("folder", folder);
-  const response = await fetch("/api/media/upload", { method: "POST", body: form, credentials: "same-origin" });
+  const headers = new Headers();\n  if (folder === "actuaciones" || folder === "noticias" || folder === "site" || folder.startsWith("penyes/perfiles/")) {\n    const { supabase } = await import("@/integrations/supabase/client");\n    const { data } = await supabase.auth.getSession();\n    if (!data.session?.access_token) throw new Error("Inicia sesión como administrador antes de subir archivos.");\n    headers.set("Authorization", "Bearer " + data.session.access_token);\n  }\n  const response = await fetch("/api/media/upload", { method: "POST", body: form, headers, credentials: "same-origin" });
   const result = await response.json().catch(() => null) as { path?: string; url?: string; error?: string } | null;
   if (!response.ok || !result?.path || !result.url) {
     throw new Error(result?.error || "No se pudo subir el archivo.");
