@@ -331,7 +331,7 @@ function AnnualFestCalendar({ items, onEventClick }: { items: any[]; onEventClic
     return {delta,y,m,events,offset:(new Date(y,m,1).getDay()+6)%7,days:new Date(y,m+1,0).getDate()};
   };
   const cards=[-1,0,1].map(monthData),active=cards[1];
-  const stepWidth=()=>Math.max(1,(trackRef.current?.parentElement?.clientWidth||360)/3);
+  const stepWidth=()=>Math.max(1,(trackRef.current?.clientWidth||360)/3);
   const resetTrack=()=>{const track=trackRef.current;if(!track)return;track.style.transition="transform 240ms cubic-bezier(.2,.75,.25,1)";track.style.transform="translate3d(0,0,0)";};
   const move=(steps:number)=>{const track=trackRef.current;if(!track||pendingSteps.current!==0)return;const amount=Math.max(-1,Math.min(1,Math.trunc(steps)));if(!amount){resetTrack();return;}pendingSteps.current=amount;track.style.transition="transform 260ms cubic-bezier(.18,.72,.22,1)";track.style.transform=`translate3d(${-amount*stepWidth()}px,0,0)`;};
   const finishMove=()=>{const steps=pendingSteps.current;if(!steps)return;pendingSteps.current=0;setActiveDate(d=>new Date(d.getFullYear(),d.getMonth()+steps,1));setSelectedDay(null);const track=trackRef.current;if(track){track.style.transition="none";track.style.transform="translate3d(-33.3333%,0,0)";}};
