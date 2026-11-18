@@ -316,46 +316,76 @@ const esVideoDirecto=(value:string)=>{try{const path=new URL(value).pathname.toL
 const esVideoVertical=(value:string)=>{try{const u=new URL(value);return /\/shorts\/|\/reel\/|\/p\//i.test(u.pathname);}catch{return false;}};
 
 function AnnualFestCalendar({ items, onEventClick }: { items: any[]; onEventClick: (item: any) => void }) {
-  const [activeDate, setActiveDate] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
-  const [slide, setSlide] = useState<"idle"|"next"|"previous">("idle");
-  const touchStartX = useRef<number | null>(null);
-  const year = activeDate.getFullYear(), month = activeDate.getMonth();
-  const names = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-  const makeCard = (delta:number) => {
-    const date = new Date(year,month+delta,1), y=date.getFullYear(), m=date.getMonth();
-    const monthItems=items.filter(item=>{const d=new Date(String(item.dia||"").slice(0,10)+"T12:00:00");return !Number.isNaN(d.getTime())&&d.getFullYear()===y&&d.getMonth()===m;}).sort((x,b)=>String(x.dia).localeCompare(String(b.dia))||String(x.hora||"").localeCompare(String(b.hora||"")));
-    const first=(new Date(y,m,1).getDay()+6)%7, count=new Date(y,m+1,0).getDate();
-    return {delta,y,m,monthItems,first,count};
+  const [activeDate,setActiveDate]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1));
+  const [direction,setDirection]=useState<"next"|"previous"|null>(null);
+  const [expanded,setExpanded]=useState(false);
+  const [selectedDay,setSelectedDay]=useState<number|null>(null);
+  const touchStart=useRef<number|null>(null);
+  const year=activeDate.getFullYear(),month=activeDate.getMonth();
+  const names=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  const monthData=(delta:number)=>{
+    const date=new Date(year,month+delta,1),y=date.getFullYear(),m=date.getMonth();
+    const events=items.filter(item=>{const d=new Date(String(item.dia||"").slice(0,10)+"T12:00:00");return !Number.isNaN(d.getTime())&&d.getFullYear()===y&&d.getMonth()===m;}).sort((x,b)=>String(x.dia).localeCompare(String(b.dia))||String(x.hora||"").localeCompare(String(b.hora||"")));
+    return {delta,y,m,events,offset:(new Date(y,m,1).getDay()+6)%7,days:new Date(y,m+1,0).getDate()};
   };
-  const cards=[-2,-1,0,1,2].map(makeCard);
-  const shift=(direction:"next"|"previous")=>{if(slide!=="idle")return;setSlide(direction);};
-  const finishSlide=()=>{if(slide==="idle")return;setActiveDate(d=>new Date(d.getFullYear(),d.getMonth()+(slide==="next"?1:-1),1));setSlide("idle");};
-  const active=cards[2];
-  return <section aria-labelledby="annual-calendar-title" className="relative mt-7 overflow-hidden rounded-[2rem] border border-primary/15 bg-[#102f3d] px-3 py-5 text-white shadow-xl sm:px-6 sm:py-7">
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-30" style={{backgroundImage:"radial-gradient(circle at 12% 15%, rgba(255,255,255,.2), transparent 35%), radial-gradient(circle at 90% 85%, rgba(212,175,55,.22), transparent 32%)"}}/>
-    <div className="relative z-10 mx-auto flex max-w-5xl items-center justify-between gap-3"><div><p className="text-[9px] font-extrabold uppercase tracking-[.22em] text-white/60">Agenda anual</p><h2 id="annual-calendar-title" className="mt-1 text-xl font-extrabold sm:text-2xl">Calendario festero</h2></div><span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-bold">{active.y}</span></div>
-    <div className="relative z-10 mx-auto mt-5 flex max-w-5xl items-center gap-2 sm:gap-4" onTouchStart={e=>{touchStartX.current=e.touches[0]?.clientX??null;}} onTouchEnd={e=>{if(touchStartX.current!==null){const dx=e.changedTouches[0].clientX-touchStartX.current;if(Math.abs(dx)>35)shift(dx<0?"next":"previous");}touchStartX.current=null;}}>
-      <button type="button" onClick={()=>shift("previous")} disabled={slide!=="idle"} aria-label="Mes anterior" className="z-20 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/25 bg-white/10 text-xl transition hover:bg-white/20 disabled:opacity-40">‹</button>
-      <div className="min-w-0 flex-1 overflow-hidden py-2">
-        <div onTransitionEnd={e=>{if(e.target===e.currentTarget)finishSlide();}} className="flex w-[500%] items-stretch" style={{transform:slide==="next"?"translateX(-60%)":slide==="previous"?"translateX(-20%)":"translateX(-40%)",transition:slide==="idle"?"none":"transform 560ms cubic-bezier(.22,.75,.2,1)"}}>
-          {cards.map(card=><div key={card.y+"-"+card.m} className="w-1/5 shrink-0 px-1.5 sm:px-2">
-            <button type="button" onClick={()=>{if(card.delta===-1)shift("previous");else if(card.delta===1)shift("next");}} aria-label={"Ver "+names[card.m]+" "+card.y} className={`h-full w-full min-w-0 rounded-[1.3rem] border text-left transition-all duration-500 ${card.delta===0?"border-white/35 bg-white/[.15] p-2.5 shadow-2xl backdrop-blur-md sm:p-4":"border-white/10 bg-white/[.055] p-1.5 opacity-55 sm:p-3"}`}>
-              <div className="mb-2 text-center"><p className={`truncate font-display font-bold leading-none ${card.delta===0?"text-lg sm:text-3xl":"text-[10px] sm:text-base"}`}>{names[card.m]}</p><p className="mt-1 text-[8px] text-white/55 sm:text-[10px]">{card.y}</p></div>
-              <div className="grid grid-cols-7 gap-[2px] text-center text-[6px] font-bold text-white/45 sm:gap-1 sm:text-[9px]">{["L","M","X","J","V","S","D"].map(d=><span key={d}>{d}</span>)}</div>
-              <div className="mt-1 grid grid-cols-7 gap-x-[2px] gap-y-1 sm:gap-x-1 sm:gap-y-1.5">
-                {Array.from({length:card.first},(_,i)=><span key={"blank"+i}/>)}
-                {Array.from({length:card.count},(_,i)=>i+1).map(day=>{const dayItems=card.monthItems.filter(item=>Number(String(item.dia).slice(8,10))===day);const today=card.y===new Date().getFullYear()&&card.m===new Date().getMonth()&&day===new Date().getDate();return <span key={day} className="flex min-h-[25px] min-w-0 flex-col items-center justify-start sm:min-h-[34px]"><span className={`grid h-4 w-4 place-items-center rounded-full text-[7px] leading-none sm:h-6 sm:w-6 sm:text-[10px] ${dayItems.length?"bg-[#d5b45b] font-extrabold text-[#17313b]":today?"border border-white/70 text-white":"text-white/75"}`}>{day}</span>{dayItems.length>0&&<span className="mt-[2px] h-[2px] w-3 rounded-full bg-[#d5b45b] sm:w-5"/>}{card.delta===0&&dayItems.slice(0,1).map((item:any)=><span key={String(item.id)} className="mt-[2px] block w-full truncate text-center text-[5px] font-semibold leading-tight text-white/85 sm:text-[8px]" title={item.titulo}>{item.titulo}</span>)}</span>;})}
-              </div>
-              <p className="mt-2 text-center text-[8px] font-semibold text-white/55 sm:text-[10px]">{card.monthItems.length?card.monthItems.length+" actos":"Sin actos publicados"}</p>
-            </button>
-          </div>)}
-        </div>
-      </div>
-      <button type="button" onClick={()=>shift("next")} disabled={slide!=="idle"} aria-label="Mes siguiente" className="z-20 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/25 bg-white/10 text-xl transition hover:bg-white/20 disabled:opacity-40">›</button>
+  const cards=[-1,0,1].map(monthData),active=cards[1];
+  const move=(dir:"next"|"previous")=>{if(direction)return;setDirection(dir);};
+  const finishMove=()=>{if(!direction)return;setActiveDate(d=>new Date(d.getFullYear(),d.getMonth()+(direction==="next"?1:-1),1));setDirection(null);};
+  const eventsOn=(data:any,day:number)=>data.events.filter((item:any)=>Number(String(item.dia).slice(8,10))===day);
+  const calendarGrid=(data:any,large=false)=><>
+    <div className={`grid grid-cols-7 text-center font-semibold text-muted-foreground ${large?"mb-2 text-xs":"mb-1 text-[6px] sm:text-[8px]"}`}>{["L","M","X","J","V","S","D"].map(d=><span key={d}>{d}</span>)}</div>
+    <div className={`grid grid-cols-7 ${large?"gap-1.5 sm:gap-2":"gap-x-0.5 gap-y-1"}`}>
+      {Array.from({length:data.offset},(_,i)=><span key={"blank"+i}/>)}
+      {Array.from({length:data.days},(_,i)=>i+1).map(day=>{
+        const dayEvents=eventsOn(data,day),today=data.y===new Date().getFullYear()&&data.m===new Date().getMonth()&&day===new Date().getDate();
+        return large?<button key={day} type="button" onClick={()=>setSelectedDay(dayEvents.length?day:null)} className={`flex min-h-[76px] flex-col items-center rounded-xl border p-1.5 text-xs transition sm:min-h-[100px] sm:p-2 ${selectedDay===day?"border-primary bg-primary/10":dayEvents.length?"border-primary/20 bg-white/70 hover:bg-primary/10":today?"border-primary/30 bg-primary/5":"border-black/5 bg-white/35 hover:bg-white/70"}`}><span className={`grid h-6 w-6 place-items-center rounded-full text-xs ${today?"bg-primary text-white":""}`}>{day}</span>{dayEvents.slice(0,2).map((ev:any,i:number)=><span key={String(ev.id||i)} className="mt-1 w-full truncate rounded-sm border-l-2 border-[#c6a24b] pl-1 text-left text-[8px] leading-tight text-foreground sm:text-[10px]">{ev.titulo}</span>)}{dayEvents.length>2&&<span className="text-[8px] text-muted-foreground">+{dayEvents.length-2}</span>}</button>
+        :<span key={day} className="flex min-h-[21px] flex-col items-center"><span className={`grid h-3.5 w-3.5 place-items-center rounded-full text-[6px] leading-none sm:h-5 sm:w-5 sm:text-[8px] ${dayEvents.length?"bg-primary/15 font-bold text-primary":today?"border border-primary/50 text-primary":"text-foreground/75"}`}>{day}</span>{dayEvents.length>0&&<span className="mt-[2px] h-[2px] w-2.5 rounded-full bg-[#c6a24b] sm:w-4"/>}{data.delta===0&&dayEvents.slice(0,1).map((ev:any,i:number)=><span key={String(ev.id||i)} className="mt-[2px] block max-w-full truncate text-center text-[5px] leading-none text-muted-foreground sm:text-[7px]">{ev.titulo}</span>)}</span>;
+      })}
     </div>
-    <div className="relative z-10 mx-auto mt-2 flex max-w-5xl items-center justify-between px-1"><button type="button" onClick={()=>{if(slide==="idle")setActiveDate(new Date(new Date().getFullYear(),new Date().getMonth(),1));}} className="text-[10px] font-bold text-white/65 underline underline-offset-4">Ir al mes actual</button><p className="text-[9px] text-white/45">Desliza para descubrir los meses</p></div>
-    {active.monthItems.length>0&&<div className="relative z-10 mx-auto mt-3 max-w-5xl border-t border-white/15 pt-3"><p className="mb-2 text-[10px] font-extrabold uppercase tracking-wider text-white/60">Actos de {names[active.m]}</p><div className="flex flex-wrap gap-2">{active.monthItems.slice(0,4).map((item:any)=><button key={String(item.id)} type="button" onClick={()=>onEventClick(item)} className="max-w-full rounded-full border border-white/15 bg-white/[.08] px-3 py-1.5 text-left text-[10px] font-semibold text-white/85 transition hover:bg-white/15"><span className="text-[#e4c875]">{String(item.dia).slice(8,10)}</span> · {item.titulo}</button>)}</div></div>}
-  </section>;
+  </>;
+  useEffect(()=>{if(!expanded)return;const onKey=(e:KeyboardEvent)=>{if(e.key==="Escape"){setExpanded(false);setSelectedDay(null);}if(e.key==="ArrowRight")setActiveDate(d=>new Date(d.getFullYear(),d.getMonth()+1,1));if(e.key==="ArrowLeft")setActiveDate(d=>new Date(d.getFullYear(),d.getMonth()-1,1));};window.addEventListener("keydown",onKey);return()=>window.removeEventListener("keydown",onKey);},[expanded]);
+  const selectedEvents=selectedDay===null?[]:eventsOn(active,selectedDay);
+  return <>
+    <section aria-labelledby="annual-calendar-title" className="relative mt-7 overflow-hidden rounded-[1.8rem] border border-white/70 bg-gradient-to-br from-white/85 via-[#f8f7f3]/90 to-[#e9eef0]/85 p-4 text-foreground shadow-[0_12px_40px_rgba(38,55,65,.10)] backdrop-blur-2xl sm:p-6">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(255,255,255,.95),transparent_42%),linear-gradient(135deg,rgba(255,255,255,.35),transparent_55%)]"/>
+      <div className="relative z-10 flex items-center justify-between gap-3"><div><p className="text-[9px] font-bold uppercase tracking-[.2em] text-primary/65">Agenda durante todo el año</p><h2 id="annual-calendar-title" className="mt-1 text-xl font-extrabold text-primary sm:text-2xl">Calendario festero</h2></div><button type="button" onClick={()=>setExpanded(true)} className="rounded-full border border-white/90 bg-white/65 px-3 py-2 text-[10px] font-bold text-primary shadow-sm backdrop-blur-xl transition hover:bg-white">⛶ Ampliar</button></div>
+      <div className="relative z-10 mt-4 flex items-center justify-center gap-1.5 sm:gap-3" onTouchStart={e=>{touchStart.current=e.touches[0]?.clientX??null;}} onTouchEnd={e=>{if(touchStart.current!==null){const dx=e.changedTouches[0].clientX-touchStart.current;if(Math.abs(dx)>35)move(dx<0?"next":"previous");}touchStart.current=null;}}>
+        <button type="button" aria-label="Mes anterior" onClick={()=>move("previous")} disabled={!!direction} className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/90 bg-white/65 text-lg text-primary shadow-sm backdrop-blur-xl disabled:opacity-40">‹</button>
+        <div className="min-w-0 flex-1 overflow-hidden py-2">
+          <div onTransitionEnd={e=>{if(e.target===e.currentTarget)finishMove();}} className="flex w-[300%] items-stretch" style={{transform:direction==="next"?"translateX(-66.6667%)":direction==="previous"?"translateX(0%)":"translateX(-33.3333%)",transition:direction?"transform 620ms cubic-bezier(.22,.72,.18,1)":"none"}}>
+            {cards.map((data)=><div key={data.y+"-"+data.m} className="w-1/3 shrink-0 px-1.5 sm:px-3">
+              <button type="button" onClick={()=>{if(data.delta===-1)move("previous");else if(data.delta===1)move("next");else setExpanded(true);}} className={`relative flex min-h-[245px] w-full flex-col rounded-[1.35rem] border text-left backdrop-blur-2xl transition-all duration-500 sm:min-h-[310px] ${data.delta===0?"scale-100 border-white bg-white/65 p-3 shadow-[0_12px_32px_rgba(35,52,62,.13)] sm:p-4":"scale-[.94] border-white/60 bg-white/35 p-2 opacity-75 shadow-[0_6px_20px_rgba(35,52,62,.07)] sm:p-3"}`}>
+                <div className="mb-2 text-center"><p className={`font-display font-bold text-primary ${data.delta===0?"text-lg sm:text-2xl":"text-xs sm:text-base"}`}>{names[data.m]}</p><p className="text-[8px] text-muted-foreground sm:text-[10px]">{data.y}</p></div>
+                {calendarGrid(data)}
+                <div className="mt-auto pt-2 text-center text-[8px] font-semibold text-primary/65 sm:text-[10px]">{data.events.length?data.events.length+" actos":"Agenda abierta"}</div>
+                {data.delta===0&&<span className="mt-1 text-center text-[8px] font-bold text-primary/75">Toca para ampliar</span>}
+              </button>
+            </div>)}
+          </div>
+        </div>
+        <button type="button" aria-label="Mes siguiente" onClick={()=>move("next")} disabled={!!direction} className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/90 bg-white/65 text-lg text-primary shadow-sm backdrop-blur-xl disabled:opacity-40">›</button>
+      </div>
+      <p className="relative z-10 mt-2 text-center text-[9px] text-muted-foreground">Desliza los meses · Pulsa el mes central para abrir el calendario</p>
+    </section>
+    {expanded&&typeof document!=="undefined"&&createPortal(
+      <div role="dialog" aria-modal="true" aria-label="Calendario festero ampliado" className="fixed inset-0 z-[100001] h-[100dvh] overflow-y-auto bg-[radial-gradient(circle_at_15%_0%,rgba(255,255,255,.98),transparent_45%),linear-gradient(145deg,#f5f3ed,#e7edf0)] text-foreground">
+        <div className="mx-auto min-h-full w-full max-w-6xl px-3 pb-8 pt-4 sm:px-7 sm:pt-7">
+          <header className="mb-5 flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-primary/60">FestAlfàs · Agenda anual</p><h2 className="mt-1 text-2xl font-extrabold text-primary sm:text-4xl">Calendario festero</h2></div><button type="button" onClick={()=>{setExpanded(false);setSelectedDay(null);}} className="rounded-full border border-white/90 bg-white/75 px-4 py-2.5 text-xs font-bold text-primary shadow-lg backdrop-blur-2xl">✕ Cerrar</button></header>
+          <div className="rounded-[2rem] border border-white/80 bg-white/45 p-3 shadow-[0_20px_70px_rgba(35,52,62,.12)] backdrop-blur-2xl sm:p-6">
+            <div className="mb-4 flex items-center justify-between gap-3"><button type="button" onClick={()=>{setActiveDate(d=>new Date(d.getFullYear(),d.getMonth()-1,1));setSelectedDay(null);}} className="rounded-full border border-white bg-white/70 px-4 py-2 text-sm text-primary shadow-sm">‹</button><div className="text-center"><h3 className="text-2xl font-bold text-primary sm:text-4xl">{names[month]}</h3><p className="text-xs text-muted-foreground">{year}</p></div><button type="button" onClick={()=>{setActiveDate(d=>new Date(d.getFullYear(),d.getMonth()+1,1));setSelectedDay(null);}} className="rounded-full border border-white bg-white/70 px-4 py-2 text-sm text-primary shadow-sm">›</button></div>
+            <div className="grid grid-cols-7 gap-1.5 text-center text-[9px] font-bold uppercase tracking-wider text-muted-foreground sm:gap-2 sm:text-xs">{["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"].map(d=><span key={d} className="truncate py-2">{d.slice(0,3)}</span>)}</div>
+            {calendarGrid(active,true)}
+            <div className="mt-5 flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground"><span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-[#c6a24b]"/>Actos publicados</span><span>Selecciona un día para consultar sus actos</span></div>
+          </div>
+          <div className="mt-4 rounded-[1.5rem] border border-white/80 bg-white/55 p-4 shadow-lg backdrop-blur-2xl sm:p-5">
+            <h3 className="text-sm font-extrabold text-primary">{selectedDay?"Actos del "+selectedDay+" de "+names[month]:"Actos de "+names[month]}</h3>
+            {selectedEvents.length?<div className="mt-3 grid gap-2 sm:grid-cols-2">{selectedEvents.map((item:any,i:number)=><button key={String(item.id||i)} onClick={()=>onEventClick(item)} className="rounded-xl border border-white bg-white/70 p-3 text-left shadow-sm transition hover:bg-white"><span className="text-[10px] font-bold text-primary/65">{item.hora||"Hora por confirmar"} · {item.lugar||"Lugar por confirmar"}</span><span className="mt-1 block text-sm font-bold">{item.titulo}</span><span className="mt-1 block text-[10px] text-primary">Ver información del acto →</span></button>)}</div>:<p className="mt-2 text-xs text-muted-foreground">{selectedDay?"No hay actos publicados para este día.":active.events.length?active.events.length+" actos publicados este mes. Selecciona un día del calendario.":"Todavía no hay actos publicados para este mes."}</p>}
+          </div>
+          <div className="mt-4 flex justify-center"><button type="button" onClick={()=>{setActiveDate(new Date(new Date().getFullYear(),new Date().getMonth(),1));setSelectedDay(null);}} className="rounded-full border border-white/80 bg-white/60 px-4 py-2 text-xs font-bold text-primary shadow-sm">Volver al mes actual</button></div>
+        </div>
+      </div>,document.body
+    )}
+  </>;
 }
 function Home() {
   const [q, setQ] = useState("");
