@@ -7,8 +7,10 @@ Adoptar una infraestructura común y ampliable con Cloudflare Workers (API), D1 
 - La web actual depende de Supabase para autenticación de administración, lectura/escritura de peñas, actos, eventos, contenido y almacenamiento.
 - Las noticias se guardan actualmente en `site_content` bajo `noticias_json`; avisos y puntos de mapa también se conservan como JSON en `site_content`.
 - Este repositorio contiene los tipos y migraciones SQL de Supabase, pero no contiene una exportación verificada de los registros actuales ni de los archivos almacenados.
-- El proyecto Supabase que se pudo ver desde la conexión disponible no era el proyecto correcto. No se debe tocar.
-- Por tanto, no se puede retirar Supabase ni cambiar la aplicación a D1 hasta conseguir una exportación íntegra del backend antiguo. La base nueva no debe arrancar vacía.
+- El proyecto de origen identificado es `fdmhchfcvnbmoczoperg` y actualmente figura como `INACTIVE` (pausado). La conexión de gestión confirma el estado, pero no permite leer sus tablas mientras está inactivo.
+- No se debe reactivar el proyecto ni contratar un plan de pago para esta migración. La recuperación de datos debe hacerse desde una copia descargable, si está disponible, o desde una exportación previa del propietario.
+- Supabase documenta una ventana de 90 días para reanudar un proyecto pausado; después permite descargar la copia física de la base y los objetos de Storage desde el Dashboard y restaurar la base localmente. No se debe pulsar «Resume/Restore» si se mantiene la decisión de no reactivarlo.
+- Por tanto, no se puede retirar Supabase ni cambiar la aplicación a D1 hasta conseguir y verificar una exportación íntegra del backend antiguo. La base nueva no debe arrancar vacía.
 
 ## Arquitectura objetivo
 1. **Workers:** API única para operaciones de lectura/escritura, validación, permisos, moderación y límites anti-spam.
@@ -48,7 +50,7 @@ El esquema es una propuesta inicial y debe contrastarse con la estructura real e
 
 ## Requisitos antes del despliegue
 - Acceso a una cuenta Cloudflare del propietario para crear D1 y Workers, y una cuenta Backblaze B2 para el almacenamiento.
-- Exportación del Supabase correcto. No pedir ni guardar contraseñas, tokens o claves en el repositorio.
+- Copia descargada del proyecto Supabase correcto (`fdmhchfcvnbmoczoperg`): base de datos y objetos del bucket `penyes`. No pedir ni guardar contraseñas, tokens o claves en el repositorio.
 - Confirmar dominio y DNS para configurar las rutas del Worker.
 - Revisar los límites gratuitos vigentes antes de publicar y añadir alertas de uso.
 
