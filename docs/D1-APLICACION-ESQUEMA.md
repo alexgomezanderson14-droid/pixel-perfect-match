@@ -37,7 +37,7 @@ Deben aparecer estas tablas:
 - `noticia_comentarios`
 - `noticia_likes`
 - `noticias`
-- `penes`
+- `penyes`
 - `penya_invitaciones`
 - `penya_miembros`
 - `site_content`
