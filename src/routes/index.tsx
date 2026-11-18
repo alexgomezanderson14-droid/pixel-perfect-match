@@ -711,7 +711,7 @@ function Home() {
         </section>
       </main>
       </>}
-      {currentPage==="programa" && <main className="mx-auto min-h-[75vh] w-full min-w-0 max-w-[1600px] overflow-x-clip px-4 pb-32 pt-6 sm:px-5 sm:pt-8">
+      {currentPage==="programa" && <main className="relative z-0 mx-auto min-h-[75vh] w-full min-w-0 max-w-[1600px] px-4 pb-32 pt-6 sm:px-5 sm:pt-8">
         <section id="programa" className="scroll-mt-24">
           <SectionTitle>{ui.nav.programa}</SectionTitle>
           {!dias.length ? (
@@ -849,9 +849,10 @@ function Home() {
         </section>
       </main>}      {currentPage==="penyes" && <main className="mx-auto min-h-[75vh] w-full min-w-0 max-w-[1600px] overflow-x-clip px-4 pb-32 pt-6 sm:px-5 sm:pt-8">
         <section id="penyes" className="scroll-mt-24">
-          <div className="relative mb-5 min-h-[260px] w-full min-w-0 overflow-hidden rounded-b-[1.75rem] rounded-t-2xl bg-gradient-to-br from-[#173f52] via-[#236579] to-[#2c7180] px-4 py-6 text-white shadow-[0_18px_45px_rgba(23,63,82,.18)] sm:mb-8 sm:min-h-[300px] sm:rounded-[1.75rem] sm:px-8 sm:py-9">
-            <div className="pointer-events-none absolute -right-10 -top-12 h-48 w-48 rounded-full border-[22px] border-white/10"/>
-            <div className="relative z-10 max-w-3xl">
+          <div className="relative left-1/2 mb-6 min-h-[260px] w-screen -translate-x-1/2 overflow-hidden rounded-b-[1.75rem] bg-[#173f52] px-5 py-7 text-white shadow-[0_12px_32px_rgba(23,63,82,.16)] sm:mb-8 sm:min-h-[320px] sm:px-8 sm:py-10">
+            {siteContent["penyes_banner_image_url"] ? <img src={siteContent["penyes_banner_image_url"]} alt="" aria-hidden="true" fetchPriority="low" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center"/> : null}
+            <div className="absolute inset-0 bg-[#102f40]/55"/>
+            <div className="relative z-10 mx-auto w-full max-w-[1500px]">
               <p className="text-[10px] font-extrabold uppercase tracking-[.24em] text-white/70 sm:text-xs">La vida festera de l'Alfàs del Pi</p>
               <h2 className="mt-2 break-words text-[2rem] font-extrabold leading-tight sm:text-5xl">Nuestras peñas</h2><p className="mt-1 text-sm font-semibold text-white/85">43 peñas en total en l’Alfàs del Pi</p>
               <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/85 sm:text-base">Descubre quién está detrás de cada peña, conoce su música y su ambiente, encuentra sus próximas actividades y guarda tus favoritas.</p>
