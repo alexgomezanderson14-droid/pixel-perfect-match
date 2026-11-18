@@ -10,7 +10,6 @@ En el Worker/Pages que publica festalfàs, abre Settings → Variables and Secre
 | --- | --- | --- |
 | `B2_APPLICATION_KEY_ID` | Secret | ID de la clave de aplicación de Backblaze |
 | `B2_APPLICATION_KEY` | Secret | Clave secreta de aplicación de Backblaze |
-| `B2_BUCKET_ID` | Variable | ID del bucket `festalfas-media` |
 | `B2_BUCKET_NAME` | Variable | `festalfas-media` |
 | `SUPABASE_URL` | Existing variable | URL del proyecto Supabase actual, necesaria temporalmente para validar la sesión del administrador |
 | `SUPABASE_PUBLISHABLE_KEY` | Existing variable/secret | Clave pública de Supabase, necesaria temporalmente para validar la sesión del administrador |
