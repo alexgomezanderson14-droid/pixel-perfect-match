@@ -23,6 +23,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
   const [blocks, setBlocks] = useState<ProfileBlock[]>([]);
   const [blocksLoading, setBlocksLoading] = useState(true);
   const [blocksSaving, setBlocksSaving] = useState(false);
+  const [uploadingBlockId, setUploadingBlockId] = useState<string | null>(null);
   const [blocksMessage, setBlocksMessage] = useState("");
   useEffect(() => {
     let active = true;
@@ -40,6 +41,24 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
   const addBlock = (type: ProfileBlock["type"]) => setBlocks(old => [...old, { id: crypto.randomUUID(), type, title: type === "text" ? "Nuestra historia" : type === "photo" ? "Un momento especial" : type === "video" ? "Vídeo de la peña" : type === "link" ? "Síguenos" : type === "list" ? "Lo que nos gusta" : "Lo que nos hace únicos", content: "", url: "" }]);
   const updateBlock = (id: string, key: keyof ProfileBlock, value: string) => setBlocks(old => old.map(block => block.id === id ? { ...block, [key]: value } : block));
   const moveBlock = (index: number, offset: number) => setBlocks(old => { const next = [...old]; const target = index + offset; if (target < 0 || target >= next.length) return old; [next[index], next[target]] = [next[target], next[index]]; return next; });
+  const uploadBlockPhoto = async (blockId: string, file: File | null) => {
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      setBlocksMessage("La fotografía debe ser JPG, PNG o WEBP y no superar 5 MB.");
+      return;
+    }
+    setUploadingBlockId(blockId); setBlocksMessage("");
+    try {
+      const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+      const path = "penyes/perfiles/" + penya.id + "/" + crypto.randomUUID() + "." + ext;
+      const { error: uploadError } = await supabase.storage.from("penyes").upload(path, file, { contentType: file.type });
+      if (uploadError) throw uploadError;
+      const publicUrl = supabase.storage.from("penyes").getPublicUrl(path).data.publicUrl;
+      updateBlock(blockId, "url", publicUrl);
+      setBlocksMessage("Fotografía subida. Guarda los apartados para publicarla en la ficha.");
+    } catch (err) { setBlocksMessage("No se ha podido subir la fotografía: " + (err instanceof Error ? err.message : String(err))); }
+    finally { setUploadingBlockId(null); }
+  };
   const saveBlocks = async () => {
     setBlocksSaving(true); setBlocksMessage("");
     try {
@@ -132,7 +151,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
             <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-xs font-extrabold uppercase tracking-wide text-primary">{({text:"Texto",photo:"Fotografía",video:"Vídeo",link:"Enlace",highlight:"Destacado",list:"Lista"} as Record<string,string>)[block.type]} · Apartado {index+1}</span><div className="flex gap-1"><button type="button" disabled={index===0} onClick={()=>moveBlock(index,-1)} className="rounded-lg border px-2 py-1 text-xs disabled:opacity-30" aria-label="Mover arriba">↑</button><button type="button" disabled={index===blocks.length-1} onClick={()=>moveBlock(index,1)} className="rounded-lg border px-2 py-1 text-xs disabled:opacity-30" aria-label="Mover abajo">↓</button><button type="button" onClick={()=>setBlocks(old=>old.filter(item=>item.id!==block.id))} className="rounded-lg border border-destructive/30 px-2 py-1 text-xs font-bold text-destructive">Eliminar</button></div></div>
             <label className="block space-y-1 text-xs font-semibold">Título<input className={field} maxLength={100} value={block.title} onChange={e=>updateBlock(block.id,"title",e.target.value)} placeholder="Título del apartado"/></label>
             {(block.type==="text"||block.type==="highlight"||block.type==="list")&&<label className="block space-y-1 text-xs font-semibold">{block.type==="list"?"Elementos (uno por línea)":"Contenido"}<textarea className={field} rows={block.type==="list"?4:5} maxLength={5000} value={block.content} onChange={e=>updateBlock(block.id,"content",e.target.value)} placeholder={block.type==="list"?"Convivencia\nMúsica\nDisfraces":"Escribe aquí lo que quieras contar…"} /></label>}
-            {(block.type==="photo"||block.type==="video"||block.type==="link")&&<label className="block space-y-1 text-xs font-semibold">{block.type==="photo"?"Dirección de la fotografía (URL)":block.type==="video"?"Enlace de YouTube, Vimeo o vídeo MP4":"Dirección del enlace"}<input className={field} type="url" maxLength={1000} value={block.url} onChange={e=>updateBlock(block.id,"url",e.target.value)} placeholder="https://…"/></label>}
+            {(block.type==="photo"||block.type==="video"||block.type==="link")&&<label className="block space-y-1 text-xs font-semibold">{block.type==="photo"?"Dirección de la fotografía (URL)":block.type==="video"?"Enlace de YouTube, Vimeo o vídeo MP4":"Dirección del enlace"}<input className={field} type="url" maxLength={1000} value={block.url} onChange={e=>updateBlock(block.id,"url",e.target.value)} placeholder="https://…"/>{block.type==="photo"&&<label className="mt-2 block space-y-1 text-xs font-semibold">O subir una fotografía desde el dispositivo<input className="block w-full text-sm font-normal" type="file" accept="image/jpeg,image/png,image/webp" disabled={uploadingBlockId===block.id} onChange={e=>void uploadBlockPhoto(block.id,e.target.files?.[0]??null)}/>{uploadingBlockId===block.id&&<span className="text-primary">Subiendo fotografía…</span>}</label>}</label>}
             {block.type==="link"&&<label className="block space-y-1 text-xs font-semibold">Texto del enlace<input className={field} maxLength={300} value={block.content} onChange={e=>updateBlock(block.id,"content",e.target.value)} placeholder="Visita nuestra página"/></label>}
             {block.type==="photo"&&<label className="block space-y-1 text-xs font-semibold">Descripción de la foto<input className={field} maxLength={300} value={block.content} onChange={e=>updateBlock(block.id,"content",e.target.value)} placeholder="Nuestra peña en las fiestas…"/></label>}
           </article>)}
