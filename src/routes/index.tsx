@@ -315,84 +315,6 @@ const videoEmbedUrl=(value:string)=>{try{const u=new URL(value);const host=u.hos
 const esVideoDirecto=(value:string)=>{try{const path=new URL(value).pathname.toLowerCase();return [".mp4",".webm",".ogg",".mov"].some(ext=>path.endsWith(ext));}catch{return false;}};
 const esVideoVertical=(value:string)=>{try{const u=new URL(value);return /\/shorts\/|\/reel\/|\/p\//i.test(u.pathname);}catch{return false;}};
 
-function AnnualFestCalendar({ items, onEventClick }: { items: any[]; onEventClick: (item: any) => void }) {
-  const [activeDate,setActiveDate]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1));
-  const [expanded,setExpanded]=useState(false);
-  const [hoveredCard,setHoveredCard]=useState<number|null>(null);
-  const [selectedDay,setSelectedDay]=useState<number|null>(null);
-  const pointerStart=useRef<{x:number;time:number}|null>(null);
-  const dragged=useRef(false);
-  const pendingSteps=useRef(0);
-  const trackRef=useRef<HTMLDivElement|null>(null);
-  const year=activeDate.getFullYear(),month=activeDate.getMonth();
-  const names=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-  const monthData=(delta:number)=>{
-    const date=new Date(year,month+delta,1),y=date.getFullYear(),m=date.getMonth();
-    const events=items.filter(item=>{const d=new Date(String(item.dia||"").slice(0,10)+"T12:00:00");return !Number.isNaN(d.getTime())&&d.getFullYear()===y&&d.getMonth()===m;}).sort((x,b)=>String(x.dia).localeCompare(String(b.dia))||String(x.hora||"").localeCompare(String(b.hora||"")));
-    return {delta,y,m,events,offset:(new Date(y,m,1).getDay()+6)%7,days:new Date(y,m+1,0).getDate()};
-  };
-  const cards=[-2,-1,0,1,2].map(monthData),active=cards[2];
-  const stepWidth=()=>Math.max(1,(trackRef.current?.clientWidth||600)/5);
-  const baseOffset=()=>stepWidth();
-  const resetTrack=()=>{const track=trackRef.current;if(!track)return;track.style.transition="transform 240ms cubic-bezier(.2,.75,.25,1)";track.style.transform=`translate3d(${-baseOffset()}px,0,0)`;};
-  const move=(steps:number)=>{const track=trackRef.current;if(!track||pendingSteps.current!==0)return;const amount=Math.max(-1,Math.min(1,Math.trunc(steps)));if(!amount){resetTrack();return;}pendingSteps.current=amount;track.style.transition="transform 460ms cubic-bezier(.22,.72,.18,1)";track.style.transform=`translate3d(${(-1-amount)*stepWidth()}px,0,0)`;};
-  const finishMove=()=>{const steps=pendingSteps.current;if(!steps)return;pendingSteps.current=0;setActiveDate(d=>new Date(d.getFullYear(),d.getMonth()+steps,1));setSelectedDay(null);const track=trackRef.current;if(track){track.style.transition="none";track.style.transform=`translate3d(${-baseOffset()}px,0,0)`;}};
-  const eventsOn=(data:any,day:number)=>data.events.filter((item:any)=>Number(String(item.dia).slice(8,10))===day);
-  const calendarGrid=(data:any,large=false)=><>
-    <div className={"grid grid-cols-7 text-center font-semibold text-muted-foreground "+(large?"mb-2 text-xs":"mb-1 text-[8px] sm:text-[10px]")}>{["L","M","X","J","V","S","D"].map(d=><span key={d}>{d}</span>)}</div>
-    <div className={"grid grid-cols-7 "+(large?"grid-rows-6 gap-1.5 sm:gap-2":"h-full flex-1 min-h-0 grid-rows-6 gap-x-0.5 gap-y-0")}>
-      {Array.from({length:data.offset},(_,i)=><span key={"blank"+i}/>)}
-      {Array.from({length:data.days},(_,i)=>i+1).map(day=>{
-        const dayEvents=eventsOn(data,day),today=data.y===new Date().getFullYear()&&data.m===new Date().getMonth()&&day===new Date().getDate();
-        if(large)return <button key={day} type="button" onClick={()=>setSelectedDay(day)} className={"flex min-h-[76px] flex-col items-center rounded-xl border p-1.5 text-xs transition sm:min-h-[100px] sm:p-2 "+(selectedDay===day?"border-primary bg-primary/10":dayEvents.length?"border-primary/20 bg-white/70 hover:bg-primary/10":today?"border-primary/30 bg-primary/5":"border-black/5 bg-white/35 hover:bg-white/70")}><span className={"grid h-6 w-6 place-items-center rounded-full text-xs "+(today?"bg-primary text-white font-bold":"")}>{day}</span>{dayEvents.slice(0,2).map((ev:any,i:number)=><span key={String(ev.id||i)} className="mt-1 w-full truncate rounded-sm border-l-2 border-[#c6a24b] pl-1 text-left text-[8px] leading-tight text-foreground sm:text-[10px]">{ev.titulo}</span>)}{dayEvents.length>2&&<span className="text-[8px] text-muted-foreground">+{dayEvents.length-2}</span>}</button>;
-        return <span key={day} className="relative flex h-full min-h-0 w-full flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 sm:rounded-xl"><span className={"grid h-full min-h-[25px] w-full place-items-center rounded-lg text-[10px] font-semibold leading-none transition-colors sm:rounded-xl sm:text-xs "+(today?"bg-primary text-white font-extrabold shadow-[0_0_0_2px_rgba(255,255,255,.85),0_2px_8px_rgba(30,65,85,.25)]":dayEvents.length?"bg-primary/10 font-bold text-primary":"text-foreground/80 hover:bg-primary/5")}>{day}</span>{dayEvents.length>0&&<span className="absolute bottom-1 flex items-center gap-[2px]">{Array.from({length:Math.min(dayEvents.length,3)},(_,i)=><i key={i} className="h-[3px] w-[3px] rounded-full bg-[#c6a24b]"/>)}</span>}</span>;
-      })}
-    </div>
-  </>;
-  useEffect(()=>{if(!expanded)return;const onKey=(e:KeyboardEvent)=>{if(e.key==="Escape"){setExpanded(false);setSelectedDay(null);}if(e.key==="ArrowRight")setActiveDate(d=>new Date(d.getFullYear(),d.getMonth()+1,1));if(e.key==="ArrowLeft")setActiveDate(d=>new Date(d.getFullYear(),d.getMonth()-1,1));};window.addEventListener("keydown",onKey);return()=>window.removeEventListener("keydown",onKey);},[expanded]);
-  const selectedEvents=selectedDay===null?[]:eventsOn(active,selectedDay);
-  return <>
-    <section aria-labelledby="annual-calendar-title" className="relative mt-7 rounded-[1.8rem] bg-gradient-to-br from-white/80 via-[#f7f8f6]/65 to-[#e5edf0]/80 p-3 text-foreground shadow-[0_12px_40px_rgba(38,55,65,.10)] backdrop-blur-[32px] sm:p-5">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_12%_0%,rgba(255,255,255,.98),transparent_42%),radial-gradient(ellipse_at_95%_100%,rgba(145,181,196,.58),transparent_44%),linear-gradient(145deg,rgba(255,255,255,.48),rgba(108,137,151,.13)_45%,rgba(39,62,77,.22)_100%)]"/><div className="pointer-events-none absolute inset-x-2 top-[38%] h-[42%] rounded-[50%] bg-[radial-gradient(ellipse,rgba(24,43,57,.22),rgba(24,43,57,.08)_48%,transparent_72%)] blur-2xl"/>
-      <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent"/>
-      <div className="relative z-10 flex items-center justify-between gap-3"><div><p className="text-[9px] font-bold uppercase tracking-[.2em] text-primary/65">Agenda durante todo el año</p><h2 id="annual-calendar-title" className="mt-1 text-xl font-extrabold text-primary sm:text-2xl">Calendario festero</h2></div></div>
-      <div className="relative z-10 mt-4 flex cursor-grab select-none items-center justify-center overflow-x-clip overflow-y-visible py-8 touch-pan-y active:cursor-grabbing" onPointerDown={e=>{if(pendingSteps.current!==0)return;pointerStart.current={x:e.clientX,time:performance.now()};dragged.current=false;e.currentTarget.setPointerCapture(e.pointerId);}} onPointerMove={e=>{const start=pointerStart.current;if(!start||pendingSteps.current!==0)return;const dx=Math.max(-stepWidth(),Math.min(stepWidth(),e.clientX-start.x));if(Math.abs(dx)>7)dragged.current=true;const track=trackRef.current;if(track){track.style.transition="none";track.style.transform=`translate3d(${-baseOffset()+dx}px,0,0)`;}}} onPointerUp={e=>{const start=pointerStart.current;if(!start)return;const dx=e.clientX-start.x,elapsed=Math.max(1,performance.now()-start.time),velocity=dx/elapsed;pointerStart.current=null;if(Math.abs(dx)>8)dragged.current=true;let steps=0;if(Math.abs(dx)>38)steps=Math.sign(-dx);if(Math.abs(velocity)>.75)steps=Math.sign(-velocity);move(steps);}} onPointerCancel={()=>{pointerStart.current=null;if(pendingSteps.current===0)resetTrack();}} onClick={e=>{if(dragged.current){dragged.current=false;return;}if(!(e.target as HTMLElement).closest("button")){const rect=e.currentTarget.getBoundingClientRect(),x=e.clientX-rect.left;move(x<rect.width/2?-1:1);}}}>
-        <div className="min-w-0 w-full overflow-visible px-1 py-4 sm:px-4 sm:py-5 [perspective:1100px]">
-          <div ref={trackRef} onTransitionEnd={e=>{if(e.target===e.currentTarget&&e.propertyName==="transform")finishMove();}} className="flex w-[166.6667%] items-stretch" style={{transform:"translate3d(-20%,0,0)",transition:"none",willChange:"transform",backfaceVisibility:"hidden",contain:"layout"}}>
-            {cards.map((data,index)=><div key={data.y+"-"+data.m} className="w-1/5 shrink-0 px-0.5 sm:px-2">
-              <button type="button" onClick={()=>{if(dragged.current){dragged.current=false;return;}setActiveDate(new Date(data.y,data.m,1));setSelectedDay(null);setExpanded(true);}} aria-label={"Ampliar calendario de "+names[data.m]+" "+data.y} onMouseEnter={()=>setHoveredCard(index)} onMouseLeave={()=>setHoveredCard(null)} style={{transform:hoveredCard===index||(hoveredCard===null&&index===2)?"translateZ(34px) scale(1.04)":index<2?"perspective(900px) rotateY(13deg) translateZ(-24px) scale(.88)":"perspective(900px) rotateY(-13deg) translateZ(-24px) scale(.88)",transformOrigin:"center center",transition:"transform 320ms cubic-bezier(.22,.61,.36,1)",backfaceVisibility:"hidden",willChange:"transform"}} className={"group relative flex h-[248px] w-full min-w-0 flex-col overflow-hidden rounded-[1.1rem] border text-left backdrop-blur-sm sm:h-[340px] sm:rounded-[1.35rem] lg:h-[400px] "+(hoveredCard===index||(hoveredCard===null&&index===2)?"z-30 border-white bg-white/85 p-1.5 shadow-[0_26px_55px_rgba(25,43,58,.34),0_5px_12px_rgba(255,255,255,.85)_inset] sm:p-4":"z-10 border-white/90 bg-white/58 p-1 shadow-[0_20px_38px_rgba(25,43,58,.28),0_3px_8px_rgba(255,255,255,.72)_inset] sm:p-3")}>
-                <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,.8),transparent_34%,rgba(202,222,230,.2)_72%,rgba(255,255,255,.3))]"/>
-                <span aria-hidden="true" className="pointer-events-none absolute inset-x-3 top-0 h-px bg-white"/>
-                <span className="relative mb-2 block text-center"><span className={"block truncate font-display font-bold text-primary "+(hoveredCard===index||(hoveredCard===null&&index===2)?"text-[10px] sm:text-xl":"text-[8px] sm:text-sm")}>{names[data.m]}</span><span className="mt-1 block text-[9px] text-muted-foreground sm:text-[10px]">{data.y}</span></span>
-                <span className="relative flex min-h-0 w-full flex-1 flex-col justify-stretch">{calendarGrid(data)}</span>
-                <span className="relative mt-auto block pt-2 text-center text-[7px] font-semibold text-primary/65 sm:text-[9px]">{data.events.length?data.events.length+" actos":"Agenda abierta"}</span>
-              </button>
-            </div>)}
-          </div>
-        </div>
-      </div>
-      
-    </section>
-    {expanded&&typeof document!=="undefined"&&createPortal(
-      <div role="dialog" aria-modal="true" aria-label="Calendario festero ampliado" className="fixed inset-0 z-[100001] h-[100dvh] overflow-y-auto bg-[radial-gradient(circle_at_15%_0%,rgba(255,255,255,.98),transparent_45%),linear-gradient(145deg,#f5f3ed,#e7edf0)] text-foreground animate-in fade-in zoom-in-[0.985] duration-200">
-        <div className="mx-auto min-h-full w-full max-w-6xl px-3 pb-8 pt-4 sm:px-7 sm:pt-7">
-          <header className="mb-5 flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-primary/60">FestAlfàs · Agenda anual</p><h2 className="mt-1 text-2xl font-extrabold text-primary sm:text-4xl">Calendario festero</h2></div><button type="button" onClick={()=>{setExpanded(false);setSelectedDay(null);}} className="rounded-full border border-white/90 bg-white/75 px-4 py-2.5 text-xs font-bold text-primary shadow-lg backdrop-blur-2xl">✕ Cerrar</button></header>
-          <div className="rounded-[2rem] border border-white/80 bg-white/45 p-3 shadow-[0_20px_70px_rgba(35,52,62,.12)] backdrop-blur-2xl sm:p-6">
-            <div className="mb-4 flex items-center justify-between gap-3"><button type="button" onClick={()=>{setActiveDate(d=>new Date(d.getFullYear(),d.getMonth()-1,1));setSelectedDay(null);}} className="rounded-full border border-white bg-white/70 px-4 py-2 text-sm text-primary shadow-sm">‹</button><div className="text-center"><h3 className="text-2xl font-bold text-primary sm:text-4xl">{names[month]}</h3><p className="text-xs text-muted-foreground">{year}</p></div><button type="button" onClick={()=>{setActiveDate(d=>new Date(d.getFullYear(),d.getMonth()+1,1));setSelectedDay(null);}} className="rounded-full border border-white bg-white/70 px-4 py-2 text-sm text-primary shadow-sm">›</button></div>
-            <div className="grid grid-cols-7 gap-1.5 text-center text-[9px] font-bold uppercase tracking-wider text-muted-foreground sm:gap-2 sm:text-xs">{["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"].map(d=><span key={d} className="truncate py-2">{d.slice(0,3)}</span>)}</div>
-            {calendarGrid(active,true)}
-            <div className="mt-5 flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground"><span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-[#c6a24b]"/>Actos publicados</span><span>Selecciona un día para consultar sus actos</span></div>
-          </div>
-          <div className="mt-4 rounded-[1.5rem] border border-white/80 bg-white/55 p-4 shadow-lg backdrop-blur-2xl sm:p-5">
-            <h3 className="text-sm font-extrabold text-primary">{selectedDay?"Actos del "+selectedDay+" de "+names[month]:"Actos de "+names[month]}</h3>
-            {selectedEvents.length?<div className="mt-3 grid gap-2 sm:grid-cols-2">{selectedEvents.map((item:any,i:number)=><button key={String(item.id||i)} onClick={()=>onEventClick(item)} className="rounded-xl border border-white bg-white/70 p-3 text-left shadow-sm transition hover:bg-white"><span className="text-[10px] font-bold text-primary/65">{item.hora||"Hora por confirmar"} · {item.lugar||"Lugar por confirmar"}</span><span className="mt-1 block text-sm font-bold">{item.titulo}</span><span className="mt-1 block text-[10px] text-primary">Ver información del acto →</span></button>)}</div>:<p className="mt-2 text-xs text-muted-foreground">{selectedDay?"No hay actos publicados para este día.":active.events.length?active.events.length+" actos publicados este mes. Selecciona un día del calendario.":"Todavía no hay actos publicados para este mes."}</p>}
-          </div>
-          <div className="mt-4 flex justify-center"><button type="button" onClick={()=>{setActiveDate(new Date(new Date().getFullYear(),new Date().getMonth(),1));setSelectedDay(null);}} className="rounded-full border border-white/80 bg-white/60 px-4 py-2 text-xs font-bold text-primary shadow-sm">Volver al mes actual</button></div>
-        </div>
-      </div>,document.body
-    )}
-  </>;
-}
 function Home() {
   const [q, setQ] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -695,17 +617,17 @@ function Home() {
 
   return (
     <div className="page-bg min-h-screen" style={{ "--pink": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--secondary": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--accent": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--ring": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--cat-penya": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--background": siteContent["theme_background"] || "oklch(0.975 0.012 90)", "--gradient-page": `linear-gradient(180deg, ${siteContent["theme_background"] || "oklch(0.985 0.008 90)"}, ${siteContent["theme_background"] || "oklch(0.965 0.014 90)"})` } as React.CSSProperties}>
-      <nav aria-label="Navegación principal" className="fixed left-1/2 top-[calc(env(safe-area-inset-top)+7px)] z-[5000] grid h-[48px] w-[min(calc(100vw-48px),340px)] -translate-x-1/2 grid-cols-6 items-center gap-0 overflow-hidden rounded-full border border-white/80 bg-[rgba(245,248,250,.88)] px-1 py-1 shadow-[0_4px_14px_rgba(20,39,52,.14),0_1px_4px_rgba(255,255,255,.95)_inset] backdrop-blur-2xl [backdrop-filter:blur(24px)_saturate(155%)] sm:h-[52px] sm:w-[min(calc(100vw-64px),540px)] sm:px-1.5">
+      <nav aria-label="Navegación principal" className="fixed left-1/2 top-[calc(env(safe-area-inset-top)+7px)] z-[5000] grid h-[44px] w-[min(calc(100vw-64px),300px)] -translate-x-1/2 grid-cols-6 items-center gap-0 overflow-hidden rounded-full border border-white/85 bg-[rgba(245,248,250,.92)] px-1 py-0.5 shadow-[0_4px_14px_rgba(20,39,52,.14),0_1px_4px_rgba(255,255,255,.95)_inset] backdrop-blur-2xl [backdrop-filter:blur(24px)_saturate(155%)] sm:h-[52px] sm:w-[min(calc(100vw-64px),540px)] sm:px-1.5 sm:py-1">
         {(["home","eventos","penyes","programa","noticias","info"] as const).map((page,index)=>{
           const labels={home:"Inicio",eventos:"Eventos",penyes:"Peñas",programa:"Programa",noticias:"Noticias",info:"Info"};
           const active=currentPage===page;
-          return <button key={page} type="button" aria-current={active?"page":undefined} onClick={()=>{setMapFullscreen(false);setSelectedPenya(null);setPenyaDetailFullscreen(false);setEventFormPenya(null);setForm(false);setNewsPopup([]);setShareReminder(false);setNoticiaSeleccionada(null);setCurrentPage(page);window.scrollTo({top:0,behavior:"smooth"});}} className={"relative z-10 flex h-full min-w-0 flex-col items-center justify-center gap-0 rounded-full px-0 py-0 text-center leading-none transition-colors duration-200 "+(active?"text-white":"text-primary/75 hover:text-primary")}>
-            <span className="grid h-[19px] w-[19px] shrink-0 place-items-center leading-none">
-              <svg viewBox="0 0 24 24" aria-hidden="true" className="block h-[16px] w-[16px] shrink-0 sm:h-[16px] sm:w-[16px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          return <button key={page} type="button" aria-current={active?"page":undefined} onClick={()=>{setMapFullscreen(false);setSelectedPenya(null);setPenyaDetailFullscreen(false);setEventFormPenya(null);setForm(false);setNewsPopup([]);setShareReminder(false);setNoticiaSeleccionada(null);setCurrentPage(page);window.scrollTo({top:0,behavior:"smooth"});}} className={"relative z-10 flex h-full min-w-0 flex-col items-center justify-center gap-0 overflow-hidden rounded-full px-0 py-0 text-center leading-none transition-colors duration-200 "+(active?"text-white":"text-primary/75 hover:text-primary")}>
+            <span className="grid h-[18px] w-[18px] shrink-0 place-items-center leading-none">
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="block h-[15px] w-[15px] shrink-0 sm:h-[16px] sm:w-[16px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 {page==="home"?<><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></>:page==="eventos"?<><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M8 2.8v4M16 2.8v4M3 9h18M8 13h3M8 16.5h6"/></>:page==="penyes"?<><circle cx="9" cy="8" r="3.2"/><path d="M2.8 20c.4-3.5 2.5-5.4 6.2-5.4s5.8 1.9 6.2 5.4M16 5.2a3 3 0 0 1 0 5.7M17 14.8c2.4.5 3.7 2.2 4.1 5.2"/></>:page==="programa"?<><rect x="3" y="3.5" width="18" height="17" rx="2.5"/><path d="M7 8h10M7 12h3M7 16h10M14 12h3"/></>:page==="noticias"?<><path d="M5 4h14a2 2 0 0 1 2 2v14H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M7 8h4v4H7zM14 8h4M14 12h4M7 16h11"/></>:<><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5h.01"/></>}
               </svg>
             </span>
-            <span className={"mt-0.5 block shrink-0 whitespace-nowrap text-[8px] leading-[9px] sm:mt-0.5 sm:text-[8px] sm:leading-[10px] "+(active?"font-bold":"font-medium")}>{labels[page]}</span>
+            <span className={"mt-0.5 block max-w-full shrink-0 whitespace-nowrap text-[7px] leading-[8px] sm:mt-0.5 sm:text-[8px] sm:leading-[10px] "+(active?"font-bold":"font-medium")}>{labels[page]}</span>
           </button>;
         })}
         <span aria-hidden="true" className="pointer-events-none absolute inset-y-1 left-1 z-0 w-[calc((100%-8px)/6)] rounded-full border border-white/25 bg-[linear-gradient(145deg,rgba(25,43,55,.78),rgba(25,43,55,.58))] shadow-[0_5px_18px_rgba(18,35,47,.22),0_1px_4px_rgba(255,255,255,.22)_inset] backdrop-blur-2xl transition-transform duration-300 ease-[cubic-bezier(.22,.61,.36,1)]" style={{transform:"translateX(calc("+(["home","eventos","penyes","programa","noticias","info"].indexOf(currentPage)*100)+"%))"}}/>
@@ -766,7 +688,16 @@ function Home() {
               </ClientOnly>
             </div>}
           </div>
-          <AnnualFestCalendar items={[...actos.filter((a:any)=>!a._officialOnly).map((a:any)=>({...a,_origen:"programa"})),...eventos.map((e:any)=>({...e,_origen:"penya"}))]} onEventClick={(item:any)=>{setCurrentPage(item._origen==="penya"?"eventos":"programa");if(item._origen!=="penya")setDia(item.dia);setFilterDay("all");window.scrollTo({top:0,behavior:"smooth"});}} />
+          <section aria-labelledby="annual-calendar-title" className="relative mt-7 overflow-hidden rounded-[1.8rem] border border-white/80 bg-gradient-to-br from-white/85 via-[#f7f8f6]/75 to-[#e5edf0]/85 p-5 text-foreground shadow-[0_12px_40px_rgba(38,55,65,.10)] backdrop-blur-2xl sm:p-7">
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_12%_0%,rgba(255,255,255,.98),transparent_42%),radial-gradient(ellipse_at_95%_100%,rgba(145,181,196,.38),transparent_44%)]"/>
+            <div className="relative z-10 flex min-h-[150px] flex-col items-center justify-center text-center">
+              <span className="mb-3 grid h-12 w-12 place-items-center rounded-2xl border border-white/90 bg-white/65 text-primary shadow-sm"><svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M8 2.8v4M16 2.8v4M3 9h18M8 13h3M8 16.5h6"/></svg></span>
+              <p className="text-[10px] font-bold uppercase tracking-[.2em] text-primary/65">Agenda durante todo el año</p>
+              <h2 id="annual-calendar-title" className="mt-1 text-xl font-extrabold text-primary sm:text-2xl">Calendario festero</h2>
+              <span className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#c6a24b]/35 bg-[#c6a24b]/10 px-4 py-1.5 text-xs font-bold tracking-wide text-[#92732d]"><span className="h-1.5 w-1.5 rounded-full bg-[#c6a24b]"/>Próximamente</span>
+              <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground">Estamos preparando un calendario para consultar todos los actos y celebraciones festeras durante el año. Muy pronto estará disponible.</p>
+            </div>
+          </section>
           <section className="mt-6 overflow-hidden rounded-[1.75rem] border border-primary/15 bg-white/70 p-5 shadow-sm sm:p-7">
             <div className="mx-auto max-w-3xl text-center">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Una nueva etapa</p>
