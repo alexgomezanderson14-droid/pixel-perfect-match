@@ -29,7 +29,7 @@ El esquema es una propuesta inicial y debe contrastarse con la estructura real e
 
 ## Orden seguro de implantación
 1. Obtener y verificar exportación de Supabase: tablas, registros, usuarios necesarios y archivos del bucket `penyes`.
-2. Crear D1 en Cloudflare y un bucket B2 en Backblaze; guardar el ID del bucket y las claves como variables/secretos de despliegue, nunca en Git.
+2. Crear D1 en Cloudflare y un bucket B2 en Backblaze; guardar las claves como secretos de despliegue y el nombre del bucket como variable, nunca en Git. La clave restringida al bucket permite obtener su ID durante la autorización.
 3. Aplicar y revisar el esquema D1; importar datos y archivos; comparar recuentos y referencias con el origen.
 4. Desplegar Worker con autenticación, validación, moderación, límites anti-spam y endpoints de compatibilidad.
 5. Conectar la base D1 al Worker con el binding `DB` y aplicar `cloudflare/migrations/0001_initial.sql` en un entorno de pruebas.
@@ -47,7 +47,7 @@ El esquema es una propuesta inicial y debe contrastarse con la estructura real e
 - Las imágenes de `og:image` deben ser URLs públicas HTTPS, accesibles por los rastreadores sin cookies ni autenticación.
 
 ## Requisitos antes del despliegue
-- Acceso a una cuenta Cloudflare del propietario para crear D1, R2 y Workers.
+- Acceso a una cuenta Cloudflare del propietario para crear D1 y Workers, y una cuenta Backblaze B2 para el almacenamiento.
 - Exportación del Supabase correcto. No pedir ni guardar contraseñas, tokens o claves en el repositorio.
 - Confirmar dominio y DNS para configurar las rutas del Worker.
 - Revisar los límites gratuitos vigentes antes de publicar y añadir alertas de uso.
