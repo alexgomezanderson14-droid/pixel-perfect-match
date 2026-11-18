@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadMediaFile } from "@/lib/media-upload";
 
 const field = "w-full rounded-xl border border-input bg-background px-3 py-2 text-sm";
 
@@ -49,12 +50,8 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     }
     setUploadingBlockId(blockId); setBlocksMessage("");
     try {
-      const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
-      const path = "penyes/perfiles/" + penya.id + "/" + crypto.randomUUID() + "." + ext;
-      const { error: uploadError } = await supabase.storage.from("penyes").upload(path, file, { contentType: file.type });
-      if (uploadError) throw uploadError;
-      const publicUrl = supabase.storage.from("penyes").getPublicUrl(path).data.publicUrl;
-      updateBlock(blockId, "url", publicUrl);
+      const uploaded = await uploadMediaFile(file, "penyes/perfiles/" + penya.id);
+      updateBlock(blockId, "url", uploaded.url);
       setBlocksMessage("Fotografía subida. Guarda los apartados para publicarla en la ficha.");
     } catch (err) { setBlocksMessage("No se ha podido subir la fotografía: " + (err instanceof Error ? err.message : String(err))); }
     finally { setUploadingBlockId(null); }
@@ -93,11 +90,8 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     try {
       let foto_url = quitarFoto ? null : penya.foto_url;
       if (foto) {
-        const ext = foto.type === "image/png" ? "png" : foto.type === "image/webp" ? "webp" : "jpg";
-        const path = "penyes/" + crypto.randomUUID() + "." + ext;
-        const upload = await supabase.storage.from("penyes").upload(path, foto, { contentType: foto.type });
-        if (upload.error) throw upload.error;
-        foto_url = path;
+        const uploaded = await uploadMediaFile(foto, "penyes");
+        foto_url = uploaded.url;
       }
       const { error: updateError } = await supabase.from("penyes").update({
         nombre: form.nombre.trim(),

@@ -48,9 +48,9 @@ export default function AddPenyaEventForm({ penyaId, penyaName, onClose, onSaved
       const fd = new FormData();
       fd.append("file", imagen!);
       fd.append("folder", "eventos");
-      const imagePath = (await uploadPublicPhoto({ data: fd })).path;
+      const imagePath = (await uploadPublicPhoto({ data: fd })).url;
 
-      const imageUrl = supabase.storage.from("penyes").getPublicUrl(imagePath).data.publicUrl;
+      const imageUrl = imagePath;
       const { error: insertError } = await supabase.from("eventos").insert({
         penya_id: penyaId,
         titulo: titulo.trim(),

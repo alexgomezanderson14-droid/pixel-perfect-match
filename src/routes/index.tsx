@@ -490,15 +490,15 @@ function Home() {
     setNoticias(unicas.filter(esNoticiaFestivaLocal).map((noticia:any)=>({...noticia,destacada:idsDestacadas.includes(String(noticia.id))})));
     try { const points=JSON.parse(content["mapa_puntos_json"]||"[]"); setMapPoints(Array.isArray(points)?points.filter((p:any)=>Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))&&Number(p.lat)>=-90&&Number(p.lat)<=90&&Number(p.lng)>=-180&&Number(p.lng)<=180):[]); } catch { setMapPoints([]); }
     if (content["hero_image_path"]) {
-      const { data: imageData } = supabase.storage.from("penyes").getPublicUrl(content["hero_image_path"]);
-      setHeroImage(imageData.publicUrl);
-      try { localStorage.setItem("festalfas-hero-image", imageData.publicUrl); } catch { /* La portada sigue disponible desde el servidor. */ }
+      const heroUrl = content["hero_image_path"].startsWith("http") ? content["hero_image_path"] : supabase.storage.from("penyes").getPublicUrl(content["hero_image_path"]).data.publicUrl;
+      setHeroImage(heroUrl);
+      try { localStorage.setItem("festalfas-hero-image", heroUrl); } catch { /* La portada sigue disponible desde el servidor. */ }
     } else {
       setHeroImage("");
       try { localStorage.removeItem("festalfas-hero-image"); } catch { /* Sin caché local. */ }
     }
     if (!data) return;
-    const urls = data.map((p) => p.foto_url ? supabase.storage.from("penyes").getPublicUrl(p.foto_url).data.publicUrl : "");
+    const urls = data.map((p) => p.foto_url ? (p.foto_url.startsWith("http") ? p.foto_url : supabase.storage.from("penyes").getPublicUrl(p.foto_url).data.publicUrl) : "");
     setPenyes(data.map((p, i) => ({ ...p, foto: urls[i] ?? "" })));
   }, []);
   useEffect(() => { cargar(); }, [cargar]);
