@@ -632,7 +632,7 @@ function Home() {
         })}
         <span aria-hidden="true" className="pointer-events-none absolute inset-y-1 left-1 z-0 w-[calc((100%-8px)/6)] rounded-full border border-white/25 bg-[linear-gradient(145deg,rgba(25,43,55,.78),rgba(25,43,55,.58))] shadow-[0_5px_18px_rgba(18,35,47,.22),0_1px_4px_rgba(255,255,255,.22)_inset] backdrop-blur-2xl transition-transform duration-300 ease-[cubic-bezier(.22,.61,.36,1)]" style={{transform:"translateX(calc("+(["home","eventos","penyes","programa","noticias","info"].indexOf(currentPage)*100)+"%))"}}/>
       </nav>
-      {currentPage!=="home"&&<div aria-hidden="true" className="h-[58px] shrink-0 sm:h-[64px]" />}
+      {currentPage!=="home"&&<div aria-hidden="true" className={currentPage==="penyes"?"h-0 shrink-0":"h-[58px] shrink-0 sm:h-[64px]"} />}
       {fotoAmpliada!==null&&noticiaImagenes[fotoAmpliada]&&<div role="dialog" aria-modal="true" aria-label="Fotografía ampliada" className="fixed inset-0 z-[7000] flex items-center justify-center bg-black/95 p-3 backdrop-blur-sm animate-in fade-in duration-200" onClick={()=>setFotoAmpliada(null)}><button type="button" onClick={()=>setFotoAmpliada(null)} aria-label="Cerrar fotografía" className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-3xl text-white transition hover:rotate-90 hover:bg-white/25">×</button><button type="button" aria-label="Fotografía anterior" onClick={e=>{e.stopPropagation();setFotoAmpliada((fotoAmpliada-1+noticiaImagenes.length)%noticiaImagenes.length);}} className="absolute left-2 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-3xl text-white transition hover:scale-110 hover:bg-white/25 sm:left-5">‹</button><div className="flex max-h-full max-w-full flex-col items-center gap-3" onClick={e=>e.stopPropagation()}><img src={noticiaImagenes[fotoAmpliada]} alt={noticiaSeleccionada?.titulo+" · foto "+(fotoAmpliada+1)} style={{width:"min(96vw, 1800px)",height:"min(86svh, 1200px)"}} width={1800} height={1200} loading="eager" fetchPriority="high" decoding="async" draggable={false} className="max-h-[86svh] max-w-[96vw] rounded-lg object-contain shadow-2xl animate-in zoom-in-95 duration-300"/><div className="flex items-center gap-3 text-sm font-semibold text-white"><span>{fotoAmpliada+1} / {noticiaImagenes.length}</span><a href={noticiaImagenes[fotoAmpliada]} download target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} className="rounded-full border border-white/30 bg-white/15 px-4 py-2 transition hover:scale-105 hover:bg-white/25">↓ Descargar foto</a></div></div><button type="button" aria-label="Fotografía siguiente" onClick={e=>{e.stopPropagation();setFotoAmpliada((fotoAmpliada+1)%noticiaImagenes.length);}} className="absolute right-2 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-3xl text-white transition hover:scale-110 hover:bg-white/25 sm:right-5">›</button></div>}
       {currentPage==="home" && <>
       <section className="relative flex min-h-[76vh] items-end overflow-hidden sm:min-h-[92vh]">
@@ -711,7 +711,7 @@ function Home() {
         </section>
       </main>
       </>}
-      {currentPage==="programa" && <main className="relative z-0 mx-auto -mt-[58px] min-h-[75vh] w-full min-w-0 max-w-[1600px] px-4 pb-32 pt-0 sm:-mt-[64px] sm:px-5 sm:pt-0">
+      {currentPage==="programa" && <main className="relative z-0 mx-auto min-h-[75vh] w-full min-w-0 max-w-[1600px] px-4 pb-32 pt-6 sm:px-5 sm:pt-8">
         <section id="programa" className="scroll-mt-24">
           <SectionTitle>{ui.nav.programa}</SectionTitle>
           {!dias.length ? (
@@ -847,7 +847,7 @@ function Home() {
             })}</div>}
           </div>
         </section>
-      </main>}      {currentPage==="penyes" && <main className="relative z-0 mx-auto min-h-[75vh] w-full min-w-0 max-w-[1600px] px-4 pb-32 pt-6 sm:px-5 sm:pt-8">
+      </main>}      {currentPage==="penyes" && <main className="relative z-0 mx-auto min-h-[75vh] w-full min-w-0 max-w-[1600px] px-4 pb-32 pt-0 sm:px-5 sm:pt-0">
         <section id="penyes" className="scroll-mt-24">
           <div className="relative left-1/2 mb-6 min-h-[360px] w-screen -translate-x-1/2 overflow-hidden rounded-b-[1.75rem] bg-gradient-to-br from-[#173f52] via-[#236579] to-[#2c7180] px-5 py-10 text-white shadow-[0_12px_32px_rgba(23,63,82,.16)] sm:mb-8 sm:min-h-[420px] sm:px-8 sm:py-12">
             {siteContent["penyes_banner_image_url"] ? <img src={siteContent["penyes_banner_image_url"]} alt="" aria-hidden="true" fetchPriority="low" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center"/> : null}
