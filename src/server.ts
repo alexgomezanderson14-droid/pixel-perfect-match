@@ -65,12 +65,12 @@ async function handleB2Request(request: Request, env: CloudflareEnv & B2Env): Pr
       if (!(file instanceof File) || typeof folder !== "string") return jsonResponse({ error: "Falta el archivo o la carpeta." }, 400);
       const validFolder = folder === "penyes" || folder === "eventos" || folder === "actuaciones" || folder === "noticias" || folder === "site" || /^penyes\/perfiles\/[a-zA-Z0-9_-]{1,100}$/.test(folder);
       if (!validFolder) return jsonResponse({ error: "Carpeta de destino no válida." }, 400);
-      const extensions: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "video/mp4": "mp4", "video/webm": "webm", "video/quicktime": "mov" };
+      const extensions: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "video/mp4": "mp4", "video/webm": "webm", "video/quicktime": "mov", "video/ogg": "ogg" };
       const extension = extensions[file.type];
       if (!extension) return jsonResponse({ error: "Formato no admitido. Usa JPG, PNG, WEBP, MP4, WEBM o MOV." }, 415);
       const isVideo = file.type.startsWith("video/");
-      const maxBytes = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
-      if (file.size <= 0 || file.size > maxBytes) return jsonResponse({ error: isVideo ? "El vídeo no puede superar los 50 MB." : "La imagen no puede superar los 5 MB." }, 413);
+      const maxBytes = isVideo ? 100 * 1024 * 1024 : 5 * 1024 * 1024;
+      if (file.size <= 0 || file.size > maxBytes) return jsonResponse({ error: isVideo ? "El vídeo no puede superar los 100 MB." : "La imagen no puede superar los 5 MB." }, 413);
 
       const authorization = await authorizeB2(env);
       const uploadUrlResponse = await fetch(authorization.apiUrl + "/b2api/v4/b2_get_upload_url?bucketId=" + encodeURIComponent(env.B2_BUCKET_ID!), {
