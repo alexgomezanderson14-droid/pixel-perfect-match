@@ -14,6 +14,9 @@ type CloudflareEnv = { DB?: D1Database } & B2Env;
 
 
 type B2Env = {
+  SUPABASE_URL?: string;
+  SUPABASE_PUBLISHABLE_KEY?: string;
+  VITE_SUPABASE_PUBLISHABLE_KEY?: string;
   B2_APPLICATION_KEY_ID?: string;
   B2_APPLICATION_KEY?: string;
   B2_BUCKET_ID?: string;
