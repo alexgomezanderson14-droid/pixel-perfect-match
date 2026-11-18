@@ -15,6 +15,7 @@ type CloudflareEnv = { DB?: D1Database } & B2Env;
 
 type B2Env = {
   SUPABASE_URL?: string;
+  VITE_SUPABASE_URL?: string;
   SUPABASE_PUBLISHABLE_KEY?: string;
   VITE_SUPABASE_PUBLISHABLE_KEY?: string;
   B2_APPLICATION_KEY_ID?: string;
@@ -53,11 +54,12 @@ async function authorizeB2(env: CloudflareEnv & B2Env): Promise<B2Authorization>
 
 async function isAuthorizedAdminUpload(request: Request, env: CloudflareEnv): Promise<boolean> {
   const authorization = request.headers.get("authorization") ?? "";
-  if (!authorization.startsWith("Bearer ") || !env.SUPABASE_URL) return false;
+  const supabaseUrl = env.SUPABASE_URL || env.VITE_SUPABASE_URL;
+  if (!authorization.startsWith("Bearer ") || !supabaseUrl) return false;
   const publishableKey = env.SUPABASE_PUBLISHABLE_KEY || env.VITE_SUPABASE_PUBLISHABLE_KEY;
   if (!publishableKey) return false;
   try {
-    const response = await fetch(env.SUPABASE_URL.replace(/\/$/, "") + "/auth/v1/user", {
+    const response = await fetch(supabaseUrl.replace(/\/$/, "") + "/auth/v1/user", {
       headers: { apikey: publishableKey, Authorization: authorization },
     });
     if (!response.ok) return false;
@@ -92,6 +94,7 @@ async function handleB2Request(request: Request, env: CloudflareEnv & B2Env): Pr
       if (!extension) return jsonResponse({ error: "Formato no admitido. Usa JPG, PNG, WEBP, MP4, WEBM, OGG o MOV." }, 415);
       const isVideo = file.type.startsWith("video/");
       const maxBytes = isVideo ? 100 * 1024 * 1024 : 5 * 1024 * 1024;
+      if (isVideo && !adminOnlyFolder) return jsonResponse({ error: "La subida de vídeos está reservada al administrador." }, 403);
       if (file.size <= 0 || file.size > maxBytes) return jsonResponse({ error: isVideo ? "El vídeo no puede superar los 100 MB." : "La imagen no puede superar los 5 MB." }, 413);
 
       const authorization = await authorizeB2(env);
