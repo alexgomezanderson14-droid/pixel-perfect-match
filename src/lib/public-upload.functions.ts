@@ -27,7 +27,6 @@ const uploadLegacyPublicPhoto = createServerFn({ method: "POST" })
       console.error("legacy public upload failed", error);
       throw new Error("No se pudo subir la foto.");
     }
-    const { supabase } = await import("@/integrations/supabase/client.server");
     return { path, url: supabaseAdmin.storage.from("penyes").getPublicUrl(path).data.publicUrl };
   });
 
