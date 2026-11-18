@@ -847,9 +847,9 @@ function Home() {
             })}</div>}
           </div>
         </section>
-      </main>}      {currentPage==="penyes" && <main className="mx-auto min-h-[75vh] w-full max-w-[min(96vw,1600px)] px-3 pb-32 pt-8 sm:px-5">
+      </main>}      {currentPage==="penyes" && <main className="mx-auto min-h-[75vh] w-full min-w-0 max-w-[1600px] overflow-x-clip px-4 pb-32 pt-6 sm:px-5 sm:pt-8">
         <section id="penyes" className="scroll-mt-24">
-          <div className="relative mb-5 min-w-0 overflow-hidden rounded-2xl bg-gradient-to-br from-[#173f52] via-[#236579] to-[#2c7180] px-4 py-5 text-white shadow-[0_18px_45px_rgba(23,63,82,.18)] sm:mb-8 sm:rounded-[1.75rem] sm:px-8 sm:py-9">
+          <div className="relative mb-5 min-h-[260px] w-full min-w-0 overflow-hidden rounded-b-[1.75rem] rounded-t-2xl bg-gradient-to-br from-[#173f52] via-[#236579] to-[#2c7180] px-4 py-6 text-white shadow-[0_18px_45px_rgba(23,63,82,.18)] sm:mb-8 sm:min-h-[300px] sm:rounded-[1.75rem] sm:px-8 sm:py-9">
             <div className="pointer-events-none absolute -right-10 -top-12 h-48 w-48 rounded-full border-[22px] border-white/10"/>
             <div className="relative z-10 max-w-3xl">
               <p className="text-[10px] font-extrabold uppercase tracking-[.24em] text-white/70 sm:text-xs">La vida festera de l'Alfàs del Pi</p>
@@ -857,7 +857,6 @@ function Home() {
               <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/85 sm:text-base">Descubre quién está detrás de cada peña, conoce su música y su ambiente, encuentra sus próximas actividades y guarda tus favoritas.</p>
               <div className="mt-5 flex flex-wrap gap-2">
                 <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-bold">{penyes.length} {penyes.length===1?"peña":"peñas"} registradas</span>
-                <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-bold">{penyes.filter(p=>p.lat!=null&&p.lng!=null).length} ubicaciones en el mapa</span>
                 <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-bold">{misPenyes.length} favoritas</span>
               </div>
             </div>
