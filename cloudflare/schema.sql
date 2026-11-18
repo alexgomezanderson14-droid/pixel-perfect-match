@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS penyes (
   tipo_musica TEXT NOT NULL DEFAULT 'Variada',
   informacion TEXT NOT NULL DEFAULT '',
   instagram TEXT,
+  email TEXT,
   tiene_evento INTEGER NOT NULL DEFAULT 0 CHECK (tiene_evento IN (0,1)),
   estado TEXT NOT NULL DEFAULT 'aprobada' CHECK (estado IN ('pendiente','aprobada','rechazada')),
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -108,7 +109,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
 CREATE TABLE IF NOT EXISTS penya_miembros (
   penya_id TEXT NOT NULL REFERENCES penyes(id) ON DELETE CASCADE,
   usuario_id TEXT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-  rol TEXT NOT NULL DEFAULT 'miembro' CHECK (rol IN ('miembro','responsable')),
+  rol TEXT NOT NULL DEFAULT 'miembro' CHECK (rol IN ('miembro','responsable','admin','admin_principal')),
   estado TEXT NOT NULL DEFAULT 'pendiente' CHECK (estado IN ('pendiente','activo','rechazado')),
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (penya_id, usuario_id)
@@ -123,3 +124,22 @@ CREATE TABLE IF NOT EXISTS avisos_internos (
   contenido TEXT NOT NULL,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+
+-- Invitations for peña administrators. Tokens are stored only as hashes.
+-- The Worker must validate the token, expiry, invitation email and caller identity
+-- before creating/updating a penya_miembros row.
+CREATE TABLE IF NOT EXISTS penya_invitaciones (
+  id TEXT PRIMARY KEY,
+  penya_id TEXT NOT NULL REFERENCES penyes(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  rol TEXT NOT NULL DEFAULT 'admin' CHECK (rol IN ('admin','admin_principal')),
+  token_hash TEXT NOT NULL UNIQUE,
+  invitado_por TEXT NOT NULL REFERENCES usuarios(id),
+  expira_en TEXT NOT NULL,
+  aceptada_en TEXT,
+  revocada_en TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_penya_invitaciones_penya ON penya_invitaciones(penya_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_penya_invitaciones_email ON penya_invitaciones(email, expira_en);
