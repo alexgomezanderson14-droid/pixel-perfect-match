@@ -50,7 +50,6 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     }
     setUploadingBlockId(blockId); setBlocksMessage("");
     try {
-      const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
       const uploaded = await uploadMediaFile(file, "penyes/perfiles/" + penya.id);
       updateBlock(blockId, "url", uploaded.url);
       setBlocksMessage("Fotografía subida. Guarda los apartados para publicarla en la ficha.");
@@ -91,7 +90,6 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     try {
       let foto_url = quitarFoto ? null : penya.foto_url;
       if (foto) {
-        const ext = foto.type === "image/png" ? "png" : foto.type === "image/webp" ? "webp" : "jpg";
         const uploaded = await uploadMediaFile(foto, "penyes");
         foto_url = uploaded.url;
       }
