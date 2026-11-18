@@ -48,6 +48,23 @@ async function authorizeB2(env: CloudflareEnv & B2Env): Promise<B2Authorization>
   return value;
 }
 
+async function isAuthorizedAdminUpload(request: Request, env: CloudflareEnv): Promise<boolean> {
+  const authorization = request.headers.get("authorization") ?? "";
+  if (!authorization.startsWith("Bearer ") || !env.SUPABASE_URL) return false;
+  const publishableKey = env.SUPABASE_PUBLISHABLE_KEY || env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (!publishableKey) return false;
+  try {
+    const response = await fetch(env.SUPABASE_URL.replace(/\\/$/, "") + "/auth/v1/user", {
+      headers: { apikey: publishableKey, Authorization: authorization },
+    });
+    if (!response.ok) return false;
+    const user = await response.json() as { email?: string };
+    return user.email?.toLowerCase() === "gomezandersonalex@gmail.com";
+  } catch {
+    return false;
+  }
+}
+
 function jsonResponse(value: unknown, status = 200): Response {
   return new Response(JSON.stringify(value), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff" } });
 }
@@ -64,7 +81,7 @@ async function handleB2Request(request: Request, env: CloudflareEnv & B2Env): Pr
       const folder = form.get("folder");
       if (!(file instanceof File) || typeof folder !== "string") return jsonResponse({ error: "Falta el archivo o la carpeta." }, 400);
       const validFolder = folder === "penyes" || folder === "eventos" || folder === "actuaciones" || folder === "noticias" || folder === "site" || /^penyes\/perfiles\/[a-zA-Z0-9_-]{1,100}$/.test(folder);
-      if (!validFolder) return jsonResponse({ error: "Carpeta de destino no válida." }, 400);
+      if (!validFolder) return jsonResponse({ error: "Carpeta de destino no válida." }, 400);\n      const adminOnlyFolder = folder === "actuaciones" || folder === "noticias" || folder === "site" || folder.startsWith("penyes/perfiles/");\n      if (adminOnlyFolder && !(await isAuthorizedAdminUpload(request, env))) return jsonResponse({ error: "Necesitas iniciar sesión con la cuenta administradora para subir este archivo." }, 401);
       const extensions: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "video/mp4": "mp4", "video/webm": "webm", "video/quicktime": "mov", "video/ogg": "ogg" };
       const extension = extensions[file.type];
       if (!extension) return jsonResponse({ error: "Formato no admitido. Usa JPG, PNG, WEBP, MP4, WEBM o MOV." }, 415);
