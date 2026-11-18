@@ -10,14 +10,13 @@ En el Worker/Pages que publica festalfàs, abre Settings → Variables and Secre
 | --- | --- | --- |
 | `B2_APPLICATION_KEY_ID` | Secret | ID de la clave de aplicación de Backblaze |
 | `B2_APPLICATION_KEY` | Secret | Clave secreta de aplicación de Backblaze |
-| `B2_BUCKET_ID` | Variable | ID del bucket `festalfas-media` |
 | `B2_BUCKET_NAME` | Variable | `festalfas-media` |
 | `SUPABASE_URL` | Existing variable | URL del proyecto Supabase actual, necesaria temporalmente para validar la sesión del administrador |
 | `SUPABASE_PUBLISHABLE_KEY` | Existing variable/secret | Clave pública de Supabase, necesaria temporalmente para validar la sesión del administrador |
 
 No guardes las claves en Git, archivos `.env` versionados, código del navegador ni mensajes. La clave de aplicación debe limitarse al bucket `festalfas-media` y tener permisos de lectura y escritura de archivos.
 
-El endpoint S3 no se utiliza en esta integración porque el Worker usa la API nativa de B2. Se conserva como dato informativo: `s3.us-east-005.backblazeb2.com`.
+El endpoint S3 no se utiliza en esta integración porque el Worker usa la API nativa de B2. El ID del bucket se obtiene automáticamente de la autorización si la clave está limitada a `festalfas-media`; si la clave da acceso a varios buckets, se puede configurar también `B2_BUCKET_ID` para seleccionar el correcto. El endpoint que has encontrado (`s3.us-east-005.backblazeb2.com`) se conserva como dato informativo.
 
 ## Rutas
 

@@ -27,6 +27,8 @@ type B2Authorization = {
   authorizationToken: string;
   apiUrl: string;
   downloadUrl: string;
+  bucketId: string;
+  bucketName: string;
 };
 let cachedB2Authorization: { value: B2Authorization; expiresAt: number } | null = null;
 
@@ -46,8 +48,14 @@ async function authorizeB2(env: CloudflareEnv & B2Env): Promise<B2Authorization>
   };
   const apiUrl = data.apiInfo?.storageApi?.apiUrl;
   const downloadUrl = data.apiInfo?.storageApi?.downloadUrl;
-  if (!data.authorizationToken || !apiUrl || !downloadUrl) throw new Error("Respuesta de almacenamiento no válida.");
-  const value = { authorizationToken: data.authorizationToken, apiUrl, downloadUrl };
+  const allowedBuckets = data.apiInfo?.storageApi?.allowed?.buckets ?? [];
+  const bucket = allowedBuckets.find((item) => item.name === env.B2_BUCKET_NAME) ?? allowedBuckets[0];
+  const bucketId = env.B2_BUCKET_ID || bucket?.id;
+  const bucketName = env.B2_BUCKET_NAME || bucket?.name || undefined;
+  if (!data.authorizationToken || !apiUrl || !downloadUrl || !bucketId || !bucketName) {
+    throw new Error("No se ha podido identificar el bucket B2 autorizado para esta clave.");
+  }
+  const value = { authorizationToken: data.authorizationToken, apiUrl, downloadUrl, bucketId, bucketName };
   cachedB2Authorization = { value, expiresAt: Date.now() + 23 * 60 * 60 * 1000 };
   return value;
 }
