@@ -80,7 +80,7 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
         const fd = new FormData();
         fd.append("file", foto);
         fd.append("folder", "penyes");
-        fotoPath = (await uploadPublicPhoto({ data: fd })).path;
+        fotoPath = (await uploadPublicPhoto({ data: fd })).url;
       }
 
       const { error: insertError } = await supabase.from("penyes").insert({
