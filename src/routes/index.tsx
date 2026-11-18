@@ -711,7 +711,7 @@ function Home() {
         </section>
       </main>
       </>}
-      {currentPage==="programa" && <main className="relative z-0 mx-auto min-h-[75vh] w-full min-w-0 max-w-[1600px] px-4 pb-32 pt-6 sm:px-5 sm:pt-8">
+      {currentPage==="programa" && <main className="relative z-0 mx-auto -mt-[58px] min-h-[75vh] w-full min-w-0 max-w-[1600px] px-4 pb-32 pt-0 sm:-mt-[64px] sm:px-5 sm:pt-0">
         <section id="programa" className="scroll-mt-24">
           <SectionTitle>{ui.nav.programa}</SectionTitle>
           {!dias.length ? (
