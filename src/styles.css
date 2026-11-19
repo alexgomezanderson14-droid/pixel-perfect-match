@@ -474,3 +474,6 @@ nav[aria-label="Navegación principal"] {
   .admin-workspace .admin-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .admin-workspace .admin-tabs button { min-height: 2.8rem; font-size: .72rem; }
 }
+
+.penya-coverflow.is-initializing .penya-coverflow-card { transition: none !important; }
+.penya-coverflow.is-ready .penya-coverflow-card { transition: transform 480ms cubic-bezier(.2,.75,.25,1), opacity 480ms ease, filter 480ms ease, box-shadow 480ms ease; }
