@@ -83,14 +83,14 @@ export default function FestMap({
       const instance = new api.Map({
         container: el.current,
         style: "https://tiles.openfreemap.org/styles/liberty",
-        center: [-0.09, 38.581],
-        zoom: 14.8,
+        center: [-0.082, 38.581],
+        zoom: 13.35,
         pitch: 55,
         bearing: -12,
         maxPitch: 72,
-        minZoom: 13,
-        maxZoom: 20,
-        maxBounds: [[-0.135, 38.55], [-0.035, 38.625]],
+        minZoom: 12.7,
+        maxZoom: 19,
+        maxBounds: [[-0.132, 38.548], [-0.028, 38.626]],
         maxBoundsViscosity: 1,
         renderWorldCopies: false,
         antialias: true,
@@ -102,21 +102,21 @@ export default function FestMap({
       instance.on("load", () => {
         if (cancelled || !map.current) return;
         if (!instance.getSource("festalfas-buildings")) {
-          instance.addSource("festalfas-buildings", { type: "vector", url: "https://tiles.openfreemap.org/planet" });
+          // Huellas de edificios de Maptoolkit: geometría y alturas alternativas a la capa genérica.
+          instance.addSource("festalfas-buildings", { type: "vector", url: "https://tiles.maptoolkit.org/buildings.json", attribution: "© OpenStreetMap contributors · © Maptoolkit" });
         }
         const labelLayer = instance.getStyle().layers?.find((layer: any) => layer.type === "symbol" && layer.layout?.["text-field"])?.id;
         if (!instance.getLayer("festalfas-3d-buildings")) {
           instance.addLayer({
             id: "festalfas-3d-buildings",
             source: "festalfas-buildings",
-            "source-layer": "building",
+            "source-layer": "buildings2d",
             type: "fill-extrusion",
-            minzoom: 13,
-            filter: ["!=", ["get", "hide_3d"], true],
+            minzoom: 12,
             paint: {
-              "fill-extrusion-color": ["interpolate", ["linear"], ["get", "render_height"], 0, "#e8e4dc", 12, "#c8c5bd", 40, "#aaa99f"],
-              "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 13, 0, 14, ["coalesce", ["get", "render_height"], 6], 15, ["coalesce", ["get", "render_height"], 7]],
-              "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0],
+              "fill-extrusion-color": ["interpolate", ["linear"], ["coalesce", ["to-number", ["get", "height"]], 7], 0, "#e8e4dc", 12, "#c8c5bd", 40, "#aaa99f"],
+              "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 12, 0, 13, ["coalesce", ["to-number", ["get", "height"]], ["*", ["to-number", ["get", "building:levels"], 2], 3], 7]],
+              "fill-extrusion-base": ["coalesce", ["to-number", ["get", "min_height"]], 0],
               "fill-extrusion-opacity": 0.92,
               "fill-extrusion-vertical-gradient": true,
             },
@@ -145,7 +145,7 @@ export default function FestMap({
   useEffect(() => {
     const instance = map.current;
     const api = mapApi.current;
-    if (!mapReady || !instance || !api || !instance.isStyleLoaded()) return;
+    if (!mapReady || !instance || !api) return;
     Object.values(markers.current).forEach((marker) => marker.remove());
     markers.current = {};
     lugares.forEach((l) => {
