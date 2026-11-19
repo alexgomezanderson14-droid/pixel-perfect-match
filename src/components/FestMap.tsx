@@ -98,7 +98,7 @@ export default function FestMap({
         trackResize: false,
         renderWorldCopies: false,
         antialias: window.innerWidth > 700 && (window.devicePixelRatio || 1) <= 1.5,
-        attributionControl: { compact: false },
+        attributionControl: { compact: true },
         canvasContextAttributes: { antialias: window.innerWidth > 700 && (window.devicePixelRatio || 1) <= 1.5 },
       });
       map.current = instance;
