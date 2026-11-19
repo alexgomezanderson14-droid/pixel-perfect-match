@@ -97,7 +97,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
       try { const parsed = JSON.parse(data?.valor || "{}"); if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) all = parsed; } catch { all = {}; }
       let featuredSaved = 0;
       all[penya.id] = blocks.map(block => {
-        const featured = block.type === "photo" && block.featured === true && /^https?:\\/\\//i.test(block.url) && featuredSaved < 3;
+        const featured = block.type === "photo" && block.featured === true && /^https?:\/\//i.test(block.url) && featuredSaved < 3;
         if (featured) featuredSaved += 1;
         return { ...block, featured, title: block.title.trim().slice(0, 100), content: block.content.trim().slice(0, 5000), url: block.url.trim().slice(0, 1000) };
       });
