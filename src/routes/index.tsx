@@ -355,6 +355,8 @@ function Home() {
   const [now, setNow] = useState(() => Date.now());
   const [selectedPenya, setSelectedPenya] = useState<PenyaDb | null>(null);
   const [penyaDetailFullscreen, setPenyaDetailFullscreen] = useState(false);
+  const [mapPenyaPreview, setMapPenyaPreview] = useState(false);
+  const [penyaGalleryOpen, setPenyaGalleryOpen] = useState(false);
   const [eventFormPenya, setEventFormPenya] = useState<PenyaDb | null>(null);
   const [communityEventForm, setCommunityEventForm] = useState(false);
   const [mapFullscreen, setMapFullscreen] = useState(false);
@@ -684,7 +686,7 @@ function Home() {
               <button type="button" onClick={() => setMapFullscreen(true)} aria-label="Ampliar mapa a pantalla completa" className="absolute right-3 top-3 z-[1200] rounded-full border border-white/70 bg-white/95 px-4 py-2 text-sm font-bold text-[#173f52] shadow-lg">⛶ Pantalla completa</button>
               <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
                 <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}>
-                  <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => { setPenyaDetailFullscreen(false); setSelectedPenya(penyes.find((p) => p.id === id) ?? null); }} onItemClick={(id)=>{setCurrentPage("eventos");setFilterDay("all");setFilterCategory(id.startsWith("acto-")?"actuaciones":"penyes");window.scrollTo({top:0,behavior:"smooth"});}} />
+                  <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => { setPenyaDetailFullscreen(false); setMapPenyaPreview(true); setSelectedPenya(penyes.find((p) => p.id === id) ?? null); }} onItemClick={(id)=>{setCurrentPage("eventos");setFilterDay("all");setFilterCategory(id.startsWith("acto-")?"actuaciones":"penyes");window.scrollTo({top:0,behavior:"smooth"});}} />
                 </Suspense>
               </ClientOnly>
             </div>}
@@ -1032,7 +1034,7 @@ function Home() {
           <div className="absolute inset-0">
             <ClientOnly fallback={<div className="h-full w-full animate-pulse bg-muted" />}>
               <Suspense fallback={<div className="h-full w-full animate-pulse bg-muted" />}>
-                <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => { setMapFullscreen(false); setPenyaDetailFullscreen(false); setSelectedPenya(penyes.find((p) => p.id === id) ?? null); }} onItemClick={(id)=>{setMapFullscreen(false);setCurrentPage("eventos");setFilterDay("all");setFilterCategory(id.startsWith("acto-")?"actuaciones":"penyes");window.scrollTo({top:0,behavior:"smooth"});}} />
+                <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => { setMapFullscreen(false); setPenyaDetailFullscreen(false); setMapPenyaPreview(true); setSelectedPenya(penyes.find((p) => p.id === id) ?? null); }} onItemClick={(id)=>{setMapFullscreen(false);setCurrentPage("eventos");setFilterDay("all");setFilterCategory(id.startsWith("acto-")?"actuaciones":"penyes");window.scrollTo({top:0,behavior:"smooth"});}} />
               </Suspense>
             </ClientOnly>
           </div>
@@ -1074,7 +1076,8 @@ function Home() {
                   {esPenyaCuBaTa(selectedPenya.nombre) && <span className="mb-2 inline-flex items-center gap-1 rounded-full border border-[#B8860B] bg-[#D4AF37] px-3 py-1 text-[10px] font-extrabold tracking-wide text-[#3B2A0A] sm:text-xs">♛ MAYORALES 2027</span>}
                   <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#6a8589]">Peña participante · festalfàs</p>
                   <h2 className="mt-1 break-words text-3xl font-black leading-tight tracking-tight text-[#173f52] sm:text-4xl md:text-5xl">{selectedPenya.nombre}</h2>
-                  {selectedPenya.direccion && <p className="mt-1 text-sm text-[#61777b]">{selectedPenya.direccion}</p>}
+                  {selectedPenya.informacion?.trim() && <p className="mt-2 line-clamp-2 max-w-2xl text-sm leading-relaxed text-[#526b70] sm:text-base">{selectedPenya.informacion}</p>}
+                  <button type="button" onClick={()=>{setSelectedPenya(null);setPenyaDetailFullscreen(false);setCurrentPage("home");setCat("penya");setFocus(selectedPenya.id);window.scrollTo({top:0,behavior:"smooth"});}} className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#cbdcdd] bg-white/85 px-4 py-2 text-xs font-extrabold text-[#24576a] shadow-sm">📍 {selectedPenya.direccion ? "Ver ubicación · "+selectedPenya.direccion : "Ver ubicación en el mapa"}</button>
                 </div>
               </div>
               <nav aria-label="Apartados de la ficha" className="sticky top-0 z-20 -mx-4 mb-6 flex gap-2 overflow-x-auto border-b border-[#d8e3e1] bg-[#f5f8f7]/95 px-4 py-3 shadow-[0_8px_20px_rgba(23,63,82,.05)] backdrop-blur-2xl sm:-mx-8 sm:px-8">
