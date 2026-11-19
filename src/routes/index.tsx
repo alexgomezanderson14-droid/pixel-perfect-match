@@ -1324,17 +1324,14 @@ function Home() {
                 )}
               </div>
 
-              <div className="mt-4 flex min-w-0 items-center gap-2 overflow-x-auto rounded-2xl border border-[#dce7e4] bg-white p-2 shadow-sm">
-                <button onClick={() => setEventFormPenya(selectedPenya)} className="min-h-11 shrink-0 rounded-xl bg-primary px-4 text-xs font-bold text-primary-foreground">＋ Proponer un plan</button>
-                <button onClick={() => toggleMiPenya(selectedPenya.id)} aria-pressed={misPenyes.includes(selectedPenya.id)} className="min-h-11 shrink-0 rounded-xl border border-primary/20 bg-white px-3 text-xs font-bold text-primary">{misPenyes.includes(selectedPenya.id) ? "★ Mi peña" : "☆ Marcar como mi peña"}</button>
-                {instagramUrl(selectedPenya.instagram) && <a className="flex min-h-11 shrink-0 items-center rounded-xl bg-[#173f52] px-3 text-xs font-bold text-white" href={instagramUrl(selectedPenya.instagram)!} target="_blank" rel="noreferrer">Instagram ↗</a>}
-                <button onClick={() => setEventFormPenya(selectedPenya)} className="min-h-11 shrink-0 rounded-xl border border-primary/20 bg-white px-3 text-xs font-bold text-primary">{selectedPenya.tiene_evento ? "Añadir evento" : "+ Añadir evento"}</button>
-              </div>
-              <div className="mt-2 flex min-w-0 items-center gap-2 overflow-x-auto rounded-2xl border border-[#dce7e4] bg-white p-2 shadow-sm">
-                {selectedPenya.direccion && <div className="flex min-w-[150px] flex-1 items-center gap-2 px-2 text-xs font-semibold text-[#52666b]"><span className="text-base">📍</span><span className="line-clamp-2">{selectedPenya.direccion}</span></div>}
-                <a href={selectedPenya.lat != null && selectedPenya.lng != null ? "https://www.google.com/maps/dir/?api=1&destination=" + selectedPenya.lat + "," + selectedPenya.lng : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent((selectedPenya.direccion || selectedPenya.nombre) + ", l'Alfàs del Pi")} target="_blank" rel="noreferrer" className="flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#173f52] px-3 text-xs font-bold text-white">📍 Cómo llegar</a>
-                <button onClick={() => void sharePenyaCard(selectedPenya)} className="flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-primary/20 bg-white px-3 text-xs font-bold text-primary">↗ Compartir</button>
-                <button onClick={() => void copyShareLink(window.location.origin + "/#penya-" + selectedPenya.id)} className="flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-primary/20 bg-white px-3 text-xs font-bold text-primary">🔗 Copiar enlace</button>
+              <div className="mt-4 grid min-w-0 grid-cols-2 gap-2 rounded-2xl border border-[#dce7e4] bg-white p-2 shadow-sm sm:grid-cols-4">
+                <button onClick={() => setEventFormPenya(selectedPenya)} className="min-h-11 min-w-0 rounded-xl bg-primary px-2 py-2 text-center text-xs font-bold text-primary-foreground">＋ Proponer un plan</button>
+                <button onClick={() => toggleMiPenya(selectedPenya.id)} aria-pressed={misPenyes.includes(selectedPenya.id)} className="min-h-11 min-w-0 rounded-xl border border-primary/20 bg-white px-2 py-2 text-center text-xs font-bold text-primary">{misPenyes.includes(selectedPenya.id) ? "★ Mi peña" : "☆ Marcar como mi peña"}</button>
+                {instagramUrl(selectedPenya.instagram) && <a className="flex min-h-11 min-w-0 items-center justify-center rounded-xl bg-[#173f52] px-2 py-2 text-center text-xs font-bold text-white" href={instagramUrl(selectedPenya.instagram)!} target="_blank" rel="noreferrer">Instagram ↗</a>}
+                <button onClick={() => setEventFormPenya(selectedPenya)} className="min-h-11 min-w-0 rounded-xl border border-primary/20 bg-white px-2 py-2 text-center text-xs font-bold text-primary">{selectedPenya.tiene_evento ? "Añadir evento" : "+ Añadir evento"}</button>
+                <a href={selectedPenya.lat != null && selectedPenya.lng != null ? "https://www.google.com/maps/dir/?api=1&destination=" + selectedPenya.lat + "," + selectedPenya.lng : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent((selectedPenya.direccion || selectedPenya.nombre) + ", l'Alfàs del Pi")} target="_blank" rel="noreferrer" className="flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl bg-[#173f52] px-2 py-2 text-center text-xs font-bold text-white">📍 Cómo llegar</a>
+                <button onClick={() => void sharePenyaCard(selectedPenya)} className="flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-primary/20 bg-white px-2 py-2 text-center text-xs font-bold text-primary">↗ Compartir</button>
+                <button onClick={() => void copyShareLink(window.location.origin + "/#penya-" + selectedPenya.id)} className="flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-primary/20 bg-white px-2 py-2 text-center text-xs font-bold text-primary">🔗 Copiar enlace</button>
               </div>
               </div>
             </div>
