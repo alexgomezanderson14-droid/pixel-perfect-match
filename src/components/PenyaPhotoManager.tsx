@@ -60,7 +60,7 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
     try {
       const added: PhotoBlock[] = [];
       for (const file of selected) {
-        const result = await uploadMediaFile(file, "penyes");
+        const result = await uploadMediaFile(file, "penyes/galeria/" + penya.id);
         added.push({ id: crypto.randomUUID(), url: result.url, title: file.name.replace(/\.[^.]+$/, "").slice(0, 100) || "Fotografía", featured: false, visible: true });
       }
       setBlocks(current => [...current, ...added]);
