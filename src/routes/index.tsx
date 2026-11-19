@@ -1236,9 +1236,9 @@ function Home() {
             <div className="relative h-[250px] overflow-hidden bg-[#c9e9f1] sm:h-[330px] lg:h-[370px]" style={{height:`clamp(250px,25vw,${selectedPenyaBannerBlock?.height??370}px)`}}>
               {selectedPenyaBanner&&<img src={selectedPenyaBanner} alt={"Portada de "+selectedPenya.nombre} style={{objectPosition:`${selectedPenyaBannerBlock?.positionX??50}% ${selectedPenyaBannerBlock?.positionY??50}%`,transform:`scale(${(selectedPenyaBannerBlock?.zoom??100)/100})`}} className="absolute inset-0 h-full w-full object-cover object-center"/>}
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background"/>
-              <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#f0f5f2] via-background/75 to-transparent sm:h-40"/>
+              <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-background via-background/75 to-transparent sm:h-40"/>
               <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-                {getPenyaStickerSet(selectedPenya.id).map((sticker,index)=><img key={selectedPenya.id+"-sticker-"+index} src={sticker.src} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" className={"penya-banner-sticker "+sticker.className}/ >)}
+                {getPenyaStickerSet(selectedPenya.id).map((sticker,index)=><img key={selectedPenya.id+"-sticker-"+index} src={sticker.src} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" className={"penya-banner-sticker "+sticker.className}/> )}
               </div>
               <button onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }} aria-label="Cerrar ficha" className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-30 grid h-10 w-10 place-items-center rounded-full border border-white/65 bg-white/65 text-lg font-bold text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105">✕</button>
             </div>
