@@ -18,6 +18,9 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
   });
   const [foto, setFoto] = useState<File | null>(null);
   const [quitarFoto, setQuitarFoto] = useState(false);
+  const [logoZoom,setLogoZoom]=useState(100);
+  const [logoX,setLogoX]=useState(50);
+  const [logoY,setLogoY]=useState(50);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   type ProfileBlock = { id: string; type: "text" | "photo" | "banner" | "video" | "link" | "highlight" | "list" | "tag"; title: string; content: string; url: string; featured?: boolean; zoom?: number; positionX?: number; positionY?: number };
@@ -30,6 +33,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
   const [blocksMessage, setBlocksMessage] = useState("");
   useEffect(() => {
     let active = true;
+    supabase.from("site_content").select("valor").eq("clave", "penyes_logos_ficha_json").maybeSingle().then(({data,error})=>{if(!active)return;if(!error){try{const settings=JSON.parse(data?.valor||"{}");const current=settings?.[penya.id]||{};setLogoZoom(current.zoom??100);setLogoX(current.x??50);setLogoY(current.y??50);}catch{setLogoZoom(100);setLogoX(50);setLogoY(50);}}});
     supabase.from("site_content").select("valor").eq("clave", "penyes_visitas_json").maybeSingle().then(({ data, error }) => {
       if (!active) return;
       if (!error) { try { const settings = JSON.parse(data?.valor || "{}"); setAceptaVisitas(settings?.[penya.id] === true); } catch { setAceptaVisitas(false); } }
@@ -134,6 +138,12 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
       visitSettings[penya.id] = aceptaVisitas;
       const { error: visitsWriteError } = await supabase.from("site_content").upsert({ clave: "penyes_visitas_json", valor: JSON.stringify(visitSettings) });
       if (visitsWriteError) throw visitsWriteError;
+      const {data:logoData,error:logoReadError}=await supabase.from("site_content").select("valor").eq("clave","penyes_logos_ficha_json").maybeSingle();
+      if(logoReadError)throw logoReadError;
+      let logoSettings:Record<string,{zoom:number;x:number;y:number}>={};try{const parsed=JSON.parse(logoData?.valor||"{}");if(parsed&&typeof parsed==="object"&&!Array.isArray(parsed))logoSettings=parsed;}catch{logoSettings={};}
+      logoSettings[penya.id]={zoom:logoZoom,x:logoX,y:logoY};
+      const {error:logoWriteError}=await supabase.from("site_content").upsert({clave:"penyes_logos_ficha_json",valor:JSON.stringify(logoSettings)});
+      if(logoWriteError)throw logoWriteError;
       let foto_url = quitarFoto ? null : penya.foto_url;
       if (foto) {
         const uploaded = await uploadMediaFile(foto, "penyes");
@@ -177,7 +187,8 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     <div className="flex flex-wrap gap-4 text-sm"><label className="flex items-center gap-2"><input type="checkbox" checked={form.tiene_evento} onChange={e=>change("tiene_evento",e.target.checked)} /> Organiza evento</label></div>
     <section className="admin-editor-section rounded-2xl border border-[#c6d9d4] bg-[#f2f8f5] p-4"><label className="flex items-start gap-3 text-sm font-semibold text-[#214d42]"><input type="checkbox" className="mt-0.5" checked={aceptaVisitas} disabled={visitasLoading} onChange={e=>setAceptaVisitas(e.target.checked)} /><span><span className="block font-extrabold">Aceptamos visitas</span><span className="mt-0.5 block text-xs font-normal text-[#557168]">Actívalo si vuestra peña está abierta a recibir visitas. Se mostrará una insignia en la ficha pública.</span></span></label></section>
     <label className="block space-y-1 text-sm font-semibold">Estado<select className={field} value={form.estado} onChange={e=>change("estado",e.target.value)}><option value="aprobada">Visible en la web</option><option value="pendiente">Pendiente / ocultar</option><option value="rechazada">Rechazada / ocultar</option></select></label>
-    {fotoUrl && !quitarFoto && <img src={fotoUrl} alt={"Foto de "+penya.nombre} className="h-36 w-full rounded-xl object-cover" />}
+    {fotoUrl && !quitarFoto && <div className="flex justify-center"><div className="h-36 w-36 overflow-hidden rounded-full border-4 border-white shadow-md"><img src={fotoUrl} alt={"Foto de "+penya.nombre} style={{objectPosition:`${logoX}% ${logoY}%`,transform:`scale(${logoZoom/100})`}} className="h-full w-full object-cover"/></div></div>}
+    <div className="grid gap-3 rounded-xl border border-primary/15 bg-primary/[.035] p-3 sm:grid-cols-2"><p className="text-xs font-extrabold text-primary sm:col-span-2">Encuadre del logo circular de la ficha · independiente de la tarjeta</p><label className="block space-y-1 text-xs font-semibold">Tamaño · {logoZoom}%<input type="range" min="70" max="200" value={logoZoom} onChange={e=>setLogoZoom(Number(e.target.value))} className="w-full accent-primary"/></label><label className="block space-y-1 text-xs font-semibold">Posición horizontal · {logoX}%<input type="range" min="0" max="100" value={logoX} onChange={e=>setLogoX(Number(e.target.value))} className="w-full accent-primary"/></label><label className="block space-y-1 text-xs font-semibold">Posición vertical · {logoY}%<input type="range" min="0" max="100" value={logoY} onChange={e=>setLogoY(Number(e.target.value))} className="w-full accent-primary"/></label><button type="button" onClick={()=>{setLogoZoom(100);setLogoX(50);setLogoY(50);}} className="self-end rounded-full border px-3 py-2 text-xs font-bold">Restablecer logo</button><p className="text-[10px] text-muted-foreground sm:col-span-2">Se guarda al pulsar «Guardar ficha». El círculo y el tamaño de la ficha se mantienen; solo cambia el encuadre de la imagen.</p></div>
     <div className="space-y-2"><p className="text-sm font-semibold">Cambiar fotografía (JPG, PNG o WEBP, máx. 5 MB)</p><div className="grid grid-cols-1 gap-2 sm:grid-cols-2"><label className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-primary/20 bg-background px-3 py-2 text-center text-xs font-bold text-primary">▧ Elegir de la galería<input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setFoto(e.target.files?.[0]??null)} /></label><label className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-primary/20 bg-background px-3 py-2 text-center text-xs font-bold text-primary">◎ Hacer una foto<input className="sr-only" type="file" accept="image/*" capture="environment" onChange={e=>setFoto(e.target.files?.[0]??null)} /></label></div>{foto&&<p className="text-xs text-muted-foreground">Imagen seleccionada: {foto.name}</p>}</div>
     {fotoUrl && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={quitarFoto} onChange={e=>setQuitarFoto(e.target.checked)} /> Quitar fotografía actual</label>}
     <section className="admin-editor-section space-y-4 rounded-2xl border border-primary/15 bg-white/75 p-4 sm:p-5">
