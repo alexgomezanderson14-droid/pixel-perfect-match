@@ -16,6 +16,13 @@ export default function AdminPenyaCardStyleEditor({penya,savedConfig,onSaved}:Pr
   useEffect(()=>{if(!logoFile){setPreview(logoUrl);return;}const objectUrl=URL.createObjectURL(logoFile);setPreview(objectUrl);return()=>URL.revokeObjectURL(objectUrl);},[logoFile,logoUrl]);
   const [busy,setBusy]=useState(false);
   const [message,setMessage]=useState("");
+  useEffect(()=>{
+    setColor(savedConfig.color||"#5968D8");
+    setLogoUrl(savedConfig.logo_url||"");
+    setTitle(savedConfig.title||penya.nombre||"");
+    setDescription(savedConfig.description??penya.informacion??"");
+    setLogoFile(null);
+  },[penya.id,penya.nombre,penya.informacion,savedConfig.color,savedConfig.logo_url,savedConfig.title,savedConfig.description]);
 
   const save=async()=>{
     if(!/^#[0-9a-fA-F]{6}$/.test(color)){setMessage("Selecciona un color válido.");return;}
