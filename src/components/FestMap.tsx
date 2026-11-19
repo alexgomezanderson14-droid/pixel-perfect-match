@@ -108,22 +108,7 @@ export default function FestMap({
         if (!instance.getSource("festalfas-buildings")) {
           instance.addSource("festalfas-buildings", { type: "vector", url: "https://tiles.maptoolkit.org/buildings.json", attribution: "© OpenStreetMap contributors · © Maptoolkit" });
         }
-        // Official Catastro INSPIRE building footprints, served as raster tiles to keep the map light.
-        if (!instance.getSource("festalfas-catastro-buildings")) {
-          instance.addSource("festalfas-catastro-buildings", {
-            type: "raster",
-            tiles: ["https://ovc.catastro.meh.es/cartografia/INSPIRE/spadgcwms.aspx?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=BU.Building&STYLES=&SRS=EPSG:3857&FORMAT=image/png&TRANSPARENT=TRUE&WIDTH=256&HEIGHT=256&BBOX={bbox-epsg-3857}"],
-            tileSize: 256,
-            attribution: "© Dirección General del Catastro · CC BY 4.0"
-          });
-        }
-        const labelLayer = instance.getStyle().layers?.find((layer: any) => layer.type === "symbol" && layer.layout?.["text-field"])?.id;
-        if (!instance.getLayer("festalfas-catastro-footprints")) {
-          instance.addLayer({
-            id: "festalfas-catastro-footprints", type: "raster", source: "festalfas-catastro-buildings", minzoom: 13.8,
-            paint: { "raster-opacity": 0.72, "raster-fade-duration": 0 }
-          }, labelLayer);
-        }
+        // 3D buildings remain sourced from vector footprints and measured OSM height tags.
         if (!instance.getLayer("festalfas-3d-buildings")) {
           instance.addLayer({
             id: "festalfas-3d-buildings", source: "festalfas-buildings", "source-layer": "buildings2d", type: "fill-extrusion", minzoom: 12.5,
