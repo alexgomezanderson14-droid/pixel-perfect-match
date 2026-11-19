@@ -440,6 +440,8 @@ function Home() {
   const mayoralesAnio = String(siteContent["mayorales_anio"]||"2027");
   // La etiqueta personalizada de Mayorales vigente en la ficha es la única fuente de verdad.
   const mayoralesPenyaId = useMemo(()=>{
+    const configuredId=String(siteContent["mayorales_penya_id"]||"").trim();
+    if(configuredId&&penyes.some(p=>String(p.id)===configuredId))return configuredId;
     try {
       const perfiles=JSON.parse(siteContent["penyes_perfiles_json"]||"{}");
       const tituloVigente=(value:any)=>{
@@ -448,11 +450,13 @@ function Home() {
         const year=title.match(/20\\d{2}/)?.[0];
         return !year || year===mayoralesAnio;
       };
-      return penyes.find(p=>Array.isArray(perfiles?.[p.id])&&perfiles[p.id].some((block:any)=>block?.type==="tag"&&tituloVigente(block.title)))?.id||"";
-    } catch { return ""; }
-  },[penyes,siteContent["penyes_perfiles_json"],mayoralesAnio]);
+      const taggedPenya=penyes.find(p=>Array.isArray(perfiles?.[p.id])&&perfiles[p.id].some((block:any)=>block?.type==="tag"&&tituloVigente(block.title)));
+      if(taggedPenya)return taggedPenya.id;
+    } catch { /* Si no hay etiquetas legibles, se usa la peña confirmada de esta edición. */ }
+    return penyes.find(p=>String(p.nombre||"").trim().toLocaleLowerCase("es").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"")==="cubata")?.id||"";
+  },[penyes,siteContent["penyes_perfiles_json"],siteContent["mayorales_penya_id"],mayoralesAnio]);
   const mayoralesColor = String((mayoralesPenyaId && penyaCardSettings[mayoralesPenyaId]?.color) || siteContent["theme_accent"] || "#173f52");
-  const visiblePenyes = useMemo(()=>[...penyes].filter(p=>(!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica,p.informacion].join(" ")).includes(normalizarBusqueda(penyaSearch)))&&(penyaMusicFilter==="Todas"||String(p.tipo_musica||"").trim()===penyaMusicFilter)&&(!penyaOnlyMine||misPenyes.includes(p.id))).sort((a,b)=>Number(Boolean(mayoralesPenyaId&&b.id===mayoralesPenyaId))-Number(Boolean(mayoralesPenyaId&&a.id===mayoralesPenyaId))||String(a.nombre??"").localeCompare(String(b.nombre??""),"es",{sensitivity:"base"})),[penyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,misPenyes,mayoralesPenyaId]);
+  const visiblePenyes = useMemo(()=>[...penyes].filter(p=>(!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica,p.informacion].join(" ")).includes(normalizarBusqueda(penyaSearch)))&&(penyaMusicFilter==="Todas"||String(p.tipo_musica||"").trim()===penyaMusicFilter)&&(!penyaOnlyMine||misPenyes.includes(p.id))).sort((a,b)=>String(a.nombre??"").localeCompare(String(b.nombre??""),"es",{sensitivity:"base"})),[penyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,misPenyes,mayoralesPenyaId]);
   const searchingPenyes = Boolean(penyaSearch.trim()) || penyaMusicFilter !== "Todas" || penyaOnlyMine;
   const loopedPenyes = !searchingPenyes && visiblePenyes.length > 1 ? [...visiblePenyes,...visiblePenyes,...visiblePenyes,...visiblePenyes,...visiblePenyes] : [...visiblePenyes];
   const centerPenyaCard=useCallback((index:number,behavior:ScrollBehavior="auto")=>{const el=penyaCarouselRef.current;const card=el?.children[index] as HTMLElement|undefined;if(!el||!card)return;const delta=card.getBoundingClientRect().left-el.getBoundingClientRect().left;const left=el.scrollLeft+delta-(el.clientWidth-card.clientWidth)/2;el.scrollTo({left,behavior});},[]);
