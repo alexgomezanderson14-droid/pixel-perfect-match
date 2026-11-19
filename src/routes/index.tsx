@@ -322,6 +322,8 @@ function Home() {
   const [penyaSearch, setPenyaSearch] = useState("");
   const [penyaMusicFilter, setPenyaMusicFilter] = useState("Todas");
   const [penyaOnlyMine, setPenyaOnlyMine] = useState(false);
+  const [activePenyaCard, setActivePenyaCard] = useState(0);
+  const penyaCarouselRef = useRef<HTMLDivElement | null>(null);
   const [eventsSearch, setEventsSearch] = useState("");
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
   const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes">("all");
@@ -1009,31 +1011,37 @@ function Home() {
           ) : visiblePenyes.length===0 ? (
             <div className="glass rounded-3xl p-8 text-center"><p className="font-bold text-primary">No encontramos peñas con esos filtros</p><p className="mt-1 text-sm text-muted-foreground">Prueba con otra búsqueda o limpia los filtros.</p><button onClick={()=>{setPenyaSearch("");setPenyaMusicFilter("Todas");setPenyaOnlyMine(false);}} className="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">Mostrar todas las peñas</button></div>
           ) : (
-            <div className="relative -mx-4 sm:-mx-6 lg:-mx-8">
-              <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-[#f5f8f7] to-transparent sm:w-14 lg:w-20"/>
-              <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-[#f5f8f7] to-transparent sm:w-14 lg:w-20"/>
-              <div className="penya-directory-carousel flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-5 pb-5 pt-2 sm:gap-4 sm:px-8 lg:gap-5 lg:px-12" style={{maskImage:"linear-gradient(90deg, transparent 0%, black 5%, black 95%, transparent 100%)",WebkitMaskImage:"linear-gradient(90deg, transparent 0%, black 5%, black 95%, transparent 100%)"}}>
-                {visiblePenyes.map((p) => (
-                  <article id={"penya-" + p.id} key={p.id} tabIndex={0} aria-label={`Abrir ficha de ${p.nombre}`} onClick={() => { setPenyaDetailFullscreen(true); setSelectedPenya(p); }} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setPenyaDetailFullscreen(true); setSelectedPenya(p); } }} className="penya-card-enter group relative w-[min(72vw,260px)] shrink-0 snap-center cursor-pointer overflow-hidden rounded-[1.55rem] bg-[#173f52] shadow-[0_12px_30px_rgba(23,63,82,.14)] transition-[transform,box-shadow] duration-500 ease-[cubic-bezier(.22,.61,.36,1)] hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(23,63,82,.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-[260px] lg:w-[290px] xl:w-[310px]">
-                    <div className="relative aspect-[4/5] overflow-hidden">
-                      {p.foto?<img src={p.foto} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(.2,.75,.25,1)] group-hover:scale-[1.06]"/>:<div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37] text-6xl font-black text-white/80">{p.nombre.trim().charAt(0).toLocaleUpperCase("es")}</div>}
-                      <div className="absolute inset-0 bg-gradient-to-b from-[#071c25]/10 via-transparent via-45% to-[#071c25]/95"/>
-                      <div className="absolute inset-x-0 bottom-0 h-[58%] bg-gradient-to-t from-[#071c25]/95 via-[#071c25]/75 to-transparent"/>
-                      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
-                        <h3 className="break-words text-base font-black leading-[1.12] tracking-[-.025em] text-white [text-shadow:0_2px_12px_rgba(0,0,0,.8)] sm:text-lg lg:text-xl">{p.nombre}</h3>
-                        <div className="mt-2 flex items-center gap-2">
-                          {esPenyaCuBaTa(p.nombre)&&<span className="inline-flex rounded-full border border-[#f5d77c]/70 bg-[#d4af37] px-2.5 py-1 text-[9px] font-extrabold tracking-[.1em] text-[#3b2a0a] shadow-lg">♛ MAYORALES 2027</span>}
-                          {misPenyes.includes(p.id)&&<span className="inline-flex rounded-full border border-white/45 bg-white/90 px-2.5 py-1 text-[9px] font-extrabold text-[#173f52] shadow-lg">★ MI PEÑA</span>}
+            <div className="relative mx-auto w-full max-w-[1180px]">
+              <button type="button" aria-label="Peña anterior" onClick={()=>{const el=penyaCarouselRef.current;if(!el)return;const next=Math.max(0,activePenyaCard-1);setActivePenyaCard(next);const card=el.children[next] as HTMLElement|undefined;card?.scrollIntoView({block:"nearest",inline:"center",behavior:"auto"});}} className="absolute left-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">‹</button>
+              <button type="button" aria-label="Peña siguiente" onClick={()=>{const el=penyaCarouselRef.current;if(!el)return;const next=Math.min(visiblePenyes.length-1,activePenyaCard+1);setActivePenyaCard(next);const card=el.children[next] as HTMLElement|undefined;card?.scrollIntoView({block:"nearest",inline:"center",behavior:"auto"});}} className="absolute right-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">›</button>
+              <div ref={penyaCarouselRef} onScroll={(event)=>{const el=event.currentTarget;const center=el.getBoundingClientRect().left+el.clientWidth/2;let nearest=0;let distance=Number.POSITIVE_INFINITY;Array.from(el.children).forEach((child,index)=>{const rect=child.getBoundingClientRect();const d=Math.abs(rect.left+rect.width/2-center);if(d<distance){distance=d;nearest=index;}});setActivePenyaCard(current=>current===nearest?current:nearest);}} className="penya-coverflow flex snap-x snap-mandatory items-center gap-3 overflow-x-auto overscroll-x-contain px-[calc(50%-112px)] py-12 sm:gap-5 sm:px-[calc(50%-130px)] lg:gap-7 lg:px-[calc(50%-150px)]">
+                {visiblePenyes.map((p,index)=>{
+                  const colors=["#5B67D8","#E45D70","#16A6C3","#19A887","#D28B35","#8559C7","#287DAD","#C45D91"];
+                  const color=colors[index%colors.length];
+                  const centered=index===activePenyaCard;
+                  return <article id={"penya-"+p.id} key={p.id} tabIndex={0} aria-label={`Abrir ficha de ${p.nombre}`} onClick={()=>{setPenyaDetailFullscreen(true);setSelectedPenya(p);}} onKeyDown={(e)=>{if(e.target===e.currentTarget&&(e.key==="Enter"||e.key===" ")){e.preventDefault();setPenyaDetailFullscreen(true);setSelectedPenya(p);}}} style={{backgroundColor:color}} className={"penya-coverflow-card group relative h-[320px] w-[224px] shrink-0 snap-center cursor-pointer overflow-visible rounded-[2rem] border border-white/25 shadow-[0_18px_42px_rgba(19,38,53,.18)] outline-none transition-[transform,opacity,filter,box-shadow] duration-500 ease-[cubic-bezier(.2,.75,.25,1)] focus-visible:ring-4 focus-visible:ring-primary/40 sm:h-[360px] sm:w-[260px] lg:h-[400px] lg:w-[290px] "+(centered?"is-active":"is-side")}>
+                    <div className="absolute inset-0 overflow-hidden rounded-[2rem]">
+                      <div className="absolute inset-x-0 top-0 p-5 sm:p-6">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <h3 className="break-words text-[19px] font-black leading-[1.05] tracking-[-.035em] text-white sm:text-[22px]">{p.nombre}</h3>
+                            <p className="mt-2 text-[10px] font-semibold uppercase tracking-[.16em] text-white/75 sm:text-[11px]">Peña festera</p>
+                          </div>
+                          {misPenyes.includes(p.id)&&<span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/20 text-sm text-white ring-1 ring-white/40" aria-label="Mi peña">★</span>}
                         </div>
+                        {esPenyaCuBaTa(p.nombre)&&<span className="mt-3 inline-flex rounded-full bg-white/20 px-2.5 py-1 text-[9px] font-extrabold tracking-wide text-white ring-1 ring-white/35">♛ MAYORALES 2027</span>}
                       </div>
-                      <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/20 to-transparent"/>
+                      <div className="absolute inset-x-0 bottom-0 h-[72%]">
+                        {p.foto?<img src={p.foto} alt={"Logo de "+p.nombre} loading="lazy" decoding="async" className="absolute inset-x-2 bottom-[-5px] h-full w-[calc(100%-16px)] object-contain object-bottom drop-shadow-[0_15px_12px_rgba(0,0,0,.2)] transition-transform duration-500 ease-[cubic-bezier(.2,.75,.25,1)] group-hover:-translate-y-2"/>:<div className="absolute inset-x-0 bottom-4 text-center text-8xl font-black text-white/90">{p.nombre.trim().charAt(0).toLocaleUpperCase("es")}</div>}
+                      </div>
                     </div>
-                  </article>
-                ))}
+                  </article>;
+                })}
               </div>
-              <p className="mt-1 flex items-center justify-center gap-2 text-[10px] font-semibold tracking-wide text-[#8aa0a1]"><span aria-hidden="true">←</span> Desliza para descubrir las peñas <span aria-hidden="true">→</span></p>
+              <p className="mt-1 text-center text-[10px] font-semibold tracking-wide text-[#8aa0a1] lg:hidden">Desliza para descubrir las peñas</p>
+              <p className="mt-1 hidden text-center text-[10px] font-semibold tracking-wide text-[#8aa0a1] lg:block">Usa las flechas para explorar las peñas</p>
             </div>
-          )}
+
 
           <div className="mt-10 rounded-3xl border border-border/70 bg-card/70 p-5 sm:p-7">
             <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-primary">Agenda festera</p><h3 className="mt-1 text-xl font-extrabold text-primary sm:text-2xl">Planes de las peñas</h3><p className="mt-1 text-sm text-muted-foreground">Actividades publicadas por las peñas y próximas citas.</p></div><button onClick={()=>{setCurrentPage("eventos");setFilterCategory("penyes");setFilterDay("upcoming");window.scrollTo({top:0,behavior:"smooth"});}} className="text-xs font-bold text-primary underline">Ver agenda completa →</button></div>
