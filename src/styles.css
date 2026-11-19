@@ -387,3 +387,12 @@ nav[aria-label="Navegación principal"] {
 @media (prefers-reduced-motion: reduce) {
   .penya-coverflow-card, .penya-coverflow-card img { transition: none !important; }
 }
+
+
+/* Efecto coverflow: tarjetas solapadas y profundidad visual, con la central en primer plano. */
+.penya-coverflow { scrollbar-width:none; scroll-behavior:auto; perspective:1100px; }
+.penya-coverflow::-webkit-scrollbar { display:none; }
+.penya-coverflow-card { transform-style:preserve-3d; backface-visibility:hidden; }
+@media (prefers-reduced-motion: reduce) {
+  .penya-coverflow-card, .penya-coverflow-card img { transition:none !important; }
+}
