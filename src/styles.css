@@ -505,20 +505,18 @@ nav[aria-label="Navegación principal"] {
 .penya-profile-sheet [class*="f5f8f7"], .penya-profile-sheet [class*="f0f5f2"] { background-color:color-mix(in oklab,var(--background) 82%,white) !important; }
 .penya-profile-sheet [class*="52666b"] { color:color-mix(in oklab,var(--foreground) 78%,var(--background)) !important; }
 
-/* Pegatinas vectoriales recortadas: transparencia real y acabado ilustrado tipo sticker. */
+/* Cuatro pegatinas transparentes por ficha, con posiciones y giros por peña. */
 .penya-banner-sticker { position:absolute; display:block; height:auto; max-width:none; filter:drop-shadow(0 7px 7px rgba(15,30,35,.2)); opacity:.98; }
 .penya-banner-sticker svg { display:block; width:100%; height:auto; overflow:visible; }
-.penya-sticker-dolcaina { width:clamp(4.5rem,9vw,8rem); left:8%; top:17%; rotate:-14deg; }
-.penya-sticker-confetti { width:clamp(5.5rem,12vw,10rem); right:8%; top:12%; rotate:11deg; }
-.penya-sticker-polvora { width:clamp(5rem,10vw,9rem); right:12%; top:44%; rotate:9deg; }
-.penya-sticker-bomb { width:clamp(4.7rem,9vw,7.8rem); left:14%; top:43%; rotate:-12deg; }
-.penya-sticker-flame { width:clamp(4.5rem,9vw,7.5rem); right:13%; top:48%; rotate:10deg; }
+.penya-sticker-slot-0 { width:clamp(3.8rem,7vw,6.8rem); }
+.penya-sticker-slot-1 { width:clamp(3.5rem,6.2vw,6.1rem); }
+.penya-sticker-slot-2 { width:clamp(4rem,7.4vw,7.1rem); }
+.penya-sticker-slot-3 { width:clamp(3.6rem,6.5vw,6.4rem); }
 @media (max-width:639px) {
- .penya-sticker-dolcaina { width:clamp(3.7rem,17vw,5.3rem); left:4%; top:18%; }
- .penya-sticker-confetti { width:clamp(4.5rem,20vw,6.2rem); right:3%; top:12%; }
- .penya-sticker-polvora { width:clamp(4rem,18vw,5.8rem); right:5%; top:48%; }
- .penya-sticker-bomb { width:clamp(3.9rem,16vw,5.1rem); left:5%; top:48%; }
- .penya-sticker-flame { width:clamp(3.7rem,16vw,5rem); right:6%; top:48%; }
+ .penya-sticker-slot-0 { width:clamp(2.8rem,14vw,4.3rem); }
+ .penya-sticker-slot-1 { width:clamp(2.6rem,12vw,3.9rem); }
+ .penya-sticker-slot-2 { width:clamp(3rem,15vw,4.5rem); }
+ .penya-sticker-slot-3 { width:clamp(2.7rem,13vw,4.1rem); }
 }
 
 /* Preferencias de accesibilidad del usuario. */
