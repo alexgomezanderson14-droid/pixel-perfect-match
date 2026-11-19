@@ -28,6 +28,8 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,auth
 AS $$ SELECT EXISTS (SELECT 1 FROM public.penya_admins pa WHERE pa.penya_id=target_penya AND pa.user_id=auth.uid() AND pa.estado='activo'); $$;
 ALTER TABLE public.penya_admins ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.penya_admin_requests ENABLE ROW LEVEL SECURITY;
+GRANT SELECT ON public.penya_admins TO authenticated;
+GRANT SELECT, INSERT ON public.penya_admin_requests TO authenticated;
 DROP POLICY IF EXISTS "Users can read own penya admin memberships" ON public.penya_admins;
 CREATE POLICY "Users can read own penya admin memberships" ON public.penya_admins FOR SELECT TO authenticated USING (user_id=auth.uid() OR public.is_festalfas_global_admin());
 DROP POLICY IF EXISTS "Global admin manages penya admin memberships" ON public.penya_admins;
