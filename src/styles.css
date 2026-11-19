@@ -435,3 +435,61 @@ nav[aria-label="Navegación principal"] {
 
 #ficha-novedades { grid-column:1 / -1; width:100%; min-width:0; }
 #ficha-novedades > div, #ficha-novedades button { min-width:0; width:100%; }
+
+
+/* Carrusel estable: las tarjetas ya están colocadas al cargar, sin animación de entrada. */
+.penya-coverflow-card { animation: none !important; contain: none; }
+.penya-coverflow-card.is-loop-start { margin-left: 0; }
+.penya-coverflow-card:not(.is-loop-start) { margin-left: -104px; }
+.penya-coverflow-card { transform-origin: center center; }
+@media (max-width: 639px) {
+  .penya-coverflow {
+    gap: 0 !important;
+    padding-left: calc(50vw - 112px) !important;
+    padding-right: calc(50vw - 112px) !important;
+    perspective: 850px !important;
+    overflow-y: visible;
+  }
+  .penya-coverflow-card,
+  .penya-coverflow-card.is-active,
+  .penya-coverflow-card.is-side {
+    width: 224px !important;
+    max-width: 224px !important;
+    height: 340px !important;
+    margin-left: -58px !important;
+    opacity: .82;
+    filter: saturate(.9);
+    box-shadow: 0 14px 32px rgba(19,38,53,.2);
+    transform-style: preserve-3d !important;
+    backface-visibility: hidden;
+  }
+  .penya-coverflow-card.is-loop-start { margin-left: 0 !important; }
+  .penya-coverflow-card.is-active { opacity: 1; }
+}
+@media (min-width: 640px) {
+  .penya-coverflow-card { transition: transform 480ms cubic-bezier(.2,.75,.25,1), opacity 480ms ease, filter 480ms ease, box-shadow 480ms ease; }
+}
+
+/* Administración: pestañas claras, ordenadas y cómodas sin desplazamiento horizontal. */
+.admin-workspace .admin-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .55rem;
+  position: static;
+  padding: .65rem;
+}
+.admin-workspace .admin-tabs button {
+  min-width: 0;
+  min-height: 3.15rem;
+  padding: .65rem .8rem;
+  white-space: normal;
+  line-height: 1.2;
+  font-size: .78rem;
+}
+.admin-workspace .admin-tabs button[aria-current="page"],
+.admin-workspace .admin-tabs button[aria-pressed="true"] { box-shadow: 0 7px 18px rgba(23,63,82,.16); }
+.admin-workspace > div > header { border-radius: 1.75rem; }
+@media (max-width: 767px) {
+  .admin-workspace .admin-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-workspace .admin-tabs button { min-height: 2.8rem; font-size: .72rem; }
+}
