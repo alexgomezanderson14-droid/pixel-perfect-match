@@ -1252,13 +1252,6 @@ function Home() {
                   {selectedPenyaAcceptsVisits && <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-[#cfe2d7] bg-[#f2f8f4] px-3 py-1 text-[10px] font-semibold text-[#47745a]"><span aria-hidden="true">✓</span> Acepta visitas</span> }
                 </div>
               </div>
-              <nav aria-label="Apartados de la ficha" className="sticky top-0 z-20 -mx-4 mb-6 flex gap-2 overflow-x-auto border-b border-[#d8e3e1] bg-[#f5f8f7]/95 px-4 py-3 shadow-[0_8px_20px_rgba(23,63,82,.05)] backdrop-blur-2xl sm:-mx-8 sm:px-8">
-                <a href="#ficha-presentacion" className="shrink-0 rounded-full bg-[#173f52] px-4 py-2.5 text-xs font-bold text-white shadow-sm">La peña</a>
-                {selectedPenyaCustomBlocks.length>0 && <a href="#ficha-personalizada" className="shrink-0 rounded-full border border-[#d4e0de] bg-white px-4 py-2.5 text-xs font-bold text-[#173f52] transition hover:border-[#d4af37]">Más sobre nosotros</a>}
-                {selectedPenyaGallery.length > 0 && <a href="#ficha-galeria" className="shrink-0 rounded-full border border-[#d4e0de] bg-white px-4 py-2.5 text-xs font-bold text-[#173f52] transition hover:border-[#d4af37]">Fotos</a>}
-                <a href="#ficha-planes" className="shrink-0 rounded-full border border-[#d4e0de] bg-white px-4 py-2.5 text-xs font-bold text-[#173f52] transition hover:border-[#d4af37]">Planes</a>
-                {selectedPenyaNews.length > 0 && <a href="#ficha-novedades" className="shrink-0 rounded-full border border-[#d4e0de] bg-white px-4 py-2.5 text-xs font-bold text-[#173f52] transition hover:border-[#d4af37]">Novedades</a>}
-              </nav>
               {(() => {
                 const profileTags = selectedPenyaCustomBlocks.filter((block:any)=>block.type==="tag" && String(block.title||"").trim() && !/^(acepta visitas|esta peña acepta visitas|puertas abiertas)$/i.test(String(block.title).trim())).map((block:any)=>String(block.title).trim());
                 const memberCount = [selectedPenya.miembros_actuales, selectedPenya.numero_miembros, selectedPenya.miembros].find((value)=>typeof value==="number" && Number.isFinite(value) && value>0);
