@@ -335,7 +335,6 @@ function Home() {
   const [accountBusy, setAccountBusy] = useState(false);
   const [personalPrefs, setPersonalPrefs] = useState({ showImportantNotices: true, reduceMotion: false });
   const [avisos, setAvisos] = useState<any[]>([]);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [readNotificationIds, setReadNotificationIds] = useState<string[]>([]);
   const [mapPoints, setMapPoints] = useState<Lugar[]>([]);
   const [cat, setCat] = useState<Categoria | null>(null);
@@ -746,7 +745,7 @@ function Home() {
         })}
         <span aria-hidden="true" className="pointer-events-none absolute inset-y-1 left-1 z-0 w-[calc((100%-8px)/4)] rounded-full border border-white/25 bg-[linear-gradient(145deg,rgba(25,43,55,.78),rgba(25,43,55,.58))] shadow-[0_5px_18px_rgba(18,35,47,.22),0_1px_4px_rgba(255,255,255,.22)_inset] backdrop-blur-2xl transition-transform duration-300 ease-[cubic-bezier(.22,.61,.36,1)] "+(currentPage==="info"?"opacity-0":"")} style={{transform:"translateX(calc("+(["home","eventos","penyes","noticias"].indexOf(currentPage)*100)+"%))"}}/>
       </nav>
-      <button type="button" onClick={()=>{setNotificationsOpen(false);setCurrentPage("info");window.scrollTo({top:0,behavior:"smooth"});}} aria-label="Abrir ajustes" title="Ajustes" className="fixed right-3 top-[calc(env(safe-area-inset-top)+12px)] z-[2147483001] grid h-11 w-11 place-items-center rounded-full border border-white/45 bg-[#173f52]/70 text-white shadow-lg backdrop-blur-xl transition hover:rotate-12 hover:bg-[#173f52]/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white sm:right-6 sm:top-[calc(env(safe-area-inset-top)+16px)] sm:h-12 sm:w-12">
+      <button type="button" onClick={()=>{setCurrentPage("info");window.scrollTo({top:0,behavior:"smooth"});}} aria-label="Abrir ajustes" title="Ajustes" className="fixed right-3 top-[calc(env(safe-area-inset-top)+12px)] z-[2147483001] grid h-11 w-11 place-items-center rounded-full border border-white/45 bg-[#173f52]/70 text-white shadow-lg backdrop-blur-xl transition hover:rotate-12 hover:bg-[#173f52]/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white sm:right-6 sm:top-[calc(env(safe-area-inset-top)+16px)] sm:h-12 sm:w-12">
         <svg viewBox="0 0 24 24" className="h-5 w-5 sm:h-[22px] sm:w-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10.2 2.8h3.6l.55 2.05a7.6 7.6 0 0 1 1.55.9l2.02-.62 1.8 3.12-1.48 1.52c.12.58.12 1.18 0 1.76l1.48 1.52-1.8 3.12-2.02-.62a7.6 7.6 0 0 1-1.55.9l-.55 2.05h-3.6l-.55-2.05a7.6 7.6 0 0 1-1.55-.9l-2.02.62-1.8-3.12 1.48-1.52a4.4 4.4 0 0 1 0-1.76L4.28 8.23l1.8-3.12 2.02.62a7.6 7.6 0 0 1 1.55-.9z"/><circle cx="12" cy="10.65" r="2.65"/></svg>
         {unreadNotifications.length>0&&<span className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500" aria-label="Hay notificaciones sin leer"/>}
       </button>
