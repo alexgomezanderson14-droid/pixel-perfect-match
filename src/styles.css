@@ -419,10 +419,11 @@ nav[aria-label="Navegación principal"] {
 
 /* Entrada escalonada de las tarjetas: elevación y aparición progresiva sin animar el layout. */
 .penya-coverflow-card {
-  animation: penya-card-enter 820ms cubic-bezier(.18,.72,.22,1) both;
   will-change: transform, opacity;
   contain: layout paint;
+  backface-visibility: hidden;
 }
+.penya-coverflow-card[style*="penya-card-enter"] { animation: penya-card-enter 620ms cubic-bezier(.18,.72,.22,1) both; }
 @keyframes penya-card-enter {
   from { translate: 0 34px; opacity: 0; }
   68% { opacity: .82; }
@@ -431,3 +432,6 @@ nav[aria-label="Navegación principal"] {
 @media (prefers-reduced-motion: reduce) {
   .penya-coverflow-card { animation: none !important; will-change: auto; }
 }
+
+#ficha-novedades { grid-column:1 / -1; width:100%; min-width:0; }
+#ficha-novedades > div, #ficha-novedades button { min-width:0; width:100%; }
