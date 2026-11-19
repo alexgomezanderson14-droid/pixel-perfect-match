@@ -78,6 +78,7 @@ export default function FestMap({
   useEffect(() => {
     let cancelled = false;
     let resizeObserver: ResizeObserver | null = null;
+    let resizeFrame = 0;
     loadMapLibre().then((api) => {
       if (cancelled || !el.current || map.current) return;
       mapApi.current = api;
@@ -86,13 +87,14 @@ export default function FestMap({
         style: "https://styles.maptoolkit.org/summer-3d.json",
         center: [-0.103, 38.580],
         zoom: window.matchMedia("(max-width: 639px)").matches ? 14.7 : 15.0,
-        pitch: window.matchMedia("(max-width: 639px)").matches ? 42 : 58,
+        pitch: window.matchMedia("(max-width: 639px)").matches ? 32 : 54,
         bearing: -12,
-        maxPitch: 65,
+        maxPitch: 62,
         minZoom: 13.6,
         maxZoom: 19,
         maxBounds: [[-0.132, 38.548], [-0.028, 38.626]],
         maxBoundsViscosity: 1,
+        trackResize: false,
         renderWorldCopies: false,
         antialias: window.innerWidth > 700 && (window.devicePixelRatio || 1) <= 1.5,
         attributionControl: { compact: false },
@@ -112,8 +114,8 @@ export default function FestMap({
             id: "festalfas-3d-buildings", source: "festalfas-buildings", "source-layer": "buildings2d", type: "fill-extrusion", minzoom: 12.5,
             paint: {
               "fill-extrusion-color": ["match", ["get", "building"], "church", "#e8d6b7", "school", "#d9c6a5", "commercial", "#d8c6b9", "retail", "#e4d0b6", "industrial", "#c9c8bd", "#eadfce"],
-              "fill-extrusion-height": ["max", 5, ["coalesce", ["to-number", ["get", "height"]], ["*", ["to-number", ["get", "building:levels"], 2], 3.4], 8]],
-              "fill-extrusion-base": ["coalesce", ["to-number", ["get", "min_height"]], 0],
+              "fill-extrusion-height": ["max", 5, ["coalesce", ["to-number", ["get", "height"]], ["to-number", ["get", "building:height"]], ["+", ["*", ["to-number", ["get", "building:levels"], 2], 3.2], ["to-number", ["get", "roof:height"], 0]], 7.5]],
+              "fill-extrusion-base": ["coalesce", ["to-number", ["get", "min_height"]], ["*", ["to-number", ["get", "building:min_level"], 0], 3.2], 0],
               "fill-extrusion-opacity": 0.98, "fill-extrusion-vertical-gradient": true
             }
           }, labelLayer);
@@ -121,7 +123,10 @@ export default function FestMap({
         setMapReady(true);
       });
       instance.on("click", (event: any) => pickRef.current?.(event.lngLat.lat, event.lngLat.lng));
-      resizeObserver = new ResizeObserver(() => requestAnimationFrame(() => map.current?.resize()));
+      resizeObserver = new ResizeObserver(() => {
+        if (resizeFrame) return;
+        resizeFrame = requestAnimationFrame(() => { resizeFrame = 0; map.current?.resize(); });
+      });
       resizeObserver.observe(el.current);
     }).catch((error) => {
       console.error("No se pudo iniciar el mapa 3D de FestAlfàs", error);
@@ -130,6 +135,7 @@ export default function FestMap({
     return () => {
       cancelled = true;
       resizeObserver?.disconnect();
+      if (resizeFrame) cancelAnimationFrame(resizeFrame);
       map.current?.remove();
       map.current = null;
       mapApi.current = null;
@@ -219,7 +225,7 @@ export default function FestMap({
     if (!marker) return;
     lastFocusedId.current = focusId;
     instance.stop();
-    instance.easeTo({ center: marker.getLngLat(), zoom: 17, pitch: 58, duration: 650 });
+    instance.easeTo({ center: marker.getLngLat(), zoom: 17, pitch: window.matchMedia("(max-width: 639px)").matches ? 34 : 54, duration: 650 });
     marker.togglePopup?.();
   }, [focusId, lugares, mapReady]);
 
