@@ -505,13 +505,20 @@ nav[aria-label="Navegación principal"] {
 .penya-profile-sheet [class*="f5f8f7"], .penya-profile-sheet [class*="f0f5f2"] { background-color:color-mix(in oklab,var(--background) 82%,white) !important; }
 .penya-profile-sheet [class*="52666b"] { color:color-mix(in oklab,var(--foreground) 78%,var(--background)) !important; }
 
-/* Cuatro pegatinas transparentes por ficha, con posiciones y giros por peña. */
-.penya-banner-sticker { position:absolute; display:block; height:auto; max-width:none; filter:drop-shadow(0 7px 7px rgba(15,30,35,.2)); opacity:.98; }
+/* Pegatinas ilustradas de gran formato: silueta recortada, volumen y sombra suave. */
+.penya-banner-sticker { position:absolute; display:block; height:auto; max-width:none; filter:drop-shadow(0 9px 8px rgba(15,30,35,.24)); opacity:1; transform-origin:center; }
 .penya-banner-sticker svg { display:block; width:100%; height:auto; overflow:visible; }
-.penya-sticker-slot-0 { width:clamp(3.8rem,7vw,6.8rem); }
-.penya-sticker-slot-1 { width:clamp(3.5rem,6.2vw,6.1rem); }
-.penya-sticker-slot-2 { width:clamp(4rem,7.4vw,7.1rem); }
-.penya-sticker-slot-3 { width:clamp(3.6rem,6.5vw,6.4rem); }
+.penya-sticker-slot-0 { width:clamp(5.2rem,11vw,10rem); }
+.penya-sticker-slot-1 { width:clamp(4.8rem,10vw,9rem); }
+.penya-sticker-slot-2 { width:clamp(5.4rem,12vw,10.8rem); }
+.penya-sticker-slot-3 { width:clamp(5rem,10.5vw,9.5rem); }
+@media (max-width:639px) {
+  .penya-banner-sticker { filter:drop-shadow(0 5px 5px rgba(15,30,35,.22)); }
+  .penya-sticker-slot-0 { width:clamp(4.1rem,17vw,6.3rem); }
+  .penya-sticker-slot-1 { width:clamp(3.9rem,16vw,5.9rem); }
+  .penya-sticker-slot-2 { width:clamp(4.3rem,18vw,6.6rem); }
+  .penya-sticker-slot-3 { width:clamp(4rem,16.5vw,6.1rem); }
+}
 @media (max-width:639px) {
  .penya-sticker-slot-0 { width:clamp(2.8rem,14vw,4.3rem); }
  .penya-sticker-slot-1 { width:clamp(2.6rem,12vw,3.9rem); }
