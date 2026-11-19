@@ -50,17 +50,39 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
   const updateBlock = (id: string, key: keyof ProfileBlock, value: string | boolean) => setBlocks(old => old.map(block => block.id === id ? { ...block, [key]: value } : block));
   const featuredPhotoCount = blocks.filter(block => block.type === "photo" && block.featured && /^https?:\/\//i.test(block.url)).length;
   const moveBlock = (index: number, offset: number) => setBlocks(old => { const next = [...old]; const target = index + offset; if (target < 0 || target >= next.length) return old; const a = next[index]; const b = next[target]; if (!a || !b) return old; next[index] = b; next[target] = a; return next; });
-  const uploadBlockPhoto = async (blockId: string, file: File | null) => {
-    if (!file) return;
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
-      setBlocksMessage("La fotografía debe ser JPG, PNG o WEBP y no superar 5 MB.");
+  const uploadBlockPhotos = async (blockId: string, files: FileList | null) => {
+    const selected = Array.from(files ?? []);
+    if (!selected.length) return;
+    if (selected.some(file => !["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024)) {
+      setBlocksMessage("Cada fotografía debe ser JPG, PNG o WEBP y no superar 5 MB.");
       return;
     }
     setUploadingBlockId(blockId); setBlocksMessage("");
     try {
-      const uploaded = await uploadMediaFile(file, "penyes/perfiles/" + penya.id);
-      updateBlock(blockId, "url", uploaded.url);
-      setBlocksMessage("Fotografía subida. Guarda los apartados para publicarla en la ficha.");
+      const urls: string[] = [];
+      for (const file of selected) {
+        const uploaded = await uploadMediaFile(file, "penyes/perfiles/" + penya.id);
+        urls.push(uploaded.url);
+      }
+      setBlocks(old => {
+        const index = old.findIndex(block => block.id === blockId);
+        if (index < 0) return old;
+        const current = old[index]!;
+        const next = [...old];
+        next[index] = { ...current, url: urls[0] ?? current.url };
+        const extraBlocks = urls.slice(1).map((url, offset) => ({
+          ...current,
+          id: crypto.randomUUID(),
+          title: current.title + " " + (offset + 2),
+          url,
+          featured: false,
+        }));
+        next.splice(index + 1, 0, ...extraBlocks);
+        return next;
+      });
+      setBlocksMessage(selected.length > 1
+        ? selected.length + " fotografías subidas. Guarda los apartados para publicarlas en la ficha."
+        : "Fotografía subida. Guarda los apartados para publicarla en la ficha.");
     } catch (err) { setBlocksMessage("No se ha podido subir la fotografía: " + (err instanceof Error ? err.message : String(err))); }
     finally { setUploadingBlockId(null); }
   };
@@ -161,7 +183,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
             <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-xs font-extrabold uppercase tracking-wide text-primary">{({text:"Texto",photo:"Fotografía",banner:"Banner principal",tag:"Etiqueta",video:"Vídeo",link:"Enlace",highlight:"Destacado",list:"Lista"} as Record<string,string>)[block.type]} · Apartado {index+1}</span><div className="flex gap-1"><button type="button" disabled={index===0} onClick={()=>moveBlock(index,-1)} className="rounded-lg border px-2 py-1 text-xs disabled:opacity-30" aria-label="Mover arriba">↑</button><button type="button" disabled={index===blocks.length-1} onClick={()=>moveBlock(index,1)} className="rounded-lg border px-2 py-1 text-xs disabled:opacity-30" aria-label="Mover abajo">↓</button><button type="button" onClick={()=>setBlocks(old=>old.filter(item=>item.id!==block.id))} className="rounded-lg border border-destructive/30 px-2 py-1 text-xs font-bold text-destructive">Eliminar</button></div></div>
             <label className="block space-y-1 text-xs font-semibold">Título<input className={field} maxLength={100} value={block.title} onChange={e=>updateBlock(block.id,"title",e.target.value)} placeholder="Título del apartado"/></label>
             {(block.type==="text"||block.type==="highlight"||block.type==="list")&&<label className="block space-y-1 text-xs font-semibold">{block.type==="list"?"Elementos (uno por línea)":"Contenido"}<textarea className={field} rows={block.type==="list"?4:5} maxLength={5000} value={block.content} onChange={e=>updateBlock(block.id,"content",e.target.value)} placeholder={block.type==="list"?"Convivencia\nMúsica\nDisfraces":"Escribe aquí lo que quieras contar…"} /></label>}
-            {(block.type==="photo"||block.type==="banner"||block.type==="video"||block.type==="link")&&<label className="block space-y-1 text-xs font-semibold">{block.type==="banner"?"Imagen de cabecera (URL)":block.type==="photo"?"Dirección de la fotografía (URL)":block.type==="video"?"Enlace de YouTube, Vimeo o vídeo MP4":"Dirección del enlace"}<input className={field} type="url" maxLength={1000} value={block.url} onChange={e=>updateBlock(block.id,"url",e.target.value)} placeholder="https://…"/>{(block.type==="photo"||block.type==="banner")&&<label className="mt-2 block space-y-1 text-xs font-semibold">O subir una imagen desde el dispositivo<input className="block w-full text-sm font-normal" type="file" accept="image/jpeg,image/png,image/webp" disabled={uploadingBlockId===block.id} onChange={e=>void uploadBlockPhoto(block.id,e.target.files?.[0]??null)}/>{uploadingBlockId===block.id&&<span className="text-primary">Subiendo fotografía…</span>}</label>}</label>}
+            {(block.type==="photo"||block.type==="banner"||block.type==="video"||block.type==="link")&&<div className="space-y-3"><label className="block space-y-1 text-xs font-semibold">{block.type==="banner"?"Imagen de cabecera (URL opcional)":block.type==="photo"?"Dirección de la fotografía (URL opcional)":block.type==="video"?"Enlace de YouTube, Vimeo o vídeo MP4":"Dirección del enlace"}<input className={field} type="url" maxLength={1000} value={block.url} onChange={e=>updateBlock(block.id,"url",e.target.value)} placeholder="Pega aquí un enlace si lo tienes"/></label>{(block.type==="photo"||block.type==="banner")&&<div className="rounded-xl border border-primary/15 bg-primary/[.035] p-3"><p className="mb-2 text-xs font-bold text-primary">Añadir imagen desde el móvil o el ordenador</p><div className="grid grid-cols-1 gap-2 sm:grid-cols-2"><label className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-primary/20 bg-white px-3 py-2 text-center text-xs font-bold text-primary transition hover:bg-primary/5">▧ Elegir de la galería<input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple={block.type==="photo"} disabled={uploadingBlockId===block.id} onChange={e=>{void uploadBlockPhotos(block.id,e.currentTarget.files);e.currentTarget.value="";}}/></label><label className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-primary/20 bg-white px-3 py-2 text-center text-xs font-bold text-primary transition hover:bg-primary/5">◎ Hacer una foto<input className="sr-only" type="file" accept="image/*" capture="environment" disabled={uploadingBlockId===block.id} onChange={e=>{void uploadBlockPhotos(block.id,e.currentTarget.files);e.currentTarget.value="";}}/></label></div><p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">{block.type==="photo"?"Puedes seleccionar varias fotos a la vez; cada una se añadirá como un apartado independiente.":"Selecciona una imagen de la galería o haz una foto con la cámara."} JPG, PNG o WEBP · Máx. 5 MB por imagen.</p>{uploadingBlockId===block.id&&<p role="status" className="mt-2 text-xs font-bold text-primary">Subiendo imagen…</p>}</div>}</div>}
             {block.type==="link"&&<label className="block space-y-1 text-xs font-semibold">Texto del enlace<input className={field} maxLength={300} value={block.content} onChange={e=>updateBlock(block.id,"content",e.target.value)} placeholder="Visita nuestra página"/></label>}
             {block.type==="photo"&&<label className="block space-y-1 text-xs font-semibold">Descripción de la foto<input className={field} maxLength={300} value={block.content} onChange={e=>updateBlock(block.id,"content",e.target.value)} placeholder="Nuestra peña en las fiestas…"/></label>}
             {block.type==="photo"&&<div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-primary/[0.045] p-3"><label className="flex items-start gap-2 text-xs font-semibold text-primary"><input type="checkbox" className="mt-0.5" checked={Boolean(block.featured)} disabled={!block.featured&&featuredPhotoCount>=3} onChange={e=>updateBlock(block.id,"featured",e.target.checked)}/><span><span className="block">Destacar entre las 3 fotos principales</span><span className="mt-0.5 block font-normal text-muted-foreground">Estas aparecerán primero en el mapa y en la ficha pública.</span></span></label><span className="text-[10px] font-bold text-muted-foreground">{featuredPhotoCount}/3 destacadas</span></div>}
