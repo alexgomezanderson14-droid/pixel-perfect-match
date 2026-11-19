@@ -505,17 +505,20 @@ nav[aria-label="Navegación principal"] {
 .penya-profile-sheet [class*="f5f8f7"], .penya-profile-sheet [class*="f0f5f2"] { background-color:color-mix(in oklab,var(--background) 82%,white) !important; }
 .penya-profile-sheet [class*="52666b"] { color:color-mix(in oklab,var(--foreground) 78%,var(--background)) !important; }
 
-/* Ilustraciones PNG transparentes, sin placas ni marcos: pegatinas recortadas sobre la foto. */
-.penya-banner-sticker { position:absolute; display:block; object-fit:contain; height:auto; max-width:none; filter:drop-shadow(0 9px 8px rgba(15,30,35,.28)); opacity:.98; }
+/* Pegatinas vectoriales recortadas: transparencia real y acabado ilustrado tipo sticker. */
+.penya-banner-sticker { position:absolute; display:block; height:auto; max-width:none; filter:drop-shadow(0 7px 7px rgba(15,30,35,.2)); opacity:.98; }
+.penya-banner-sticker svg { display:block; width:100%; height:auto; overflow:visible; }
 .penya-sticker-dolcaina { width:clamp(4.5rem,9vw,8rem); left:8%; top:17%; rotate:-14deg; }
 .penya-sticker-confetti { width:clamp(5.5rem,12vw,10rem); right:8%; top:12%; rotate:11deg; }
 .penya-sticker-polvora { width:clamp(5rem,10vw,9rem); right:12%; top:44%; rotate:9deg; }
-.penya-sticker-banda { width:clamp(6rem,13vw,11rem); left:18%; top:48%; rotate:-7deg; }
+.penya-sticker-bomb { width:clamp(4.7rem,9vw,7.8rem); left:14%; top:43%; rotate:-12deg; }
+.penya-sticker-flame { width:clamp(4.5rem,9vw,7.5rem); right:13%; top:48%; rotate:10deg; }
 @media (max-width:639px) {
  .penya-sticker-dolcaina { width:clamp(3.7rem,17vw,5.3rem); left:4%; top:18%; }
  .penya-sticker-confetti { width:clamp(4.5rem,20vw,6.2rem); right:3%; top:12%; }
  .penya-sticker-polvora { width:clamp(4rem,18vw,5.8rem); right:5%; top:48%; }
- .penya-sticker-banda { width:clamp(4.8rem,22vw,6.6rem); left:10%; top:51%; }
+ .penya-sticker-bomb { width:clamp(3.9rem,16vw,5.1rem); left:5%; top:48%; }
+ .penya-sticker-flame { width:clamp(3.7rem,16vw,5rem); right:6%; top:48%; }
 }
 
 /* Preferencias de accesibilidad del usuario. */
