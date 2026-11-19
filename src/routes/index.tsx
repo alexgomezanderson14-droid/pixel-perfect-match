@@ -286,12 +286,22 @@ async function sharePenyaCard(p: PenyaDb) {
   }
 }
 type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number | null; lng: number | null; foto: string; tipo_musica: string; tiene_evento?: boolean; instagram?: string | null; informacion?: string | null };
-const penyaStickerSets = [
-  [{type:"confetti",className:"penya-sticker-confetti"},{type:"firework",className:"penya-sticker-polvora"}],
-  [{type:"bomb",className:"penya-sticker-bomb"},{type:"flame",className:"penya-sticker-flame"}],
-  [{type:"trumpet",className:"penya-sticker-dolcaina"},{type:"confetti",className:"penya-sticker-confetti"},{type:"firework",className:"penya-sticker-polvora"}]
-];
-function getPenyaStickerSet(id:string){const seed=Array.from(id).reduce((sum,char)=>sum+char.charCodeAt(0),0);return penyaStickerSets[seed%penyaStickerSets.length]||penyaStickerSets[0]!;}
+const penyaStickerTypes = ["confetti","firework","bomb","flame","trumpet"] as const;
+function getPenyaStickerSet(id:string){
+  const seed=Array.from(id).reduce((sum,char)=>sum+char.charCodeAt(0),0);
+  return Array.from({length:4},(_,index)=>({type:penyaStickerTypes[(seed+index)%penyaStickerTypes.length],className:"penya-sticker-slot-"+index}));
+}
+function getPenyaStickerStyle(id:string,index:number){
+  const seed=Array.from(id).reduce((sum,char)=>sum+char.charCodeAt(0),0);
+  const layouts=[
+    [{left:5,top:9,rotate:-17},{left:29,top:25,rotate:12},{left:62,top:8,rotate:-9},{left:83,top:24,rotate:18}],
+    [{left:8,top:24,rotate:13},{left:34,top:7,rotate:-12},{left:66,top:25,rotate:17},{left:86,top:8,rotate:-16}],
+    [{left:4,top:11,rotate:9},{left:31,top:27,rotate:-18},{left:64,top:9,rotate:14},{left:84,top:26,rotate:-8}],
+    [{left:7,top:27,rotate:-13},{left:35,top:10,rotate:16},{left:63,top:26,rotate:-11},{left:87,top:9,rotate:19}]
+  ];
+  const item=layouts[seed%layouts.length][index];
+  return {left:item.left+"%",top:item.top+"%",transform:"rotate("+item.rotate+"deg)"};
+}
 const penyaStickerArt:Record<string,ReactNode>={
   confetti:<svg viewBox="0 0 140 140" aria-hidden="true"><g stroke="#fff" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round"><path d="M24 24l17 17M105 18l-8 23M119 91l-24-4M25 111l15-19M68 9v25M12 72l22-4" fill="none"/><path d="M48 54l10-18 9 18 19 3-14 13 4 20-18-9-17 9 4-20-14-13z" fill="#ffd43b"/><path d="M91 48l8-15 8 15 16 3-12 11 3 16-15-8-14 8 3-16-12-11z" fill="#ff5b76"/><circle cx="34" cy="68" r="8" fill="#39c6e8"/><circle cx="84" cy="112" r="7" fill="#8c6cff"/><circle cx="119" cy="119" r="6" fill="#ff9f43"/></g></svg>,
   firework:<svg viewBox="0 0 140 140" aria-hidden="true"><g fill="none" stroke="#fff" strokeWidth="13" strokeLinecap="round"><path d="M70 70L70 13M70 70L112 30M70 70L128 70M70 70L111 111M70 70L70 128M70 70L29 111M70 70L12 70M70 70L29 29"/></g><g fill="none" strokeWidth="6" strokeLinecap="round"><path stroke="#ffcc37" d="M70 70L70 13M70 70L128 70M70 70L29 29"/><path stroke="#ff5b76" d="M70 70L112 30M70 70L111 111M70 70L29 111"/><path stroke="#48c7e8" d="M70 70L70 128M70 70L12 70"/></g><circle cx="70" cy="70" r="10" fill="#fff" stroke="#ffb52e" strokeWidth="5"/></svg>,
@@ -1243,7 +1253,7 @@ function Home() {
             <div className="relative h-[250px] overflow-hidden bg-[#c9e9f1] sm:h-[330px] lg:h-[370px]" style={{height:`clamp(250px,25vw,${selectedPenyaBannerBlock?.height??370}px)`}}>
               {selectedPenyaBanner&&<img src={selectedPenyaBanner} alt={"Portada de "+selectedPenya.nombre} style={{objectPosition:`${selectedPenyaBannerBlock?.positionX??50}% ${selectedPenyaBannerBlock?.positionY??50}%`,transform:`scale(${(selectedPenyaBannerBlock?.zoom??100)/100})`}} className="absolute inset-0 h-full w-full object-cover object-center"/>}
               <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
-                {getPenyaStickerSet(selectedPenya.id).map((sticker,index)=><span key={selectedPenya.id+"-sticker-"+index} className={"penya-banner-sticker "+sticker.className}>{penyaStickerArt[sticker.type]}</span>)}
+                {getPenyaStickerSet(selectedPenya.id).map((sticker,index)=><span key={selectedPenya.id+"-sticker-"+index} style={getPenyaStickerStyle(selectedPenya.id,index)} className={"penya-banner-sticker "+sticker.className}>{penyaStickerArt[sticker.type]}</span>)}
               </div>
               <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-b from-transparent via-transparent to-background"/>
               <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-28 bg-gradient-to-t from-background via-background/75 to-transparent sm:h-40"/>
@@ -1251,7 +1261,7 @@ function Home() {
             </div>
             <div className="relative z-10 mx-auto -mt-[112px] w-full max-w-[1500px] px-4 pb-5 sm:-mt-[142px] sm:px-7 lg:px-12 xl:px-16 2xl:px-20">
               <div className="relative flex flex-col items-center text-center">
-                <div className="relative z-20 grid h-44 w-44 shrink-0 place-items-center overflow-hidden rounded-full border-[7px] border-background bg-white text-5xl font-black text-[#173f52] shadow-[0_10px_34px_rgba(4,25,34,.22)] sm:h-56 sm:w-56 sm:border-[8px] lg:h-72 lg:w-72 xl:h-80 xl:w-80" style={{transform:`scale(${(penyaProfileLogoSettings[selectedPenya.id]?.frameScale??100)/100})`}}>{selectedPenya.foto?<img src={selectedPenya.foto} alt={"Logo de "+selectedPenya.nombre} style={{objectPosition:`${penyaProfileLogoSettings[selectedPenya.id]?.x??50}% ${penyaProfileLogoSettings[selectedPenya.id]?.y??50}%`,transform:`scale(${(penyaProfileLogoSettings[selectedPenya.id]?.zoom??100)/100})`}} className="h-full w-full object-cover"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
+                <div className="relative z-30 grid h-44 w-44 shrink-0 place-items-center overflow-hidden rounded-full border-[7px] border-background bg-white text-5xl font-black text-[#173f52] shadow-[0_10px_34px_rgba(4,25,34,.22)] sm:h-56 sm:w-56 sm:border-[8px] lg:h-72 lg:w-72 xl:h-80 xl:w-80" style={{transform:`scale(${(penyaProfileLogoSettings[selectedPenya.id]?.frameScale??100)/100})`}}>{selectedPenya.foto?<img src={selectedPenya.foto} alt={"Logo de "+selectedPenya.nombre} style={{objectPosition:`${penyaProfileLogoSettings[selectedPenya.id]?.x??50}% ${penyaProfileLogoSettings[selectedPenya.id]?.y??50}%`,transform:`scale(${(penyaProfileLogoSettings[selectedPenya.id]?.zoom??100)/100})`}} className="h-full w-full object-cover"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
                 {(mayoralesPenyaId?selectedPenya.id===mayoralesPenyaId:esPenyaCuBaTa(selectedPenya.nombre))&&<div className="mt-2"><span className="inline-flex items-center gap-1 rounded-full border border-[#e6ce91] bg-[#fff7df] px-3 py-1 text-[10px] font-extrabold tracking-wide text-[#765c25] sm:text-xs">♛ MAYORALES {mayoralesAnio}</span></div>}
                 <h2 className="mt-2 max-w-4xl break-words text-[26px] font-black leading-tight tracking-tight text-[#173f52] sm:mt-3 sm:text-4xl lg:text-[2.65rem]">{selectedPenya.nombre}</h2>
                 {selectedPenya.informacion?.trim()&&<p className="mx-auto mt-2 max-w-2xl line-clamp-2 text-sm leading-relaxed text-[#61777b] sm:text-base">{selectedPenya.informacion}</p>}
