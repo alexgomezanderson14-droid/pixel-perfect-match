@@ -290,3 +290,37 @@ html.festalfas-reduce-motion *, html.festalfas-reduce-motion *::before, html.fes
   .admin-workspace .admin-tabs { top: .25rem; grid-template-columns: repeat(2,minmax(0,1fr)); }
   .admin-workspace .admin-tabs button { min-height: 2.75rem; }
 }
+
+
+/* Ajustes de interacción y jerarquía en móvil. */
+@media (max-width: 639px) {
+  .admin-workspace .admin-tabs {
+    display: flex !important;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    margin-inline: -.25rem;
+    padding: .45rem;
+  }
+  .admin-workspace .admin-tabs::-webkit-scrollbar { display: none; }
+  .admin-workspace .admin-tabs button {
+    flex: 0 0 auto;
+    min-width: max-content;
+    padding-inline: 1rem;
+    scroll-snap-align: start;
+  }
+  .admin-workspace .admin-overview-stats { display: none; }
+  .admin-workspace header { gap: .75rem; padding: 1rem; }
+  .admin-workspace header p { line-height: 1.4; }
+  .admin-workspace form.glass { padding: 1rem; border-radius: 1.25rem; }
+  .admin-workspace section > .flex.flex-col { gap: .65rem; }
+}
+.maplibregl-control-container { z-index: 2; }
+.maplibregl-ctrl-top-right { top: max(.5rem, env(safe-area-inset-top)); right: .5rem; }
+.maplibregl-ctrl-group { box-shadow: 0 3px 12px rgba(0,0,0,.18) !important; }
+@media (max-width: 639px) {
+  .maplibregl-ctrl button { width: 34px !important; height: 34px !important; }
+  .maplibregl-ctrl-top-right { top: max(.5rem, env(safe-area-inset-top)); right: .5rem; }
+}
