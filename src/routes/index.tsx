@@ -63,12 +63,6 @@ function esNoticiaMayorales(noticia: any) {
   return /mayorales|mejorales|cubata|cobre\s*bario\s*t[aá]ntalo/i.test(referencia);
 }
 
-function esPenyaCuBaTa(nombre: string) {
-  const nombreNormalizado = nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[^a-z0-9]/g, "");
-  return nombreNormalizado.includes("cubata") || nombreNormalizado.includes("cobrebariotantalo") ||
-    (nombreNormalizado.includes("cobre") && nombreNormalizado.includes("bario") && nombreNormalizado.includes("tantal"));
-}
-
 function CountdownFiestas() {
   const calcular = () => {
     const diferencia = Math.max(0, new Date(2027, 10, 6, 13, 0, 0).getTime() - Date.now());
@@ -452,7 +446,7 @@ function Home() {
         const title=String(value||"").trim().toLocaleLowerCase("es").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"");
         if(!/mayorales|mejorales/.test(title))return false;
         const year=title.match(/20\\d{2}/)?.[0];
-        return !year || year===mayoralesAnio || /vigente|actual/.test(title);
+        return !year || year===mayoralesAnio;
       };
       return penyes.find(p=>Array.isArray(perfiles?.[p.id])&&perfiles[p.id].some((block:any)=>block?.type==="tag"&&tituloVigente(block.title)))?.id||"";
     } catch { return ""; }
