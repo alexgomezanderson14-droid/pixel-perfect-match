@@ -290,3 +290,39 @@ html.festalfas-reduce-motion *, html.festalfas-reduce-motion *::before, html.fes
   .admin-workspace .admin-tabs { top: .25rem; grid-template-columns: repeat(2,minmax(0,1fr)); }
   .admin-workspace .admin-tabs button { min-height: 2.75rem; }
 }
+
+
+/* Panel de administración: navegación y resumen compactos en móvil. */
+@media (max-width: 639px) {
+  .admin-workspace .admin-tabs {
+    display: flex;
+    gap: .45rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    padding: .45rem;
+    margin-inline: -.1rem;
+  }
+  .admin-workspace .admin-tabs button {
+    flex: 0 0 auto;
+    min-width: max-content;
+    min-height: 2.65rem;
+    padding: .65rem .9rem;
+    white-space: nowrap;
+  }
+  .admin-workspace .admin-summary {
+    display: flex;
+    gap: .55rem;
+    overflow-x: auto;
+    padding-bottom: .35rem;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+  }
+  .admin-workspace .admin-summary > div {
+    flex: 0 0 9.25rem;
+    padding: .75rem;
+    scroll-snap-align: start;
+  }
+  .admin-workspace .admin-summary > div p:nth-child(2) { font-size: 1.5rem; }
+}
+.admin-workspace .admin-tabs { scroll-margin-top: .75rem; }
