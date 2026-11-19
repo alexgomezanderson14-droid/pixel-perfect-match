@@ -97,7 +97,7 @@ function MiPenyaPage() {
 
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault(); if (!membership) return; setBusy(true);
-    const { error } = await (supabase as any).from("penyes").update(profile).eq("id", membership.penya_id);
+    const { error } = await (supabase as any).rpc("update_own_penya_profile", { p_penya_id: membership.penya_id, p_direccion: profile.direccion, p_informacion: profile.informacion, p_instagram: profile.instagram, p_tipo_musica: profile.tipo_musica });
     setBusy(false); setMessage(error ? "No se pudo guardar la ficha: " + error.message : "Ficha de la peña actualizada.");
   };
 
