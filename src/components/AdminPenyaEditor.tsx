@@ -135,7 +135,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     ? (penya.foto_url.startsWith("http") ? penya.foto_url : supabase.storage.from("penyes").getPublicUrl(penya.foto_url).data.publicUrl)
     : "";
 
-  return <form onSubmit={save} className="glass space-y-3 rounded-2xl border border-primary/20 p-4">
+  return <form onSubmit={save} className="admin-penya-editor glass space-y-4 rounded-[1.6rem] border border-primary/15 p-4 shadow-sm sm:p-6">
     <div className="flex items-center justify-between gap-3"><h3 className="text-lg font-bold">Editar ficha: {penya.nombre}</h3><button type="button" onClick={onCancel} className="text-sm underline">Cancelar</button></div>
     <label className="block space-y-1 text-sm font-semibold">Nombre de la peña<input className={field} maxLength={80} value={form.nombre} onChange={e=>change("nombre",e.target.value)} required /></label>
     <label className="block space-y-1 text-sm font-semibold">Dirección / ubicación<input className={field} maxLength={200} value={form.direccion} onChange={e=>change("direccion",e.target.value)} /></label>
@@ -144,12 +144,12 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     <label className="block space-y-1 text-sm font-semibold">Instagram<input className={field} maxLength={100} value={form.instagram} onChange={e=>change("instagram",e.target.value)} placeholder="@cuenta" /></label>
     <label className="block space-y-1 text-sm font-semibold">Información / descripción<textarea className={field} rows={3} maxLength={1000} value={form.informacion} onChange={e=>change("informacion",e.target.value)} /></label>
     <div className="flex flex-wrap gap-4 text-sm"><label className="flex items-center gap-2"><input type="checkbox" checked={form.tiene_evento} onChange={e=>change("tiene_evento",e.target.checked)} /> Organiza evento</label></div>
-    <section className="rounded-xl border border-[#c6d9d4] bg-[#f2f8f5] p-3"><label className="flex items-start gap-3 text-sm font-semibold text-[#214d42]"><input type="checkbox" className="mt-0.5" checked={aceptaVisitas} disabled={visitasLoading} onChange={e=>setAceptaVisitas(e.target.checked)} /><span><span className="block font-extrabold">Aceptamos visitas</span><span className="mt-0.5 block text-xs font-normal text-[#557168]">Actívalo si vuestra peña está abierta a recibir visitas. Se mostrará una insignia en la ficha pública.</span></span></label></section>
+    <section className="admin-editor-section rounded-2xl border border-[#c6d9d4] bg-[#f2f8f5] p-4"><label className="flex items-start gap-3 text-sm font-semibold text-[#214d42]"><input type="checkbox" className="mt-0.5" checked={aceptaVisitas} disabled={visitasLoading} onChange={e=>setAceptaVisitas(e.target.checked)} /><span><span className="block font-extrabold">Aceptamos visitas</span><span className="mt-0.5 block text-xs font-normal text-[#557168]">Actívalo si vuestra peña está abierta a recibir visitas. Se mostrará una insignia en la ficha pública.</span></span></label></section>
     <label className="block space-y-1 text-sm font-semibold">Estado<select className={field} value={form.estado} onChange={e=>change("estado",e.target.value)}><option value="aprobada">Visible en la web</option><option value="pendiente">Pendiente / ocultar</option><option value="rechazada">Rechazada / ocultar</option></select></label>
     {fotoUrl && !quitarFoto && <img src={fotoUrl} alt={"Foto de "+penya.nombre} className="h-36 w-full rounded-xl object-cover" />}
     <label className="block space-y-1 text-sm font-semibold">Cambiar fotografía (JPG, PNG o WEBP, máx. 5 MB)<input className="block w-full text-sm font-normal" type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setFoto(e.target.files?.[0]??null)} /></label>
     {fotoUrl && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={quitarFoto} onChange={e=>setQuitarFoto(e.target.checked)} /> Quitar fotografía actual</label>}
-    <section className="space-y-3 rounded-2xl border border-primary/20 bg-primary/[0.035] p-4">
+    <section className="admin-editor-section space-y-4 rounded-2xl border border-primary/15 bg-white/75 p-4 sm:p-5">
       <div><h4 className="text-lg font-extrabold text-primary">Personaliza la ficha de esta peña</h4><p className="text-xs leading-relaxed text-muted-foreground">Añade tantos apartados como quieras y ordénalos a tu gusto. Solo aparecerán los que rellenes.</p></div>
       {blocksLoading ? <p className="text-sm text-muted-foreground">Cargando apartados…</p> : <>
         <div className="flex flex-wrap gap-2">
