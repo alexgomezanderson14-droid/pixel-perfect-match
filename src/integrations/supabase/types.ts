@@ -174,7 +174,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      submit_site_feedback: {
+        Args: {
+          p_tipo: string
+          p_titulo: string
+          p_descripcion: string
+          p_email?: string | null
+          p_pagina?: string | null
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
