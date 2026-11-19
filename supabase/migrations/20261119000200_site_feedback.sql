@@ -1,17 +1,34 @@
-create or replace function public.submit_site_feedback(
-  p_tipo text, p_titulo text, p_descripcion text,
-  p_email text default null, p_pagina text default null
-) returns uuid language plpgsql security definer set search_path = '' as $$
-declare v_id uuid := gen_random_uuid(); v_item jsonb;
-begin
-  if p_tipo not in ('sugerencia','error') then raise exception 'Tipo no válido'; end if;
-  if length(btrim(coalesce(p_titulo,''))) < 3 or length(btrim(p_titulo)) > 100 then raise exception 'Título no válido'; end if;
-  if length(btrim(coalesce(p_descripcion,''))) < 10 or length(btrim(p_descripcion)) > 2000 then raise exception 'Descripción no válida'; end if;
-  if p_email is not null and length(btrim(p_email)) > 254 then raise exception 'Correo no válido'; end if;
-  v_item := jsonb_build_object('id',v_id,'tipo',p_tipo,'titulo',btrim(p_titulo),'descripcion',btrim(p_descripcion),'email',nullif(btrim(coalesce(p_email,'')),''),'pagina',left(coalesce(p_pagina,''),500),'estado','pendiente','created_at',now());
-  insert into public.site_content as current_content(clave,valor) values('sugerencias_json',jsonb_build_array(v_item)::text)
-  on conflict(clave) do update set valor=(case when jsonb_typeof(current_content.valor::jsonb)='array' then current_content.valor::jsonb else '[]'::jsonb end || jsonb_build_array(v_item))::text;
-  return v_id;
-end; $$;
-revoke all on function public.submit_site_feedback(text,text,text,text,text) from public;
-grant execute on function public.submit_site_feedback(text,text,text,text,text) to anon,authenticated;
+-- Sugerencias e informes de errores: escritura pública limitada y lectura/gestión solo de administración.
+drop function if exists public.submit_site_feedback(text,text,text,text,text);
+create table if not exists public.site_feedback (
+  id uuid primary key default gen_random_uuid(),
+  tipo text not null check (tipo in ('sugerencia','error')),
+  titulo text not null check (char_length(btrim(titulo)) between 3 and 100),
+  descripcion text not null check (char_length(btrim(descripcion)) between 10 and 2000),
+  email text null check (email is null or char_length(email) <= 254),
+  pagina text null check (pagina is null or char_length(pagina) <= 500),
+  estado text not null default 'pendiente' check (estado in ('pendiente','revisada','respondida')),
+  respuesta text null check (respuesta is null or char_length(respuesta) <= 2000),
+  created_at timestamptz not null default now(),
+  responded_at timestamptz null
+);
+alter table public.site_feedback enable row level security;
+grant insert on public.site_feedback to anon, authenticated;
+grant select, update, delete on public.site_feedback to authenticated;
+drop policy if exists "Public can submit feedback" on public.site_feedback;
+create policy "Public can submit feedback" on public.site_feedback
+for insert to anon, authenticated
+with check (estado = 'pendiente' and respuesta is null and responded_at is null);
+drop policy if exists "Only site admin can read feedback" on public.site_feedback;
+create policy "Only site admin can read feedback" on public.site_feedback
+for select to authenticated
+using ((select auth.jwt() ->> 'email') = 'gomezandersonalex@gmail.com');
+drop policy if exists "Only site admin can update feedback" on public.site_feedback;
+create policy "Only site admin can update feedback" on public.site_feedback
+for update to authenticated
+using ((select auth.jwt() ->> 'email') = 'gomezandersonalex@gmail.com')
+with check ((select auth.jwt() ->> 'email') = 'gomezandersonalex@gmail.com');
+drop policy if exists "Only site admin can delete feedback" on public.site_feedback;
+create policy "Only site admin can delete feedback" on public.site_feedback
+for delete to authenticated
+using ((select auth.jwt() ->> 'email') = 'gomezandersonalex@gmail.com');
