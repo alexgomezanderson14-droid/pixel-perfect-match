@@ -16,6 +16,8 @@ jobs:
         uses: oven-sh/setup-bun@v2
       - name: Install dependencies
         run: bun install --frozen-lockfile
+      - name: Apply consistent formatting
+        run: bunx prettier --write .
       - name: Lint source
         run: bun run lint
       - name: Build production app
