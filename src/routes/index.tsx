@@ -394,7 +394,8 @@ function Home() {
   const tomorrowKey = tomorrowDate.getFullYear()+"-"+String(tomorrowDate.getMonth()+1).padStart(2,"0")+"-"+String(tomorrowDate.getDate()).padStart(2,"0");
   const matchesDay = (item:any) => eventoSigueActivo(item,now) && (filterDay==="all" || (filterDay==="upcoming" ? true : String(item.dia||"").slice(0,10)===(filterDay==="today"?todayKey:tomorrowKey)));
   const filteredActs = useMemo(()=>actos.filter((a)=>matchesDay(a) && (filterCategory==="all" || (filterCategory==="programa" && a.tipo==="evento") || (filterCategory==="actuaciones" && (a.tipo==="evento" || a.tipo==="actuacion" || /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/i.test(a.titulo||"")))) && (!eventsSearch.trim() || normalizarBusqueda([a.titulo,a.descripcion,a.lugar].join(" ")).includes(normalizarBusqueda(eventsSearch)))), [actos,filterDay,filterCategory,now,eventsSearch]);
-  const filteredPenyaEvents = useMemo(()=>eventos.filter((e)=>matchesDay(e) && (filterCategory==="all" || filterCategory==="penyes") && (!eventsSearch.trim() || normalizarBusqueda([e.titulo,e.descripcion,e.lugar,penyes.find(p=>p.id===e.penya_id)?.nombre].join(" ")).includes(normalizarBusqueda(eventsSearch)))), [eventos,filterDay,filterCategory,now,eventsSearch,penyes]);
+  const filteredPenyaEvents = useMemo(()=>eventos.filter((e)=>matchesDay(e) && (filterCategory==="all" || filterCategory==="penyes") && (!eventsSearch.trim() || normalizarBusqueda([e.titulo,e.descripcion,e.lugar,penyes.find(p=>p.id===e.penya_id)?.nombre].join(" ")).includes(normalizarBusqueda(eventsSearch)))).sort((a,b)=>String(a.dia||"").localeCompare(String(b.dia||""))||(a.hora||"").localeCompare(b.hora||"")), [eventos,filterDay,filterCategory,now,eventsSearch,penyes]);
+  const visibleActs = useMemo(()=>filteredActs.filter(a=>!/despertà|desperta|despertada|nit de albaes|nit d'albaes|nit de les albaes|albaes/.test(String(a.titulo||"").toLocaleLowerCase("es"))).sort((a,b)=>a.dia.localeCompare(b.dia)||(a.hora||"").localeCompare(b.hora||"")),[filteredActs]);
   const penyaMusicOptions = useMemo(()=>["Todas",...Array.from(new Set(penyes.map(p=>String(p.tipo_musica||"").trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b,"es"))],[penyes]);
   const mayoralesPenyaId = String(siteContent["mayorales_penya_id"]||"");
   const mayoralesAnio = String(siteContent["mayorales_anio"]||"2027");
@@ -874,15 +875,7 @@ function Home() {
             <h3 className="text-2xl font-bold text-primary">{filterCategory==="programa"?"Programa oficial":filterCategory==="actuaciones"?"Actuaciones y festes al carrer":"Actos y actuaciones"}</h3>
             <p className="text-sm text-muted-foreground">Pulsa en cada evento para consultar su descripción, fecha y lugar.</p>
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-            {filteredActs.filter((a) => {
-              if (filterDay !== "all" && !eventoSigueActivo(a, now)) return false;
-              const t = String(a.titulo || "").toLocaleLowerCase("es");
-              const excluido = /despertà|desperta|despertada|nit de albaes|nit d'albaes|nit de les albaes|albaes/.test(t);
-              // En Eventos también deben aparecer los actos oficiales añadidos manualmente
-              // desde administración aunque su tipo sea "evento" y no "actuacion".
-              return !excluido;
-            }).sort((a,b) => a.dia.localeCompare(b.dia) || (a.hora || "").localeCompare(b.hora || "")).map((a) => {
+          {visibleActs.length===0?<div className="rounded-2xl border border-dashed border-border p-5 text-sm text-muted-foreground">No hay actos ni actuaciones que coincidan con estos filtros.</div>:<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">{visibleActs.map((a) => {
               const t = String(a.titulo || "").toLocaleLowerCase("es");
               const festaCarrer = /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/.test(t);
               const portada = a.imagen_url || a.imagen || a.foto_url || a.foto || "";
@@ -913,8 +906,7 @@ function Home() {
                   {a.lat != null && a.lng != null && <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa de la web</button>}
                 </div>
               </details>;
-            })}
-          </div>
+            })}</div>}
           </>}
           {filterCategory!=="programa"&&filterCategory!=="actuaciones"&&<><div className="mt-10 space-y-3">
             <h3 className="text-2xl font-bold text-primary">Eventos de las peñas</h3>
