@@ -52,8 +52,7 @@ create policy "Penya members can delete photos"
   on public.penya_fotos for delete to authenticated
   using (
     (auth.jwt()->>'email') = 'gomezandersonalex@gmail.com'
-    or (auth.jwt()->'user_metadata'->>'penya_id') = penya_id::text
-    or coalesce(auth.jwt()->'user_metadata'->'penya_ids', '[]'::jsonb) ? penya_id::text
+    or coalesce(auth.jwt()->'app_metadata'->'penya_ids', '[]'::jsonb) ? penya_id::text
     or coalesce(auth.jwt()->'app_metadata'->'penya_memberships', '[]'::jsonb) ? penya_id::text
     or coalesce(auth.jwt()->'app_metadata'->'penya_admin_ids', '[]'::jsonb) ? penya_id::text
   );
