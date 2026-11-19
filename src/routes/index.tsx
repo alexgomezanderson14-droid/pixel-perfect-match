@@ -1041,7 +1041,7 @@ function Home() {
               <p className="mt-1 text-center text-[10px] font-semibold tracking-wide text-[#8aa0a1] lg:hidden">Desliza para descubrir las peñas</p>
               <p className="mt-1 hidden text-center text-[10px] font-semibold tracking-wide text-[#8aa0a1] lg:block">Usa las flechas para explorar las peñas</p>
             </div>
-
+          )}
 
           <div className="mt-10 rounded-3xl border border-border/70 bg-card/70 p-5 sm:p-7">
             <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-primary">Agenda festera</p><h3 className="mt-1 text-xl font-extrabold text-primary sm:text-2xl">Planes de las peñas</h3><p className="mt-1 text-sm text-muted-foreground">Actividades publicadas por las peñas y próximas citas.</p></div><button onClick={()=>{setCurrentPage("eventos");setFilterCategory("penyes");setFilterDay("upcoming");window.scrollTo({top:0,behavior:"smooth"});}} className="text-xs font-bold text-primary underline">Ver agenda completa →</button></div>
