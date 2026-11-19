@@ -349,3 +349,15 @@ body { overflow-x: clip; }
 @supports (height: 100dvh) {
   .home-hero { min-height: 100dvh; }
 }
+
+
+/* Lenguaje visual responsive, inspirado en interfaces móviles de tarjetas visuales. */
+.page-bg main { width: 100%; min-width: 0; }
+.page-bg main > section, .page-bg main > div { min-width: 0; }
+@media (min-width: 1024px) {
+  .page-bg main { margin-inline: auto; }
+  .page-bg main > section { scroll-margin-top: 2rem; }
+}
+@media (max-width: 639px) {
+  .page-bg main { padding-bottom: max(6.25rem, calc(env(safe-area-inset-bottom) + 5.5rem)); }
+}
