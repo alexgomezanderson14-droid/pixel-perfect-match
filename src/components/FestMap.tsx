@@ -108,7 +108,8 @@ export default function FestMap({
         if (!instance.getSource("festalfas-buildings")) {
           instance.addSource("festalfas-buildings", { type: "vector", url: "https://tiles.maptoolkit.org/buildings.json", attribution: "© OpenStreetMap contributors · © Maptoolkit" });
         }
-        // 3D buildings remain sourced from vector footprints and measured OSM height tags.
+        // Insertar los edificios 3D debajo de las etiquetas del mapa cuando exista una capa de texto.
+        const labelLayer = instance.getStyle().layers?.find((layer: any) => layer.type === "symbol" && layer.layout?.["text-field"])?.id;
         if (!instance.getLayer("festalfas-3d-buildings")) {
           instance.addLayer({
             id: "festalfas-3d-buildings", source: "festalfas-buildings", "source-layer": "buildings2d", type: "fill-extrusion", minzoom: 12.5,
