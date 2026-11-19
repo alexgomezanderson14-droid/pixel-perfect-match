@@ -323,7 +323,6 @@ function Home() {
   const [penyaMusicFilter, setPenyaMusicFilter] = useState("Todas");
   const [penyaOnlyMine, setPenyaOnlyMine] = useState(false);
   const [activePenyaCard, setActivePenyaCard] = useState(0);
-  const penyaCardSettings = useMemo(()=>{try{const parsed=JSON.parse(siteContent["penyas_cards_json"]||"{}");return parsed&&typeof parsed==="object"?parsed as Record<string,{color?:string;logo_url?:string}>:{ };}catch{return {}; }},[siteContent]);
   const penyaCarouselRef = useRef<HTMLDivElement | null>(null);
   const [eventsSearch, setEventsSearch] = useState("");
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
@@ -361,6 +360,7 @@ function Home() {
   }, [fotoAmpliada, noticiaSeleccionada]);
   const [newsPopup, setNewsPopup] = useState<any[]>([]);
   const [siteContent, setSiteContent] = useState<Record<string,string>>({});
+  const penyaCardSettings = useMemo(()=>{try{const parsed=JSON.parse(siteContent["penyas_cards_json"]||"{}");return parsed&&typeof parsed==="object"?parsed as Record<string,{color?:string;logo_url?:string}>:{ };}catch{return {}; }},[siteContent]);
   const [heroImage, setHeroImage] = useState("");
   const [form, setForm] = useState(false);
   const [shareReminder, setShareReminder] = useState(false);
