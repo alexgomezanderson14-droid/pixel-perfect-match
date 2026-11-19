@@ -267,3 +267,26 @@ html.festalfas-reduce-motion *, html.festalfas-reduce-motion *::before, html.fes
 /* Entrada escalonada y ligera del directorio de peñas. */
 @keyframes penya-card-arrive { from { opacity: 0; transform: translate3d(0, 18px, 0) scale(.985); } to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); } }
 @media (prefers-reduced-motion: no-preference) { .penya-card-enter { animation: penya-card-arrive 560ms cubic-bezier(.2,.75,.25,1) both; animation-delay: var(--penya-enter-delay, 0ms); } }
+
+
+/* Admin: una jerarquía visual coherente con el resto de FestAlfàs y controles más fáciles de recorrer. */
+.admin-workspace { color: var(--foreground); }
+.admin-workspace header { background: rgba(255,255,255,.76); border-color: rgba(23,63,82,.12); box-shadow: 0 12px 34px rgba(23,63,82,.07); }
+.admin-workspace .admin-tabs { position: sticky; top: .5rem; z-index: 30; padding: .45rem; border: 1px solid rgba(23,63,82,.12); border-radius: 1.35rem; background: rgba(248,250,249,.92); box-shadow: 0 8px 26px rgba(23,63,82,.08); backdrop-filter: blur(18px); }
+.admin-workspace .admin-tabs button { min-height: 2.9rem; border-radius: 1rem; font-size: .76rem; }
+.admin-workspace form.glass, .admin-workspace article.glass, .admin-workspace section.glass { border-color: rgba(23,63,82,.13); box-shadow: 0 8px 26px rgba(23,63,82,.055); }
+.admin-workspace input:not([type="checkbox"]):not([type="file"]), .admin-workspace select, .admin-workspace textarea { min-height: 2.8rem; border-radius: .9rem; background: rgba(255,255,255,.88); padding: .7rem .85rem; }
+.admin-workspace textarea { min-height: 6rem; }
+.admin-workspace input:focus, .admin-workspace select:focus, .admin-workspace textarea:focus { outline: 2px solid color-mix(in oklab, var(--primary) 35%, transparent); outline-offset: 1px; }
+.admin-workspace label { line-height: 1.45; }
+.admin-workspace article.glass { transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+.admin-workspace article.glass:hover { border-color: rgba(23,63,82,.25); box-shadow: 0 12px 30px rgba(23,63,82,.09); }
+.admin-penya-editor { background: rgba(255,255,255,.82); }
+.admin-penya-editor > label { display: block; border-radius: 1rem; }
+.admin-penya-editor .admin-editor-section { box-shadow: 0 5px 18px rgba(23,63,82,.045); }
+.admin-penya-editor button { min-height: 2.5rem; }
+@media (max-width: 639px) {
+  .admin-workspace { padding-bottom: max(6rem, env(safe-area-inset-bottom)); }
+  .admin-workspace .admin-tabs { top: .25rem; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .admin-workspace .admin-tabs button { min-height: 2.75rem; }
+}
