@@ -17,6 +17,16 @@ Adoptar una infraestructura común y ampliable con Cloudflare Workers (API), D1 
 4. **Identidad:** definir el proveedor de autenticación antes de habilitar cuentas públicas. La sesión y los roles deben validarse en el Worker; nunca confiar en un rol enviado desde el navegador.
 5. **Compartir noticias:** endpoint público de vista previa por noticia, con Open Graph/Twitter Card generado en servidor a partir de la imagen principal asignada. Un cambio de metadatos en React no basta para WhatsApp/Facebook, porque sus rastreadores no ejecutan la aplicación cliente.
 
+## Administración por peña (reglas obligatorias)
+- Cada peña tiene como máximo un administrador principal activo (`admin_principal`). La base de datos lo garantiza con un índice único parcial.
+- Puede tener varios administradores secundarios (`admin`). El principal es quien puede invitar, retirar o cambiar los permisos de esos secundarios y editar la información de su propia peña.
+- Los secundarios pueden gestionar contenido de su peña, pero no nombrar ni retirar al principal ni administrar otras peñas.
+- Cualquier usuario autenticado puede presentar una solicitud para administrar una peña existente. La solicitud queda pendiente hasta que el principal la revise; si la peña aún no tiene principal, la asignación inicial debe hacerla el administrador general tras verificar la solicitud.
+- Los cambios de rol deben comprobarse en el Worker con una sesión verificada y ejecutarse en transacciones D1. Nunca aceptar `rol`, `penya_id` autorizado o identidad desde el navegador como prueba de permiso.
+- Las invitaciones de principal no se pueden crear si ya existe uno activo ni si hay otra invitación principal pendiente.
+
+**Estado de activación:** el esquema y las reglas se preparan en el repositorio, pero D1 no está desplegada ni vinculada y el proveedor de identidad para usuarios públicos todavía no está elegido/configurado. La web actual conserva autenticación Supabase heredada; no se habilitarán solicitudes ni cambios de permisos con almacenamiento local o permisos simulados. Para activar esta función hace falta completar la identidad verificada y el despliegue D1/Worker sin perder los datos actuales.
+
 ## Modelo D1 inicial
 El archivo `cloudflare/schema.sql` propone las tablas para:
 - Las tablas actuales `penyes`, `actos`, `eventos` y `site_content`.
