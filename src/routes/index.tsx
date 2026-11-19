@@ -755,7 +755,7 @@ function Home() {
   };
   const submitFeedback = async (event:React.FormEvent) => {
     event.preventDefault();setFeedbackBusy(true);setFeedbackMessage("");
-    try { const {error}=await supabase.from("site_feedback").insert({tipo:feedbackType,titulo:feedbackTitle.trim(),descripcion:feedbackDescription.trim(),email:feedbackEmail.trim()||null,pagina:window.location.href,estado:"pendiente"}); if(error)throw error; setFeedbackTitle("");setFeedbackDescription("");setFeedbackMessage("Gracias. Tu comentario se ha enviado y aparecerá en el panel de administración para revisarlo."); }
+    try { const {error}=await supabase.from("site_feedback").insert({tipo:feedbackType,titulo:feedbackTitle.trim(),descripcion:feedbackDescription.trim(),email:feedbackEmail.trim()||null,pagina:window.location.href,estado:"pendiente"}); if(error)throw error; setFeedbackTitle("");setFeedbackDescription("");setFeedbackEmail("");setFeedbackMessage("Gracias. Tu comentario se ha enviado y aparecerá en el panel de administración para revisarlo."); }
     catch(error) {setFeedbackMessage(error instanceof Error?error.message:"No se ha podido enviar. Inténtalo de nuevo más tarde.");}
     finally{setFeedbackBusy(false);}
   };
