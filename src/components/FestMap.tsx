@@ -24,6 +24,7 @@ export default function FestMap({
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const markers = useRef<Record<string, L.Marker>>({});
+  const lastFocusedId = useRef<string | null>(null);
   const layer = useRef<L.LayerGroup | null>(null);
   const pickMarker = useRef<L.Marker | null>(null);
   const pickRef = useRef(onPick);
@@ -133,12 +134,18 @@ export default function FestMap({
   }, [pick]);
 
   useEffect(() => {
-    if (!focusId || !map.current) return;
-    const m = markers.current[focusId];
-    if (m) {
-      map.current.flyTo(m.getLatLng(), 18, { duration: 0.8 });
-      m.openPopup();
+    if (!focusId) {
+      lastFocusedId.current = null;
+      return;
     }
+    if (!map.current || lastFocusedId.current === focusId) return;
+    const marker = markers.current[focusId];
+    if (!marker) return;
+    // No repetir flyTo cuando React recrea el array de lugares en renders posteriores.
+    lastFocusedId.current = focusId;
+    map.current.stop();
+    map.current.flyTo(marker.getLatLng(), 17, { duration: 0.65, animate: true });
+    if (marker.getPopup()) marker.openPopup();
   }, [focusId, lugares]);
 
   return <div ref={el} className="h-full w-full" />;
