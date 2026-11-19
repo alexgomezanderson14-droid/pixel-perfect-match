@@ -262,3 +262,8 @@ img { -webkit-user-drag: none; }
 
 
 html.festalfas-reduce-motion *, html.festalfas-reduce-motion *::before, html.festalfas-reduce-motion *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+
+
+/* Entrada escalonada y ligera del directorio de peñas. */
+@keyframes penya-card-arrive { from { opacity: 0; transform: translate3d(0, 18px, 0) scale(.985); } to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); } }
+@media (prefers-reduced-motion: no-preference) { .penya-card-enter { animation: penya-card-arrive 560ms cubic-bezier(.2,.75,.25,1) both; animation-delay: var(--penya-enter-delay, 0ms); } }
