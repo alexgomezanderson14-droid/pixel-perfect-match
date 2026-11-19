@@ -433,6 +433,25 @@ nav[aria-label="Navegación principal"] {
   }
   .penya-coverflow-card.is-loop-start { margin-left:0; }
 }
+/* En móvil, las tarjetas laterales recuperan el efecto coverflow: inclinación hacia fuera, menor escala y transparencia. */
+@media (max-width:639px) {
+  .penya-coverflow-card.is-side-left {
+    transform:perspective(850px) rotateY(20deg) scale(.86) translateY(7px) !important;
+    opacity:.68 !important;
+    z-index:20 !important;
+  }
+  .penya-coverflow-card.is-side-right {
+    transform:perspective(850px) rotateY(-20deg) scale(.86) translateY(7px) !important;
+    opacity:.68 !important;
+    z-index:20 !important;
+  }
+  .penya-coverflow-card.is-active {
+    transform:perspective(850px) rotateY(0deg) scale(1.04) translateY(-8px) !important;
+    opacity:1 !important;
+    z-index:30 !important;
+  }
+}
+ 
 @media (prefers-reduced-motion:reduce) {
   .penya-coverflow-card,
   .penya-coverflow-card img { transition:none !important; }
