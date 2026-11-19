@@ -407,15 +407,29 @@ nav[aria-label="Navegación principal"] {
 @media (max-width:639px) {
   .penya-coverflow {
     gap:0 !important;
-    padding-left:calc(50vw - 112px) !important;
-    padding-right:calc(50vw - 112px) !important;
+    /* Centrar la tarjeta respecto al carrusel real, no respecto al viewport:
+       evita el desplazamiento lateral en páginas con márgenes o safe areas. */
+    padding-left:calc((100% - 224px) / 2) !important;
+    padding-right:calc((100% - 224px) / 2) !important;
+    scroll-padding-left:calc((100% - 224px) / 2);
+    scroll-padding-right:calc((100% - 224px) / 2);
     perspective:850px;
+    touch-action:pan-x pan-y;
+    scroll-snap-type:x mandatory;
+    scroll-behavior:auto;
+    overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
   }
   .penya-coverflow-card {
     width:224px !important;
+    min-width:224px !important;
     max-width:224px !important;
     height:340px !important;
     margin-left:-82px;
+    scroll-snap-align:center;
+    scroll-snap-stop:normal;
+    transition:transform 240ms cubic-bezier(.2,.75,.25,1), opacity 240ms ease, filter 240ms ease, box-shadow 240ms ease;
+    will-change:transform,opacity;
   }
   .penya-coverflow-card.is-loop-start { margin-left:0; }
 }
