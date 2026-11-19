@@ -502,7 +502,8 @@ nav[aria-label="Navegación principal"] {
 /* La ficha hereda el fondo cálido elegido para toda la web y aclara sus superficies. */
 .penya-profile-sheet { background:var(--background) !important; border-color:color-mix(in oklab,var(--foreground) 12%,transparent) !important; }
 .penya-profile-sheet [class~="bg-white"], .penya-profile-sheet [class~="bg-white/90"], .penya-profile-sheet [class~="bg-white/60"] { background-color:color-mix(in oklab,var(--background) 82%,white) !important; }
-.penya-profile-sheet .text-\\[\\#52666b\\] { color:color-mix(in oklab,var(--foreground) 78%,var(--background)) !important; }
+.penya-profile-sheet [class*="f5f8f7"], .penya-profile-sheet [class*="f0f5f2"] { background-color:color-mix(in oklab,var(--background) 82%,white) !important; }
+.penya-profile-sheet [class*="text-\\[\\#52666b\\]"] { color:color-mix(in oklab,var(--foreground) 78%,var(--background)) !important; }
 
 /* Ilustraciones PNG transparentes, sin placas ni marcos: pegatinas recortadas sobre la foto. */
 .penya-banner-sticker { position:absolute; display:block; object-fit:contain; height:auto; max-width:none; filter:drop-shadow(0 9px 8px rgba(15,30,35,.28)); opacity:.98; }
