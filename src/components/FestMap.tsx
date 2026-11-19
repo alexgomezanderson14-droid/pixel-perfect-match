@@ -134,7 +134,6 @@ export default function FestMap({
       map.current?.remove();
       map.current = null;
       mapApi.current = null;
-      setMapReady(false);
       markers.current = {};
       pickMarker.current = null;
     };
