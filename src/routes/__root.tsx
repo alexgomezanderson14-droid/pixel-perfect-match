@@ -16,20 +16,28 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function MotionEffects() {
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // En móviles el CSS ya elimina estas animaciones; evitar además el observador
+    // global ahorra trabajo en cada cambio del DOM y mejora el scroll.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || window.matchMedia("(max-width: 639px)").matches) return;
 
-    const selector = "main > section, main article, main details, main .glass, .copyright-footer";
+    const selector = "main > section, main article, main details, .copyright-footer";
     const observed = new WeakSet<Element>();
+    const pending = new Set<HTMLElement>();
     let observer: IntersectionObserver | null = null;
-    const reveal = (scope: ParentNode = document) => {
-      scope.querySelectorAll<HTMLElement>(selector).forEach((element, index) => {
-        if (observed.has(element)) return;
-        observed.add(element);
-        element.classList.add("motion-reveal");
-        element.style.setProperty("--motion-delay", `${Math.min(index % 5, 4) * 65}ms`);
-        if (observer) observer.observe(element);
-        else element.classList.add("is-visible");
-      });
+    let mutationFrame = 0;
+
+    const prepare = (element: HTMLElement) => {
+      if (observed.has(element)) return;
+      observed.add(element);
+      element.classList.add("motion-reveal");
+      element.style.setProperty("--motion-delay", "0ms");
+      if (observer) observer.observe(element);
+      else element.classList.add("is-visible");
+    };
+
+    const collect = (scope: ParentNode) => {
+      if (scope instanceof HTMLElement && scope.matches(selector)) prepare(scope);
+      scope.querySelectorAll<HTMLElement>(selector).forEach(prepare);
     };
 
     if ("IntersectionObserver" in window) {
@@ -42,26 +50,32 @@ function MotionEffects() {
       }, { threshold: 0.08, rootMargin: "0px 0px -32px 0px" });
     }
 
-    reveal();
+    collect(document);
     const mutations = new MutationObserver((records) => {
       records.forEach((record) => record.addedNodes.forEach((node) => {
-        if (node instanceof HTMLElement) {
-          if (node.matches(selector)) reveal(node.parentNode || document);
-          else reveal(node);
-        }
+        if (!(node instanceof HTMLElement)) return;
+        if (node.matches(selector)) pending.add(node);
+        node.querySelectorAll<HTMLElement>(selector).forEach((element) => pending.add(element));
       }));
+      if (!pending.size || mutationFrame) return;
+      mutationFrame = window.requestAnimationFrame(() => {
+        pending.forEach(prepare);
+        pending.clear();
+        mutationFrame = 0;
+      });
     });
     mutations.observe(document.body, { childList: true, subtree: true });
 
     return () => {
       mutations.disconnect();
       observer?.disconnect();
+      if (mutationFrame) window.cancelAnimationFrame(mutationFrame);
+      pending.clear();
     };
   }, []);
 
   return null;
 }
-
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
