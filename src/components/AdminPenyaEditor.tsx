@@ -22,12 +22,19 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
   const [error, setError] = useState("");
   type ProfileBlock = { id: string; type: "text" | "photo" | "banner" | "video" | "link" | "highlight" | "list" | "tag"; title: string; content: string; url: string };
   const [blocks, setBlocks] = useState<ProfileBlock[]>([]);
+  const [aceptaVisitas, setAceptaVisitas] = useState(false);
+  const [visitasLoading, setVisitasLoading] = useState(true);
   const [blocksLoading, setBlocksLoading] = useState(true);
   const [blocksSaving, setBlocksSaving] = useState(false);
   const [uploadingBlockId, setUploadingBlockId] = useState<string | null>(null);
   const [blocksMessage, setBlocksMessage] = useState("");
   useEffect(() => {
     let active = true;
+    supabase.from("site_content").select("valor").eq("clave", "penyes_visitas_json").maybeSingle().then(({ data, error }) => {
+      if (!active) return;
+      if (!error) { try { const settings = JSON.parse(data?.valor || "{}"); setAceptaVisitas(settings?.[penya.id] === true); } catch { setAceptaVisitas(false); } }
+      setVisitasLoading(false);
+    });
     supabase.from("site_content").select("valor").eq("clave", "penyes_perfiles_json").maybeSingle().then(({ data, error }) => {
       if (!active) return;
       if (error) setBlocksMessage("No se han podido cargar los apartados personalizados: " + error.message);
@@ -88,6 +95,13 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return setError("Coordenadas fuera de rango. La latitud debe estar entre -90 y 90 y la longitud entre -180 y 180.");
     setBusy(true);
     try {
+      const { data: visitsData, error: visitsReadError } = await supabase.from("site_content").select("valor").eq("clave", "penyes_visitas_json").maybeSingle();
+      if (visitsReadError) throw visitsReadError;
+      let visitSettings: Record<string, boolean> = {};
+      try { const parsed = JSON.parse(visitsData?.valor || "{}"); if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) visitSettings = parsed; } catch { visitSettings = {}; }
+      visitSettings[penya.id] = aceptaVisitas;
+      const { error: visitsWriteError } = await supabase.from("site_content").upsert({ clave: "penyes_visitas_json", valor: JSON.stringify(visitSettings) });
+      if (visitsWriteError) throw visitsWriteError;
       let foto_url = quitarFoto ? null : penya.foto_url;
       if (foto) {
         const uploaded = await uploadMediaFile(foto, "penyes");
@@ -129,6 +143,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     <label className="block space-y-1 text-sm font-semibold">Instagram<input className={field} maxLength={100} value={form.instagram} onChange={e=>change("instagram",e.target.value)} placeholder="@cuenta" /></label>
     <label className="block space-y-1 text-sm font-semibold">Información / descripción<textarea className={field} rows={3} maxLength={1000} value={form.informacion} onChange={e=>change("informacion",e.target.value)} /></label>
     <div className="flex flex-wrap gap-4 text-sm"><label className="flex items-center gap-2"><input type="checkbox" checked={form.tiene_evento} onChange={e=>change("tiene_evento",e.target.checked)} /> Organiza evento</label></div>
+    <section className="rounded-xl border border-[#c6d9d4] bg-[#f2f8f5] p-3"><label className="flex items-start gap-3 text-sm font-semibold text-[#214d42]"><input type="checkbox" className="mt-0.5" checked={aceptaVisitas} disabled={visitasLoading} onChange={e=>setAceptaVisitas(e.target.checked)} /><span><span className="block font-extrabold">Aceptamos visitas</span><span className="mt-0.5 block text-xs font-normal text-[#557168]">Actívalo si vuestra peña está abierta a recibir visitas. Se mostrará una insignia en la ficha pública.</span></span></label></section>
     <label className="block space-y-1 text-sm font-semibold">Estado<select className={field} value={form.estado} onChange={e=>change("estado",e.target.value)}><option value="aprobada">Visible en la web</option><option value="pendiente">Pendiente / ocultar</option><option value="rechazada">Rechazada / ocultar</option></select></label>
     {fotoUrl && !quitarFoto && <img src={fotoUrl} alt={"Foto de "+penya.nombre} className="h-36 w-full rounded-xl object-cover" />}
     <label className="block space-y-1 text-sm font-semibold">Cambiar fotografía (JPG, PNG o WEBP, máx. 5 MB)<input className="block w-full text-sm font-normal" type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setFoto(e.target.files?.[0]??null)} /></label>
