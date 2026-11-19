@@ -24,7 +24,7 @@ export default function AdminPenyaCardStyleEditor({penya,savedConfig,onSaved}:Pr
     try{
       const {data,error:readError}=await supabase.from("site_content").select("valor").eq("clave","penyas_cards_json").maybeSingle();
       if(readError)throw readError;
-      let all:any={};try{all=JSON.parse(data?.valor||"{}");}catch{all={};}
+      let all:any={};try{const parsed=JSON.parse(data?.valor||"{}");all=parsed&&typeof parsed==="object"&&!Array.isArray(parsed)?parsed:{};}catch{all={};}
       let nextLogo=logoUrl;
       if(logoFile)nextLogo=(await uploadMediaFile(logoFile,"penyes/tarjetas/"+penya.id)).url;
       all[penya.id]={...all[penya.id],color,logo_url:nextLogo,title:title.trim().slice(0,80),description:description.trim().slice(0,160)};
@@ -35,10 +35,10 @@ export default function AdminPenyaCardStyleEditor({penya,savedConfig,onSaved}:Pr
     finally{setBusy(false);}
   };
   return <section className="rounded-2xl border border-primary/15 bg-primary/[.035] p-4">
-    <button type="button" onClick={()=>setOpen(v=>!v)} className="flex w-full items-center justify-between gap-3 text-left"><span><span className="block text-sm font-extrabold text-primary">{penya.nombre}</span><span className="mt-0.5 block text-xs text-muted-foreground">Color y logo independientes de la ficha de la peña</span></span><span className="text-lg">{open?"−":"+"}</span></button>
+    <button type="button" onClick={()=>setOpen(v=>!v)} className="flex w-full items-center justify-between gap-3 text-left"><span><span className="block text-sm font-extrabold text-primary">{penya.nombre}</span><span className="mt-0.5 block text-xs text-muted-foreground">Nombre, descripción, color y logo · {savedConfig.color?"Diseño personalizado":"Diseño automático"}</span></span><span className="text-lg">{open?"−":"+"}</span></button>
     {open&&<div className="mt-4 grid gap-4 sm:grid-cols-[180px_1fr]">
       <div className="flex min-h-[210px] flex-col items-center justify-between overflow-hidden rounded-2xl p-3 text-white shadow-inner" style={{backgroundColor:color}}>
-        <span className="self-start text-xs font-black">{title||penya.nombre}</span>
+        <span className="self-start text-xs font-black">{title||penya.nombre}</span><span className="line-clamp-2 w-full text-left text-[10px] text-white/80">{description}</span>
         {preview?<img src={preview} alt={"Vista previa del logo de "+penya.nombre} className="h-36 w-full object-contain"/>:<span className="text-7xl font-black">{penya.nombre?.trim()?.charAt(0)||"?"}</span>}
       </div>
       <div className="space-y-3">
