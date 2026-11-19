@@ -358,7 +358,7 @@ function Home() {
   const [eventFormPenya, setEventFormPenya] = useState<PenyaDb | null>(null);
   const [communityEventForm, setCommunityEventForm] = useState(false);
   const [mapFullscreen, setMapFullscreen] = useState(false);
-  useEffect(() => { window.scrollTo({ top: 0, behavior: "auto" }); }, [currentPage, noticiaSeleccionada?.id, selectedPenya?.id, penyaDetailFullscreen, mapFullscreen]);
+  useEffect(() => { window.scrollTo({ top: 0, behavior: "auto" }); }, [currentPage, noticiaSeleccionada?.id, penyaDetailFullscreen, mapFullscreen]);
   const dias = useMemo(() => [...new Set(actos.filter((a) => eventoSigueActivo(a, now)).map((a) => a.dia))].sort(), [actos, now]);
   const [dia, setDia] = useState<string | undefined>();
   const eventosActivos = useMemo(() => eventos.filter((e) => eventoSigueActivo(e, now)), [eventos, now]);
