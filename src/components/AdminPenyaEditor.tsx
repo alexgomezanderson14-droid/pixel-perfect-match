@@ -69,11 +69,13 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
         if (index < 0) return old;
         const current = old[index]!;
         const next = [...old];
-        next[index] = { ...current, url: urls[0] ?? current.url };
-        const extraBlocks = urls.slice(1).map((url, offset) => ({
+        const currentHasPhoto = Boolean(current.url.trim());
+        const firstNewPhoto = currentHasPhoto ? 0 : 1;
+        if (!currentHasPhoto && urls[0]) next[index] = { ...current, url: urls[0], featured: false };
+        const extraBlocks = urls.slice(firstNewPhoto).map((url, offset) => ({
           ...current,
           id: crypto.randomUUID(),
-          title: current.title + " " + (offset + 2),
+          title: current.title + " " + (offset + (currentHasPhoto ? 1 : 2)),
           url,
           featured: false,
         }));
@@ -93,7 +95,12 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
       if (readError) throw readError;
       let all: Record<string, ProfileBlock[]> = {};
       try { const parsed = JSON.parse(data?.valor || "{}"); if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) all = parsed; } catch { all = {}; }
-      all[penya.id] = blocks.map(block => ({ ...block, title: block.title.trim().slice(0, 100), content: block.content.trim().slice(0, 5000), url: block.url.trim().slice(0, 1000) }));
+      let featuredSaved = 0;
+      all[penya.id] = blocks.map(block => {
+        const featured = block.type === "photo" && block.featured === true && /^https?:\\/\\//i.test(block.url) && featuredSaved < 3;
+        if (featured) featuredSaved += 1;
+        return { ...block, featured, title: block.title.trim().slice(0, 100), content: block.content.trim().slice(0, 5000), url: block.url.trim().slice(0, 1000) };
+      });
       const { error: writeError } = await supabase.from("site_content").upsert({ clave: "penyes_perfiles_json", valor: JSON.stringify(all) });
       if (writeError) throw writeError;
       setBlocksMessage("Apartados personalizados guardados. Ya se mostrarán en la ficha pública.");
