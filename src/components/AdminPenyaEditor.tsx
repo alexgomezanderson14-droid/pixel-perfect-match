@@ -20,7 +20,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
   const [quitarFoto, setQuitarFoto] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  type ProfileBlock = { id: string; type: "text" | "photo" | "banner" | "video" | "link" | "highlight" | "list" | "tag"; title: string; content: string; url: string };
+  type ProfileBlock = { id: string; type: "text" | "photo" | "banner" | "video" | "link" | "highlight" | "list" | "tag"; title: string; content: string; url: string; featured?: boolean };
   const [blocks, setBlocks] = useState<ProfileBlock[]>([]);
   const [aceptaVisitas, setAceptaVisitas] = useState(false);
   const [visitasLoading, setVisitasLoading] = useState(true);
@@ -47,7 +47,8 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     return () => { active = false; };
   }, [penya.id]);
   const addBlock = (type: ProfileBlock["type"]) => setBlocks(old => [...old, { id: crypto.randomUUID(), type, title: type === "text" ? "Nuestra historia" : type === "photo" ? "Un momento especial" : type === "banner" ? "Banner de la peña" : type === "tag" ? "Etiqueta nueva" : type === "video" ? "Vídeo de la peña" : type === "link" ? "Síguenos" : type === "list" ? "Lo que nos gusta" : "Lo que nos hace únicos", content: "", url: "" }]);
-  const updateBlock = (id: string, key: keyof ProfileBlock, value: string) => setBlocks(old => old.map(block => block.id === id ? { ...block, [key]: value } : block));
+  const updateBlock = (id: string, key: keyof ProfileBlock, value: string | boolean) => setBlocks(old => old.map(block => block.id === id ? { ...block, [key]: value } : block));
+  const featuredPhotoCount = blocks.filter(block => block.type === "photo" && block.featured && /^https?:\/\//i.test(block.url)).length;
   const moveBlock = (index: number, offset: number) => setBlocks(old => { const next = [...old]; const target = index + offset; if (target < 0 || target >= next.length) return old; const a = next[index]; const b = next[target]; if (!a || !b) return old; next[index] = b; next[target] = a; return next; });
   const uploadBlockPhoto = async (blockId: string, file: File | null) => {
     if (!file) return;
@@ -163,6 +164,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
             {(block.type==="photo"||block.type==="banner"||block.type==="video"||block.type==="link")&&<label className="block space-y-1 text-xs font-semibold">{block.type==="banner"?"Imagen de cabecera (URL)":block.type==="photo"?"Dirección de la fotografía (URL)":block.type==="video"?"Enlace de YouTube, Vimeo o vídeo MP4":"Dirección del enlace"}<input className={field} type="url" maxLength={1000} value={block.url} onChange={e=>updateBlock(block.id,"url",e.target.value)} placeholder="https://…"/>{(block.type==="photo"||block.type==="banner")&&<label className="mt-2 block space-y-1 text-xs font-semibold">O subir una imagen desde el dispositivo<input className="block w-full text-sm font-normal" type="file" accept="image/jpeg,image/png,image/webp" disabled={uploadingBlockId===block.id} onChange={e=>void uploadBlockPhoto(block.id,e.target.files?.[0]??null)}/>{uploadingBlockId===block.id&&<span className="text-primary">Subiendo fotografía…</span>}</label>}</label>}
             {block.type==="link"&&<label className="block space-y-1 text-xs font-semibold">Texto del enlace<input className={field} maxLength={300} value={block.content} onChange={e=>updateBlock(block.id,"content",e.target.value)} placeholder="Visita nuestra página"/></label>}
             {block.type==="photo"&&<label className="block space-y-1 text-xs font-semibold">Descripción de la foto<input className={field} maxLength={300} value={block.content} onChange={e=>updateBlock(block.id,"content",e.target.value)} placeholder="Nuestra peña en las fiestas…"/></label>}
+            {block.type==="photo"&&<div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-primary/[0.045] p-3"><label className="flex items-start gap-2 text-xs font-semibold text-primary"><input type="checkbox" className="mt-0.5" checked={Boolean(block.featured)} disabled={!block.featured&&featuredPhotoCount>=3} onChange={e=>updateBlock(block.id,"featured",e.target.checked)}/><span><span className="block">Destacar entre las 3 fotos principales</span><span className="mt-0.5 block font-normal text-muted-foreground">Estas aparecerán primero en el mapa y en la ficha pública.</span></span></label><span className="text-[10px] font-bold text-muted-foreground">{featuredPhotoCount}/3 destacadas</span></div>
           </article>)}
         </div>
         <button type="button" disabled={blocksSaving||blocksLoading} onClick={()=>void saveBlocks()} className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50">{blocksSaving?"Guardando apartados…":"Guardar apartados personalizados"}</button>
