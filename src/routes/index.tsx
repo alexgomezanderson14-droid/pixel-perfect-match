@@ -1059,6 +1059,7 @@ function Home() {
                   const linear=rgb.map(value=>{const channel=value/255;return channel<=0.04045?channel/12.92:Math.pow((channel+0.055)/1.055,2);});
                   const luminance=0.2126*linear[0]!+0.7152*linear[1]!+0.0722*linear[2]!;
                   const cardTextColor=luminance>0.56?"#17232a":"#ffffff";
+                  const cardTextShadow=luminance>0.56?"0 1px 2px rgba(255,255,255,.35)":"0 2px 8px rgba(0,0,0,.42)";
                   const cardTitle=String(cardConfig.title||p.nombre).trim()||p.nombre;
                   const shortDescription=String(cardConfig.description??p.informacion??"").replace(/\s+/g," ").trim();
                   const cardDescription=shortDescription.length>104?shortDescription.slice(0,101).trimEnd()+"…":shortDescription;
