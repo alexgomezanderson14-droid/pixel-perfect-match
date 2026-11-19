@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { uploadMediaFile } from "@/lib/media-upload";
 
 type PhotoBlock = { id: string; url: string; title: string; featured: boolean; visible: boolean; legacy?: boolean };
 
@@ -60,8 +59,12 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
     try {
       const added: PhotoBlock[] = [];
       for (const file of selected) {
-        const result = await uploadMediaFile(file, "penyes/galeria/" + penya.id);
-        added.push({ id: crypto.randomUUID(), url: result.url, title: file.name.replace(/\.[^.]+$/, "").slice(0, 100) || "Fotografía", featured: false, visible: true });
+        const extension = file.type === "image/jpeg" ? "jpg" : file.type === "image/png" ? "png" : "webp";
+        const path = "penyes/galeria/" + penya.id + "/" + crypto.randomUUID() + "." + extension;
+        const { error } = await supabase.storage.from("penyes").upload(path, file, { contentType: file.type, cacheControl: "3600", upsert: false });
+        if (error) throw error;
+        const url = supabase.storage.from("penyes").getPublicUrl(path).data.publicUrl;
+        added.push({ id: crypto.randomUUID(), url, title: file.name.replace(/\.[^.]+$/, "").slice(0, 100) || "Fotografía", featured: false, visible: true });
       }
       setBlocks(current => [...current, ...added]);
       setMessage(added.length === 1 ? "Imagen subida. Recuerda guardar los cambios." : added.length + " imágenes subidas. Recuerda guardar los cambios.");
