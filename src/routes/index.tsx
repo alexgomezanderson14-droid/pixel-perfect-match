@@ -763,7 +763,7 @@ function Home() {
       {currentPage==="eventos" && <main className="mx-auto min-h-[75vh] w-full max-w-[min(96vw,1600px)] px-3 pb-32 pt-8 sm:px-5">
         <section id="eventos" className="scroll-mt-24">
           <SectionTitle>Eventos</SectionTitle>
-          <div className="mb-5 flex flex-col gap-3 rounded-3xl border border-primary/15 bg-primary/[.045] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"><div><h3 className="text-lg font-extrabold tracking-tight text-[#173f52] sm:text-xl">¿Organizas algo en l’Alfàs?</h3><p className="text-sm text-muted-foreground">Propón una fiesta, concierto, encuentro o actividad para incluirla en la agenda festera.</p></div><button type="button" onClick={() => setCommunityEventForm(true)} className="shrink-0 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">＋ Proponer evento</button></div>
+          <div className="mb-5 flex flex-col gap-3 rounded-3xl border border-primary/15 bg-primary/[.045] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"><div><h3 className="text-lg font-extrabold text-primary">¿Organizas algo en l’Alfàs?</h3><p className="text-sm text-muted-foreground">Propón una fiesta, concierto, encuentro o actividad para incluirla en la agenda festera.</p></div><button type="button" onClick={() => setCommunityEventForm(true)} className="shrink-0 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">＋ Proponer evento</button></div>
           <label className="mb-4 block"><span className="sr-only">Buscar eventos</span><input type="search" value={eventsSearch} onChange={e=>setEventsSearch(e.target.value)} placeholder="Buscar eventos por nombre, peña o lugar…" className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-base shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"/></label>
           <details className="glass mb-5 rounded-2xl p-3 sm:p-4">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-bold text-primary">
@@ -910,7 +910,7 @@ function Home() {
                       </div>
                     </div>
                     <div className="flex flex-1 flex-col p-4 sm:p-5">
-                      <div className="flex flex-wrap items-center gap-2.5">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eaf1f2] px-3 py-1.5 text-[11px] font-bold text-[#24576a]">♫ {p.tipo_musica||"Música variada"}</span>
                         {p.lat!=null&&p.lng!=null&&<span className="inline-flex items-center gap-1 rounded-full border border-[#dbe5e7] px-3 py-1.5 text-[11px] font-semibold text-[#607781]">⌖ Con ubicación</span>}
                       </div>
