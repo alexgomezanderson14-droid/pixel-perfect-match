@@ -323,6 +323,7 @@ function Home() {
   const [penyaMusicFilter, setPenyaMusicFilter] = useState("Todas");
   const [penyaOnlyMine, setPenyaOnlyMine] = useState(false);
   const [activePenyaCard, setActivePenyaCard] = useState(0);
+  const penyaCardSettings = useMemo(()=>{try{const parsed=JSON.parse(siteContent["penyas_cards_json"]||"{}");return parsed&&typeof parsed==="object"?parsed as Record<string,{color?:string;logo_url?:string}>:{ };}catch{return {}; }},[siteContent]);
   const penyaCarouselRef = useRef<HTMLDivElement | null>(null);
   const [eventsSearch, setEventsSearch] = useState("");
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
@@ -1014,14 +1015,17 @@ function Home() {
             <div className="relative mx-auto w-full max-w-[1180px]">
               <button type="button" aria-label="Peña anterior" onClick={()=>{const el=penyaCarouselRef.current;if(!el)return;const next=Math.max(0,activePenyaCard-1);setActivePenyaCard(next);const card=el.children[next] as HTMLElement|undefined;card?.scrollIntoView({block:"nearest",inline:"center",behavior:"auto"});}} className="absolute left-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">‹</button>
               <button type="button" aria-label="Peña siguiente" onClick={()=>{const el=penyaCarouselRef.current;if(!el)return;const next=Math.min(visiblePenyes.length-1,activePenyaCard+1);setActivePenyaCard(next);const card=el.children[next] as HTMLElement|undefined;card?.scrollIntoView({block:"nearest",inline:"center",behavior:"auto"});}} className="absolute right-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">›</button>
-              <div ref={penyaCarouselRef} onScroll={(event)=>{const el=event.currentTarget;const center=el.getBoundingClientRect().left+el.clientWidth/2;let nearest=0;let distance=Number.POSITIVE_INFINITY;Array.from(el.children).forEach((child,index)=>{const rect=child.getBoundingClientRect();const d=Math.abs(rect.left+rect.width/2-center);if(d<distance){distance=d;nearest=index;}});setActivePenyaCard(current=>current===nearest?current:nearest);}} className="penya-coverflow flex snap-x snap-mandatory items-center gap-3 overflow-x-auto overscroll-x-contain px-[calc(50%-112px)] py-12 sm:gap-5 sm:px-[calc(50%-130px)] lg:gap-7 lg:px-[calc(50%-150px)]">
+              <div ref={penyaCarouselRef} onScroll={(event)=>{const el=event.currentTarget;const center=el.getBoundingClientRect().left+el.clientWidth/2;let nearest=0;let distance=Number.POSITIVE_INFINITY;Array.from(el.children).forEach((child,index)=>{const rect=child.getBoundingClientRect();const d=Math.abs(rect.left+rect.width/2-center);if(d<distance){distance=d;nearest=index;}});setActivePenyaCard(current=>current===nearest?current:nearest);}} className="penya-coverflow flex snap-x snap-mandatory items-center overflow-x-auto overscroll-x-contain px-[calc(50%-112px)] py-16 sm:px-[calc(50%-130px)] lg:px-[calc(50%-150px)]">
                 {visiblePenyes.map((p,index)=>{
-                  const colors=["#5B67D8","#E45D70","#16A6C3","#19A887","#D28B35","#8559C7","#287DAD","#C45D91"];
-                  const color=colors[index%colors.length];
-                  const centered=index===activePenyaCard;
-                  return <article id={"penya-"+p.id} key={p.id} tabIndex={0} aria-label={`Abrir ficha de ${p.nombre}`} onClick={()=>{setPenyaDetailFullscreen(true);setSelectedPenya(p);}} onKeyDown={(e)=>{if(e.target===e.currentTarget&&(e.key==="Enter"||e.key===" ")){e.preventDefault();setPenyaDetailFullscreen(true);setSelectedPenya(p);}}} style={{backgroundColor:color}} className={"penya-coverflow-card group relative h-[320px] w-[224px] shrink-0 snap-center cursor-pointer overflow-visible rounded-[2rem] border border-white/25 shadow-[0_18px_42px_rgba(19,38,53,.18)] outline-none transition-[transform,opacity,filter,box-shadow] duration-500 ease-[cubic-bezier(.2,.75,.25,1)] focus-visible:ring-4 focus-visible:ring-primary/40 sm:h-[360px] sm:w-[260px] lg:h-[400px] lg:w-[290px] "+(centered?"is-active":"is-side")}>
+                  const fallbackColors=["#5968D8","#E45D70","#13A6C3","#19A887","#D28B35","#8559C7","#287DAD","#C45D91"];
+                  const cardConfig=penyaCardSettings[p.id]||{};
+                  const color=/^#[0-9a-fA-F]{6}$/.test(cardConfig.color||"")?cardConfig.color!:fallbackColors[index%fallbackColors.length];
+                  const logo=cardConfig.logo_url||p.foto;
+                  const offset=index-activePenyaCard;
+                  const centered=offset===0;
+                  return <article id={"penya-"+p.id} key={p.id} tabIndex={0} aria-label={`Abrir ficha de ${p.nombre}`} onClick={()=>{setPenyaDetailFullscreen(true);setSelectedPenya(p);}} onKeyDown={(e)=>{if(e.target===e.currentTarget&&(e.key==="Enter"||e.key===" ")){e.preventDefault();setPenyaDetailFullscreen(true);setSelectedPenya(p);}}} style={{backgroundColor:color,zIndex:30-Math.abs(offset),marginLeft:index===0?0:"-104px",transform:`perspective(1100px) translateY(${centered?-8:Math.min(22,Math.abs(offset)*10)}px) scale(${centered?1.08:Math.max(.68,.88-Math.max(0,Math.abs(offset)-1)*.08)}) rotateY(${offset===0?0:offset<0?13:-13}deg)`,opacity:Math.abs(offset)>3?.18:Math.max(.35,1-Math.abs(offset)*.18),filter:centered?"saturate(1.08)":"saturate(.88)"}} className="penya-coverflow-card group relative h-[320px] w-[224px] shrink-0 snap-center cursor-pointer overflow-visible rounded-[2rem] border border-white/25 shadow-[0_18px_42px_rgba(19,38,53,.18)] outline-none transition-[transform,opacity,filter,box-shadow] duration-500 ease-[cubic-bezier(.2,.75,.25,1)] focus-visible:ring-4 focus-visible:ring-primary/40 sm:h-[360px] sm:w-[260px] lg:h-[400px] lg:w-[290px]">
                     <div className="absolute inset-0 overflow-hidden rounded-[2rem]">
-                      <div className="absolute inset-x-0 top-0 p-5 sm:p-6">
+                      <div className="absolute inset-x-0 top-0 z-10 p-5 sm:p-6">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
                             <h3 className="break-words text-[19px] font-black leading-[1.05] tracking-[-.035em] text-white sm:text-[22px]">{p.nombre}</h3>
@@ -1031,8 +1035,8 @@ function Home() {
                         </div>
                         {esPenyaCuBaTa(p.nombre)&&<span className="mt-3 inline-flex rounded-full bg-white/20 px-2.5 py-1 text-[9px] font-extrabold tracking-wide text-white ring-1 ring-white/35">♛ MAYORALES 2027</span>}
                       </div>
-                      <div className="absolute inset-x-0 bottom-0 h-[72%]">
-                        {p.foto?<img src={p.foto} alt={"Logo de "+p.nombre} loading="lazy" decoding="async" className="absolute inset-x-2 bottom-[-5px] h-full w-[calc(100%-16px)] object-contain object-bottom drop-shadow-[0_15px_12px_rgba(0,0,0,.2)] transition-transform duration-500 ease-[cubic-bezier(.2,.75,.25,1)] group-hover:-translate-y-2"/>:<div className="absolute inset-x-0 bottom-4 text-center text-8xl font-black text-white/90">{p.nombre.trim().charAt(0).toLocaleUpperCase("es")}</div>}
+                      <div className="absolute inset-x-0 bottom-0 h-[78%]">
+                        {logo?<img src={logo} alt={"Logo de "+p.nombre} loading="lazy" decoding="async" className="absolute inset-x-1 bottom-[-8px] h-full w-[calc(100%-8px)] object-contain object-bottom drop-shadow-[0_18px_14px_rgba(0,0,0,.22)] transition-transform duration-500 ease-[cubic-bezier(.2,.75,.25,1)] group-hover:-translate-y-2"/>:<div className="absolute inset-x-0 bottom-4 text-center text-8xl font-black text-white/90">{p.nombre.trim().charAt(0).toLocaleUpperCase("es")}</div>}
                       </div>
                     </div>
                   </article>;
