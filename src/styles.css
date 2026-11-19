@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap");
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
@@ -490,3 +491,8 @@ nav[aria-label="Navegación principal"] {
   .admin-workspace form.glass { padding:1rem; border-radius:1.25rem; }
   .admin-workspace section > .flex.flex-col { gap:.65rem; }
 }
+
+
+/* Tipografía propia y renderizado limpio para los nombres del directorio de peñas. */
+.penya-card-title { font-family:"Space Grotesk",sans-serif; font-weight:700; letter-spacing:-.055em; line-height:.98; text-wrap:balance; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+.penya-coverflow-card img { image-rendering:auto; -webkit-backface-visibility:hidden; backface-visibility:hidden; }
