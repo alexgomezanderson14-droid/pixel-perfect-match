@@ -143,7 +143,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
       if (visitsWriteError) throw visitsWriteError;
       const {data:logoData,error:logoReadError}=await supabase.from("site_content").select("valor").eq("clave","penyes_logos_ficha_json").maybeSingle();
       if(logoReadError)throw logoReadError;
-      let logoSettings:Record<string,{zoom:number;x:number;y:number}>={};try{const parsed=JSON.parse(logoData?.valor||"{}");if(parsed&&typeof parsed==="object"&&!Array.isArray(parsed))logoSettings=parsed;}catch{logoSettings={};}
+      let logoSettings:Record<string,{zoom:number;x:number;y:number;frameScale?:number}>={};try{const parsed=JSON.parse(logoData?.valor||"{}");if(parsed&&typeof parsed==="object"&&!Array.isArray(parsed))logoSettings=parsed;}catch{logoSettings={};}
       logoSettings[penya.id]={zoom:logoZoom,x:logoX,y:logoY,frameScale:logoFrameScale};
       const {error:logoWriteError}=await supabase.from("site_content").upsert({clave:"penyes_logos_ficha_json",valor:JSON.stringify(logoSettings)});
       if(logoWriteError)throw logoWriteError;
