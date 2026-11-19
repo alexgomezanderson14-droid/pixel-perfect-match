@@ -1185,7 +1185,7 @@ function Home() {
                         {(mayoralesPenyaId?p.id===mayoralesPenyaId:esPenyaCuBaTa(p.nombre))&&<span className="mt-3 inline-flex items-center gap-1 rounded-full border border-[#d4af37] bg-gradient-to-r from-[#fff4c2] via-[#f4d77a] to-[#d4af37] px-2.5 py-1 text-[9px] font-extrabold tracking-wide text-[#684b08] shadow-[0_2px_8px_rgba(142,103,20,.22)]">♛ MAYORALES {mayoralesAnio}</span>}
                       </div>
                       <div className="absolute inset-x-0 bottom-0 h-[78%]">
-                        {logo?<img src={logo} alt={"Logo de "+p.nombre} loading="lazy" decoding="async" style={{objectPosition:`${logoX}% ${logoY}%`,transform:`translate(${(logoX-50)/2}%,${(logoY-50)/2}%) scale(${logoScale/100})`}} className="absolute inset-x-1 bottom-[-8px] h-full w-[calc(100%-8px)] object-contain drop-shadow-[0_18px_14px_rgba(0,0,0,.22)] transition-transform duration-500 ease-[cubic-bezier(.2,.75,.25,1)] group-hover:-translate-y-2"/>:<div className="absolute inset-x-0 bottom-4 text-center text-8xl font-black text-white/90">{p.nombre.trim().charAt(0).toLocaleUpperCase("es")}</div>}
+                        {logo?<img src={logo} alt={"Logo de "+p.nombre} loading="lazy" decoding="async" style={{objectPosition:`${logoX}% ${logoY}%`,transform:`translate(${(logoX-50)/2}%,${(logoY-50)/2}%) scale(${logoScale/100})`}} className="absolute inset-x-1 bottom-[-8px] h-full w-[calc(100%-8px)] object-contain transition-transform duration-500 ease-[cubic-bezier(.2,.75,.25,1)] group-hover:-translate-y-2"/>:<div className="absolute inset-x-0 bottom-4 text-center text-8xl font-black text-white/90">{p.nombre.trim().charAt(0).toLocaleUpperCase("es")}</div>}
                       </div>
                     </div>
                   </article>;
