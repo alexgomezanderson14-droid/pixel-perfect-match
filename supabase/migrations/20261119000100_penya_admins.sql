@@ -47,9 +47,13 @@ BEGIN
  IF p_approve THEN INSERT INTO public.penya_admins(penya_id,user_id,rol,estado) VALUES(request_row.penya_id,request_row.user_id,'admin','activo') ON CONFLICT(penya_id,user_id) DO UPDATE SET estado='activo',rol='admin'; END IF;
 END; $$;
 GRANT EXECUTE ON FUNCTION public.resolve_penya_admin_request(uuid,boolean) TO authenticated;
-DROP POLICY IF EXISTS "Penya admins can update own penya profile" ON public.penyes;
-CREATE POLICY "Penya admins can update own penya profile" ON public.penyes FOR UPDATE TO authenticated USING (public.is_active_penya_admin(id)) WITH CHECK (public.is_active_penya_admin(id));
-GRANT UPDATE (direccion,informacion,instagram,tipo_musica) ON public.penyes TO authenticated;
+CREATE OR REPLACE FUNCTION public.update_own_penya_profile(p_penya_id uuid,p_direccion text,p_informacion text,p_instagram text,p_tipo_musica text) RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,auth AS $
+BEGIN
+ IF NOT public.is_active_penya_admin(p_penya_id) THEN RAISE EXCEPTION 'No tienes permisos para editar esta peña.'; END IF;
+ UPDATE public.penyes SET direccion=p_direccion, informacion=p_informacion, instagram=p_instagram, tipo_musica=p_tipo_musica WHERE id=p_penya_id;
+END; $;
+GRANT EXECUTE ON FUNCTION public.update_own_penya_profile(uuid,text,text,text,text) TO authenticated;
 DROP POLICY IF EXISTS "Penya admins can manage own events" ON public.eventos;
 CREATE POLICY "Penya admins can manage own events" ON public.eventos FOR ALL TO authenticated USING (public.is_active_penya_admin(penya_id)) WITH CHECK (public.is_active_penya_admin(penya_id));
 REVOKE UPDATE,DELETE ON public.eventos FROM anon;
