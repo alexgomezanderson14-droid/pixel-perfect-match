@@ -290,7 +290,7 @@ const safeHttpUrl=(value:any)=>{try{const url=new URL(String(value||""));return 
 const penyaVideoEmbed=(value:any)=>{const raw=safeHttpUrl(value);if(!raw)return "";try{const url=new URL(raw);if(url.hostname==="youtu.be")return "https://www.youtube-nocookie.com/embed/"+url.pathname.slice(1).split("/")[0];if(url.hostname.endsWith("youtube.com")){const id=url.searchParams.get("v")||url.pathname.split("/").filter(Boolean).pop();return id?"https://www.youtube-nocookie.com/embed/"+id:"";}if(url.hostname.endsWith("vimeo.com")){const id=url.pathname.split("/").filter(Boolean).pop();return id?"https://player.vimeo.com/video/"+id:"";}return /\.mp4(?:$|[?#])/i.test(url.pathname)?raw:"";}catch{return "";}};
 const normalizarBusqueda=(value:any)=>String(value||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
 const limpiarTextoNoticia=(value:any)=>{
-  let text=String(value||"")
+  const text=String(value||"")
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi," ")
     .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi," ")
     .replace(/<\/(?:p|div|section|article|h[1-6]|li|blockquote|tr)>/gi,"\n\n")
@@ -359,16 +359,6 @@ function Home() {
   const [noticias, setNoticias] = useState<any[]>([]);
   const [noticiaSeleccionada, setNoticiaSeleccionada] = useState<any | null>(null);
   const [fotoAmpliada, setFotoAmpliada] = useState<number | null>(null);
-  useEffect(() => {
-    if (fotoAmpliada === null) return;
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setFotoAmpliada(null);
-      if (event.key === "ArrowRight") setFotoAmpliada(current => current === null ? null : (current + 1) % noticiaImagenes.length);
-      if (event.key === "ArrowLeft") setFotoAmpliada(current => current === null ? null : (current - 1 + noticiaImagenes.length) % noticiaImagenes.length);
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [fotoAmpliada, noticiaSeleccionada]);
   const [newsPopup, setNewsPopup] = useState<any[]>([]);
   const [siteContent, setSiteContent] = useState<Record<string,string>>({});
   const penyaCardSettings = useMemo(()=>{try{const parsed=JSON.parse(siteContent["penyas_cards_json"]||"{}");return parsed&&typeof parsed==="object"?parsed as Record<string,{color?:string;logo_url?:string;title?:string;description?:string}>:{ };}catch{return {}; }},[siteContent]);
@@ -392,9 +382,9 @@ function Home() {
   const todayKey = todayDate.getFullYear()+"-"+String(todayDate.getMonth()+1).padStart(2,"0")+"-"+String(todayDate.getDate()).padStart(2,"0");
   const tomorrowDate = new Date(now); tomorrowDate.setDate(tomorrowDate.getDate()+1);
   const tomorrowKey = tomorrowDate.getFullYear()+"-"+String(tomorrowDate.getMonth()+1).padStart(2,"0")+"-"+String(tomorrowDate.getDate()).padStart(2,"0");
-  const matchesDay = (item:any) => eventoSigueActivo(item,now) && (filterDay==="all" || (filterDay==="upcoming" ? true : String(item.dia||"").slice(0,10)===(filterDay==="today"?todayKey:tomorrowKey)));
-  const filteredActs = useMemo(()=>actos.filter((a)=>matchesDay(a) && (filterCategory==="all" || (filterCategory==="programa" && a.tipo==="evento") || (filterCategory==="actuaciones" && (a.tipo==="evento" || a.tipo==="actuacion" || /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/i.test(a.titulo||"")))) && (!eventsSearch.trim() || normalizarBusqueda([a.titulo,a.descripcion,a.lugar].join(" ")).includes(normalizarBusqueda(eventsSearch)))), [actos,filterDay,filterCategory,now,eventsSearch]);
-  const filteredPenyaEvents = useMemo(()=>eventos.filter((e)=>matchesDay(e) && (filterCategory==="all" || filterCategory==="penyes") && (!eventsSearch.trim() || normalizarBusqueda([e.titulo,e.descripcion,e.lugar,penyes.find(p=>p.id===e.penya_id)?.nombre].join(" ")).includes(normalizarBusqueda(eventsSearch)))).sort((a,b)=>String(a.dia||"").localeCompare(String(b.dia||""))||(a.hora||"").localeCompare(b.hora||"")), [eventos,filterDay,filterCategory,now,eventsSearch,penyes]);
+  const matchesDay = useCallback((item:any) => eventoSigueActivo(item,now) && (filterDay==="all" || (filterDay==="upcoming" ? true : String(item.dia||"").slice(0,10)===(filterDay==="today"?todayKey:tomorrowKey))), [filterDay,now,todayKey,tomorrowKey]);
+  const filteredActs = useMemo(()=>actos.filter((a)=>matchesDay(a) && (filterCategory==="all" || (filterCategory==="programa" && a.tipo==="evento") || (filterCategory==="actuaciones" && (a.tipo==="evento" || a.tipo==="actuacion" || /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/i.test(a.titulo||"")))) && (!eventsSearch.trim() || normalizarBusqueda([a.titulo,a.descripcion,a.lugar].join(" ")).includes(normalizarBusqueda(eventsSearch)))), [actos,filterDay,filterCategory,now,eventsSearch,matchesDay]);
+  const filteredPenyaEvents = useMemo(()=>eventos.filter((e)=>matchesDay(e) && (filterCategory==="all" || filterCategory==="penyes") && (!eventsSearch.trim() || normalizarBusqueda([e.titulo,e.descripcion,e.lugar,penyes.find(p=>p.id===e.penya_id)?.nombre].join(" ")).includes(normalizarBusqueda(eventsSearch)))).sort((a,b)=>String(a.dia||"").localeCompare(String(b.dia||""))||(a.hora||"").localeCompare(b.hora||"")), [eventos,filterDay,filterCategory,now,eventsSearch,penyes,matchesDay]);
   const visibleActs = useMemo(()=>filteredActs.filter(a=>!/despertà|desperta|despertada|nit de albaes|nit d'albaes|nit de les albaes|albaes/.test(String(a.titulo||"").toLocaleLowerCase("es"))).sort((a,b)=>a.dia.localeCompare(b.dia)||(a.hora||"").localeCompare(b.hora||"")),[filteredActs]);
   const penyaMusicOptions = useMemo(()=>["Todas",...Array.from(new Set(penyes.map(p=>String(p.tipo_musica||"").trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b,"es"))],[penyes]);
   const mayoralesPenyaId = String(siteContent["mayorales_penya_id"]||"");
@@ -719,6 +709,17 @@ function Home() {
     return [...vistas];
   })();
 
+  useEffect(() => {
+    if (fotoAmpliada === null || noticiaImagenes.length === 0) return;
+    const galleryLength = noticiaImagenes.length;
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setFotoAmpliada(null);
+      if (event.key === "ArrowRight") setFotoAmpliada(current => current === null ? null : (current + 1) % galleryLength);
+      if (event.key === "ArrowLeft") setFotoAmpliada(current => current === null ? null : (current - 1 + galleryLength) % galleryLength);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [fotoAmpliada, noticiaSeleccionada, noticiaImagenes.length]);
   const featuredPhotoEditorModal = editingFeaturedPenya ? <div className="fixed inset-0 z-[2147483100] flex items-start justify-center overflow-y-auto bg-[#071c25]/80 p-3 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-md sm:p-6"><section className="my-auto w-full max-w-4xl rounded-3xl bg-background p-4 shadow-2xl sm:p-6"><div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-lg font-black">Añadir fotos destacadas · {editingFeaturedPenya.nombre}</h2><button type="button" onClick={()=>setEditingFeaturedPenya(null)} className="rounded-full border px-3 py-2 text-sm font-bold">Cerrar</button></div><AdminPenyaEditor penya={editingFeaturedPenya} onCancel={()=>setEditingFeaturedPenya(null)} onSaved={()=>{setEditingFeaturedPenya(null);void (async()=>{const {data}=await supabase.from("site_content").select("clave,valor");setSiteContent(Object.fromEntries((data||[]).map((x:any)=>[x.clave,x.valor])));})();}}/></section></div> : null;
   const renderNewsCard = (n:any) => <button type="button" key={n.id} onClick={()=>{setNoticiaSeleccionada(n);window.scrollTo({top:0,behavior:"smooth"});}} className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
     {n.tipo!=="video"&&n.imagen_url&&<div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden"><img src={n.imagen_url} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center transition duration-300 group-hover:scale-[1.02]"/></div>}
