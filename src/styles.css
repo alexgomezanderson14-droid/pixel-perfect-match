@@ -371,3 +371,19 @@ nav[aria-label="Navegación principal"] {
   -webkit-backdrop-filter: blur(28px) saturate(165%) !important;
   backdrop-filter: blur(28px) saturate(165%) !important;
 }
+
+
+/* Carrusel de tarjetas de peñas tipo coverflow, sin degradados sobre las tarjetas. */
+.penya-coverflow { scrollbar-width: none; scroll-behavior: auto; }
+.penya-coverflow::-webkit-scrollbar { display: none; }
+.penya-coverflow-card { transform: scale(.82); opacity: .68; filter: saturate(.88); }
+.penya-coverflow-card.is-active { transform: scale(1.08); opacity: 1; filter: saturate(1.08); z-index: 3; box-shadow: 0 24px 54px rgba(19,38,53,.24); }
+.penya-coverflow-card.is-side { transform: scale(.88); opacity: .78; z-index: 1; }
+@media (max-width: 639px) {
+  .penya-coverflow-card { transform: scale(.82); }
+  .penya-coverflow-card.is-active { transform: scale(1.04); }
+  .penya-coverflow-card.is-side { transform: scale(.88); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .penya-coverflow-card, .penya-coverflow-card img { transition: none !important; }
+}
