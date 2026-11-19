@@ -81,6 +81,27 @@ export default function FestMap({
         }),
       });
       if (l.categoria === "penya") {
+        // Elevar y ampliar ligeramente la peña al pasar el cursor, sin alterar el icono original.
+        m.on("mouseover", () => {
+          m.setZIndexOffset(1000);
+          const markerElement = m.getElement();
+          const visual = markerElement?.firstElementChild as HTMLElement | null;
+          if (visual) {
+            visual.style.transition = "transform 160ms ease, filter 160ms ease";
+            visual.style.transform = "scale(1.14)";
+            visual.style.transformOrigin = "center center";
+            visual.style.filter = "drop-shadow(0 4px 7px rgba(0,0,0,.35))";
+          }
+        });
+        m.on("mouseout", () => {
+          m.setZIndexOffset(0);
+          const markerElement = m.getElement();
+          const visual = markerElement?.firstElementChild as HTMLElement | null;
+          if (visual) {
+            visual.style.transform = "scale(1)";
+            visual.style.filter = "";
+          }
+        });
         // Al tocar el icono de una peña, abrir directamente su ficha.
         m.on("click", () => penyaClickRef.current?.(l.id));
       } else {
