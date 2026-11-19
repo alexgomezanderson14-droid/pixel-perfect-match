@@ -438,21 +438,30 @@ function Home() {
   const visibleActs = useMemo(()=>filteredActs.filter(a=>!/despertà|desperta|despertada|nit de albaes|nit d'albaes|nit de les albaes|albaes/.test(String(a.titulo||"").toLocaleLowerCase("es"))).sort((a,b)=>a.dia.localeCompare(b.dia)||(a.hora||"").localeCompare(b.hora||"")),[filteredActs]);
   const penyaMusicOptions = useMemo(()=>["Todas",...Array.from(new Set(penyes.map(p=>String(p.tipo_musica||"").trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b,"es"))],[penyes]);
   const mayoralesAnio = String(siteContent["mayorales_anio"]||"2027");
-  // La etiqueta personalizada de Mayorales vigente en la ficha es la única fuente de verdad.
+  // Primero se respeta la etiqueta vigente de la ficha; la configuración y CuBaTa
+  // son respaldos para que el distintivo nunca desaparezca si falla la lectura del perfil.
   const mayoralesPenyaId = useMemo(()=>{
+    const normalizar=(value:any)=>String(value||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").replace(/[^a-z0-9]/g,"");
     try {
       const perfiles=JSON.parse(siteContent["penyes_perfiles_json"]||"{}");
       const tituloVigente=(value:any)=>{
-        const title=String(value||"").trim().toLocaleLowerCase("es").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"");
-        if(!/mayorales|mejorales/.test(title))return false;
-        const year=title.match(/20\\d{2}/)?.[0];
+        const title=normalizar(value);
+        if(!title.includes("mayorales")&&!title.includes("mejorales"))return false;
+        const year=String(value||"").match(/20\\d{2}/)?.[0];
         return !year || year===mayoralesAnio;
       };
-      return penyes.find(p=>Array.isArray(perfiles?.[p.id])&&perfiles[p.id].some((block:any)=>block?.type==="tag"&&tituloVigente(block.title)))?.id||"";
-    } catch { return ""; }
-  },[penyes,siteContent["penyes_perfiles_json"],mayoralesAnio]);
+      const tagged=penyes.find(p=>Array.isArray(perfiles?.[p.id])&&perfiles[p.id].some((block:any)=>block?.type==="tag"&&tituloVigente(block.title)));
+      if(tagged)return tagged.id;
+    } catch { /* Se continúa con los respaldos configurados. */ }
+    const configuredId=String(siteContent["mayorales_penya_id"]||"");
+    if(configuredId&&penyes.some(p=>p.id===configuredId))return configuredId;
+    return penyes.find(p=>{
+      const name=normalizar(p.nombre);
+      return name==="cubata"||name.includes("cobrebariotantalo");
+    })?.id||"";
+  },[penyes,siteContent["penyes_perfiles_json"],siteContent["mayorales_penya_id"],mayoralesAnio]);
   const mayoralesColor = String((mayoralesPenyaId && penyaCardSettings[mayoralesPenyaId]?.color) || siteContent["theme_accent"] || "#173f52");
-  const visiblePenyes = useMemo(()=>[...penyes].filter(p=>(!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica,p.informacion].join(" ")).includes(normalizarBusqueda(penyaSearch)))&&(penyaMusicFilter==="Todas"||String(p.tipo_musica||"").trim()===penyaMusicFilter)&&(!penyaOnlyMine||misPenyes.includes(p.id))).sort((a,b)=>Number(Boolean(mayoralesPenyaId&&b.id===mayoralesPenyaId))-Number(Boolean(mayoralesPenyaId&&a.id===mayoralesPenyaId))||String(a.nombre??"").localeCompare(String(b.nombre??""),"es",{sensitivity:"base"})),[penyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,misPenyes,mayoralesPenyaId]);
+  const visiblePenyes = useMemo(()=>[...penyes].filter(p=>(!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica,p.informacion].join(" ")).includes(normalizarBusqueda(penyaSearch)))&&(penyaMusicFilter==="Todas"||String(p.tipo_musica||"").trim()===penyaMusicFilter)&&(!penyaOnlyMine||misPenyes.includes(p.id))).sort((a,b)=>String(a.nombre??"").localeCompare(String(b.nombre??""),"es",{sensitivity:"base"})),[penyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,misPenyes,mayoralesPenyaId]);
   const searchingPenyes = Boolean(penyaSearch.trim()) || penyaMusicFilter !== "Todas" || penyaOnlyMine;
   const loopedPenyes = !searchingPenyes && visiblePenyes.length > 1 ? [...visiblePenyes,...visiblePenyes,...visiblePenyes,...visiblePenyes,...visiblePenyes] : [...visiblePenyes];
   const centerPenyaCard=useCallback((index:number,behavior:ScrollBehavior="auto")=>{const el=penyaCarouselRef.current;const card=el?.children[index] as HTMLElement|undefined;if(!el||!card)return;const delta=card.getBoundingClientRect().left-el.getBoundingClientRect().left;const left=el.scrollLeft+delta-(el.clientWidth-card.clientWidth)/2;el.scrollTo({left,behavior});},[]);
