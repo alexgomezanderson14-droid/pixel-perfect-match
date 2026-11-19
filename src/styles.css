@@ -496,3 +496,54 @@ nav[aria-label="Navegación principal"] {
 /* Tipografía propia y renderizado limpio para los nombres del directorio de peñas. */
 .penya-card-title { font-family:"Space Grotesk",sans-serif; font-weight:700; letter-spacing:-.055em; line-height:.98; text-wrap:balance; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
 .penya-coverflow-card img { image-rendering:auto; -webkit-backface-visibility:hidden; backface-visibility:hidden; }
+
+
+/* Evitar que los nombres se rastericen borrosos por filtros de color en el carrusel. */
+.penya-coverflow-card { backface-visibility: visible; -webkit-backface-visibility: visible; }
+.penya-card-title {
+  font-family:"Space Grotesk",sans-serif;
+  font-weight:700;
+  letter-spacing:-.045em;
+  line-height:1;
+  text-rendering:geometricPrecision;
+  -webkit-font-smoothing:auto;
+  -moz-osx-font-smoothing:auto;
+  backface-visibility:visible;
+  -webkit-backface-visibility:visible;
+  transform:translateZ(0);
+  paint-order:normal;
+  text-shadow:none !important;
+}
+
+/* La ficha utiliza el mismo fondo verde grisáceo suave que el resto de FestAlfàs. */
+.penya-profile-sheet { background:#f0f5f2 !important; }
+.penya-profile-sheet [class~="bg-white"] { background-color:#edf3f0 !important; }
+.penya-profile-sheet [class~="bg-white/90"] { background-color:rgba(237,243,240,.92) !important; }
+.penya-profile-sheet [class~="bg-white/60"] { background-color:rgba(237,243,240,.72) !important; }
+
+/* Emojis convertidos en pegatinas grandes, con borde blanco y sombra de recorte. */
+.penya-banner-sticker {
+  position:absolute;
+  display:grid;
+  place-items:center;
+  width:clamp(3.35rem,7vw,5.8rem);
+  aspect-ratio:1;
+  border:4px solid rgba(255,255,255,.98);
+  border-radius:1.15rem;
+  background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(247,244,231,.9));
+  box-shadow:0 8px 22px rgba(12,39,48,.28),0 2px 5px rgba(12,39,48,.16),inset 0 1px 0 #fff;
+  font-size:clamp(2.1rem,4.7vw,3.65rem);
+  line-height:1;
+  filter:drop-shadow(0 3px 2px rgba(4,24,33,.16));
+}
+.penya-sticker-one { left:10%; top:19%; rotate:-13deg; }
+.penya-sticker-two { right:12%; top:13%; rotate:12deg; }
+.penya-sticker-three { left:23%; top:58%; rotate:9deg; scale:.88; }
+.penya-sticker-four { right:23%; top:55%; rotate:-10deg; scale:.9; }
+@media (max-width:639px) {
+  .penya-banner-sticker { width:clamp(3rem,13vw,4.1rem); border-width:3px; border-radius:.9rem; font-size:clamp(1.85rem,8vw,2.65rem); }
+  .penya-sticker-one { left:6%; top:18%; }
+  .penya-sticker-two { right:7%; top:12%; }
+  .penya-sticker-three { left:16%; top:59%; }
+  .penya-sticker-four { right:15%; top:56%; }
+}
