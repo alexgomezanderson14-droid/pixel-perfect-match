@@ -38,7 +38,7 @@ function loadMapLibre(): Promise<MapLibreApi> {
       script.onerror = () => reject(new Error("No se pudo cargar MapLibre"));
       document.head.appendChild(script);
     });
-    mapLibreLoader = pending.catch((error) => { mapLibreLoader = null; throw error; });
+    mapLibreLoader = pending.catch((error) => { document.querySelector('script[data-festalfas-maplibre="true"]')?.remove(); mapLibreLoader = null; throw error; });
   }
   return mapLibreLoader;
 }
