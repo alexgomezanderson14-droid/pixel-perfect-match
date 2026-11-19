@@ -35,7 +35,7 @@ CREATE POLICY "Users can read own penya admin memberships" ON public.penya_admin
 DROP POLICY IF EXISTS "Global admin manages penya admin memberships" ON public.penya_admins;
 CREATE POLICY "Global admin manages penya admin memberships" ON public.penya_admins FOR ALL TO authenticated USING (public.is_festalfas_global_admin()) WITH CHECK (public.is_festalfas_global_admin());
 DROP POLICY IF EXISTS "Users can create own penya admin requests" ON public.penya_admin_requests;
-CREATE POLICY "Users can create own penya admin requests" ON public.penya_admin_requests FOR INSERT TO authenticated WITH CHECK (user_id=auth.uid() AND estado='pendiente' AND EXISTS (SELECT 1 FROM public.penyes p WHERE p.id=penya_id AND p.estado='aprobada'));
+CREATE POLICY "Users can create own penya admin requests" ON public.penya_admin_requests FOR INSERT TO authenticated WITH CHECK (user_id=auth.uid() AND estado='pendiente' AND lower(email)=lower(coalesce(auth.jwt()->>'email','')) AND EXISTS (SELECT 1 FROM public.penyes p WHERE p.id=penya_id AND p.estado='aprobada'));
 DROP POLICY IF EXISTS "Users and global admin can read penya admin requests" ON public.penya_admin_requests;
 CREATE POLICY "Users and global admin can read penya admin requests" ON public.penya_admin_requests FOR SELECT TO authenticated USING (user_id=auth.uid() OR public.is_festalfas_global_admin());
 CREATE OR REPLACE FUNCTION public.resolve_penya_admin_request(p_request_id uuid,p_approve boolean) RETURNS void
