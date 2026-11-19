@@ -560,8 +560,9 @@ function Home() {
   const selectedPenyaEvents = selectedPenya ? eventos.filter((e) => eventoSigueActivo(e, now) && (e.penya_id === selectedPenya.id || [e.titulo, e.descripcion, e.lugar].some((v) => normalizarBusqueda(v).includes(normalizarBusqueda(selectedPenya.nombre))))) : [];
   const selectedPenyaActs = selectedPenya ? actos.filter((a) => eventoSigueActivo(a, now) && [a.titulo, a.descripcion, a.lugar].some((v) => normalizarBusqueda(v).includes(normalizarBusqueda(selectedPenya.nombre)))) : [];
   const selectedPenyaNews = selectedPenya ? noticias.filter((n:any) => n.publicado && (n.penya_id === selectedPenya.id || normalizarBusqueda([n.penya_nombre, n.autor].join(" ")).includes(normalizarBusqueda(selectedPenya.nombre)))).slice().sort((a:any,b:any) => String(b.fecha||b.created_at||"").localeCompare(String(a.fecha||a.created_at||""))).slice(0,3) : [];
-  const selectedPenyaGallery = selectedPenya ? [...new Set([...selectedPenyaEvents.map((e:any) => e.imagen_url || e.imagen || e.foto_url || e.foto), ...selectedPenyaActs.map((a:any) => a.imagen_url || a.imagen || a.foto_url || a.foto)].filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url) && url !== selectedPenya.foto))] : [];
   const selectedPenyaCustomBlocks = (() => { try { const all=JSON.parse(siteContent["penyes_perfiles_json"]||"{}"); const blocks=all?.[selectedPenya?.id||""]; return Array.isArray(blocks)?blocks.filter((block:any)=>block&&typeof block==="object"):[]; } catch { return []; } })();
+  const selectedPenyaBanner = selectedPenyaCustomBlocks.find((block:any)=>block.type==="banner" && typeof block.url==="string" && /^https?:\/\//i.test(block.url))?.url || "";
+  const selectedPenyaGallery = selectedPenya ? [...new Set([...selectedPenyaEvents.map((e:any) => e.imagen_url || e.imagen || e.foto_url || e.foto), ...selectedPenyaActs.map((a:any) => a.imagen_url || a.imagen || a.foto_url || a.foto), ...selectedPenyaCustomBlocks.filter((block:any)=>block.type==="photo").map((block:any)=>block.url)].filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url) && url !== selectedPenya.foto && url !== selectedPenyaBanner))] : [];
   // Las noticias automáticas solo pueden usar la lista creada por el extractor de galerías.
   // No se aceptan los campos heredados "galeria"/"imagenes", que podían contener logos del sitio.
   const noticiaImagenes: string[] = (() => {
@@ -1059,17 +1060,23 @@ function Home() {
       {selectedPenya && (
         <div className={`fixed inset-0 z-[1900] flex justify-center ${penyaDetailFullscreen ? "bg-[#102f3d] items-stretch p-0" : "bg-[#071c25]/75 items-end p-0 sm:items-center sm:p-5 backdrop-blur-md"}`} onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }}>
           <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className={`w-full overflow-auto border border-white/70 bg-[#f5f8f7] shadow-[0_30px_100px_rgba(4,25,34,.42)] ${penyaDetailFullscreen ? "h-[100dvh] max-h-[100dvh] max-w-none rounded-none" : "max-h-[94dvh] max-w-5xl rounded-t-[1.75rem] sm:rounded-[2rem]"}`}>
-            <div className="relative h-[300px] overflow-hidden bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37] sm:h-[420px]">
-              {selectedPenya.foto && <img src={selectedPenya.foto} alt={selectedPenya.nombre} className="absolute inset-0 h-full w-full object-cover" />}
-              <div className="absolute inset-0 bg-gradient-to-b from-[#071c25]/25 via-[#102f3d]/10 to-[#102f3d]/95" />
+            <div className="relative h-[230px] overflow-visible bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37] sm:h-[310px]">
+              {selectedPenyaBanner && <img src={selectedPenyaBanner} alt={"Banner de "+selectedPenya.nombre} className="absolute inset-0 h-full w-full object-cover" />}
+              <div className="absolute inset-0 bg-gradient-to-b from-[#071c25]/10 via-[#102f3d]/10 to-[#102f3d]/55" />
+              <div className="absolute inset-0 opacity-20" style={{backgroundImage:"radial-gradient(circle at 20% 20%, white 0, transparent 38%), radial-gradient(circle at 80% 70%, white 0, transparent 30%)"}} />
               <button onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }} aria-label="Cerrar ficha" className="absolute right-4 top-4 z-10 grid h-11 w-11 place-items-center rounded-full border border-white/50 bg-[#102f3d]/55 text-lg font-bold text-white shadow-xl backdrop-blur-xl transition hover:scale-105">✕</button>
-              <div className="absolute inset-x-5 bottom-6 max-w-3xl text-white sm:inset-x-10 sm:bottom-10">
-                {esPenyaCuBaTa(selectedPenya.nombre) && <span className="mb-2 inline-flex items-center gap-1 rounded-full border border-[#B8860B] bg-[#D4AF37] px-3 py-1 text-[10px] font-extrabold tracking-wide text-[#3B2A0A] sm:text-xs">♛ MAYORALES 2027</span>}
-                <p className="text-[10px] font-bold uppercase tracking-[.22em] text-white/80 sm:text-xs">Peña participante · festalfàs</p>
-                <h2 className="mt-2 text-3xl font-black leading-[1.05] tracking-tight drop-shadow sm:text-5xl md:text-6xl">{selectedPenya.nombre}</h2>
-              </div>
+              <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-[#f5f8f7]/35 to-transparent" />
             </div>
             <div className="mx-auto max-w-6xl px-4 pb-8 pt-4 sm:px-8 sm:pb-12 sm:pt-6 lg:px-12">
+              <div className="relative -mt-[62px] mb-5 flex flex-col items-center gap-3 text-center sm:-mt-[78px] sm:flex-row sm:items-end sm:gap-5 sm:text-left">
+                <div className="grid h-28 w-28 shrink-0 place-items-center overflow-hidden rounded-full border-[5px] border-[#f5f8f7] bg-white text-3xl font-black text-[#173f52] shadow-[0_12px_35px_rgba(4,25,34,.22)] sm:h-36 sm:w-36">{selectedPenya.foto ? <img src={selectedPenya.foto} alt={"Logo de "+selectedPenya.nombre} className="h-full w-full object-cover"/> : selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
+                <div className="min-w-0 flex-1 pb-1">
+                  {esPenyaCuBaTa(selectedPenya.nombre) && <span className="mb-2 inline-flex items-center gap-1 rounded-full border border-[#B8860B] bg-[#D4AF37] px-3 py-1 text-[10px] font-extrabold tracking-wide text-[#3B2A0A] sm:text-xs">♛ MAYORALES 2027</span>}
+                  <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#6a8589]">Peña participante · festalfàs</p>
+                  <h2 className="mt-1 break-words text-3xl font-black leading-tight tracking-tight text-[#173f52] sm:text-4xl md:text-5xl">{selectedPenya.nombre}</h2>
+                  {selectedPenya.direccion && <p className="mt-1 text-sm text-[#61777b]">{selectedPenya.direccion}</p>}
+                </div>
+              </div>
               <nav aria-label="Apartados de la ficha" className="sticky top-0 z-20 -mx-4 mb-6 flex gap-2 overflow-x-auto border-b border-[#d8e3e1] bg-[#f5f8f7]/95 px-4 py-3 shadow-[0_8px_20px_rgba(23,63,82,.05)] backdrop-blur-2xl sm:-mx-8 sm:px-8">
                 <a href="#ficha-presentacion" className="shrink-0 rounded-full bg-[#173f52] px-4 py-2.5 text-xs font-bold text-white shadow-sm">La peña</a>
                 {selectedPenyaCustomBlocks.length>0 && <a href="#ficha-personalizada" className="shrink-0 rounded-full border border-[#d4e0de] bg-white px-4 py-2.5 text-xs font-bold text-[#173f52] transition hover:border-[#d4af37]">Más sobre nosotros</a>}
