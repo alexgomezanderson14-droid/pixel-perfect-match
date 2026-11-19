@@ -396,3 +396,22 @@ nav[aria-label="Navegación principal"] {
 @media (prefers-reduced-motion: reduce) {
   .penya-coverflow-card, .penya-coverflow-card img { transition:none !important; }
 }
+
+
+/* En móvil el carrusel pasa a tarjetas normales: sin perspectiva, escalado ni solapamiento. */
+@media (max-width: 639px) {
+  .penya-coverflow { gap: 14px; padding-left: 10vw !important; padding-right: 10vw !important; perspective: none; }
+  .penya-coverflow-card,
+  .penya-coverflow-card.is-active,
+  .penya-coverflow-card.is-side {
+    width: 80vw !important;
+    max-width: 310px;
+    height: 340px !important;
+    margin-left: 0 !important;
+    transform: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+    box-shadow: 0 12px 28px rgba(19,38,53,.16) !important;
+  }
+  .penya-coverflow-card img { transform: none !important; }
+}
