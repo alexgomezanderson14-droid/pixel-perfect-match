@@ -65,6 +65,7 @@ export default function FestMap({
   const map = useRef<any>(null);
   const mapApi = useRef<MapLibreApi | null>(null);
   const markers = useRef<Record<string, any>>({});
+  const markerSignatures = useRef<Record<string, string>>({});
   const lastFocusedId = useRef<string | null>(null);
   const pickMarker = useRef<any>(null);
   const pickRef = useRef(onPick);
@@ -84,18 +85,18 @@ export default function FestMap({
         container: el.current,
         style: "https://styles.maptoolkit.org/summer-3d.json",
         center: [-0.103, 38.580],
-        zoom: 15.0,
-        pitch: 64,
+        zoom: window.matchMedia("(max-width: 639px)").matches ? 14.7 : 15.0,
+        pitch: window.matchMedia("(max-width: 639px)").matches ? 42 : 58,
         bearing: -12,
-        maxPitch: 72,
+        maxPitch: 65,
         minZoom: 13.6,
         maxZoom: 19,
         maxBounds: [[-0.132, 38.548], [-0.028, 38.626]],
         maxBoundsViscosity: 1,
         renderWorldCopies: false,
-        antialias: true,
+        antialias: window.innerWidth > 700 && (window.devicePixelRatio || 1) <= 1.5,
         attributionControl: { compact: false },
-        canvasContextAttributes: { antialias: true },
+        canvasContextAttributes: { antialias: window.innerWidth > 700 && (window.devicePixelRatio || 1) <= 1.5 },
       });
       map.current = instance;
       instance.addControl(new api.NavigationControl({ visualizePitch: true }), "top-right");
@@ -133,6 +134,7 @@ export default function FestMap({
       map.current = null;
       mapApi.current = null;
       markers.current = {};
+      markerSignatures.current = {};
       pickMarker.current = null;
     };
   }, []);
@@ -141,9 +143,19 @@ export default function FestMap({
     const instance = map.current;
     const api = mapApi.current;
     if (!mapReady || !instance || !api) return;
-    Object.values(markers.current).forEach((marker) => marker.remove());
-    markers.current = {};
+    const incomingIds = new Set(lugares.map((l) => l.id));
+    Object.keys(markers.current).forEach((id) => {
+      if (!incomingIds.has(id)) {
+        markers.current[id].remove();
+        delete markers.current[id];
+        delete markerSignatures.current[id];
+      }
+    });
     lugares.forEach((l) => {
+      const signature = JSON.stringify([l.lng,l.lat,l.categoria,l.foto,l.nombre,l.descripcion,l.dia,l.hora,l.detalleId]);
+      if (markers.current[l.id] && markerSignatures.current[l.id] === signature) return;
+      markers.current[l.id]?.remove();
+      delete markers.current[l.id];
       const normalizedPenyaName = l.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[^a-z0-9]/g, "");
       const isCuBaTa = l.categoria === "penya" && (normalizedPenyaName.includes("cubata") || normalizedPenyaName.includes("cobrebariotantalo") || (normalizedPenyaName.includes("cobre") && normalizedPenyaName.includes("bario") && normalizedPenyaName.includes("tantal")));
       const markerHtml = isCuBaTa
@@ -175,6 +187,7 @@ export default function FestMap({
         });
       }
       markers.current[l.id] = marker;
+      markerSignatures.current[l.id] = signature;
     });
   }, [lugares, mapReady]);
 

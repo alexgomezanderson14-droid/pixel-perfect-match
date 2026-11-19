@@ -716,7 +716,7 @@ function Home() {
 
   return (
     <div className="page-bg min-h-screen" style={{ "--pink": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--secondary": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--accent": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--ring": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--cat-penya": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--background": siteContent["theme_background"] || "oklch(0.975 0.012 90)", "--gradient-page": `linear-gradient(180deg, ${siteContent["theme_background"] || "oklch(0.985 0.008 90)"}, ${siteContent["theme_background"] || "oklch(0.965 0.014 90)"})` } as React.CSSProperties}>
-      <nav aria-label="Navegación principal" className="fixed left-1/2 top-[calc(env(safe-area-inset-top)+8px)] z-[5000] flex h-[52px] w-[calc(100vw-32px)] max-w-[540px] -translate-x-1/2 items-center justify-between gap-0 overflow-hidden rounded-full border border-white/85 bg-[rgba(245,248,250,.94)] px-1 shadow-[0_5px_18px_rgba(20,39,52,.16),0_1px_4px_rgba(255,255,255,.95)_inset] backdrop-blur-2xl [backdrop-filter:blur(24px)_saturate(155%)]">
+      <nav aria-label="Navegación principal" className="fixed left-1/2 top-[calc(env(safe-area-inset-top)+8px)] z-[5000] flex h-[52px] w-[calc(100vw-32px)] max-w-[540px] -translate-x-1/2 max-[639px]:left-4 max-[639px]:w-[calc(100vw-104px)] max-[639px]:translate-x-0 items-center justify-between gap-0 overflow-hidden rounded-full border border-white/85 bg-[rgba(245,248,250,.94)] px-1 shadow-[0_5px_18px_rgba(20,39,52,.16),0_1px_4px_rgba(255,255,255,.95)_inset] backdrop-blur-2xl [backdrop-filter:blur(24px)_saturate(155%)]">
         {(["home","eventos","penyes","programa","noticias","info"] as const).map((page,index)=>{
           const labels={home:"Inicio",eventos:"Eventos",penyes:"Peñas",programa:"Programa",noticias:"Noticias",info:"Ajustes"};
           const active=currentPage===page;
@@ -731,12 +731,12 @@ function Home() {
         })}
         <span aria-hidden="true" className="pointer-events-none absolute inset-y-1 left-1 z-0 w-[calc((100%-8px)/6)] rounded-full border border-white/25 bg-[linear-gradient(145deg,rgba(25,43,55,.78),rgba(25,43,55,.58))] shadow-[0_5px_18px_rgba(18,35,47,.22),0_1px_4px_rgba(255,255,255,.22)_inset] backdrop-blur-2xl transition-transform duration-300 ease-[cubic-bezier(.22,.61,.36,1)]" style={{transform:"translateX(calc("+(["home","eventos","penyes","programa","noticias","info"].indexOf(currentPage)*100)+"%))"}}/>
       </nav>
-      {currentPage==="home"&&<div className="fixed right-4 top-[calc(env(safe-area-inset-top)+68px)] z-[5200] flex items-center gap-2 sm:right-6">
-        <button type="button" onClick={()=>setNotificationsOpen(open=>!open)} aria-label={"Notificaciones"+(unreadNotifications.length?", "+unreadNotifications.length+" sin leer":"")} aria-expanded={notificationsOpen} className="relative grid h-11 w-11 place-items-center rounded-full border border-white/75 bg-[rgba(245,248,250,.94)] text-[#173f52] shadow-[0_5px_18px_rgba(20,39,52,.16)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white">
+      {currentPage==="home"&&<div className="fixed right-4 top-[calc(env(safe-area-inset-top)+8px)] z-[5200] flex items-center gap-2 sm:right-6">
+        <button type="button" onClick={()=>setNotificationsOpen(open=>!open)} aria-label={"Notificaciones"+(unreadNotifications.length?", "+unreadNotifications.length+" sin leer":"")} aria-expanded={notificationsOpen} className="relative grid h-10 w-8 place-items-center border-0 bg-transparent text-white shadow-none transition hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
           <svg viewBox="0 0 24 24" className="h-[21px] w-[21px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
           {unreadNotifications.length>0&&<span className="absolute right-[5px] top-[5px] h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500 shadow-sm" aria-label="Hay notificaciones sin leer"/>}
         </button>
-        <button type="button" onClick={()=>{setNotificationsOpen(false);setCurrentPage("info");window.scrollTo({top:0,behavior:"smooth"});}} aria-label="Mi cuenta y ajustes" className="grid h-11 w-11 place-items-center rounded-full border border-white/75 bg-[rgba(245,248,250,.94)] text-[#173f52] shadow-[0_5px_18px_rgba(20,39,52,.16)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white">
+        <button type="button" onClick={()=>{setNotificationsOpen(false);setCurrentPage("info");window.scrollTo({top:0,behavior:"smooth"});}} aria-label="Mi cuenta y ajustes" className="grid h-10 w-8 place-items-center border-0 bg-transparent text-white shadow-none transition hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
           <svg viewBox="0 0 24 24" className="h-[21px] w-[21px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c.7-4 3.1-6 7.5-6s6.8 2 7.5 6"/></svg>
         </button>
       </div>}
@@ -796,7 +796,7 @@ function Home() {
               {penyes.some((p)=>p.lat==null||p.lng==null)||actos.some((a)=>a.lat==null||a.lng==null)||eventos.some((e)=>e.lat==null||e.lng==null) ? <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">Algunas peñas o actividades no aparecen en el mapa porque todavía no tienen coordenadas exactas verificadas. No se han inventado ubicaciones.</p> : null}
             </div>}
             {!mapFullscreen && <div className="relative h-[390px] overflow-hidden rounded-[1.25rem] sm:h-[500px] sm:rounded-[1.5rem] md:h-[600px]">
-              <button type="button" onClick={() => setMapFullscreen(true)} aria-label="Ampliar mapa a pantalla completa" className="absolute right-3 top-3 z-[1200] rounded-full border border-white/70 bg-white/95 px-4 py-2 text-sm font-bold text-[#173f52] shadow-lg">⛶ Pantalla completa</button>
+              <button type="button" onClick={() => setMapFullscreen(true)} aria-label="Ampliar mapa a pantalla completa" className="absolute left-3 top-3 z-[1200] rounded-full border border-white/70 bg-white/95 px-4 py-2 text-sm font-bold text-[#173f52] shadow-lg">⛶ Pantalla completa</button>
               <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
                 <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}>
                   <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => { setPenyaDetailFullscreen(false); setMapPenyaPreview(true); setSelectedPenya(penyes.find((p) => p.id === id) ?? null); }} onItemClick={(id)=>{setCurrentPage("eventos");setFilterDay("all");setFilterCategory(id.startsWith("acto-")?"actuaciones":"penyes");window.scrollTo({top:0,behavior:"smooth"});}} />
@@ -1164,7 +1164,7 @@ function Home() {
               </Suspense>
             </ClientOnly>
           </div>
-          <button type="button" onClick={() => setMapFullscreen(false)} className="absolute right-4 top-4 z-[100000] rounded-full border border-white bg-white px-5 py-3 text-sm font-bold text-[#173f52] shadow-xl">✕ Cerrar mapa</button>
+          <button type="button" onClick={() => setMapFullscreen(false)} className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-[100000] rounded-full border border-white bg-white px-5 py-3 text-sm font-bold text-[#173f52] shadow-xl">✕ Cerrar mapa</button>
         </div>, document.body
       )}
       {<footer className="space-y-4 px-5 pb-32 text-center text-sm text-muted-foreground">
@@ -1185,13 +1185,13 @@ function Home() {
         <button onClick={() => { setShareReminder(false); void shareWebsite(); }} className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">Compartir</button>
       </aside>}
 
-      {selectedPenya && penyaGalleryOpen && <div className="fixed inset-0 z-[2200] flex items-center justify-center bg-[#092431]/80 p-3 backdrop-blur-md" role="dialog" aria-modal="true" aria-label={"Galería de "+selectedPenya.nombre} onClick={()=>setPenyaGalleryOpen(false)}>
+      {selectedPenya && penyaGalleryOpen && <div className="fixed inset-0 z-[6100] flex items-center justify-center bg-[#092431]/80 p-3 pt-[max(.75rem,env(safe-area-inset-top))] backdrop-blur-md" role="dialog" aria-modal="true" aria-label={"Galería de "+selectedPenya.nombre} onClick={()=>setPenyaGalleryOpen(false)}>
         <section className="max-h-[90dvh] w-full max-w-4xl overflow-y-auto rounded-[1.5rem] border border-white/70 bg-[#f5f8f7] p-4 shadow-2xl sm:p-7" onClick={e=>e.stopPropagation()}>
           <div className="mb-5 flex items-start justify-between gap-3"><div><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#9a7a32]">Recuerdos compartidos</p><h2 className="mt-1 text-xl font-black text-[#173f52] sm:text-2xl">Galería de {selectedPenya.nombre}</h2><p className="mt-1 text-xs text-[#6c8285]">{selectedPenyaGallery.length} fotografías</p></div><button type="button" onClick={()=>setPenyaGalleryOpen(false)} aria-label="Cerrar galería" className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#d6e2df] bg-white text-lg font-bold text-[#173f52]">✕</button></div>
           {selectedPenyaGallery.length>0?<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">{selectedPenyaGallery.map((url,index)=><figure key={url} className="overflow-hidden rounded-xl border border-[#dce7e4] bg-white p-1.5 shadow-sm"><img src={url} alt={"Foto "+(index+1)+" de "+selectedPenya.nombre} loading="lazy" className="aspect-square w-full rounded-lg object-cover"/><figcaption className="px-1 pb-1 pt-2 text-[10px] font-semibold text-[#52666b]">{index<3?"Foto destacada":"Recuerdo de la peña"}</figcaption></figure>)}</div>:<p className="rounded-xl border border-dashed border-[#cbdcdd] p-8 text-center text-sm text-[#6c8285]">Todavía no hay fotografías en esta galería.</p>}
         </section>
       </div>}
-      {selectedPenya && (mapPenyaPreview ? <div className="fixed inset-0 z-[1900] flex items-center justify-center bg-[#092431]/65 p-3 backdrop-blur-sm" onClick={()=>{setSelectedPenya(null);setMapPenyaPreview(false);}}>
+      {selectedPenya && (mapPenyaPreview ? <div className="fixed inset-0 z-[6000] flex items-center justify-center bg-[#092431]/65 p-3 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-sm" onClick={()=>{setSelectedPenya(null);setMapPenyaPreview(false);}}>
         <section role="dialog" aria-modal="true" aria-label={"Resumen de "+selectedPenya.nombre} onClick={e=>e.stopPropagation()} className="relative w-full max-w-[370px] overflow-hidden rounded-[1.45rem] border border-white/80 bg-white shadow-[0_24px_80px_rgba(4,24,33,.38)]">
           <div className="relative z-0 h-[104px] overflow-hidden bg-gradient-to-br from-[#173f52] via-[#286477] to-[#c6a24b]">
             {selectedPenyaBanner&&<img src={selectedPenyaBanner} alt="" className="h-full w-full object-cover"/>}
@@ -1215,13 +1215,13 @@ function Home() {
           </div>
         </section>
       </div> : (
-        <div className={`fixed inset-0 z-[1900] flex justify-center ${penyaDetailFullscreen ? "bg-[#102f3d] items-stretch p-0" : "bg-[#071c25]/75 items-end p-0 sm:items-center sm:p-5 backdrop-blur-md"}`} onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }}>
+        <div className={`fixed inset-0 z-[6000] flex justify-center ${penyaDetailFullscreen ? "bg-[#102f3d] items-stretch p-0" : "bg-[#071c25]/75 items-end p-0 pt-[max(1rem,env(safe-area-inset-top))] sm:items-center sm:p-5 backdrop-blur-md"}`} onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }}>
           <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className={`w-full overflow-auto border border-white/70 bg-[#f5f8f7] shadow-[0_30px_100px_rgba(4,25,34,.42)] ${penyaDetailFullscreen ? "h-[100dvh] max-h-[100dvh] max-w-none rounded-none" : "max-h-[94dvh] max-w-5xl rounded-t-[1.75rem] sm:rounded-[2rem]"}`}>
             <div className="relative h-[230px] overflow-visible bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37] sm:h-[310px]">
               {selectedPenyaBanner && <img src={selectedPenyaBanner} alt={"Banner de "+selectedPenya.nombre} className="absolute inset-0 h-full w-full object-cover" />}
               <div className="absolute inset-0 bg-gradient-to-b from-[#071c25]/10 via-[#102f3d]/10 to-[#102f3d]/55" />
               <div className="absolute inset-0 opacity-20" style={{backgroundImage:"radial-gradient(circle at 20% 20%, white 0, transparent 38%), radial-gradient(circle at 80% 70%, white 0, transparent 30%)"}} />
-              <button onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }} aria-label="Cerrar ficha" className="absolute right-4 top-4 z-10 grid h-11 w-11 place-items-center rounded-full border border-white/50 bg-[#102f3d]/55 text-lg font-bold text-white shadow-xl backdrop-blur-xl transition hover:scale-105">✕</button>
+              <button onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }} aria-label="Cerrar ficha" className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-30 grid h-11 w-11 place-items-center rounded-full border border-white/50 bg-[#102f3d]/75 text-lg font-bold text-white shadow-xl backdrop-blur-xl transition hover:scale-105">✕</button>
               <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-[#f5f8f7]/35 to-transparent" />
             </div>
             <div className="mx-auto max-w-6xl px-4 pb-8 pt-4 sm:px-8 sm:pb-12 sm:pt-6 lg:px-12">
