@@ -373,107 +373,120 @@ nav[aria-label="Navegación principal"] {
 }
 
 
-/* Carrusel de tarjetas de peñas tipo coverflow, sin degradados sobre las tarjetas. */
-.penya-coverflow { scrollbar-width: none; scroll-behavior: auto; }
-.penya-coverflow::-webkit-scrollbar { display: none; }
-.penya-coverflow-card { transform: scale(.82); opacity: .68; filter: saturate(.88); }
-.penya-coverflow-card.is-active { transform: scale(1.08); opacity: 1; filter: saturate(1.08); z-index: 3; box-shadow: 0 24px 54px rgba(19,38,53,.24); }
-.penya-coverflow-card.is-side { transform: scale(.88); opacity: .78; z-index: 1; }
-@media (max-width: 639px) {
-  .penya-coverflow-card { transform: scale(.82); }
-  .penya-coverflow-card.is-active { transform: scale(1.04); }
-  .penya-coverflow-card.is-side { transform: scale(.88); }
+/* Carrusel coverflow: una tarjeta central destacada y laterales solapadas en todos los tamaños. */
+.penya-coverflow {
+  display:flex;
+  align-items:center;
+  width:100%;
+  overflow-x:auto;
+  overflow-y:visible;
+  overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch;
+  scroll-snap-type:x mandatory;
+  scroll-behavior:auto;
+  scrollbar-width:none;
+  perspective:1200px;
 }
-@media (prefers-reduced-motion: reduce) {
-  .penya-coverflow-card, .penya-coverflow-card img { transition: none !important; }
-}
-
-
-/* Efecto coverflow: tarjetas solapadas y profundidad visual, con la central en primer plano. */
-.penya-coverflow { scrollbar-width:none; scroll-behavior:auto; perspective:1100px; }
 .penya-coverflow::-webkit-scrollbar { display:none; }
-.penya-coverflow-card { transform-style:preserve-3d; backface-visibility:hidden; }
-@media (prefers-reduced-motion: reduce) {
-  .penya-coverflow-card, .penya-coverflow-card img { transition:none !important; }
-}
-
-
-/* Entrada escalonada de las tarjetas: elevación y aparición progresiva sin animar el layout. */
+.penya-coverflow.is-initializing { visibility:hidden; }
+.penya-coverflow.is-ready { visibility:visible; }
 .penya-coverflow-card {
-  will-change: transform, opacity;
-  contain: layout paint;
-  backface-visibility: hidden;
+  position:relative;
+  flex:0 0 auto;
+  margin-left:-110px;
+  scroll-snap-align:center;
+  transform-origin:center center;
+  transform-style:preserve-3d;
+  backface-visibility:hidden;
+  transition:transform 480ms cubic-bezier(.2,.75,.25,1), opacity 480ms ease, filter 480ms ease, box-shadow 480ms ease;
 }
-.penya-coverflow-card[style*="penya-card-enter"] { animation: penya-card-enter 620ms cubic-bezier(.18,.72,.22,1) both; }
-@keyframes penya-card-enter {
-  from { translate: 0 34px; opacity: 0; }
-  68% { opacity: .82; }
-  to { translate: 0 0; opacity: 1; }
+.penya-coverflow-card.is-loop-start { margin-left:0; }
+.penya-coverflow-card.is-active { z-index:30; box-shadow:0 24px 54px rgba(19,63,82,.24); }
+.penya-coverflow-card.is-side { z-index:20; }
+@media (max-width:639px) {
+  .penya-coverflow {
+    gap:0 !important;
+    padding-left:calc(50vw - 112px) !important;
+    padding-right:calc(50vw - 112px) !important;
+    perspective:850px;
+  }
+  .penya-coverflow-card {
+    width:224px !important;
+    max-width:224px !important;
+    height:340px !important;
+    margin-left:-82px;
+  }
+  .penya-coverflow-card.is-loop-start { margin-left:0; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .penya-coverflow-card { animation: none !important; will-change: auto; }
+@media (prefers-reduced-motion:reduce) {
+  .penya-coverflow-card,
+  .penya-coverflow-card img { transition:none !important; }
 }
 
 #ficha-novedades { grid-column:1 / -1; width:100%; min-width:0; }
 #ficha-novedades > div, #ficha-novedades button { min-width:0; width:100%; }
 
-
-/* Carrusel estable: las tarjetas ya están colocadas al cargar, sin animación de entrada. */
-.penya-coverflow-card { animation: none !important; contain: none; }
-.penya-coverflow-card.is-loop-start { margin-left: 0; }
-.penya-coverflow-card:not(.is-loop-start) { margin-left: -104px; }
-.penya-coverflow-card { transform-origin: center center; }
-@media (max-width: 639px) {
-  .penya-coverflow {
-    gap: 0 !important;
-    padding-left: calc(50vw - 112px) !important;
-    padding-right: calc(50vw - 112px) !important;
-    perspective: 850px !important;
-    overflow-y: visible;
-  }
-  .penya-coverflow-card,
-  .penya-coverflow-card.is-active,
-  .penya-coverflow-card.is-side {
-    width: 224px !important;
-    max-width: 224px !important;
-    height: 340px !important;
-    margin-left: -58px !important;
-    opacity: .82;
-    filter: saturate(.9);
-    box-shadow: 0 14px 32px rgba(19,38,53,.2);
-    transform-style: preserve-3d !important;
-    backface-visibility: hidden;
-  }
-  .penya-coverflow-card.is-loop-start { margin-left: 0 !important; }
-  .penya-coverflow-card.is-active { opacity: 1; }
-}
-@media (min-width: 640px) {
-  .penya-coverflow-card { transition: transform 480ms cubic-bezier(.2,.75,.25,1), opacity 480ms ease, filter 480ms ease, box-shadow 480ms ease; }
-}
-
-/* Administración: pestañas claras, ordenadas y cómodas sin desplazamiento horizontal. */
+/* Administración con la misma identidad visual y una navegación consistente en móvil y escritorio. */
+.admin-workspace { color:var(--foreground); }
+.admin-workspace header { background:rgba(255,255,255,.76); border-color:rgba(23,63,82,.12); box-shadow:0 12px 34px rgba(23,63,82,.07); }
 .admin-workspace .admin-tabs {
-  display: grid !important;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: .55rem;
-  position: static;
-  padding: .65rem;
+  position:sticky;
+  top:.5rem;
+  z-index:30;
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:.55rem;
+  padding:.65rem;
+  border:1px solid rgba(23,63,82,.12);
+  border-radius:1.35rem;
+  background:rgba(248,250,249,.92);
+  box-shadow:0 8px 26px rgba(23,63,82,.08);
+  -webkit-backdrop-filter:blur(18px);
+  backdrop-filter:blur(18px);
 }
 .admin-workspace .admin-tabs button {
-  min-width: 0;
-  min-height: 3.15rem;
-  padding: .65rem .8rem;
-  white-space: normal;
-  line-height: 1.2;
-  font-size: .78rem;
+  min-width:0;
+  min-height:3rem;
+  padding:.65rem .8rem;
+  border-radius:1rem;
+  font-size:.78rem;
+  line-height:1.2;
+  white-space:normal;
 }
-.admin-workspace .admin-tabs button[aria-current="page"],
-.admin-workspace .admin-tabs button[aria-pressed="true"] { box-shadow: 0 7px 18px rgba(23,63,82,.16); }
-.admin-workspace > div > header { border-radius: 1.75rem; }
-@media (max-width: 767px) {
-  .admin-workspace .admin-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .admin-workspace .admin-tabs button { min-height: 2.8rem; font-size: .72rem; }
+.admin-workspace form.glass,
+.admin-workspace article.glass,
+.admin-workspace section.glass {
+  border-color:rgba(23,63,82,.13);
+  box-shadow:0 8px 26px rgba(23,63,82,.055);
 }
-
-.penya-coverflow.is-initializing .penya-coverflow-card { transition: none !important; }
-.penya-coverflow.is-ready .penya-coverflow-card { transition: transform 480ms cubic-bezier(.2,.75,.25,1), opacity 480ms ease, filter 480ms ease, box-shadow 480ms ease; }
+.admin-workspace input:not([type="checkbox"]):not([type="file"]),
+.admin-workspace select,
+.admin-workspace textarea {
+  min-height:2.8rem;
+  border-radius:.9rem;
+  background:rgba(255,255,255,.88);
+  padding:.7rem .85rem;
+}
+.admin-workspace textarea { min-height:6rem; }
+.admin-workspace input:focus,
+.admin-workspace select:focus,
+.admin-workspace textarea:focus { outline:2px solid color-mix(in oklab,var(--primary) 35%,transparent); outline-offset:1px; }
+.admin-workspace label { line-height:1.45; }
+.admin-workspace article.glass { transition:border-color .2s ease,box-shadow .2s ease; }
+.admin-workspace article.glass:hover { border-color:rgba(23,63,82,.25); box-shadow:0 12px 30px rgba(23,63,82,.09); }
+.admin-penya-editor { background:rgba(255,255,255,.82); }
+.admin-penya-editor > label { display:block; border-radius:1rem; }
+.admin-penya-editor .admin-editor-section { box-shadow:0 5px 18px rgba(23,63,82,.045); }
+.admin-penya-editor button { min-height:2.5rem; }
+@media (max-width:767px) {
+  .admin-workspace .admin-tabs { grid-template-columns:repeat(2,minmax(0,1fr)); top:.25rem; }
+  .admin-workspace .admin-tabs button { min-height:2.8rem; font-size:.74rem; }
+  .admin-workspace { padding-bottom:max(6rem,env(safe-area-inset-bottom)); }
+}
+@media (max-width:639px) {
+  .admin-workspace .admin-overview-stats { display:none; }
+  .admin-workspace header { gap:.75rem; padding:1rem; }
+  .admin-workspace header p { line-height:1.4; }
+  .admin-workspace form.glass { padding:1rem; border-radius:1.25rem; }
+  .admin-workspace section > .flex.flex-col { gap:.65rem; }
+}
