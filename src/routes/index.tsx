@@ -287,27 +287,43 @@ async function sharePenyaCard(p: PenyaDb) {
 }
 type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number | null; lng: number | null; foto: string; tipo_musica: string; tiene_evento?: boolean; instagram?: string | null; informacion?: string | null };
 const penyaStickerTypes = ["confetti","firework","bomb","flame","trumpet"] as const;
+function getPenyaStickerSeed(id:string){
+  return Array.from(id).reduce((sum,char)=>((sum*31)+char.charCodeAt(0))>>>0,17);
+}
 function getPenyaStickerSet(id:string){
-  const seed=Array.from(id).reduce((sum,char)=>sum+char.charCodeAt(0),0);
-  return Array.from({length:4},(_,index)=>({type:penyaStickerTypes[(seed+index)%penyaStickerTypes.length],className:"penya-sticker-slot-"+index}));
+  const seed=getPenyaStickerSeed(id);
+  const shuffled=[...penyaStickerTypes].sort((a,b)=>{
+    const av=Array.from(a).reduce((n,c)=>n+c.charCodeAt(0),seed);
+    const bv=Array.from(b).reduce((n,c)=>n+c.charCodeAt(0),seed);
+    return ((av*2654435761)>>>0)-((bv*2654435761)>>>0);
+  });
+  return shuffled.slice(0,4).map((type,index)=>({type,className:"penya-sticker-slot-"+index}));
 }
 function getPenyaStickerStyle(id:string,index:number){
-  const seed=Array.from(id).reduce((sum,char)=>sum+char.charCodeAt(0),0);
-  const layouts=[
-    [{left:5,top:9,rotate:-17},{left:29,top:25,rotate:12},{left:62,top:8,rotate:-9},{left:83,top:24,rotate:18}],
-    [{left:8,top:24,rotate:13},{left:34,top:7,rotate:-12},{left:66,top:25,rotate:17},{left:86,top:8,rotate:-16}],
-    [{left:4,top:11,rotate:9},{left:31,top:27,rotate:-18},{left:64,top:9,rotate:14},{left:84,top:26,rotate:-8}],
-    [{left:7,top:27,rotate:-13},{left:35,top:10,rotate:16},{left:63,top:26,rotate:-11},{left:87,top:9,rotate:19}]
+  const seed=getPenyaStickerSeed(id);
+  const hash=(n:number)=>((Math.imul(seed^(n*0x9e3779b9),0x85ebca6b)>>>0)%10000)/10000;
+  const zones=[
+    {x:3+hash(1)*12,y:5+hash(2)*13},
+    {x:25+hash(3)*15,y:7+hash(4)*18},
+    {x:58+hash(5)*15,y:5+hash(6)*14},
+    {x:79+hash(7)*13,y:10+hash(8)*17}
   ];
-  const item=layouts[seed%layouts.length][index];
-  return {left:item.left+"%",top:item.top+"%",transform:"rotate("+item.rotate+"deg)"};
+  const item=zones[index];
+  const rotate=-27+hash(10+index)*54;
+  const width=10.5+hash(20+index)*5.5;
+  return {
+    left:item.x+"%",
+    top:item.y+"%",
+    width:"clamp(4.7rem, "+width.toFixed(1)+"vw, "+(width*1.08).toFixed(1)+"rem)",
+    transform:"rotate("+rotate.toFixed(1)+"deg)"
+  };
 }
 const penyaStickerArt:Record<string,ReactNode>={
-  confetti:<svg viewBox="0 0 140 140" aria-hidden="true"><g stroke="#fff" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round"><path d="M24 24l17 17M105 18l-8 23M119 91l-24-4M25 111l15-19M68 9v25M12 72l22-4" fill="none"/><path d="M48 54l10-18 9 18 19 3-14 13 4 20-18-9-17 9 4-20-14-13z" fill="#ffd43b"/><path d="M91 48l8-15 8 15 16 3-12 11 3 16-15-8-14 8 3-16-12-11z" fill="#ff5b76"/><circle cx="34" cy="68" r="8" fill="#39c6e8"/><circle cx="84" cy="112" r="7" fill="#8c6cff"/><circle cx="119" cy="119" r="6" fill="#ff9f43"/></g></svg>,
-  firework:<svg viewBox="0 0 140 140" aria-hidden="true"><g fill="none" stroke="#fff" strokeWidth="13" strokeLinecap="round"><path d="M70 70L70 13M70 70L112 30M70 70L128 70M70 70L111 111M70 70L70 128M70 70L29 111M70 70L12 70M70 70L29 29"/></g><g fill="none" strokeWidth="6" strokeLinecap="round"><path stroke="#ffcc37" d="M70 70L70 13M70 70L128 70M70 70L29 29"/><path stroke="#ff5b76" d="M70 70L112 30M70 70L111 111M70 70L29 111"/><path stroke="#48c7e8" d="M70 70L70 128M70 70L12 70"/></g><circle cx="70" cy="70" r="10" fill="#fff" stroke="#ffb52e" strokeWidth="5"/></svg>,
-  bomb:<svg viewBox="0 0 140 140" aria-hidden="true"><g stroke="#fff" strokeWidth="9" strokeLinejoin="round" strokeLinecap="round"><path d="M87 35l12-17 13 9-13 18" fill="none"/><path d="M107 18l9-8M118 28l12-2M106 8l2-7" fill="none" stroke="#ffb52e" strokeWidth="6"/><circle cx="65" cy="79" r="43" fill="#273849"/><path d="M39 64q12-18 29-18" fill="none" stroke="#71869b" strokeWidth="7"/><path d="M52 100l-12 7M82 105l9 5" fill="none" stroke="#ff5b76" strokeWidth="7"/></g><circle cx="51" cy="65" r="5" fill="#fff"/></svg>,
-  flame:<svg viewBox="0 0 140 140" aria-hidden="true"><path d="M72 10C83 36 119 46 111 88c-5 27-23 43-47 42C36 128 19 110 23 82c3-22 18-34 27-49 1 20 10 26 14 29 8-16 8-32 8-52z" fill="#ff633e" stroke="#fff" strokeWidth="10" strokeLinejoin="round"/><path d="M70 72c10 13 22 21 17 38-3 10-11 15-21 14-12-1-19-10-17-22 1-9 10-17 14-24 1 9 4 13 7 15 2-7 1-14 0-21z" fill="#ffd34d"/></svg>,
-  trumpet:<svg viewBox="0 0 140 140" aria-hidden="true"><g fill="#f6b832" stroke="#fff" strokeWidth="9" strokeLinejoin="round" strokeLinecap="round"><path d="M18 64h59v18H18z"/><path d="M76 55l42-20v76L76 91z"/><path d="M37 64V43h14v21M37 82v19h14V82" /><path d="M118 43l11-9M118 105l11 9" fill="none"/></g><path d="M29 69h39" stroke="#fff0b8" strokeWidth="5" strokeLinecap="round"/></svg>
+  confetti:<svg viewBox="0 0 180 180" aria-hidden="true"><defs><linearGradient id="confettiGold" x2="0" y2="1"><stop stopColor="#fff27a"/><stop offset="1" stopColor="#ff9e19"/></linearGradient><linearGradient id="confettiPink" x2="0" y2="1"><stop stopColor="#ff91bd"/><stop offset="1" stopColor="#ef286c"/></linearGradient><filter id="stickerShadow"><feGaussianBlur stdDeviation="2.5"/></filter></defs><g stroke="#fff" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round"><path d="M24 23l17 23M145 17l-9 27M158 105l-29-5M21 137l19-25M88 8v29M9 83l28-5" fill="none"/><path d="M55 56l13-25 13 25 27 4-20 19 5 27-25-13-24 13 5-27-20-19z" fill="url(#confettiGold)"/><path d="M119 54l10-20 11 20 21 4-16 15 4 22-20-11-20 11 4-22-16-15z" fill="url(#confettiPink)"/><circle cx="37" cy="88" r="11" fill="#35c9ed"/><circle cx="105" cy="145" r="10" fill="#8e69f7"/><circle cx="158" cy="145" r="8" fill="#ff9b38"/><path d="M45 15l5 12M168 65l-12 4M73 154l-8 13" fill="none" strokeWidth="8"/></g><path d="M57 57l11-18 10 18 20 4-15 14 4 20-19-10-18 10 4-20-15-14z" fill="none" stroke="#fff8c9" strokeWidth="3"/><path d="M123 55l7-13 7 13 15 3-11 10 3 15-14-8-13 8 3-15-11-10z" fill="none" stroke="#ffd4e4" strokeWidth="3"/></svg>,
+  firework:<svg viewBox="0 0 180 180" aria-hidden="true"><defs><radialGradient id="burstCore"><stop stopColor="#fff"/><stop offset=".48" stopColor="#ffe96a"/><stop offset="1" stopColor="#ff9c20"/></radialGradient></defs><g fill="none" stroke="#fff" strokeWidth="15" strokeLinecap="round"><path d="M90 89L90 12M90 89L145 31M90 89L168 81M90 89L146 145M90 89L91 169M90 89L32 145M90 89L12 83M90 89L32 31"/></g><g fill="none" strokeWidth="7" strokeLinecap="round"><path stroke="#ffb82e" d="M90 89L90 12M90 89L168 81M90 89L32 31"/><path stroke="#ff4f87" d="M90 89L145 31M90 89L146 145M90 89L32 145"/><path stroke="#37c8ec" d="M90 89L91 169M90 89L12 83"/></g><g fill="none" strokeWidth="5" strokeLinecap="round"><path stroke="#fff" d="M51 18l-5-10M133 13l8-9M166 125l10 5M15 119l-10 6M59 165l-4 10M125 164l6 9"/><path stroke="#ffe35b" d="M90 4v-3M175 81h4M90 176v3M4 83H1"/></g><circle cx="90" cy="89" r="20" fill="url(#burstCore)" stroke="#fff" strokeWidth="8"/><circle cx="90" cy="89" r="7" fill="#fff"/></svg>,
+  bomb:<svg viewBox="0 0 180 180" aria-hidden="true"><defs><radialGradient id="bombBody" cx="30%" cy="22%"><stop stopColor="#71859b"/><stop offset=".5" stopColor="#34475b"/><stop offset="1" stopColor="#172536"/></radialGradient><linearGradient id="bombFuse"><stop stopColor="#fff27a"/><stop offset="1" stopColor="#ff7b22"/></linearGradient></defs><path d="M111 47l19-27 20 12-20 31" fill="none" stroke="#fff" strokeWidth="16" strokeLinecap="round"/><path d="M111 47l19-27 20 12-20 31" fill="none" stroke="#9ba9b8" strokeWidth="8" strokeLinecap="round"/><path d="M146 23l10-13M157 38l15-2M139 11l2-10" fill="none" stroke="#fff" strokeWidth="12" strokeLinecap="round"/><path d="M146 23l10-13M157 38l15-2M139 11l2-10" fill="none" stroke="url(#bombFuse)" strokeWidth="6" strokeLinecap="round"/><circle cx="83" cy="103" r="62" fill="url(#bombBody)" stroke="#fff" strokeWidth="13"/><path d="M43 82q17-29 48-27" fill="none" stroke="#aebdca" strokeWidth="10" strokeLinecap="round" opacity=".75"/><path d="M49 130l-16 10M112 143l13 8" fill="none" stroke="#ff5b82" strokeWidth="9" strokeLinecap="round"/><circle cx="62" cy="88" r="7" fill="#fff"/><path d="M105 67q17 10 22 28" fill="none" stroke="#8395a8" strokeWidth="6" strokeLinecap="round"/><path d="M27 34l7-12M15 52l-13-2M151 100l15 5" stroke="#fff" strokeWidth="7" strokeLinecap="round"/></svg>,
+  flame:<svg viewBox="0 0 180 180" aria-hidden="true"><defs><linearGradient id="flameOuter" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#ffb52f"/><stop offset=".55" stopColor="#ff5b32"/><stop offset="1" stopColor="#e52b45"/></linearGradient><linearGradient id="flameInner" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#fff78b"/><stop offset="1" stopColor="#ffb52f"/></linearGradient></defs><path d="M93 9c15 36 57 51 48 103-6 37-30 59-65 57-39-2-62-31-55-68 5-29 26-45 39-67 2 26 13 35 20 40 10-23 11-43 13-65z" fill="url(#flameOuter)" stroke="#fff" strokeWidth="13" strokeLinejoin="round"/><path d="M91 84c14 17 29 30 22 51-5 17-17 26-33 24-19-2-29-17-25-34 3-14 15-25 23-37 2 13 7 19 11 22 4-10 3-18 2-26z" fill="url(#flameInner)" stroke="#ffdc65" strokeWidth="4"/><path d="M65 47q-17 15-20 33M124 48q15 15 16 31" fill="none" stroke="#fff4c7" strokeWidth="6" strokeLinecap="round" opacity=".9"/><path d="M24 115l-13 4M153 124l14 7M37 25l-8-10" stroke="#fff" strokeWidth="8" strokeLinecap="round"/></svg>,
+  trumpet:<svg viewBox="0 0 180 180" aria-hidden="true"><defs><linearGradient id="brass" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#fff18b"/><stop offset=".38" stopColor="#ffc83d"/><stop offset="1" stopColor="#d77b13"/></linearGradient></defs><g stroke="#fff" strokeWidth="14" strokeLinejoin="round" strokeLinecap="round"><path d="M18 77h77v25H18z" fill="url(#brass)"/><path d="M94 65l62-30v110l-62-31z" fill="url(#brass)"/><path d="M43 77V48h19v29M43 102v30h19v-30" fill="url(#brass)"/><path d="M155 48l16-13M155 132l16 13" fill="none"/></g><g fill="none" strokeLinecap="round"><path d="M29 83h59" stroke="#fff7c5" strokeWidth="7"/><path d="M105 70l37-18M105 109l37 18" stroke="#ffe99a" strokeWidth="5"/><path d="M20 66l-9-8M20 113l-9 8" stroke="#fff" strokeWidth="7"/></g><circle cx="51" cy="40" r="7" fill="#fff" opacity=".9"/></svg>
 };
 const safeHttpUrl=(value:any)=>{try{const url=new URL(String(value||""));return url.protocol==="https:"||url.protocol==="http:"?url.toString():"";}catch{return "";}};
 const penyaVideoEmbed=(value:any)=>{const raw=safeHttpUrl(value);if(!raw)return "";try{const url=new URL(raw);if(url.hostname==="youtu.be")return "https://www.youtube-nocookie.com/embed/"+url.pathname.slice(1).split("/")[0];if(url.hostname.endsWith("youtube.com")){const id=url.searchParams.get("v")||url.pathname.split("/").filter(Boolean).pop();return id?"https://www.youtube-nocookie.com/embed/"+id:"";}if(url.hostname.endsWith("vimeo.com")){const id=url.pathname.split("/").filter(Boolean).pop();return id?"https://player.vimeo.com/video/"+id:"";}return /\.mp4(?:$|[?#])/i.test(url.pathname)?raw:"";}catch{return "";}};
