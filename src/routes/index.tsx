@@ -912,10 +912,11 @@ function Home() {
                       </div>
                       <div className="absolute inset-x-4 bottom-4">
                         
-                        <h3 className="mt-1 line-clamp-2 break-words text-xl font-extrabold leading-tight text-white drop-shadow sm:text-2xl">{p.nombre}</h3>
+                        <h3 className="mt-1 line-clamp-2 break-words text-xl font-black leading-[1.02] tracking-[-.045em] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,.85)] sm:hidden">{p.nombre}</h3>
                       </div>
                     </div>
                     <div className="flex flex-1 flex-col p-4 sm:p-5">
+                      <h3 className="mb-3 hidden break-words text-[1.35rem] font-black leading-[1.05] tracking-[-.045em] text-[#173f52] sm:block lg:text-[1.55rem]">{p.nombre}</h3>
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eaf1f2] px-3 py-1.5 text-[11px] font-bold text-[#24576a]">♫ {p.tipo_musica||"Música variada"}</span>
                         {p.lat!=null&&p.lng!=null&&<span className="inline-flex items-center gap-1 rounded-full border border-[#dbe5e7] px-3 py-1.5 text-[11px] font-semibold text-[#607781]">⌖ Con ubicación</span>}
