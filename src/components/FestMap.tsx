@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Lugar } from "@/content/fiestas";
 
 type MapLibreApi = {
@@ -61,6 +61,7 @@ export default function FestMap({
   onItemClick?: (id: string) => void;
 }) {
   const el = useRef<HTMLDivElement>(null);
+  const [mapReady, setMapReady] = useState(false);
   const map = useRef<any>(null);
   const mapApi = useRef<MapLibreApi | null>(null);
   const markers = useRef<Record<string, any>>({});
@@ -118,6 +119,7 @@ export default function FestMap({
             },
           }, labelLayer);
         }
+        setMapReady(true);
       });
       instance.on("click", (event: any) => pickRef.current?.(event.lngLat.lat, event.lngLat.lng));
       resizeObserver = new ResizeObserver(() => requestAnimationFrame(() => map.current?.resize()));
@@ -132,6 +134,7 @@ export default function FestMap({
       map.current?.remove();
       map.current = null;
       mapApi.current = null;
+      setMapReady(false);
       markers.current = {};
       pickMarker.current = null;
     };
@@ -140,7 +143,7 @@ export default function FestMap({
   useEffect(() => {
     const instance = map.current;
     const api = mapApi.current;
-    if (!instance || !api || !instance.isStyleLoaded()) return;
+    if (!mapReady || !instance || !api || !instance.isStyleLoaded()) return;
     Object.values(markers.current).forEach((marker) => marker.remove());
     markers.current = {};
     lugares.forEach((l) => {
@@ -170,12 +173,12 @@ export default function FestMap({
       }
       markers.current[l.id] = marker;
     });
-  }, [lugares]);
+  }, [lugares, mapReady]);
 
   useEffect(() => {
     const instance = map.current;
     const api = mapApi.current;
-    if (!instance || !api) return;
+    if (!mapReady || !instance || !api) return;
     if (!pick) {
       pickMarker.current?.remove();
       pickMarker.current = null;
@@ -187,7 +190,7 @@ export default function FestMap({
       pickMarker.current = new api.Marker({ element, anchor: "center" }).setLngLat([pick.lng, pick.lat]).addTo(instance);
     } else pickMarker.current.setLngLat([pick.lng, pick.lat]);
     instance.easeTo({ center: [pick.lng, pick.lat], duration: 450 });
-  }, [pick]);
+  }, [pick, mapReady]);
 
   useEffect(() => {
     const instance = map.current;
@@ -195,14 +198,14 @@ export default function FestMap({
       lastFocusedId.current = null;
       return;
     }
-    if (!instance || lastFocusedId.current === focusId) return;
+    if (!mapReady || !instance || lastFocusedId.current === focusId) return;
     const marker = markers.current[focusId];
     if (!marker) return;
     lastFocusedId.current = focusId;
     instance.stop();
     instance.easeTo({ center: marker.getLngLat(), zoom: 17, pitch: 58, duration: 650 });
     marker.togglePopup?.();
-  }, [focusId, lugares]);
+  }, [focusId, lugares, mapReady]);
 
   return <div ref={el} className="h-full w-full" />;
 }
