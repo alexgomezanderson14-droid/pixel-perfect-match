@@ -5,7 +5,7 @@ create table if not exists public.penya_fotos (
   url text not null,
   destacada boolean not null default false,
   visible boolean not null default true,
-  created_by uuid references auth.users(id) on delete set null,
+  created_by uuid default auth.uid() references auth.users(id) on delete set null,
   created_at timestamptz not null default now()
 );
 
@@ -60,3 +60,19 @@ create policy "Penya members can delete photos"
 grant select on public.penya_fotos to anon, authenticated;
 grant insert, update, delete on public.penya_fotos to authenticated;
 notify pgrst, 'reload schema';
+
+-- Gallery uploads use a dedicated path and trusted membership claims.
+drop policy if exists "Penya members can upload gallery photos" on storage.objects;
+create policy "Penya members can upload gallery photos"
+  on storage.objects for insert to authenticated
+  with check (
+    bucket_id = 'penyes'
+    and (storage.foldername(name))[1] = 'penyes'
+    and (storage.foldername(name))[2] = 'galeria'
+    and (
+      (auth.jwt()->>'email') = 'gomezandersonalex@gmail.com'
+      or coalesce(auth.jwt()->'app_metadata'->'penya_ids', '[]'::jsonb) ? (storage.foldername(name))[3]
+      or coalesce(auth.jwt()->'app_metadata'->'penya_memberships', '[]'::jsonb) ? (storage.foldername(name))[3]
+      or coalesce(auth.jwt()->'app_metadata'->'penya_admin_ids', '[]'::jsonb) ? (storage.foldername(name))[3]
+    )
+  );
