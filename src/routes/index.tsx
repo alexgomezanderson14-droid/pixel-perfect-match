@@ -362,7 +362,7 @@ function Home() {
   const [newsPopup, setNewsPopup] = useState<any[]>([]);
   const [siteContent, setSiteContent] = useState<Record<string,string>>({});
   const penyaCardSettings = useMemo(()=>{try{const parsed=JSON.parse(siteContent["penyas_cards_json"]||"{}");return parsed&&typeof parsed==="object"?parsed as Record<string,{color?:string;logo_url?:string;title?:string;description?:string;logo_scale?:number;logo_x?:number;logo_y?:number}>:{ };}catch{return {}; }},[siteContent]);
-  const penyaProfileLogoSettings = useMemo(()=>{try{const parsed=JSON.parse(siteContent["penyes_logos_ficha_json"]||"{}");return parsed&&typeof parsed==="object"?parsed as Record<string,{zoom?:number;x?:number;y?:number}>:{ };}catch{return {}; }},[siteContent]);
+  const penyaProfileLogoSettings = useMemo(()=>{try{const parsed=JSON.parse(siteContent["penyes_logos_ficha_json"]||"{}");return parsed&&typeof parsed==="object"?parsed as Record<string,{zoom?:number;x?:number;y?:number;frameScale?:number}>:{ };}catch{return {}; }},[siteContent]);
   const [heroImage, setHeroImage] = useState("");
   const [form, setForm] = useState(false);
   const [shareReminder, setShareReminder] = useState(false);
@@ -1058,7 +1058,8 @@ function Home() {
                   const logoX=Number.isFinite(cardConfig.logo_x)?Math.max(0,Math.min(100,cardConfig.logo_x!)):50;
                   const logoY=Number.isFinite(cardConfig.logo_y)?Math.max(0,Math.min(100,cardConfig.logo_y!)):50;
                   const rgb=color.match(/[0-9a-f]{2}/gi)?.map(value=>parseInt(value,16))||[89,104,216];
-                  const luminance=(0.2126*rgb[0]!+0.7152*rgb[1]!+0.0722*rgb[2]!)/255;
+                  const linear=rgb.map(value=>{const channel=value/255;return channel<=0.04045?channel/12.92:Math.pow((channel+0.055)/1.055,2);});
+                  const luminance=0.2126*linear[0]!+0.7152*linear[1]!+0.0722*linear[2]!;
                   const cardTextColor=luminance>0.56?"#17232a":"#ffffff";
                   const cardTextShadow=luminance>0.56?"0 1px 2px rgba(255,255,255,.35)":"0 2px 8px rgba(0,0,0,.42)";
                   const cardTitle=String(cardConfig.title||p.nombre).trim()||p.nombre;
@@ -1226,7 +1227,7 @@ function Home() {
       </div> : (
         <div className={`fixed inset-0 z-[2147483002] flex justify-center ${penyaDetailFullscreen ? "bg-[#102f3d] items-stretch p-0" : "bg-[#071c25]/75 items-end p-0 pt-[max(1rem,env(safe-area-inset-top))] sm:items-center sm:p-5 backdrop-blur-md"}`} onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }}>
           <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className={`w-full overflow-auto overscroll-contain border border-white/70 bg-[#f5f8f7] pb-[calc(105px+env(safe-area-inset-bottom))] shadow-[0_30px_100px_rgba(4,25,34,.42)] ${penyaDetailFullscreen ? "h-[100dvh] max-h-[100dvh] max-w-none rounded-none" : "max-h-[94dvh] max-w-[min(96vw,1500px)] rounded-t-[1.75rem] sm:rounded-[2rem]"}`}>
-            <div className="relative h-[250px] overflow-hidden bg-[#c9e9f1] sm:h-[330px] lg:h-[370px]">
+            <div className="relative h-[250px] overflow-hidden bg-[#c9e9f1] sm:h-[330px] lg:h-[370px]" style={{height:`clamp(250px,25vw,${selectedPenyaBannerBlock?.height??370}px)`}}>
               {selectedPenyaBanner&&<img src={selectedPenyaBanner} alt={"Portada de "+selectedPenya.nombre} style={{objectPosition:`${selectedPenyaBannerBlock?.positionX??50}% ${selectedPenyaBannerBlock?.positionY??50}%`,transform:`scale(${(selectedPenyaBannerBlock?.zoom??100)/100})`}} className="absolute inset-0 h-full w-full object-cover object-center"/>}
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#f5f8f7]"/>
               <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#f5f8f7] via-[#f5f8f7]/65 to-transparent sm:h-40"/>
@@ -1240,7 +1241,7 @@ function Home() {
             </div>
             <div className="relative z-10 mx-auto -mt-[112px] w-full max-w-[1500px] px-4 pb-5 sm:-mt-[142px] sm:px-7 lg:px-12 xl:px-16 2xl:px-20">
               <div className="relative flex flex-col items-center text-center">
-                <div className="relative z-20 grid h-44 w-44 shrink-0 place-items-center overflow-hidden rounded-full border-[7px] border-[#f5f8f7] bg-white text-5xl font-black text-[#173f52] shadow-[0_10px_34px_rgba(4,25,34,.22)] sm:h-56 sm:w-56 sm:border-[8px] lg:h-72 lg:w-72 xl:h-80 xl:w-80">{selectedPenya.foto?<img src={selectedPenya.foto} alt={"Logo de "+selectedPenya.nombre} style={{objectPosition:`${penyaProfileLogoSettings[selectedPenya.id]?.x??50}% ${penyaProfileLogoSettings[selectedPenya.id]?.y??50}%`,transform:`scale(${(penyaProfileLogoSettings[selectedPenya.id]?.zoom??100)/100})`}} className="h-full w-full object-cover"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
+                <div className="relative z-20 grid h-44 w-44 shrink-0 place-items-center overflow-hidden rounded-full border-[7px] border-[#f5f8f7] bg-white text-5xl font-black text-[#173f52] shadow-[0_10px_34px_rgba(4,25,34,.22)] sm:h-56 sm:w-56 sm:border-[8px] lg:h-72 lg:w-72 xl:h-80 xl:w-80" style={{transform:`scale(${(penyaProfileLogoSettings[selectedPenya.id]?.frameScale??100)/100})`}}>{selectedPenya.foto?<img src={selectedPenya.foto} alt={"Logo de "+selectedPenya.nombre} style={{objectPosition:`${penyaProfileLogoSettings[selectedPenya.id]?.x??50}% ${penyaProfileLogoSettings[selectedPenya.id]?.y??50}%`,transform:`scale(${(penyaProfileLogoSettings[selectedPenya.id]?.zoom??100)/100})`}} className="h-full w-full object-cover"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
                 {(mayoralesPenyaId?selectedPenya.id===mayoralesPenyaId:esPenyaCuBaTa(selectedPenya.nombre))&&<div className="mt-2"><span className="inline-flex items-center gap-1 rounded-full border border-[#e6ce91] bg-[#fff7df] px-3 py-1 text-[10px] font-extrabold tracking-wide text-[#765c25] sm:text-xs">♛ MAYORALES {mayoralesAnio}</span></div>}
                 <h2 className="mt-2 max-w-4xl break-words text-[26px] font-black leading-tight tracking-tight text-[#173f52] sm:mt-3 sm:text-4xl lg:text-[2.65rem]">{selectedPenya.nombre}</h2>
                 {selectedPenya.informacion?.trim()&&<p className="mx-auto mt-2 max-w-2xl line-clamp-2 text-sm leading-relaxed text-[#61777b] sm:text-base">{selectedPenya.informacion}</p>}
