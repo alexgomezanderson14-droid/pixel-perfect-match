@@ -745,10 +745,10 @@ function Home() {
         })}
         <span aria-hidden="true" className={"pointer-events-none absolute inset-y-1 left-1 z-0 w-[calc((100%-8px)/4)] rounded-full border border-white/25 bg-[linear-gradient(145deg,rgba(25,43,55,.78),rgba(25,43,55,.58))] shadow-[0_5px_18px_rgba(18,35,47,.22),0_1px_4px_rgba(255,255,255,.22)_inset] backdrop-blur-2xl transition-transform duration-300 ease-[cubic-bezier(.22,.61,.36,1)] "+(currentPage==="info"?"opacity-0":"")} style={{transform:"translateX(calc("+(["home","eventos","penyes","noticias"].indexOf(currentPage)*100)+"%))"}}/>
       </nav>
-      <button type="button" onClick={()=>{setCurrentPage("info");window.scrollTo({top:0,behavior:"smooth"});}} aria-label="Abrir ajustes" title="Ajustes" className="fixed right-3 top-[calc(env(safe-area-inset-top)+12px)] z-[2147483001] grid h-11 w-11 place-items-center rounded-full border border-white/45 bg-[#173f52]/70 text-white shadow-lg backdrop-blur-xl transition hover:rotate-12 hover:bg-[#173f52]/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white sm:right-6 sm:top-[calc(env(safe-area-inset-top)+16px)] sm:h-12 sm:w-12">
+      {!selectedPenya&&<button type="button" onClick={()=>{setCurrentPage("info");window.scrollTo({top:0,behavior:"smooth"});}} aria-label="Abrir ajustes" title="Ajustes" className="fixed right-3 top-[calc(env(safe-area-inset-top)+12px)] z-[2147483001] grid h-11 w-11 place-items-center rounded-full border border-white/35 bg-[rgba(23,63,82,.34)] text-white shadow-md backdrop-blur-2xl [backdrop-filter:blur(18px)_saturate(145%)] transition hover:rotate-12 hover:bg-[rgba(23,63,82,.58)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-white sm:right-6 sm:top-[calc(env(safe-area-inset-top)+16px)] sm:h-12 sm:w-12">
         <svg viewBox="0 0 24 24" className="h-5 w-5 sm:h-[22px] sm:w-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10.2 2.8h3.6l.55 2.05a7.6 7.6 0 0 1 1.55.9l2.02-.62 1.8 3.12-1.48 1.52c.12.58.12 1.18 0 1.76l1.48 1.52-1.8 3.12-2.02-.62a7.6 7.6 0 0 1-1.55.9l-.55 2.05h-3.6l-.55-2.05a7.6 7.6 0 0 1-1.55-.9l-2.02.62-1.8-3.12 1.48-1.52a4.4 4.4 0 0 1 0-1.76L4.28 8.23l1.8-3.12 2.02.62a7.6 7.6 0 0 1 1.55-.9z"/><circle cx="12" cy="10.65" r="2.65"/></svg>
         {unreadNotifications.length>0&&<span className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500" aria-label="Hay notificaciones sin leer"/>}
-      </button>
+      </button>}
       {currentPage!=="home"&&<div aria-hidden="true" className={currentPage==="penyes"||currentPage==="noticias"?"h-0 shrink-0":"h-[58px] shrink-0 sm:h-[64px]"} />}
       {fotoAmpliada!==null&&noticiaImagenes[fotoAmpliada]&&<div role="dialog" aria-modal="true" aria-label="Fotografía ampliada" className="fixed inset-0 z-[7000] flex items-center justify-center bg-black/95 p-3 backdrop-blur-sm animate-in fade-in duration-200" onClick={()=>setFotoAmpliada(null)}><button type="button" onClick={()=>setFotoAmpliada(null)} aria-label="Cerrar fotografía" className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-3xl text-white transition hover:rotate-90 hover:bg-white/25">×</button><button type="button" aria-label="Fotografía anterior" onClick={e=>{e.stopPropagation();setFotoAmpliada((fotoAmpliada-1+noticiaImagenes.length)%noticiaImagenes.length);}} className="absolute left-2 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-3xl text-white transition hover:scale-110 hover:bg-white/25 sm:left-5">‹</button><div className="flex max-h-full max-w-full flex-col items-center gap-3" onClick={e=>e.stopPropagation()}><img src={noticiaImagenes[fotoAmpliada]} alt={noticiaSeleccionada?.titulo+" · foto "+(fotoAmpliada+1)} style={{width:"min(96vw, 1800px)",height:"min(86svh, 1200px)"}} width={1800} height={1200} loading="eager" fetchPriority="high" decoding="async" draggable={false} className="max-h-[86svh] max-w-[96vw] rounded-lg object-contain shadow-2xl animate-in zoom-in-95 duration-300"/><div className="flex items-center gap-3 text-sm font-semibold text-white"><span>{fotoAmpliada+1} / {noticiaImagenes.length}</span><a href={noticiaImagenes[fotoAmpliada]} download target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} className="rounded-full border border-white/30 bg-white/15 px-4 py-2 transition hover:scale-105 hover:bg-white/25">↓ Descargar foto</a></div></div><button type="button" aria-label="Fotografía siguiente" onClick={e=>{e.stopPropagation();setFotoAmpliada((fotoAmpliada+1)%noticiaImagenes.length);}} className="absolute right-2 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-3xl text-white transition hover:scale-110 hover:bg-white/25 sm:right-5">›</button></div>}
       {currentPage==="home" && <>
@@ -1009,41 +1009,20 @@ function Home() {
           ) : visiblePenyes.length===0 ? (
             <div className="glass rounded-3xl p-8 text-center"><p className="font-bold text-primary">No encontramos peñas con esos filtros</p><p className="mt-1 text-sm text-muted-foreground">Prueba con otra búsqueda o limpia los filtros.</p><button onClick={()=>{setPenyaSearch("");setPenyaMusicFilter("Todas");setPenyaOnlyMine(false);}} className="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">Mostrar todas las peñas</button></div>
           ) : (
-            <div className="grid min-w-0 grid-cols-1 items-stretch gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-2 2xl:grid-cols-2">
-              {visiblePenyes.map((p) => {
-                const plans = eventosActivos.filter(e => e.penya_id === p.id);
-                return (
-                  <article id={"penya-" + p.id} key={p.id} tabIndex={0} aria-label={`Abrir ficha de ${p.nombre}`} onClick={() => { setPenyaDetailFullscreen(true); setSelectedPenya(p); }} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setPenyaDetailFullscreen(true); setSelectedPenya(p); } }} style={{"--penya-enter-delay": (Math.min(visiblePenyes.indexOf(p),12)*55)+"ms"} as React.CSSProperties} className="penya-card-enter group flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-[1.6rem] border border-white/80 bg-white/75 shadow-[0_12px_36px_rgba(23,63,82,.08)] ring-1 ring-[#173f52]/[.045] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_48px_rgba(23,63,82,.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:rounded-[1.8rem]">
-                    <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37]">
-                      {p.foto ? <img src={p.foto} alt={p.nombre} loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.045]" /> : <div className="grid h-full place-items-center text-6xl font-extrabold tracking-tight text-white/80">{p.nombre.trim().charAt(0).toLocaleUpperCase("es")}</div>}
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#102f3d]/75 via-transparent to-black/10"/>
-                      <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3.5">
-                        {esPenyaCuBaTa(p.nombre) ? <span className="rounded-full border border-[#f5d77c]/60 bg-[#d4af37] px-3 py-1.5 text-[9px] font-extrabold tracking-[.12em] text-[#3b2a0a] shadow-lg">♛ MAYORALES 2027</span> : <span/>}
-                        {misPenyes.includes(p.id) && <span className="rounded-full border border-white/40 bg-white/90 px-3 py-1.5 text-[9px] font-extrabold tracking-wider text-[#173f52] shadow-lg">★ FAVORITA</span>}
-                      </div>
-                      <div className="absolute inset-x-4 bottom-4">
-                        
-                        <h3 className="mt-1 line-clamp-2 break-words text-xl font-black leading-[1.02] tracking-[-.045em] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,.85)] sm:hidden">{p.nombre}</h3>
-                      </div>
+            <div className="grid min-w-0 grid-cols-2 items-stretch gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+              {visiblePenyes.map((p) => (
+                <article id={"penya-" + p.id} key={p.id} tabIndex={0} aria-label={`Abrir ficha de ${p.nombre}`} onClick={() => { setPenyaDetailFullscreen(true); setSelectedPenya(p); }} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setPenyaDetailFullscreen(true); setSelectedPenya(p); } }} style={{"--penya-enter-delay": (Math.min(visiblePenyes.indexOf(p),18)*35)+"ms"} as React.CSSProperties} className="penya-card-enter group relative min-w-0 cursor-pointer overflow-hidden rounded-[1.2rem] bg-[#173f52] shadow-[0_7px_22px_rgba(23,63,82,.12)] transition-[transform,box-shadow] duration-500 ease-[cubic-bezier(.22,.61,.36,1)] hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(23,63,82,.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:rounded-[1.45rem]">
+                  <div className="relative aspect-[4/5] overflow-hidden">
+                    {p.foto?<img src={p.foto} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(.2,.75,.25,1)] group-hover:scale-[1.07]"/>:<div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37] text-5xl font-black text-white/80">{p.nombre.trim().charAt(0).toLocaleUpperCase("es")}</div>}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#071c25]/85 via-[#071c25]/10 to-[#071c25]/5"/>
+                    <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4">
+                      <h3 className="line-clamp-2 break-words text-[13px] font-black leading-tight tracking-[-.02em] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,.65)] sm:text-base lg:text-lg">{p.nombre}</h3>
+                      {esPenyaCuBaTa(p.nombre)&&<span className="mt-2 inline-flex rounded-full border border-[#f5d77c]/60 bg-[#d4af37] px-2 py-1 text-[8px] font-extrabold tracking-[.1em] text-[#3b2a0a] shadow-lg sm:text-[9px]">♛ MAYORALES 2027</span>}
                     </div>
-                    <div className="flex flex-1 flex-col p-4 sm:p-5">
-                      <h3 className="mb-3 hidden break-words text-[1.35rem] font-black leading-[1.05] tracking-[-.045em] text-[#173f52] sm:block lg:text-[1.55rem]">{p.nombre}</h3>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eaf1f2] px-3 py-1.5 text-[11px] font-bold text-[#24576a]">♫ {p.tipo_musica||"Música variada"}</span>
-                        {p.lat!=null&&p.lng!=null&&<span className="inline-flex items-center gap-1 rounded-full border border-[#dbe5e7] px-3 py-1.5 text-[11px] font-semibold text-[#607781]">⌖ Con ubicación</span>}
-                      </div>
-                      {p.direccion&&<p className="mt-3 line-clamp-1 text-xs font-medium text-muted-foreground">⌖ {p.direccion}</p>}
-                      {p.informacion?.trim()&&<p className="mt-3 line-clamp-2 break-words text-sm leading-relaxed text-muted-foreground">{p.informacion}</p>}
-                      {plans.length>0&&<div className="mt-4 rounded-xl border border-[#dce8e8] bg-[#f2f7f6] px-3.5 py-3"><p className="text-[9px] font-extrabold uppercase tracking-[.16em] text-[#47717b]">Próximo plan</p><p className="mt-1 line-clamp-1 text-xs font-bold text-[#173f52]">{plans[0].titulo}{plans[0].dia?" · "+fmtDia(plans[0].dia):""}</p></div>}
-                      <div className="mt-auto flex items-center gap-2 border-t border-[#e4ebeb] pt-4 ">
-                        <button onClick={e=>{e.stopPropagation();toggleMiPenya(p.id);}} aria-pressed={misPenyes.includes(p.id)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#dce6e7] bg-white text-lg text-[#24576a] transition hover:bg-[#edf4f3]" aria-label={misPenyes.includes(p.id)?"Quitar de mis peñas":"Guardar en mis peñas"}>{misPenyes.includes(p.id)?"★":"☆"}</button>
-                        <button onClick={e=>{e.stopPropagation();goMap(p.id);}} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#dce6e7] bg-white text-base text-[#24576a] transition hover:bg-[#edf4f3]" aria-label="Ver en el mapa">⌖</button>
-                        <button onClick={e=>{e.stopPropagation();setSelectedPenya(p);setPenyaDetailFullscreen(true);}} className="flex min-h-10 flex-1 items-center justify-center gap-2 rounded-full bg-[#173f52] px-4 text-xs font-bold text-white shadow-sm transition hover:bg-[#236579]">Ver peña <span aria-hidden="true">↗</span></button>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
+                    {misPenyes.includes(p.id)&&<span className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full border border-white/45 bg-white/85 text-sm text-[#173f52] shadow-md" aria-label="Peña favorita">★</span>}
+                  </div>
+                </article>
+              ))}
             </div>
           )}
 
@@ -1175,8 +1154,8 @@ function Home() {
           </div>
         </section>
       </div> : (
-        <div className={`fixed inset-0 z-[6000] flex justify-center ${penyaDetailFullscreen ? "bg-[#102f3d] items-stretch p-0" : "bg-[#071c25]/75 items-end p-0 pt-[max(1rem,env(safe-area-inset-top))] sm:items-center sm:p-5 backdrop-blur-md"}`} onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }}>
-          <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className={`w-full overflow-auto border border-white/70 bg-[#f5f8f7] shadow-[0_30px_100px_rgba(4,25,34,.42)] ${penyaDetailFullscreen ? "h-[100dvh] max-h-[100dvh] max-w-none rounded-none" : "max-h-[94dvh] max-w-[min(96vw,1500px)] rounded-t-[1.75rem] sm:rounded-[2rem]"}`}>
+        <div className={`fixed inset-0 z-[2147483002] flex justify-center ${penyaDetailFullscreen ? "bg-[#102f3d] items-stretch p-0" : "bg-[#071c25]/75 items-end p-0 pt-[max(1rem,env(safe-area-inset-top))] sm:items-center sm:p-5 backdrop-blur-md"}`} onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }}>
+          <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className={`w-full overflow-auto overscroll-contain border border-white/70 bg-[#f5f8f7] pb-[calc(105px+env(safe-area-inset-bottom))] shadow-[0_30px_100px_rgba(4,25,34,.42)] ${penyaDetailFullscreen ? "h-[100dvh] max-h-[100dvh] max-w-none rounded-none" : "max-h-[94dvh] max-w-[min(96vw,1500px)] rounded-t-[1.75rem] sm:rounded-[2rem]"}`}>
             <div className="relative h-[250px] overflow-hidden bg-[#c9e9f1] sm:h-[330px] lg:h-[370px]">
               {selectedPenyaBanner&&<img src={selectedPenyaBanner} alt={"Portada de "+selectedPenya.nombre} className="absolute inset-0 h-full w-full object-cover object-center"/>}
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#f5f8f7]"/>
