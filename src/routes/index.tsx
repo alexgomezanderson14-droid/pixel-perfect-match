@@ -3,6 +3,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type
 import { createPortal } from "react-dom";
 import { edicion, lugares as lugaresFijos, ui, type Categoria, type Lugar } from "@/content/fiestas";
 import { supabase } from "@/integrations/supabase/client";
+import AdminPenyaEditor from "@/components/AdminPenyaEditor";
 import CopyrightFooter from "@/components/CopyrightFooter";
 import { noticiaCuBaTa2027 } from "@/content/noticia-cubata-2027";
 import { noticiaCestaNavidad2027 } from "@/content/noticia-cesta-navidad-2027";
@@ -325,7 +326,6 @@ function Home() {
   const [activePenyaCard, setActivePenyaCard] = useState(0);
   const [editingFeaturedPenya, setEditingFeaturedPenya] = useState<PenyaDb | null>(null);
   const penyaCarouselRef = useRef<HTMLDivElement | null>(null);
-  useEffect(()=>{if(!visiblePenyes.length)return;const middle=visiblePenyes.length;setActivePenyaCard(middle);const frame=requestAnimationFrame(()=>{const card=penyaCarouselRef.current?.children[middle] as HTMLElement|undefined;card?.scrollIntoView({block:"nearest",inline:"center",behavior:"auto"});});return()=>cancelAnimationFrame(frame);},[visiblePenyes.length,penyaSearch,penyaMusicFilter,penyaOnlyMine]);
   const [eventsSearch, setEventsSearch] = useState("");
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
   const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes">("all");
@@ -389,6 +389,7 @@ function Home() {
   const penyaMusicOptions = useMemo(()=>["Todas",...Array.from(new Set(penyes.map(p=>String(p.tipo_musica||"").trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b,"es"))],[penyes]);
   const visiblePenyes = useMemo(()=>[...penyes].filter(p=>(!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica,p.informacion].join(" ")).includes(normalizarBusqueda(penyaSearch)))&&(penyaMusicFilter==="Todas"||String(p.tipo_musica||"").trim()===penyaMusicFilter)&&(!penyaOnlyMine||misPenyes.includes(p.id))).sort((a,b)=>Number(esPenyaCuBaTa(b.nombre))-Number(esPenyaCuBaTa(a.nombre))||Number(misPenyes.includes(b.id))-Number(misPenyes.includes(a.id))||a.nombre.localeCompare(b.nombre,"es")),[penyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,misPenyes]);
   const loopedPenyes = visiblePenyes.length ? [...visiblePenyes,...visiblePenyes,...visiblePenyes] : [];
+  useEffect(()=>{if(!visiblePenyes.length)return;const middle=visiblePenyes.length;setActivePenyaCard(middle);const frame=requestAnimationFrame(()=>{const card=penyaCarouselRef.current?.children[middle] as HTMLElement|undefined;card?.scrollIntoView({block:"nearest",inline:"center",behavior:"auto"});});return()=>cancelAnimationFrame(frame);},[visiblePenyes.length,penyaSearch,penyaMusicFilter,penyaOnlyMine]);
   const visibleNews = useMemo(()=>noticias.filter((n:any)=>n.publicado&&(!newsSearch.trim()||normalizarBusqueda([n.titulo,n.resumen,n.contenido,n.autor,n.fuente].join(" ")).includes(normalizarBusqueda(newsSearch)))).slice().sort((x:any,y:any)=>new Date(String(y.fecha||y.created_at||"").slice(0,10)+"T12:00:00").getTime()-new Date(String(x.fecha||x.created_at||"").slice(0,10)+"T12:00:00").getTime()),[noticias,newsSearch]);
   const featuredNews = visibleNews.filter((n:any)=>n.destacada);
   const regularNews = visibleNews.filter((n:any)=>!n.destacada);
@@ -737,6 +738,7 @@ function Home() {
 
   return (
     <div className="page-bg relative min-h-screen" style={{ "--pink": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--secondary": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--accent": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--ring": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--cat-penya": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--background": siteContent["theme_background"] || "oklch(0.975 0.012 90)", "--gradient-page": `linear-gradient(180deg, ${siteContent["theme_background"] || "oklch(0.985 0.008 90)"}, ${siteContent["theme_background"] || "oklch(0.965 0.014 90)"})` } as React.CSSProperties}>
+      {featuredPhotoEditorModal}
       <nav aria-label="Navegación principal" style={{position:"fixed",left:"50vw",right:"auto",top:"auto",bottom:"calc(env(safe-area-inset-bottom) + 10px)",width:"min(460px, calc(100vw - 24px))",maxWidth:"calc(100vw - 24px)",height:"62px",minHeight:"62px",boxSizing:"border-box",transform:"translate3d(-50%, 0, 0)",translate:"none",margin:0,zIndex:2147483000}} className="flex items-center justify-between gap-0 overflow-hidden rounded-full border border-white/85 bg-[rgba(245,248,250,.94)] px-1 shadow-[0_5px_18px_rgba(20,39,52,.16),0_1px_4px_rgba(255,255,255,.95)_inset] backdrop-blur-2xl [backdrop-filter:blur(24px)_saturate(155%)]">
         {(["home","eventos","penyes","noticias"] as const).map((page,index)=>{
           const labels={home:"Inicio",eventos:"Eventos",penyes:"Peñas",noticias:"Noticias"};
@@ -1306,7 +1308,6 @@ function SectionTitle({ children }: { children: ReactNode }) {
 
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
   return (
-    {featuredPhotoEditorModal}
     <button onClick={onClick} className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${active ? "border-primary bg-primary text-primary-foreground" : "glass-btn"}`}>
       {children}
     </button>
