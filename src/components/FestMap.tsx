@@ -83,9 +83,9 @@ export default function FestMap({
       const instance = new api.Map({
         container: el.current,
         style: "https://tiles.openfreemap.org/styles/liberty",
-        center: [-0.082, 38.581],
-        zoom: 13.35,
-        pitch: 55,
+        center: [-0.103, 38.581],
+        zoom: 12.85,
+        pitch: 48,
         bearing: -12,
         maxPitch: 72,
         minZoom: 12.7,
@@ -101,27 +101,45 @@ export default function FestMap({
       instance.addControl(new api.NavigationControl({ visualizePitch: true }), "top-right");
       instance.on("load", () => {
         if (cancelled || !map.current) return;
-        if (!instance.getSource("festalfas-buildings")) {
-          // Huellas de edificios de Maptoolkit: geometría y alturas alternativas a la capa genérica.
-          instance.addSource("festalfas-buildings", { type: "vector", url: "https://tiles.maptoolkit.org/buildings.json", attribution: "© OpenStreetMap contributors · © Maptoolkit" });
+        // Fuente vectorial abierta de OpenFreeMap (datos OpenStreetMap, sin clave ni cuenta).
+        // Usamos sus alturas render_height: el endpoint Maptoolkit anterior no estaba aportando
+        // una capa visible en este mapa y por eso el aspecto no cambiaba.
+        if (!instance.getSource("festalfas-open-buildings")) {
+          instance.addSource("festalfas-open-buildings", { type: "vector", url: "https://tiles.openfreemap.org/planet" });
         }
         const labelLayer = instance.getStyle().layers?.find((layer: any) => layer.type === "symbol" && layer.layout?.["text-field"])?.id;
+        if (!instance.getLayer("festalfas-building-outlines")) {
+          instance.addLayer({
+            id: "festalfas-building-outlines",
+            source: "festalfas-open-buildings",
+            "source-layer": "building",
+            type: "line",
+            minzoom: 13.5,
+            filter: ["!=", ["get", "hide_3d"], true],
+            paint: { "line-color": "#9b8068", "line-width": ["interpolate", ["linear"], ["zoom"], 13.5, 0.35, 17, 0.8], "line-opacity": 0.48 },
+          }, labelLayer);
+        }
         if (!instance.getLayer("festalfas-3d-buildings")) {
           instance.addLayer({
             id: "festalfas-3d-buildings",
-            source: "festalfas-buildings",
-            "source-layer": "buildings2d",
+            source: "festalfas-open-buildings",
+            "source-layer": "building",
             type: "fill-extrusion",
-            minzoom: 12,
+            minzoom: 13.5,
+            filter: ["!=", ["get", "hide_3d"], true],
             paint: {
-              "fill-extrusion-color": ["interpolate", ["linear"], ["coalesce", ["to-number", ["get", "height"]], 7], 0, "#e8e4dc", 12, "#c8c5bd", 40, "#aaa99f"],
-              "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 12, 0, 13, ["coalesce", ["to-number", ["get", "height"]], ["*", ["to-number", ["get", "building:levels"], 2], 3], 7]],
-              "fill-extrusion-base": ["coalesce", ["to-number", ["get", "min_height"]], 0],
-              "fill-extrusion-opacity": 0.92,
+              "fill-extrusion-color": ["match", ["get", "building"],
+                "church", "#d9c39f", "school", "#e8d2a8", "commercial", "#d9c4ae",
+                "industrial", "#cbd5d3", "retail", "#ead8bd", "#e8d8c4"],
+              "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 13.5, 0, 14.5, ["coalesce", ["to-number", ["get", "render_height"]], 8]],
+              "fill-extrusion-base": ["coalesce", ["to-number", ["get", "render_min_height"]], 0],
+              "fill-extrusion-opacity": 1,
               "fill-extrusion-vertical-gradient": true,
             },
           }, labelLayer);
         }
+        // Entrada animada: aterriza sobre el casco urbano de l'Alfàs del Pi.
+        instance.easeTo({ center: [-0.103, 38.581], zoom: 13.65, pitch: 62, bearing: -14, duration: 1150, essential: true });
         setMapReady(true);
       });
       instance.on("click", (event: any) => pickRef.current?.(event.lngLat.lat, event.lngLat.lng));
