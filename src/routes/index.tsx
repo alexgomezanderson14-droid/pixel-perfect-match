@@ -156,10 +156,12 @@ async function sharePenyaCard(p: PenyaDb) {
 
   // La foto/logo de la peña se coloca como emblema circular.
   if (p.foto) {
+    let logoObjectUrl: string | null = null;
     try {
       const response = await fetch(p.foto, { mode: "cors" });
       if (!response.ok) throw new Error("Logo no disponible");
       const objectUrl = URL.createObjectURL(await response.blob());
+      logoObjectUrl = objectUrl;
       const logo = new Image();
       await new Promise<void>((resolve, reject) => {
         logo.onload = () => resolve();
@@ -173,7 +175,9 @@ async function sharePenyaCard(p: PenyaDb) {
       c.drawImage(logo, 68, 153, 184, 184);
       c.restore();
       URL.revokeObjectURL(objectUrl);
+      logoObjectUrl = null;
     } catch {
+      if (logoObjectUrl) URL.revokeObjectURL(logoObjectUrl);
       c.fillStyle = "#e6b6c7";
       c.beginPath(); c.arc(160, 245, 92, 0, Math.PI * 2); c.fill();
       c.fillStyle = "#173f52"; c.font = "bold 90px Arial";
@@ -204,11 +208,13 @@ async function sharePenyaCard(p: PenyaDb) {
 
   let mapDrawn = false;
   if (p.lat != null && p.lng != null) {
+    let mapObjectUrl: string | null = null;
     try {
       const mapUrl = "https://staticmap.openstreetmap.de/staticmap.php?center=" + p.lat + "," + p.lng + "&zoom=16&size=960x760&markers=" + p.lat + "," + p.lng + ",red-pushpin";
       const response = await fetch(mapUrl, { mode: "cors" });
       if (!response.ok) throw new Error("Mapa no disponible");
       const objectUrl = URL.createObjectURL(await response.blob());
+      mapObjectUrl = objectUrl;
       const mapImage = new Image();
       await new Promise<void>((resolve, reject) => {
         mapImage.onload = () => resolve();
@@ -220,8 +226,9 @@ async function sharePenyaCard(p: PenyaDb) {
       c.drawImage(mapImage, 60, 550, 960, 760);
       c.restore();
       URL.revokeObjectURL(objectUrl);
+      mapObjectUrl = null;
       mapDrawn = true;
-    } catch { mapDrawn = false; }
+    } catch { if (mapObjectUrl) URL.revokeObjectURL(mapObjectUrl); mapDrawn = false; }
   }
 
   if (!mapDrawn) {
