@@ -1060,8 +1060,21 @@ function Home() {
       </aside>}
 
       {selectedPenya && (
-        <div className={`fixed inset-0 z-[1900] flex justify-center ${penyaDetailFullscreen ? "bg-[#102f3d] items-stretch p-0" : "bg-[#071c25]/75 items-end p-0 sm:items-center sm:p-5 backdrop-blur-md"}`} onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }}>
-          <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className={`w-full overflow-auto border border-white/70 bg-[#f5f8f7] shadow-[0_30px_100px_rgba(4,25,34,.42)] ${penyaDetailFullscreen ? "h-[100dvh] max-h-[100dvh] max-w-none rounded-none" : "max-h-[94dvh] max-w-5xl rounded-t-[1.75rem] sm:rounded-[2rem]"}`}>
+        <div className={`fixed inset-0 z-[1900] flex justify-center ${penyaDetailFullscreen ? "bg-[#102f3d] items-stretch p-0" : mapPenyaPreview ? "bg-[#071c25]/75 items-center p-3 sm:p-5 backdrop-blur-md" : "bg-[#071c25]/75 items-end p-0 sm:items-center sm:p-5 backdrop-blur-md"}`} onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }}>
+          <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className={`w-full overflow-auto border border-white/70 bg-[#f5f8f7] shadow-[0_30px_100px_rgba(4,25,34,.42)] ${penyaDetailFullscreen ? "h-[100dvh] max-h-[100dvh] max-w-none rounded-none" : mapPenyaPreview ? "max-h-[75dvh] max-w-md rounded-[1.75rem]" : "max-h-[94dvh] max-w-5xl rounded-t-[1.75rem] sm:rounded-[2rem]"}`}>
+            {mapPenyaPreview ? <div className="px-5 pb-6">
+              <div className="relative -mx-5 -mt-0 h-28 bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37]">
+                {selectedPenyaBanner && <img src={selectedPenyaBanner} alt="" className="h-full w-full object-cover"/>}
+                <button type="button" onClick={()=>{setSelectedPenya(null);setMapPenyaPreview(false);}} className="absolute right-3 top-3 rounded-full bg-black/40 px-3 py-2 text-white">✕</button>
+              </div>
+              <div className="-mt-9 flex items-end gap-3">
+                <div className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full border-4 border-[#f5f8f7] bg-white text-2xl font-black text-[#173f52] shadow-lg">{selectedPenya.foto?<img src={selectedPenya.foto} alt="" className="h-full w-full object-cover"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
+                <h2 className="pb-1 text-xl font-black leading-tight text-[#173f52]">{selectedPenya.nombre}</h2>
+              </div>
+              {selectedPenya.informacion?.trim() && <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-[#40575e]">{selectedPenya.informacion}</p>}
+              {selectedPenya.direccion && <p className="mt-3 text-xs font-semibold text-[#61777b]">📍 {selectedPenya.direccion}</p>}
+              <button type="button" onClick={()=>{setMapPenyaPreview(false);setCurrentPage("penyes");setPenyaDetailFullscreen(true);window.scrollTo({top:0,behavior:"smooth"});}} className="mt-5 w-full rounded-full bg-[#173f52] px-4 py-3 text-sm font-extrabold text-white">Ver ficha completa en Peñas ↗</button>
+            </div> : <>
             <div className="relative h-[230px] overflow-visible bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37] sm:h-[310px]">
               {selectedPenyaBanner && <img src={selectedPenyaBanner} alt={"Banner de "+selectedPenya.nombre} className="absolute inset-0 h-full w-full object-cover" />}
               <div className="absolute inset-0 bg-gradient-to-b from-[#071c25]/10 via-[#102f3d]/10 to-[#102f3d]/55" />
@@ -1109,7 +1122,8 @@ function Home() {
                         </div>;
                       })}
                     </div>
-                  </section>
+                    </>}
+          </section>
                 </>;
               })()}
               {selectedPenya.informacion?.trim() && <section className="mt-5 rounded-[1.5rem] border border-[#dce7e4] bg-white p-5 shadow-[0_8px_28px_rgba(23,63,82,.055)] sm:p-7"><div className="mb-3 flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#e7f0ed] text-lg text-[#173f52]">✦</span><h3 className="text-lg font-extrabold tracking-tight text-[#173f52] sm:text-xl">Quiénes somos</h3></div><p className="whitespace-pre-line text-[15px] leading-7 text-[#40575e] sm:text-base sm:leading-8">{selectedPenya.informacion}</p></section>}
