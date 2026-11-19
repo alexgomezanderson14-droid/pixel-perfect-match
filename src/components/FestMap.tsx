@@ -84,11 +84,11 @@ export default function FestMap({
         container: el.current,
         style: "https://styles.maptoolkit.org/summer-3d.json",
         center: [-0.103, 38.580],
-        zoom: 13.25,
-        pitch: 55,
+        zoom: 15.0,
+        pitch: 64,
         bearing: -12,
         maxPitch: 72,
-        minZoom: 12.7,
+        minZoom: 13.6,
         maxZoom: 19,
         maxBounds: [[-0.132, 38.548], [-0.028, 38.626]],
         maxBoundsViscosity: 1,
@@ -101,7 +101,22 @@ export default function FestMap({
       instance.addControl(new api.NavigationControl({ visualizePitch: true }), "top-right");
       instance.on("load", () => {
         if (cancelled || !map.current) return;
-        // El estilo Summer 3D aporta cartografía más viva y edificios basados en huellas reales de OpenStreetMap.
+        // Refuerzo de edificios 3D con huellas reales de OpenStreetMap (Maptoolkit).
+        if (!instance.getSource("festalfas-buildings")) {
+          instance.addSource("festalfas-buildings", { type: "vector", url: "https://tiles.maptoolkit.org/buildings.json", attribution: "© OpenStreetMap contributors · © Maptoolkit" });
+        }
+        const labelLayer = instance.getStyle().layers?.find((layer: any) => layer.type === "symbol" && layer.layout?.["text-field"])?.id;
+        if (!instance.getLayer("festalfas-3d-buildings")) {
+          instance.addLayer({
+            id: "festalfas-3d-buildings", source: "festalfas-buildings", "source-layer": "buildings2d", type: "fill-extrusion", minzoom: 12.5,
+            paint: {
+              "fill-extrusion-color": ["match", ["get", "building"], "church", "#e8d6b7", "school", "#d9c6a5", "commercial", "#d8c6b9", "retail", "#e4d0b6", "industrial", "#c9c8bd", "#eadfce"],
+              "fill-extrusion-height": ["max", 5, ["coalesce", ["to-number", ["get", "height"]], ["*", ["to-number", ["get", "building:levels"], 2], 3.4], 8]],
+              "fill-extrusion-base": ["coalesce", ["to-number", ["get", "min_height"]], 0],
+              "fill-extrusion-opacity": 0.98, "fill-extrusion-vertical-gradient": true
+            }
+          }, labelLayer);
+        }
         setMapReady(true);
       });
       instance.on("click", (event: any) => pickRef.current?.(event.lngLat.lat, event.lngLat.lng));
