@@ -493,57 +493,32 @@ nav[aria-label="Navegación principal"] {
 }
 
 
-/* Tipografía propia y renderizado limpio para los nombres del directorio de peñas. */
-.penya-card-title { font-family:"Space Grotesk",sans-serif; font-weight:700; letter-spacing:-.055em; line-height:.98; text-wrap:balance; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
-.penya-coverflow-card img { image-rendering:auto; -webkit-backface-visibility:hidden; backface-visibility:hidden; }
+/* Tarjetas de peñas: sin transformaciones 3D ni escalado de texto, para evitar rasterización borrosa. */
+.penya-coverflow { perspective:none !important; }
+.penya-coverflow-card { transform-style:flat !important; backface-visibility:visible !important; -webkit-backface-visibility:visible !important; filter:none !important; }
+.penya-card-title { font-family:"Space Grotesk",system-ui,sans-serif; font-weight:700; letter-spacing:-.035em; line-height:1.05; text-wrap:balance; text-rendering:auto; -webkit-font-smoothing:auto; -moz-osx-font-smoothing:auto; text-shadow:none !important; }
+.penya-coverflow-card p { text-shadow:none !important; }
 
+/* La ficha hereda el fondo cálido elegido para toda la web y aclara sus superficies. */
+.penya-profile-sheet { background:var(--background) !important; border-color:color-mix(in oklab,var(--foreground) 12%,transparent) !important; }
+.penya-profile-sheet [class~="bg-white"], .penya-profile-sheet [class~="bg-white/90"], .penya-profile-sheet [class~="bg-white/60"] { background-color:color-mix(in oklab,var(--background) 82%,white) !important; }
+.penya-profile-sheet [class*="f5f8f7"], .penya-profile-sheet [class*="f0f5f2"] { background-color:color-mix(in oklab,var(--background) 82%,white) !important; }
+.penya-profile-sheet [class*="52666b"] { color:color-mix(in oklab,var(--foreground) 78%,var(--background)) !important; }
 
-/* Evitar que los nombres se rastericen borrosos por filtros de color en el carrusel. */
-.penya-coverflow-card { backface-visibility: visible; -webkit-backface-visibility: visible; }
-.penya-card-title {
-  font-family:"Space Grotesk",sans-serif;
-  font-weight:700;
-  letter-spacing:-.045em;
-  line-height:1;
-  text-rendering:geometricPrecision;
-  -webkit-font-smoothing:auto;
-  -moz-osx-font-smoothing:auto;
-  backface-visibility:visible;
-  -webkit-backface-visibility:visible;
-  transform:translateZ(0);
-  paint-order:normal;
-  text-shadow:none !important;
-}
-
-/* La ficha utiliza el mismo fondo verde grisáceo suave que el resto de FestAlfàs. */
-.penya-profile-sheet { background:#f0f5f2 !important; }
-.penya-profile-sheet [class~="bg-white"] { background-color:#edf3f0 !important; }
-.penya-profile-sheet [class~="bg-white/90"] { background-color:rgba(237,243,240,.92) !important; }
-.penya-profile-sheet [class~="bg-white/60"] { background-color:rgba(237,243,240,.72) !important; }
-
-/* Emojis convertidos en pegatinas grandes, con borde blanco y sombra de recorte. */
-.penya-banner-sticker {
-  position:absolute;
-  display:grid;
-  place-items:center;
-  width:clamp(3.35rem,7vw,5.8rem);
-  aspect-ratio:1;
-  border:4px solid rgba(255,255,255,.98);
-  border-radius:1.15rem;
-  background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(247,244,231,.9));
-  box-shadow:0 8px 22px rgba(12,39,48,.28),0 2px 5px rgba(12,39,48,.16),inset 0 1px 0 #fff;
-  font-size:clamp(2.1rem,4.7vw,3.65rem);
-  line-height:1;
-  filter:drop-shadow(0 3px 2px rgba(4,24,33,.16));
-}
-.penya-sticker-one { left:10%; top:19%; rotate:-13deg; }
-.penya-sticker-two { right:12%; top:13%; rotate:12deg; }
-.penya-sticker-three { left:23%; top:58%; rotate:9deg; scale:.88; }
-.penya-sticker-four { right:23%; top:55%; rotate:-10deg; scale:.9; }
+/* Ilustraciones PNG transparentes, sin placas ni marcos: pegatinas recortadas sobre la foto. */
+.penya-banner-sticker { position:absolute; display:block; object-fit:contain; height:auto; max-width:none; filter:drop-shadow(0 9px 8px rgba(15,30,35,.28)); opacity:.98; }
+.penya-sticker-dolcaina { width:clamp(4.5rem,9vw,8rem); left:8%; top:17%; rotate:-14deg; }
+.penya-sticker-confetti { width:clamp(5.5rem,12vw,10rem); right:8%; top:12%; rotate:11deg; }
+.penya-sticker-polvora { width:clamp(5rem,10vw,9rem); right:12%; top:44%; rotate:9deg; }
+.penya-sticker-banda { width:clamp(6rem,13vw,11rem); left:18%; top:48%; rotate:-7deg; }
 @media (max-width:639px) {
-  .penya-banner-sticker { width:clamp(3rem,13vw,4.1rem); border-width:3px; border-radius:.9rem; font-size:clamp(1.85rem,8vw,2.65rem); }
-  .penya-sticker-one { left:6%; top:18%; }
-  .penya-sticker-two { right:7%; top:12%; }
-  .penya-sticker-three { left:16%; top:59%; }
-  .penya-sticker-four { right:15%; top:56%; }
+ .penya-sticker-dolcaina { width:clamp(3.7rem,17vw,5.3rem); left:4%; top:18%; }
+ .penya-sticker-confetti { width:clamp(4.5rem,20vw,6.2rem); right:3%; top:12%; }
+ .penya-sticker-polvora { width:clamp(4rem,18vw,5.8rem); right:5%; top:48%; }
+ .penya-sticker-banda { width:clamp(4.8rem,22vw,6.6rem); left:10%; top:51%; }
 }
+
+/* Preferencias de accesibilidad del usuario. */
+html.festalfas-large-text .page-bg p, html.festalfas-large-text .page-bg label, html.festalfas-large-text .page-bg button { font-size:1.08em; }
+html.festalfas-high-contrast .page-bg .text-muted-foreground { color:#39454a !important; }
+html.festalfas-high-contrast .page-bg [class*="border-border"] { border-color:color-mix(in oklab,var(--foreground) 32%,transparent) !important; }
