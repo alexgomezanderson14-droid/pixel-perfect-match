@@ -252,3 +252,10 @@ img { -webkit-user-drag: none; }
   article p { overflow-wrap: anywhere; }
   input, select, textarea { max-width: 100%; }
 }
+
+/* Hide the Lovable editor badge on the independently hosted public site. */
+#lovable-badge {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
