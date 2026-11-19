@@ -118,12 +118,13 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     if (foto && (!["image/jpeg", "image/png", "image/webp"].includes(foto.type) || foto.size > 5 * 1024 * 1024)) {
       return setError("La foto debe ser JPG, PNG o WEBP y no superar 5 MB.");
     }
-    // Las coordenadas de las peñas son obligatorias en la base de datos.
-    // Si solo se cambia la dirección, conservar el punto actual del mapa.
-    const lat = form.lat.trim() === "" ? Number(penya.lat) : Number(form.lat.replace(",", "."));
-    const lng = form.lng.trim() === "" ? Number(penya.lng) : Number(form.lng.replace(",", "."));
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return setError("Indica una latitud y longitud válidas para el mapa.");
-    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return setError("Coordenadas fuera de rango. La latitud debe estar entre -90 y 90 y la longitud entre -180 y 180.");
+    // La ubicación es opcional. Si no se han indicado coordenadas, conserva las existentes
+    // (o null en las peñas nuevas que todavía no tienen un punto en el mapa).
+    const lat = form.lat.trim() === "" ? (penya.lat == null ? null : Number(penya.lat)) : Number(form.lat.replace(",", "."));
+    const lng = form.lng.trim() === "" ? (penya.lng == null ? null : Number(penya.lng)) : Number(form.lng.replace(",", "."));
+    if ((lat === null) !== (lng === null)) return setError("Indica las dos coordenadas o deja ambas vacías.");
+    if (lat !== null && lng !== null && (!Number.isFinite(lat) || !Number.isFinite(lng))) return setError("Indica una latitud y longitud válidas para el mapa.");
+    if (lat !== null && lng !== null && (lat < -90 || lat > 90 || lng < -180 || lng > 180)) return setError("Coordenadas fuera de rango. La latitud debe estar entre -90 y 90 y la longitud entre -180 y 180.");
     setBusy(true);
     try {
       const { data: visitsData, error: visitsReadError } = await supabase.from("site_content").select("valor").eq("clave", "penyes_visitas_json").maybeSingle();
