@@ -115,6 +115,10 @@ CREATE TABLE IF NOT EXISTS penya_miembros (
   PRIMARY KEY (penya_id, usuario_id)
 );
 CREATE INDEX IF NOT EXISTS idx_penya_miembros_usuario ON penya_miembros(usuario_id);
+-- A peña can have many secondary admins, but only one active principal admin.
+CREATE UNIQUE INDEX IF NOT EXISTS uq_penya_admin_principal_activo
+  ON penya_miembros(penya_id)
+  WHERE rol = 'admin_principal' AND estado = 'activo';
 
 CREATE TABLE IF NOT EXISTS avisos_internos (
   id TEXT PRIMARY KEY,
@@ -143,3 +147,21 @@ CREATE TABLE IF NOT EXISTS penya_invitaciones (
 );
 CREATE INDEX IF NOT EXISTS idx_penya_invitaciones_penya ON penya_invitaciones(penya_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_penya_invitaciones_email ON penya_invitaciones(email, expira_en);
+
+
+-- Only one unaccepted principal invitation may exist per peña, and it cannot
+-- be issued while a principal administrator is already active.
+CREATE TRIGGER IF NOT EXISTS trg_penya_invite_principal_guard_insert
+BEFORE INSERT ON penya_invitaciones
+WHEN NEW.rol = 'admin_principal' AND NEW.aceptada_en IS NULL AND NEW.revocada_en IS NULL
+BEGIN
+  SELECT CASE WHEN EXISTS (
+    SELECT 1 FROM penya_miembros
+    WHERE penya_id = NEW.penya_id AND rol = 'admin_principal' AND estado = 'activo'
+  ) THEN RAISE(ABORT, 'La peña ya tiene un administrador principal activo') END;
+  SELECT CASE WHEN EXISTS (
+    SELECT 1 FROM penya_invitaciones
+    WHERE penya_id = NEW.penya_id AND rol = 'admin_principal'
+      AND aceptada_en IS NULL AND revocada_en IS NULL AND expira_en > CURRENT_TIMESTAMP
+  ) THEN RAISE(ABORT, 'Ya existe una invitación pendiente para administrador principal') END;
+END;
