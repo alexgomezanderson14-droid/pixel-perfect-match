@@ -1009,20 +1009,29 @@ function Home() {
           ) : visiblePenyes.length===0 ? (
             <div className="glass rounded-3xl p-8 text-center"><p className="font-bold text-primary">No encontramos peñas con esos filtros</p><p className="mt-1 text-sm text-muted-foreground">Prueba con otra búsqueda o limpia los filtros.</p><button onClick={()=>{setPenyaSearch("");setPenyaMusicFilter("Todas");setPenyaOnlyMine(false);}} className="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">Mostrar todas las peñas</button></div>
           ) : (
-            <div className="grid min-w-0 grid-cols-2 items-stretch gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-              {visiblePenyes.map((p) => (
-                <article id={"penya-" + p.id} key={p.id} tabIndex={0} aria-label={`Abrir ficha de ${p.nombre}`} onClick={() => { setPenyaDetailFullscreen(true); setSelectedPenya(p); }} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setPenyaDetailFullscreen(true); setSelectedPenya(p); } }} style={{"--penya-enter-delay": (Math.min(visiblePenyes.indexOf(p),18)*35)+"ms"} as React.CSSProperties} className="penya-card-enter group relative min-w-0 cursor-pointer overflow-hidden rounded-[1.2rem] bg-[#173f52] shadow-[0_7px_22px_rgba(23,63,82,.12)] transition-[transform,box-shadow] duration-500 ease-[cubic-bezier(.22,.61,.36,1)] hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(23,63,82,.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:rounded-[1.45rem]">
-                  <div className="relative aspect-[4/5] overflow-hidden">
-                    {p.foto?<img src={p.foto} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(.2,.75,.25,1)] group-hover:scale-[1.07]"/>:<div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37] text-5xl font-black text-white/80">{p.nombre.trim().charAt(0).toLocaleUpperCase("es")}</div>}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#071c25]/85 via-[#071c25]/10 to-[#071c25]/5"/>
-                    <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4">
-                      <h3 className="line-clamp-2 break-words text-[13px] font-black leading-tight tracking-[-.02em] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,.65)] sm:text-base lg:text-lg">{p.nombre}</h3>
-                      {esPenyaCuBaTa(p.nombre)&&<span className="mt-2 inline-flex rounded-full border border-[#f5d77c]/60 bg-[#d4af37] px-2 py-1 text-[8px] font-extrabold tracking-[.1em] text-[#3b2a0a] shadow-lg sm:text-[9px]">♛ MAYORALES 2027</span>}
+            <div className="relative -mx-4 sm:-mx-6 lg:-mx-8">
+              <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-[#f5f8f7] to-transparent sm:w-14 lg:w-20"/>
+              <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-[#f5f8f7] to-transparent sm:w-14 lg:w-20"/>
+              <div className="penya-directory-carousel flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-5 pb-5 pt-2 sm:gap-4 sm:px-8 lg:gap-5 lg:px-12" style={{maskImage:"linear-gradient(90deg, transparent 0%, black 5%, black 95%, transparent 100%)",WebkitMaskImage:"linear-gradient(90deg, transparent 0%, black 5%, black 95%, transparent 100%)"}}>
+                {visiblePenyes.map((p) => (
+                  <article id={"penya-" + p.id} key={p.id} tabIndex={0} aria-label={`Abrir ficha de ${p.nombre}`} onClick={() => { setPenyaDetailFullscreen(true); setSelectedPenya(p); }} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setPenyaDetailFullscreen(true); setSelectedPenya(p); } }} className="penya-card-enter group relative w-[min(72vw,260px)] shrink-0 snap-center cursor-pointer overflow-hidden rounded-[1.55rem] bg-[#173f52] shadow-[0_12px_30px_rgba(23,63,82,.14)] transition-[transform,box-shadow] duration-500 ease-[cubic-bezier(.22,.61,.36,1)] hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(23,63,82,.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-[260px] lg:w-[290px] xl:w-[310px]">
+                    <div className="relative aspect-[4/5] overflow-hidden">
+                      {p.foto?<img src={p.foto} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(.2,.75,.25,1)] group-hover:scale-[1.06]"/>:<div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37] text-6xl font-black text-white/80">{p.nombre.trim().charAt(0).toLocaleUpperCase("es")}</div>}
+                      <div className="absolute inset-0 bg-gradient-to-b from-[#071c25]/10 via-transparent via-45% to-[#071c25]/95"/>
+                      <div className="absolute inset-x-0 bottom-0 h-[58%] bg-gradient-to-t from-[#071c25]/95 via-[#071c25]/75 to-transparent"/>
+                      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+                        <h3 className="break-words text-base font-black leading-[1.12] tracking-[-.025em] text-white [text-shadow:0_2px_12px_rgba(0,0,0,.8)] sm:text-lg lg:text-xl">{p.nombre}</h3>
+                        <div className="mt-2 flex items-center gap-2">
+                          {esPenyaCuBaTa(p.nombre)&&<span className="inline-flex rounded-full border border-[#f5d77c]/70 bg-[#d4af37] px-2.5 py-1 text-[9px] font-extrabold tracking-[.1em] text-[#3b2a0a] shadow-lg">♛ MAYORALES 2027</span>}
+                          {misPenyes.includes(p.id)&&<span className="inline-flex rounded-full border border-white/45 bg-white/90 px-2.5 py-1 text-[9px] font-extrabold text-[#173f52] shadow-lg">★ MI PEÑA</span>}
+                        </div>
+                      </div>
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/20 to-transparent"/>
                     </div>
-                    {misPenyes.includes(p.id)&&<span className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full border border-white/45 bg-white/85 text-sm text-[#173f52] shadow-md" aria-label="Peña favorita">★</span>}
-                  </div>
-                </article>
-              ))}
+                  </article>
+                ))}
+              </div>
+              <p className="mt-1 flex items-center justify-center gap-2 text-[10px] font-semibold tracking-wide text-[#8aa0a1]"><span aria-hidden="true">←</span> Desliza para descubrir las peñas <span aria-hidden="true">→</span></p>
             </div>
           )}
 
@@ -1168,9 +1177,9 @@ function Home() {
               </div>
               <button onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }} aria-label="Cerrar ficha" className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-30 grid h-10 w-10 place-items-center rounded-full border border-white/65 bg-white/65 text-lg font-bold text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105">✕</button>
             </div>
-            <div className="relative z-10 mx-auto -mt-[112px] w-full max-w-[1180px] px-4 pb-5 sm:-mt-[142px] sm:px-7 lg:px-10">
+            <div className="relative z-10 mx-auto -mt-[112px] w-full max-w-[1500px] px-4 pb-5 sm:-mt-[142px] sm:px-7 lg:px-12 xl:px-16 2xl:px-20">
               <div className="relative flex flex-col items-center text-center">
-                <div className="relative z-20 grid h-44 w-44 shrink-0 place-items-center overflow-hidden rounded-full border-[7px] border-[#f5f8f7] bg-white text-5xl font-black text-[#173f52] shadow-[0_10px_34px_rgba(4,25,34,.22)] sm:h-56 sm:w-56 sm:border-[8px] lg:h-60 lg:w-60">{selectedPenya.foto?<img src={selectedPenya.foto} alt={"Logo de "+selectedPenya.nombre} className="h-full w-full object-cover"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
+                <div className="relative z-20 grid h-44 w-44 shrink-0 place-items-center overflow-hidden rounded-full border-[7px] border-[#f5f8f7] bg-white text-5xl font-black text-[#173f52] shadow-[0_10px_34px_rgba(4,25,34,.22)] sm:h-56 sm:w-56 sm:border-[8px] lg:h-72 lg:w-72 xl:h-80 xl:w-80">{selectedPenya.foto?<img src={selectedPenya.foto} alt={"Logo de "+selectedPenya.nombre} className="h-full w-full object-cover"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
                 {esPenyaCuBaTa(selectedPenya.nombre)&&<div className="mt-2"><span className="inline-flex items-center gap-1 rounded-full border border-[#e6ce91] bg-[#fff7df] px-3 py-1 text-[10px] font-extrabold tracking-wide text-[#765c25] sm:text-xs">♛ MAYORALES 2027</span></div>}
                 <h2 className="mt-2 max-w-4xl break-words text-[26px] font-black leading-tight tracking-tight text-[#173f52] sm:mt-3 sm:text-4xl lg:text-[2.65rem]">{selectedPenya.nombre}</h2>
                 {selectedPenya.informacion?.trim()&&<p className="mx-auto mt-2 max-w-2xl line-clamp-2 text-sm leading-relaxed text-[#61777b] sm:text-base">{selectedPenya.informacion}</p>}
