@@ -133,10 +133,14 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
           <select value={tipoMusica} onChange={(e) => setTipoMusica(e.target.value)} className="w-full rounded-full border border-input bg-glass px-4 py-2.5 font-normal"><option>Variada</option><option>Reggaetón</option><option>Pop / comercial</option><option>Rock</option><option>Electrónica</option><option>Remember</option><option>Otra</option></select>
         </label>
         <label className="block space-y-1 text-sm font-bold"><span>Instagram (opcional)</span><input value={instagram} onChange={(e) => setInstagram(e.target.value)} maxLength={100} placeholder="@nombredepenya" className="w-full rounded-full border border-input bg-glass px-4 py-2.5 font-normal" /></label>
-        <label className="block space-y-1 text-sm font-bold">
-          <span>Fotografía (opcional · JPG, PNG o WEBP, máx. 5 MB)</span>
-          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setFoto(e.target.files?.[0] ?? null)} className="w-full text-sm font-normal" />
-        </label>
+        <div className="space-y-2 text-sm font-bold">
+          <span>Fotografía de la peña (opcional · JPG, PNG o WEBP, máx. 5 MB)</span>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <label className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-primary/20 bg-background px-3 py-2 text-center text-xs font-bold text-primary">▧ Elegir de la galería<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setFoto(e.target.files?.[0] ?? null)} className="sr-only" /></label>
+            <label className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-primary/20 bg-background px-3 py-2 text-center text-xs font-bold text-primary">◎ Hacer una foto<input type="file" accept="image/*" capture="environment" onChange={(e) => setFoto(e.target.files?.[0] ?? null)} className="sr-only" /></label>
+          </div>
+          {foto && <p className="text-xs font-normal text-muted-foreground">Imagen seleccionada: {foto.name}</p>}
+        </div>
         {error && <p className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
         <p className="text-xs text-muted-foreground">La peña se publicará automáticamente al enviarla. La foto y el punto exacto del mapa son opcionales.</p>
         <button disabled={busy} className="w-full rounded-full bg-pink px-6 py-3 font-bold text-brown disabled:opacity-60">{busy ? "Guardando…" : "Añadir peña"}</button>

@@ -338,3 +338,14 @@ nav[aria-label="Navegación principal"] > button { min-width: 0 !important; min-
   .festalfas-map-marker > div { animation: festalfas-marker-in 360ms cubic-bezier(.2,.75,.25,1) both; }
   @keyframes festalfas-marker-in { from { opacity: 0; scale: .72; } to { opacity: 1; scale: 1; } }
 }
+
+
+/* Full-bleed mastheads: remove the thin page-background strip above banners. */
+html, body { margin: 0; min-height: 100%; }
+body { overflow-x: clip; }
+.page-bg { min-height: 100svh; overflow-x: clip; }
+.home-hero { margin-top: 0 !important; min-height: 100svh; }
+.home-hero > img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+@supports (height: 100dvh) {
+  .home-hero { min-height: 100dvh; }
+}
