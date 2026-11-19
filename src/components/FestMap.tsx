@@ -15,7 +15,7 @@ let mapLibreLoader: Promise<MapLibreApi> | null = null;
 function loadMapLibre(): Promise<MapLibreApi> {
   if (typeof window !== "undefined" && window.maplibregl) return Promise.resolve(window.maplibregl);
   if (!mapLibreLoader) {
-    mapLibreLoader = new Promise((resolve, reject) => {
+    const pending = new Promise<MapLibreApi>((resolve, reject) => {
       const cssId = "festalfas-maplibre-css";
       if (!document.getElementById(cssId)) {
         const link = document.createElement("link");
@@ -38,6 +38,7 @@ function loadMapLibre(): Promise<MapLibreApi> {
       script.onerror = () => reject(new Error("No se pudo cargar MapLibre"));
       document.head.appendChild(script);
     });
+    mapLibreLoader = pending.catch((error) => { document.querySelector('script[data-festalfas-maplibre="true"]')?.remove(); mapLibreLoader = null; throw error; });
   }
   return mapLibreLoader;
 }

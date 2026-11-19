@@ -49,6 +49,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
   const addBlock = (type: ProfileBlock["type"]) => setBlocks(old => [...old, { id: crypto.randomUUID(), type, title: type === "text" ? "Nuestra historia" : type === "photo" ? "Un momento especial" : type === "banner" ? "Banner de la peña" : type === "tag" ? "Etiqueta nueva" : type === "video" ? "Vídeo de la peña" : type === "link" ? "Síguenos" : type === "list" ? "Lo que nos gusta" : "Lo que nos hace únicos", content: "", url: "" }]);
   const updateBlock = (id: string, key: keyof ProfileBlock, value: string | boolean) => setBlocks(old => old.map(block => block.id === id ? { ...block, [key]: value } : block));
   const featuredPhotoCount = blocks.filter(block => block.type === "photo" && block.featured && /^https?:\/\//i.test(block.url)).length;
+  const featuredPhotos = blocks.filter(block => block.type === "photo" && block.featured && /^https?:\/\//i.test(block.url)).slice(0, 3).map(block => block.url);
   const moveBlock = (index: number, offset: number) => setBlocks(old => { const next = [...old]; const target = index + offset; if (target < 0 || target >= next.length) return old; const a = next[index]; const b = next[target]; if (!a || !b) return old; next[index] = b; next[target] = a; return next; });
   const uploadBlockPhotos = async (blockId: string, files: FileList | null) => {
     const selected = Array.from(files ?? []);
@@ -117,12 +118,13 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     if (foto && (!["image/jpeg", "image/png", "image/webp"].includes(foto.type) || foto.size > 5 * 1024 * 1024)) {
       return setError("La foto debe ser JPG, PNG o WEBP y no superar 5 MB.");
     }
-    // Las coordenadas de las peñas son obligatorias en la base de datos.
-    // Si solo se cambia la dirección, conservar el punto actual del mapa.
-    const lat = form.lat.trim() === "" ? Number(penya.lat) : Number(form.lat.replace(",", "."));
-    const lng = form.lng.trim() === "" ? Number(penya.lng) : Number(form.lng.replace(",", "."));
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return setError("Indica una latitud y longitud válidas para el mapa.");
-    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return setError("Coordenadas fuera de rango. La latitud debe estar entre -90 y 90 y la longitud entre -180 y 180.");
+    // La ubicación es opcional. Si no se han indicado coordenadas, conserva las existentes
+    // (o null en las peñas nuevas que todavía no tienen un punto en el mapa).
+    const lat = form.lat.trim() === "" ? (penya.lat == null ? null : Number(penya.lat)) : Number(form.lat.replace(",", "."));
+    const lng = form.lng.trim() === "" ? (penya.lng == null ? null : Number(penya.lng)) : Number(form.lng.replace(",", "."));
+    if ((lat === null) !== (lng === null)) return setError("Indica las dos coordenadas o deja ambas vacías.");
+    if (lat !== null && lng !== null && (!Number.isFinite(lat) || !Number.isFinite(lng))) return setError("Indica una latitud y longitud válidas para el mapa.");
+    if (lat !== null && lng !== null && (lat < -90 || lat > 90 || lng < -180 || lng > 180)) return setError("Coordenadas fuera de rango. La latitud debe estar entre -90 y 90 y la longitud entre -180 y 180.");
     setBusy(true);
     try {
       const { data: visitsData, error: visitsReadError } = await supabase.from("site_content").select("valor").eq("clave", "penyes_visitas_json").maybeSingle();
@@ -185,6 +187,15 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
           {([{type:"banner",label:"+ Banner de cabecera"},{type:"tag",label:"+ Etiqueta"},{type:"text",label:"+ Texto"},{type:"photo",label:"+ Fotografía"},{type:"video",label:"+ Vídeo"},{type:"link",label:"+ Enlace"},{type:"highlight",label:"+ Destacado"},{type:"list",label:"+ Lista"}] as const).map(item=><button key={item.type} type="button" onClick={()=>addBlock(item.type)} className="rounded-full border border-primary/20 bg-background px-3 py-2 text-xs font-bold text-primary hover:bg-primary/5">{item.label}</button>)}
         </div>
         {blocks.length===0&&<p className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">Todavía no hay apartados adicionales. Añade una historia, fotos, vídeos, enlaces o cualquier otro contenido.</p>}
+        <section className="rounded-2xl border border-primary/15 bg-primary/[.035] p-3 sm:p-4">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <div><h5 className="text-sm font-extrabold text-primary">Plantilla · Momentos destacados</h5><p className="mt-1 text-xs text-muted-foreground">Así se mostrarán en la ficha: una fotografía principal delante y dos detrás, también en móviles.</p></div>
+            <span className="rounded-full bg-white px-3 py-1 text-[10px] font-extrabold text-primary">{featuredPhotoCount}/3 seleccionadas</span>
+          </div>
+          <div className="relative mx-auto h-[178px] w-full max-w-[420px] overflow-hidden rounded-xl bg-[#e8efed]">
+            {[0,1,2].map((slot)=>{const url=featuredPhotos[slot];const positions=["left-1/2 top-2 z-30 -translate-x-1/2 rotate-0","left-[8%] top-6 z-10 -rotate-[-9deg]","right-[8%] top-6 z-20 rotate-[9deg]"];const widths=["w-[38%]","w-[34%]","w-[34%]"];return url?<div key={slot} className={"absolute h-[148px] overflow-hidden rounded-xl border-[4px] border-white bg-white shadow-lg "+positions[slot]+" "+widths[slot]}><img src={url} alt={"Vista previa de foto destacada "+(slot+1)} loading="lazy" decoding="async" className="h-full w-full object-cover"/></div>:<div key={slot} aria-hidden="true" className={"absolute flex h-[138px] items-center justify-center rounded-xl border-[4px] border-white bg-gradient-to-br from-[#f2f6f4] to-[#d6e4e1] text-[#8ba29c] shadow-md "+positions[slot]+" "+widths[slot]}><span className="text-2xl">▧</span></div>;})}
+          </div>
+        </section>
         <div className="space-y-3">
           {blocks.map((block,index)=><article key={block.id} className="space-y-2 rounded-xl border border-border bg-background p-3">
             <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-xs font-extrabold uppercase tracking-wide text-primary">{({text:"Texto",photo:"Fotografía",banner:"Banner principal",tag:"Etiqueta",video:"Vídeo",link:"Enlace",highlight:"Destacado",list:"Lista"} as Record<string,string>)[block.type]} · Apartado {index+1}</span><div className="flex gap-1"><button type="button" disabled={index===0} onClick={()=>moveBlock(index,-1)} className="rounded-lg border px-2 py-1 text-xs disabled:opacity-30" aria-label="Mover arriba">↑</button><button type="button" disabled={index===blocks.length-1} onClick={()=>moveBlock(index,1)} className="rounded-lg border px-2 py-1 text-xs disabled:opacity-30" aria-label="Mover abajo">↓</button><button type="button" onClick={()=>setBlocks(old=>old.filter(item=>item.id!==block.id))} className="rounded-lg border border-destructive/30 px-2 py-1 text-xs font-bold text-destructive">Eliminar</button></div></div>

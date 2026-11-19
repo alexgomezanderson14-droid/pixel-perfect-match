@@ -1,4 +1,4 @@
--- Publish peñas immediately; no manual approval workflow is required.
+-- New peñas must be reviewed and approved before becoming public.
 -- Safe to run repeatedly in the Supabase SQL Editor.
 
 alter table public.penyes

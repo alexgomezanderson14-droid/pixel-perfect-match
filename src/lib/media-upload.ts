@@ -22,7 +22,7 @@ export async function uploadMediaFile(file: File, folder: string, fallbackToSupa
   form.append("file", file);
   form.append("folder", folder);
   const headers = new Headers();
-  if (folder === "actuaciones" || folder === "noticias" || folder === "site" || folder.startsWith("penyes/perfiles/")) {
+  if (folder === "actuaciones" || folder === "noticias" || folder === "site" || (folder.startsWith("penyes/perfiles/") || folder.startsWith("penyes/tarjetas/"))) {
     const { supabase } = await import("@/integrations/supabase/client");
     const { data } = await supabase.auth.getSession();
     if (!data.session?.access_token) throw new Error("Inicia sesión como administrador antes de subir archivos.");

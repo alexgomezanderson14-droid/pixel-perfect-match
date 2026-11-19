@@ -156,10 +156,12 @@ async function sharePenyaCard(p: PenyaDb) {
 
   // La foto/logo de la peña se coloca como emblema circular.
   if (p.foto) {
+    let logoObjectUrl: string | null = null;
     try {
       const response = await fetch(p.foto, { mode: "cors" });
       if (!response.ok) throw new Error("Logo no disponible");
       const objectUrl = URL.createObjectURL(await response.blob());
+      logoObjectUrl = objectUrl;
       const logo = new Image();
       await new Promise<void>((resolve, reject) => {
         logo.onload = () => resolve();
@@ -173,7 +175,9 @@ async function sharePenyaCard(p: PenyaDb) {
       c.drawImage(logo, 68, 153, 184, 184);
       c.restore();
       URL.revokeObjectURL(objectUrl);
+      logoObjectUrl = null;
     } catch {
+      if (logoObjectUrl) URL.revokeObjectURL(logoObjectUrl);
       c.fillStyle = "#e6b6c7";
       c.beginPath(); c.arc(160, 245, 92, 0, Math.PI * 2); c.fill();
       c.fillStyle = "#173f52"; c.font = "bold 90px Arial";
@@ -204,11 +208,13 @@ async function sharePenyaCard(p: PenyaDb) {
 
   let mapDrawn = false;
   if (p.lat != null && p.lng != null) {
+    let mapObjectUrl: string | null = null;
     try {
       const mapUrl = "https://staticmap.openstreetmap.de/staticmap.php?center=" + p.lat + "," + p.lng + "&zoom=16&size=960x760&markers=" + p.lat + "," + p.lng + ",red-pushpin";
       const response = await fetch(mapUrl, { mode: "cors" });
       if (!response.ok) throw new Error("Mapa no disponible");
       const objectUrl = URL.createObjectURL(await response.blob());
+      mapObjectUrl = objectUrl;
       const mapImage = new Image();
       await new Promise<void>((resolve, reject) => {
         mapImage.onload = () => resolve();
@@ -220,8 +226,9 @@ async function sharePenyaCard(p: PenyaDb) {
       c.drawImage(mapImage, 60, 550, 960, 760);
       c.restore();
       URL.revokeObjectURL(objectUrl);
+      mapObjectUrl = null;
       mapDrawn = true;
-    } catch { mapDrawn = false; }
+    } catch { if (mapObjectUrl) URL.revokeObjectURL(mapObjectUrl); mapDrawn = false; }
   }
 
   if (!mapDrawn) {
@@ -283,7 +290,7 @@ const safeHttpUrl=(value:any)=>{try{const url=new URL(String(value||""));return 
 const penyaVideoEmbed=(value:any)=>{const raw=safeHttpUrl(value);if(!raw)return "";try{const url=new URL(raw);if(url.hostname==="youtu.be")return "https://www.youtube-nocookie.com/embed/"+url.pathname.slice(1).split("/")[0];if(url.hostname.endsWith("youtube.com")){const id=url.searchParams.get("v")||url.pathname.split("/").filter(Boolean).pop();return id?"https://www.youtube-nocookie.com/embed/"+id:"";}if(url.hostname.endsWith("vimeo.com")){const id=url.pathname.split("/").filter(Boolean).pop();return id?"https://player.vimeo.com/video/"+id:"";}return /\.mp4(?:$|[?#])/i.test(url.pathname)?raw:"";}catch{return "";}};
 const normalizarBusqueda=(value:any)=>String(value||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
 const limpiarTextoNoticia=(value:any)=>{
-  let text=String(value||"")
+  const text=String(value||"")
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi," ")
     .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi," ")
     .replace(/<\/(?:p|div|section|article|h[1-6]|li|blockquote|tr)>/gi,"\n\n")
@@ -327,6 +334,7 @@ function Home() {
   const [penyaCarouselInitialized, setPenyaCarouselInitialized] = useState(false);
   const [editingFeaturedPenya, setEditingFeaturedPenya] = useState<PenyaDb | null>(null);
   const penyaCarouselRef = useRef<HTMLDivElement | null>(null);
+  const penyaScrollFrameRef = useRef<number | null>(null);
   const [eventsSearch, setEventsSearch] = useState("");
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
   const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes">("all");
@@ -351,19 +359,9 @@ function Home() {
   const [noticias, setNoticias] = useState<any[]>([]);
   const [noticiaSeleccionada, setNoticiaSeleccionada] = useState<any | null>(null);
   const [fotoAmpliada, setFotoAmpliada] = useState<number | null>(null);
-  useEffect(() => {
-    if (fotoAmpliada === null) return;
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setFotoAmpliada(null);
-      if (event.key === "ArrowRight") setFotoAmpliada(current => current === null ? null : (current + 1) % noticiaImagenes.length);
-      if (event.key === "ArrowLeft") setFotoAmpliada(current => current === null ? null : (current - 1 + noticiaImagenes.length) % noticiaImagenes.length);
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [fotoAmpliada, noticiaSeleccionada]);
   const [newsPopup, setNewsPopup] = useState<any[]>([]);
   const [siteContent, setSiteContent] = useState<Record<string,string>>({});
-  const penyaCardSettings = useMemo(()=>{try{const parsed=JSON.parse(siteContent["penyas_cards_json"]||"{}");return parsed&&typeof parsed==="object"?parsed as Record<string,{color?:string;logo_url?:string}>:{ };}catch{return {}; }},[siteContent]);
+  const penyaCardSettings = useMemo(()=>{try{const parsed=JSON.parse(siteContent["penyas_cards_json"]||"{}");return parsed&&typeof parsed==="object"?parsed as Record<string,{color?:string;logo_url?:string;title?:string;description?:string}>:{ };}catch{return {}; }},[siteContent]);
   const [heroImage, setHeroImage] = useState("");
   const [form, setForm] = useState(false);
   const [shareReminder, setShareReminder] = useState(false);
@@ -384,15 +382,20 @@ function Home() {
   const todayKey = todayDate.getFullYear()+"-"+String(todayDate.getMonth()+1).padStart(2,"0")+"-"+String(todayDate.getDate()).padStart(2,"0");
   const tomorrowDate = new Date(now); tomorrowDate.setDate(tomorrowDate.getDate()+1);
   const tomorrowKey = tomorrowDate.getFullYear()+"-"+String(tomorrowDate.getMonth()+1).padStart(2,"0")+"-"+String(tomorrowDate.getDate()).padStart(2,"0");
-  const matchesDay = (item:any) => eventoSigueActivo(item,now) && (filterDay==="all" || (filterDay==="upcoming" ? true : String(item.dia||"").slice(0,10)===(filterDay==="today"?todayKey:tomorrowKey)));
-  const filteredActs = useMemo(()=>actos.filter((a)=>matchesDay(a) && (filterCategory==="all" || (filterCategory==="programa" && a.tipo==="evento") || (filterCategory==="actuaciones" && (a.tipo==="evento" || a.tipo==="actuacion" || /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/i.test(a.titulo||"")))) && (!eventsSearch.trim() || normalizarBusqueda([a.titulo,a.descripcion,a.lugar].join(" ")).includes(normalizarBusqueda(eventsSearch)))), [actos,filterDay,filterCategory,now,eventsSearch]);
-  const filteredPenyaEvents = useMemo(()=>eventos.filter((e)=>matchesDay(e) && (filterCategory==="all" || filterCategory==="penyes") && (!eventsSearch.trim() || normalizarBusqueda([e.titulo,e.descripcion,e.lugar,penyes.find(p=>p.id===e.penya_id)?.nombre].join(" ")).includes(normalizarBusqueda(eventsSearch)))), [eventos,filterDay,filterCategory,now,eventsSearch,penyes]);
+  const matchesDay = useCallback((item:any) => eventoSigueActivo(item,now) && (filterDay==="all" || (filterDay==="upcoming" ? true : String(item.dia||"").slice(0,10)===(filterDay==="today"?todayKey:tomorrowKey))), [filterDay,now,todayKey,tomorrowKey]);
+  const filteredActs = useMemo(()=>actos.filter((a)=>matchesDay(a) && (filterCategory==="all" || (filterCategory==="programa" && a.tipo==="evento") || (filterCategory==="actuaciones" && (a.tipo==="evento" || a.tipo==="actuacion" || /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/i.test(a.titulo||"")))) && (!eventsSearch.trim() || normalizarBusqueda([a.titulo,a.descripcion,a.lugar].join(" ")).includes(normalizarBusqueda(eventsSearch)))), [actos,filterDay,filterCategory,now,eventsSearch,matchesDay]);
+  const filteredPenyaEvents = useMemo(()=>eventos.filter((e)=>matchesDay(e) && (filterCategory==="all" || filterCategory==="penyes") && (!eventsSearch.trim() || normalizarBusqueda([e.titulo,e.descripcion,e.lugar,penyes.find(p=>p.id===e.penya_id)?.nombre].join(" ")).includes(normalizarBusqueda(eventsSearch)))).sort((a,b)=>String(a.dia||"").localeCompare(String(b.dia||""))||(a.hora||"").localeCompare(b.hora||"")), [eventos,filterDay,filterCategory,now,eventsSearch,penyes,matchesDay]);
+  const visibleActs = useMemo(()=>filteredActs.filter(a=>!/despertà|desperta|despertada|nit de albaes|nit d'albaes|nit de les albaes|albaes/.test(String(a.titulo||"").toLocaleLowerCase("es"))).sort((a,b)=>a.dia.localeCompare(b.dia)||(a.hora||"").localeCompare(b.hora||"")),[filteredActs]);
   const penyaMusicOptions = useMemo(()=>["Todas",...Array.from(new Set(penyes.map(p=>String(p.tipo_musica||"").trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b,"es"))],[penyes]);
   const mayoralesPenyaId = String(siteContent["mayorales_penya_id"]||"");
   const mayoralesAnio = String(siteContent["mayorales_anio"]||"2027");
   const visiblePenyes = useMemo(()=>[...penyes].filter(p=>(!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica,p.informacion].join(" ")).includes(normalizarBusqueda(penyaSearch)))&&(penyaMusicFilter==="Todas"||String(p.tipo_musica||"").trim()===penyaMusicFilter)&&(!penyaOnlyMine||misPenyes.includes(p.id))).sort((a,b)=>Number(mayoralesPenyaId?b.id===mayoralesPenyaId:esPenyaCuBaTa(b.nombre))-Number(mayoralesPenyaId?a.id===mayoralesPenyaId:esPenyaCuBaTa(a.nombre))||a.nombre.localeCompare(b.nombre,"es",{sensitivity:"base"})),[penyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,misPenyes,mayoralesPenyaId]);
-  const loopedPenyes = visiblePenyes.length ? [...visiblePenyes,...visiblePenyes,...visiblePenyes] : [];
-  useEffect(()=>{if(!visiblePenyes.length){setPenyaCarouselInitialized(false);return;}setPenyaCarouselInitialized(false);const middle=visiblePenyes.length;setActivePenyaCard(middle);const frame=requestAnimationFrame(()=>{const el=penyaCarouselRef.current;const card=el?.children[middle] as HTMLElement|undefined;if(el&&card)el.scrollLeft=card.offsetLeft-(el.clientWidth-card.offsetWidth)/2;setPenyaCarouselInitialized(true);});return()=>cancelAnimationFrame(frame);},[visiblePenyes.length,penyaSearch,penyaMusicFilter,penyaOnlyMine]);
+  const loopedPenyes = visiblePenyes.length > 1 ? [...visiblePenyes,...visiblePenyes,...visiblePenyes] : [...visiblePenyes];
+  const centerPenyaCard=useCallback((index:number,behavior:ScrollBehavior="auto")=>{const el=penyaCarouselRef.current;const card=el?.children[index] as HTMLElement|undefined;if(!el||!card)return;const delta=card.getBoundingClientRect().left-el.getBoundingClientRect().left;const left=el.scrollLeft+delta-(el.clientWidth-card.clientWidth)/2;el.scrollTo({left,behavior});},[]);
+  const handlePenyaCarouselScroll=(el:HTMLDivElement)=>{if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);penyaScrollFrameRef.current=requestAnimationFrame(()=>{const count=visiblePenyes.length;if(count<=1){setActivePenyaCard(0);penyaScrollFrameRef.current=null;return;}const center=el.getBoundingClientRect().left+el.clientWidth/2;let nearest=0;let distance=Number.POSITIVE_INFINITY;Array.from(el.children).forEach((child,index)=>{const rect=child.getBoundingClientRect();const d=Math.abs(rect.left+rect.width/2-center);if(d<distance){distance=d;nearest=index;}});if(nearest<count||nearest>=count*2){const normalized=((nearest%count)+count)%count;const targetIndex=normalized+count;const target=el.children[targetIndex] as HTMLElement|undefined;if(target){const delta=target.getBoundingClientRect().left-el.getBoundingClientRect().left;el.scrollLeft=el.scrollLeft+delta-(el.clientWidth-target.clientWidth)/2;}nearest=targetIndex;}setActivePenyaCard(current=>current===nearest?current:nearest);penyaScrollFrameRef.current=null;});};
+  useEffect(()=>{if(currentPage!=="penyes"||!visiblePenyes.length){setPenyaCarouselInitialized(false);return;}setPenyaCarouselInitialized(false);const middle=visiblePenyes.length>1?visiblePenyes.length:0;setActivePenyaCard(middle);const frame=requestAnimationFrame(()=>{const el=penyaCarouselRef.current;const card=el?.children[middle] as HTMLElement|undefined;if(el&&card){const delta=card.getBoundingClientRect().left-el.getBoundingClientRect().left;el.scrollLeft=el.scrollLeft+delta-(el.clientWidth-card.clientWidth)/2;}setPenyaCarouselInitialized(true);});return()=>cancelAnimationFrame(frame);},[currentPage,visiblePenyes.length,penyaSearch,penyaMusicFilter,penyaOnlyMine,mayoralesPenyaId,misPenyes]);
+  useEffect(()=>{if(!penyaCarouselInitialized)return;const handleResize=()=>centerPenyaCard(activePenyaCard);window.addEventListener("resize",handleResize,{passive:true});return()=>window.removeEventListener("resize",handleResize);},[penyaCarouselInitialized,activePenyaCard,centerPenyaCard]);
+  useEffect(()=>()=>{if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);},[]);
   const visibleNews = useMemo(()=>noticias.filter((n:any)=>n.publicado&&(!newsSearch.trim()||normalizarBusqueda([n.titulo,n.resumen,n.contenido,n.autor,n.fuente].join(" ")).includes(normalizarBusqueda(newsSearch)))).slice().sort((x:any,y:any)=>new Date(String(y.fecha||y.created_at||"").slice(0,10)+"T12:00:00").getTime()-new Date(String(x.fecha||x.created_at||"").slice(0,10)+"T12:00:00").getTime()),[noticias,newsSearch]);
   const featuredNews = visibleNews.filter((n:any)=>n.destacada);
   const regularNews = visibleNews.filter((n:any)=>!n.destacada);
@@ -706,6 +709,17 @@ function Home() {
     return [...vistas];
   })();
 
+  useEffect(() => {
+    if (fotoAmpliada === null || noticiaImagenes.length === 0) return;
+    const galleryLength = noticiaImagenes.length;
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setFotoAmpliada(null);
+      if (event.key === "ArrowRight") setFotoAmpliada(current => current === null ? null : (current + 1) % galleryLength);
+      if (event.key === "ArrowLeft") setFotoAmpliada(current => current === null ? null : (current - 1 + galleryLength) % galleryLength);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [fotoAmpliada, noticiaSeleccionada, noticiaImagenes.length]);
   const featuredPhotoEditorModal = editingFeaturedPenya ? <div className="fixed inset-0 z-[2147483100] flex items-start justify-center overflow-y-auto bg-[#071c25]/80 p-3 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-md sm:p-6"><section className="my-auto w-full max-w-4xl rounded-3xl bg-background p-4 shadow-2xl sm:p-6"><div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-lg font-black">Añadir fotos destacadas · {editingFeaturedPenya.nombre}</h2><button type="button" onClick={()=>setEditingFeaturedPenya(null)} className="rounded-full border px-3 py-2 text-sm font-bold">Cerrar</button></div><AdminPenyaEditor penya={editingFeaturedPenya} onCancel={()=>setEditingFeaturedPenya(null)} onSaved={()=>{setEditingFeaturedPenya(null);void (async()=>{const {data}=await supabase.from("site_content").select("clave,valor");setSiteContent(Object.fromEntries((data||[]).map((x:any)=>[x.clave,x.valor])));})();}}/></section></div> : null;
   const renderNewsCard = (n:any) => <button type="button" key={n.id} onClick={()=>{setNoticiaSeleccionada(n);window.scrollTo({top:0,behavior:"smooth"});}} className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
     {n.tipo!=="video"&&n.imagen_url&&<div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden"><img src={n.imagen_url} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center transition duration-300 group-hover:scale-[1.02]"/></div>}
@@ -858,19 +872,11 @@ function Home() {
               <button type="button" onClick={()=>{setFilterDay("upcoming");setFilterCategory("all");}} className="text-xs font-bold text-primary underline">Quitar todos los filtros</button>
             </div>
           </details>
-          <div className="mb-6 space-y-2">
-            <h3 className="text-2xl font-bold text-primary">Actuaciones y festes al carrer</h3>
+          {filterCategory!=="penyes"&&<><div className="mb-6 space-y-2">
+            <h3 className="text-2xl font-bold text-primary">{filterCategory==="programa"?"Programa oficial":filterCategory==="actuaciones"?"Actuaciones y festes al carrer":"Actos y actuaciones"}</h3>
             <p className="text-sm text-muted-foreground">Pulsa en cada evento para consultar su descripción, fecha y lugar.</p>
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-            {filteredActs.filter((a) => {
-              if (filterDay !== "all" && !eventoSigueActivo(a, now)) return false;
-              const t = String(a.titulo || "").toLocaleLowerCase("es");
-              const excluido = /despertà|desperta|despertada|nit de albaes|nit d'albaes|nit de les albaes|albaes/.test(t);
-              // En Eventos también deben aparecer los actos oficiales añadidos manualmente
-              // desde administración aunque su tipo sea "evento" y no "actuacion".
-              return !excluido;
-            }).sort((a,b) => a.dia.localeCompare(b.dia) || (a.hora || "").localeCompare(b.hora || "")).map((a) => {
+          {visibleActs.length===0?<div className="rounded-2xl border border-dashed border-border p-5 text-sm text-muted-foreground">No hay actos ni actuaciones que coincidan con estos filtros.</div>:<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">{visibleActs.map((a) => {
               const t = String(a.titulo || "").toLocaleLowerCase("es");
               const festaCarrer = /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/.test(t);
               const portada = a.imagen_url || a.imagen || a.foto_url || a.foto || "";
@@ -901,11 +907,11 @@ function Home() {
                   {a.lat != null && a.lng != null && <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa de la web</button>}
                 </div>
               </details>;
-            })}
-          </div>
-          <div className="mt-10 space-y-3">
-            <h3 className="text-2xl font-bold text-primary">Otros eventos de las peñas</h3>
-            {!eventosActivos.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">Todavía no hay eventos de peñas publicados.</div> : <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">{filteredPenyaEvents.map((e) => {
+            })}</div>}
+          </>}
+          {filterCategory!=="programa"&&filterCategory!=="actuaciones"&&<><div className="mt-10 space-y-3">
+            <h3 className="text-2xl font-bold text-primary">Eventos de las peñas</h3>
+            {!filteredPenyaEvents.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">{eventosActivos.length?"No hay eventos de peñas que coincidan con estos filtros.":"Todavía no hay eventos de peñas publicados."}</div> : <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">{filteredPenyaEvents.map((e) => {
               const imagen = e.imagen_url || e.imagen || e.foto_url || e.foto;
               const penyaAsociada = penyes.find(p => p.id === e.penya_id) || penyes.find(p => [e.titulo, e.descripcion, e.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(p.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, ""))));
               const penyaNombre = penyaAsociada?.nombre;
@@ -927,7 +933,8 @@ function Home() {
                 <div className="flex items-center justify-between gap-2 px-2 py-1.5">{e.lat != null && e.lng != null && <button onClick={() => goMap("evento-" + e.id)} className="text-[10px] font-bold text-[#173f52] sm:text-sm">📍 Ver ubicación</button>}</div>
               </article>;
             })}</div>}
-          </div>
+          </div></>}
+          
 <section id="programa" className="scroll-mt-24">
           <SectionTitle>{ui.nav.programa}</SectionTitle>
           {!dias.length ? (
@@ -1024,25 +1031,26 @@ function Home() {
             <div className="glass rounded-3xl p-8 text-center"><p className="font-bold text-primary">No encontramos peñas con esos filtros</p><p className="mt-1 text-sm text-muted-foreground">Prueba con otra búsqueda o limpia los filtros.</p><button onClick={()=>{setPenyaSearch("");setPenyaMusicFilter("Todas");setPenyaOnlyMine(false);}} className="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">Mostrar todas las peñas</button></div>
           ) : (
             <div className="relative mx-auto w-full max-w-[1180px]">
-              <button type="button" aria-label="Peña anterior" onClick={()=>{const el=penyaCarouselRef.current;if(!el)return;const next=activePenyaCard-1;setActivePenyaCard(next);const card=el.children[next] as HTMLElement|undefined;card?.scrollIntoView({block:"nearest",inline:"center",behavior:"smooth"});}} className="absolute left-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">‹</button>
-              <button type="button" aria-label="Peña siguiente" onClick={()=>{const el=penyaCarouselRef.current;if(!el)return;const next=activePenyaCard+1;setActivePenyaCard(next);const card=el.children[next] as HTMLElement|undefined;card?.scrollIntoView({block:"nearest",inline:"center",behavior:"auto"});}} className="absolute right-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">›</button>
-              <div ref={penyaCarouselRef} onScroll={(event)=>{const el=event.currentTarget;const center=el.getBoundingClientRect().left+el.clientWidth/2;let nearest=0;let distance=Number.POSITIVE_INFINITY;Array.from(el.children).forEach((child,index)=>{const rect=child.getBoundingClientRect();const d=Math.abs(rect.left+rect.width/2-center);if(d<distance){distance=d;nearest=index;}});const count=visiblePenyes.length;if(count>0&&(nearest<count/2||nearest>=count*2+count/2)){const normalized=((nearest%count)+count)%count;const recentered=normalized+count;const target=el.children[recentered] as HTMLElement|undefined;if(target)el.scrollLeft=target.offsetLeft-(el.clientWidth-target.offsetWidth)/2;nearest=recentered;}setActivePenyaCard(current=>current===nearest?current:nearest);}} className={`penya-coverflow ${penyaCarouselInitialized?"is-ready":"is-initializing"} flex snap-x snap-mandatory items-center overflow-x-auto overscroll-x-contain px-[calc(50%-112px)] py-16 sm:px-[calc(50%-130px)] lg:px-[calc(50%-150px)]`}>
+              {visiblePenyes.length>1&&<button type="button" aria-label="Peña anterior" onClick={()=>{const next=Math.max(0,activePenyaCard-1);setActivePenyaCard(next);centerPenyaCard(next,"smooth");}} className="absolute left-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">‹</button>}
+              {visiblePenyes.length>1&&<button type="button" aria-label="Peña siguiente" onClick={()=>{const next=Math.min(loopedPenyes.length-1,activePenyaCard+1);setActivePenyaCard(next);centerPenyaCard(next,"smooth");}} className="absolute right-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">›</button>}
+              <div ref={penyaCarouselRef} onScroll={(event)=>handlePenyaCarouselScroll(event.currentTarget)} className={`penya-coverflow ${penyaCarouselInitialized?"is-ready":"is-initializing"} flex snap-x snap-mandatory items-center overflow-x-auto overscroll-x-contain px-[calc(50%-112px)] py-16 sm:px-[calc(50%-130px)] lg:px-[calc(50%-150px)]`}>
                 {loopedPenyes.map((p,index)=>{
                   const fallbackColors=["#5968D8","#E45D70","#13A6C3","#19A887","#D28B35","#8559C7","#287DAD","#C45D91"];
                   const cardConfig=penyaCardSettings[p.id]||{};
                   const colorSeed=String(p.id||p.nombre||"penya").split("").reduce((hash,char)=>(hash*31+char.charCodeAt(0))>>>0,7);
                   const color=/^#[0-9a-fA-F]{6}$/.test(cardConfig.color||"")?cardConfig.color!:fallbackColors[colorSeed%fallbackColors.length];
                   const logo=cardConfig.logo_url||"";
-                  const shortDescription=String(p.informacion||"").replace(/\\s+/g," ").trim();
+                  const cardTitle=String(cardConfig.title||p.nombre).trim()||p.nombre;
+                  const shortDescription=String(cardConfig.description??p.informacion??"").replace(/\s+/g," ").trim();
                   const cardDescription=shortDescription.length>104?shortDescription.slice(0,101).trimEnd()+"…":shortDescription;
                   const offset=index-activePenyaCard;
                   const centered=offset===0;
-                  return <article id={"penya-"+p.id+"-"+index} key={p.id+"-"+index} tabIndex={0} aria-label={`Abrir ficha de ${p.nombre}`} onClick={()=>{setPenyaDetailFullscreen(true);setSelectedPenya(p);}} onKeyDown={(e)=>{if(e.target===e.currentTarget&&(e.key==="Enter"||e.key===" ")){e.preventDefault();setPenyaDetailFullscreen(true);setSelectedPenya(p);}}} style={{backgroundColor:color,zIndex:30-Math.abs(offset),transform:`perspective(1100px) translateY(${centered?-8:Math.min(22,Math.abs(offset)*10)}px) scale(${centered?1.08:Math.max(.68,.88-Math.max(0,Math.abs(offset)-1)*.08)}) rotateY(${offset===0?0:offset<0?13:-13}deg)`,opacity:Math.abs(offset)>3?.18:Math.max(.35,1-Math.abs(offset)*.18),filter:centered?"saturate(1.08)":"saturate(.88)"}} className={`penya-coverflow-card group relative ${index%Math.max(visiblePenyes.length,1)===0?"is-loop-start":""} h-[320px] w-[224px] shrink-0 snap-center cursor-pointer overflow-visible rounded-[2rem] border border-white/25 shadow-[0_18px_42px_rgba(19,38,53,.18)] outline-none transition-[transform,opacity,filter,box-shadow] duration-500 ease-[cubic-bezier(.2,.75,.25,1)] focus-visible:ring-4 focus-visible:ring-primary/40 sm:h-[360px] sm:w-[260px] lg:h-[400px] lg:w-[290px]`}>
+                  return <article id={"penya-"+p.id+"-"+index} key={p.id+"-"+index} tabIndex={0} aria-label={`Abrir ficha de ${cardTitle}`} onClick={()=>{setPenyaDetailFullscreen(true);setSelectedPenya(p);}} onKeyDown={(e)=>{if(e.target===e.currentTarget&&(e.key==="Enter"||e.key===" ")){e.preventDefault();setPenyaDetailFullscreen(true);setSelectedPenya(p);}}} style={{backgroundColor:color,zIndex:30-Math.abs(offset),transform:`perspective(1100px) translateY(${centered?-8:Math.min(22,Math.abs(offset)*10)}px) scale(${centered?1.08:Math.max(.68,.88-Math.max(0,Math.abs(offset)-1)*.08)}) rotateY(${offset===0?0:offset<0?13:-13}deg)`,opacity:Math.abs(offset)>3?.18:Math.max(.35,1-Math.abs(offset)*.18),filter:centered?"saturate(1.08)":"saturate(.88)"}} className={`penya-coverflow-card group relative ${centered?"is-active":Math.abs(offset)===1?"is-side":""} ${index%Math.max(visiblePenyes.length,1)===0?"is-loop-start":""} h-[320px] w-[224px] shrink-0 snap-center cursor-pointer overflow-visible rounded-[2rem] border border-white/25 shadow-[0_18px_42px_rgba(19,38,53,.18)] outline-none transition-[transform,opacity,filter,box-shadow] duration-500 ease-[cubic-bezier(.2,.75,.25,1)] focus-visible:ring-4 focus-visible:ring-primary/40 sm:h-[360px] sm:w-[260px] lg:h-[400px] lg:w-[290px]`}>
                     <div className="absolute inset-0 overflow-hidden rounded-[2rem]">
                       <div className="absolute inset-x-0 top-0 z-10 p-5 sm:p-6">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <h3 className="break-words text-[19px] font-black leading-[1.05] tracking-[-.035em] text-white sm:text-[22px]">{p.nombre}</h3>
+                            <h3 className="break-words text-[19px] font-black leading-[1.05] tracking-[-.035em] text-white sm:text-[22px]">{cardTitle}</h3>
                             {cardDescription&&<p className="mt-2 line-clamp-3 max-w-[30ch] text-[11px] font-medium leading-relaxed text-white/85 sm:text-xs">{cardDescription}</p>}
                           </div>
                           {misPenyes.includes(p.id)&&<span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/20 text-sm text-white ring-1 ring-white/40" aria-label="Mi peña">★</span>}
@@ -1181,7 +1189,13 @@ function Home() {
             {selectedPenya.informacion?.trim()&&<p className="mt-3 line-clamp-3 text-[13px] leading-[1.55] text-[#52666b]">{selectedPenya.informacion}</p>}
             {selectedPenya.direccion&&<div className="mt-3 flex items-start gap-2 rounded-xl border border-[#e5eceb] bg-[#f5f8f7] px-3 py-2.5 text-[11px] font-semibold leading-snug text-[#52666b]"><span className="text-[#b18d3d]">📍</span><span className="min-w-0">{selectedPenya.direccion}</span></div>}
             <div className="mt-3 flex flex-wrap gap-1.5">{selectedPenya.tipo_musica&&<span className="rounded-full bg-[#eaf1f2] px-2.5 py-1 text-[10px] font-bold text-[#24576a]">♫ {selectedPenya.tipo_musica}</span>}{(selectedPenyaEvents.length+selectedPenyaActs.length)>0&&<span className="rounded-full bg-[#f7f0df] px-2.5 py-1 text-[10px] font-bold text-[#806a2d]">▣ {selectedPenyaEvents.length+selectedPenyaActs.length} actividades</span>}</div>
-            <div className="mt-3 rounded-2xl border border-[#e2eae8] bg-[#f5f8f7] px-2.5 pb-2.5 pt-2"><div className="mb-2 flex items-center justify-between"><span className="text-[10px] font-extrabold uppercase tracking-wider text-[#52666b]">Momentos de la peña</span><button type="button" onClick={()=>setPenyaGalleryOpen(true)} className="text-[9px] font-extrabold text-[#24576a] underline underline-offset-2">Ver todas ({selectedPenyaGallery.length})</button></div>{selectedPenyaFeaturedGallery.length>0?<div className="grid grid-cols-3 gap-2">{[0,1,2].map(i=>{const url=selectedPenyaFeaturedGallery[i];return <div key={i} className="aspect-[1.08] overflow-hidden rounded-xl border-[3px] border-white bg-[#e8efed] shadow-[0_4px_12px_rgba(23,63,82,.12)]">{url?<button type="button" onClick={()=>setPenyaFotoAmpliada(selectedPenyaGallery.indexOf(url))} aria-label={"Ampliar foto "+(i+1)} className="h-full w-full overflow-hidden"><img src={url} alt={"Foto "+(i+1)+" de "+selectedPenya.nombre} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 ease-out hover:scale-110"/></button>:<div className="flex h-full items-center justify-center text-[9px] font-semibold text-[#9aa9aa]">Sin foto</div>}</div>;})}</div>:<div className="relative mx-auto flex h-[170px] max-w-[440px] items-center justify-center overflow-hidden rounded-xl bg-[#e8efed] p-3"><div className="absolute left-[16%] top-8 h-[112px] w-[30%] rotate-[-9deg] rounded-xl border-[5px] border-white bg-[#d6e4e1] shadow-md"/><div className="absolute right-[16%] top-8 h-[112px] w-[30%] rotate-[9deg] rounded-xl border-[5px] border-white bg-[#d6e4e1] shadow-md"/><div className="relative z-10 flex h-[132px] w-[34%] items-center justify-center rounded-xl border-[5px] border-white bg-[#dce9e6] shadow-xl">{selectedPenya.foto?<img src={selectedPenya.foto} alt={"Logo de "+selectedPenya.nombre} className="h-full w-full rounded-lg object-contain p-2"/>:<span className="text-5xl font-black text-[#8ba29c]">{selectedPenya.nombre.trim().charAt(0).toLocaleUpperCase("es")}</span>}</div><div className="absolute inset-x-2 bottom-2 z-20 flex justify-center">{accountUser?.email?.toLowerCase()==="gomezandersonalex@gmail.com"?<button type="button" onClick={()=>setEditingFeaturedPenya(selectedPenya)} className="rounded-full bg-[#173f52] px-4 py-2 text-[10px] font-extrabold text-white shadow-md">＋ Añadir fotos destacadas</button>:<span className="rounded-full bg-white/90 px-4 py-2 text-[10px] font-semibold text-[#52666b]">Esta peña aún no tiene fotos destacadas</span>}</div></div>}</div>
+            <div className="mt-3 rounded-2xl border border-[#e2eae8] bg-[#f5f8f7] px-2.5 pb-2.5 pt-2"><div className="mb-2 flex items-center justify-between"><span className="text-[10px] font-extrabold uppercase tracking-wider text-[#52666b]">Momentos destacados</span><button type="button" onClick={()=>setPenyaGalleryOpen(true)} className="text-[9px] font-extrabold text-[#24576a] underline underline-offset-2">Ver todas ({selectedPenyaGallery.length})</button></div><div className="relative mx-auto flex h-[150px] w-full max-w-[440px] items-center justify-center overflow-hidden rounded-xl bg-[#e8efed] p-2">
+              {[0,1,2].map((slot)=>{const url=selectedPenyaFeaturedGallery[slot];const positions=["left-1/2 top-1 z-30 -translate-x-1/2 rotate-0","left-[12%] top-5 z-10 -rotate-[-9deg]","right-[12%] top-5 z-20 rotate-[9deg]"];const widths=["w-[38%]","w-[32%]","w-[32%]"];return url?<button key={slot} type="button" onClick={()=>setPenyaFotoAmpliada(selectedPenyaGallery.indexOf(url))} aria-label={"Ampliar foto destacada "+(slot+1)} className={"absolute h-[124px] overflow-hidden rounded-xl border-[4px] border-white bg-white shadow-lg "+positions[slot]+" "+widths[slot]}><img src={url} alt={"Foto destacada "+(slot+1)+" de "+selectedPenya.nombre} loading="lazy" decoding="async" className="h-full w-full object-cover"/></button>:<div key={slot} aria-hidden="true" className={"absolute flex h-[112px] items-center justify-center rounded-xl border-[4px] border-white bg-gradient-to-br from-[#f2f6f4] to-[#d6e4e1] text-[#8ba29c] shadow-md "+positions[slot]+" "+widths[slot]}><span className="text-2xl">▧</span></div>;})}
+            </div>
+            <div className="mt-2 flex justify-center">
+              {accountUser?.email?.toLowerCase()==="gomezandersonalex@gmail.com"?<button type="button" onClick={()=>setEditingFeaturedPenya(selectedPenya)} className="rounded-full bg-[#173f52] px-4 py-2 text-[10px] font-extrabold text-white shadow-md">＋ Añadir fotos destacadas</button>:selectedPenyaFeaturedGallery.length===0?<span className="rounded-full bg-white/90 px-4 py-2 text-[10px] font-semibold text-[#52666b]">Esta peña aún no tiene fotos destacadas</span>:null}
+            </div>
+          </div>
             <div className="mt-4 flex gap-2">
               <button type="button" onClick={()=>{setMapPenyaPreview(false);setCurrentPage("penyes");setPenyaDetailFullscreen(true);window.scrollTo({top:0,behavior:"smooth"});}} className="flex-1 rounded-xl bg-[#173f52] px-3 py-3 text-[12px] font-extrabold text-white shadow-sm transition hover:bg-[#24566a]">Ver ficha completa <span aria-hidden="true">↗</span></button>
               <button type="button" aria-label="Cerrar ventana" onClick={()=>{setSelectedPenya(null);setMapPenyaPreview(false);}} className="rounded-xl border border-[#dce6e5] bg-white px-4 py-3 text-[12px] font-bold text-[#52666b] transition hover:bg-[#f5f8f7]">Cerrar</button>
@@ -1206,7 +1220,7 @@ function Home() {
             <div className="relative z-10 mx-auto -mt-[112px] w-full max-w-[1500px] px-4 pb-5 sm:-mt-[142px] sm:px-7 lg:px-12 xl:px-16 2xl:px-20">
               <div className="relative flex flex-col items-center text-center">
                 <div className="relative z-20 grid h-44 w-44 shrink-0 place-items-center overflow-hidden rounded-full border-[7px] border-[#f5f8f7] bg-white text-5xl font-black text-[#173f52] shadow-[0_10px_34px_rgba(4,25,34,.22)] sm:h-56 sm:w-56 sm:border-[8px] lg:h-72 lg:w-72 xl:h-80 xl:w-80">{selectedPenya.foto?<img src={selectedPenya.foto} alt={"Logo de "+selectedPenya.nombre} className="h-full w-full object-cover"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
-                {esPenyaCuBaTa(selectedPenya.nombre)&&<div className="mt-2"><span className="inline-flex items-center gap-1 rounded-full border border-[#e6ce91] bg-[#fff7df] px-3 py-1 text-[10px] font-extrabold tracking-wide text-[#765c25] sm:text-xs">♛ MAYORALES 2027</span></div>}
+                {(mayoralesPenyaId?selectedPenya.id===mayoralesPenyaId:esPenyaCuBaTa(selectedPenya.nombre))&&<div className="mt-2"><span className="inline-flex items-center gap-1 rounded-full border border-[#e6ce91] bg-[#fff7df] px-3 py-1 text-[10px] font-extrabold tracking-wide text-[#765c25] sm:text-xs">♛ MAYORALES {mayoralesAnio}</span></div>}
                 <h2 className="mt-2 max-w-4xl break-words text-[26px] font-black leading-tight tracking-tight text-[#173f52] sm:mt-3 sm:text-4xl lg:text-[2.65rem]">{selectedPenya.nombre}</h2>
                 {selectedPenya.informacion?.trim()&&<p className="mx-auto mt-2 max-w-2xl line-clamp-2 text-sm leading-relaxed text-[#61777b] sm:text-base">{selectedPenya.informacion}</p>}
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2"><button type="button" onClick={()=>{setSelectedPenya(null);setPenyaDetailFullscreen(false);setCurrentPage("home");setCat("penya");setFocus(selectedPenya.id);window.scrollTo({top:0,behavior:"smooth"});}} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#d8e5e2] bg-white/90 px-4 py-2 text-xs font-extrabold text-[#24576a] shadow-sm transition hover:-translate-y-0.5">📍 Ver en el mapa</button>{selectedPenyaAcceptsVisits&&<span className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] font-extrabold text-emerald-800"><span aria-hidden="true">✓</span> Esta peña acepta visitas</span>}</div>
@@ -1215,19 +1229,18 @@ function Home() {
                 const profileTags = selectedPenyaCustomBlocks.filter((block:any)=>block.type==="tag" && String(block.title||"").trim() && !/^(acepta visitas|esta peña acepta visitas|puertas abiertas)$/i.test(String(block.title).trim())).map((block:any)=>String(block.title).trim());
                 const memberCount = [selectedPenya.miembros_actuales, selectedPenya.numero_miembros, selectedPenya.miembros].find((value)=>typeof value==="number" && Number.isFinite(value) && value>0);
                 const tags = [...(selectedPenya.tipo_musica ? ["♫ "+selectedPenya.tipo_musica] : []), ...(memberCount ? ["👥 "+memberCount+" miembros"] : []), ...profileTags, ...(misPenyes.includes(selectedPenya.id) ? ["★ Mi peña"] : [])].slice(0,4);
-                const profilePhotos = selectedPenyaFeaturedGallery.length ? selectedPenyaFeaturedGallery : selectedPenyaGallery.slice(0,3);
+                const profilePhotos = selectedPenyaFeaturedGallery.slice(0,3);
                 return <>
                   <div id="ficha-presentacion" className="mb-1 flex min-h-8 flex-wrap items-center justify-center gap-2 sm:justify-start">
                     {tags.map((tag,index)=><span key={index} className={["rounded-full border px-3 py-1.5 text-[10px] font-bold shadow-sm sm:text-xs", "border-[#f3c5d7] bg-[#fff0f5] text-[#9d4567]", "border-[#c6d9f4] bg-[#edf5ff] text-[#315f9a]", "border-[#d7c8ed] bg-[#f5efff] text-[#70509b]", "border-[#c9e5d8] bg-[#eefaf3] text-[#367457]"][index%5]}>{tag}</span>)}
                   </div>
                   <section id="ficha-galeria" className="relative mt-5 overflow-hidden bg-transparent px-0 pb-3 pt-2 sm:mt-7">
-                    <div className="mb-3 flex items-end justify-between gap-3 px-1"><div><h3 className="text-xl font-extrabold tracking-tight text-[#173f52] sm:text-2xl">Momentos de la peña</h3><p className="mt-1 text-xs text-[#7b9293] sm:text-sm">Sus recuerdos más destacados</p></div><button type="button" onClick={()=>setPenyaGalleryOpen(true)} className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#d4e0de] bg-white px-3 py-2 text-[10px] font-extrabold text-[#24576a] shadow-sm transition hover:border-[#d4af37] sm:px-4 sm:text-xs">Ver galería ↗ <span className="rounded-full bg-[#edf3f1] px-1.5 py-0.5">{selectedPenyaGallery.length}</span></button></div>
+                    <div className="mb-3 flex items-end justify-between gap-3 px-1"><div><h3 className="text-xl font-extrabold tracking-tight text-[#173f52] sm:text-2xl">Momentos destacados</h3><p className="mt-1 text-xs text-[#7b9293] sm:text-sm">Sus recuerdos más destacados</p></div><button type="button" onClick={()=>setPenyaGalleryOpen(true)} className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#d4e0de] bg-white px-3 py-2 text-[10px] font-extrabold text-[#24576a] shadow-sm transition hover:border-[#d4af37] sm:px-4 sm:text-xs">Ver galería ↗ <span className="rounded-full bg-[#edf3f1] px-1.5 py-0.5">{selectedPenyaGallery.length}</span></button></div>
                     <div className="relative mx-auto h-[250px] w-full max-w-[760px] sm:h-[340px] lg:h-[390px]">
-                      {profilePhotos.length?profilePhotos.slice(0,3).map((url:string,index:number)=>{
-                        const positions=["left-[7%] top-8 z-10 -rotate-[9deg]","left-1/2 top-0 z-30 -translate-x-1/2 rotate-0","right-[7%] top-8 z-20 rotate-[9deg]"];
-                        const widths=["w-[43%] sm:w-[38%]","w-[48%] sm:w-[40%]","w-[43%] sm:w-[38%]"];
-                        return <button key={url} type="button" onClick={()=>setPenyaFotoAmpliada(selectedPenyaGallery.indexOf(url))} aria-label={"Ampliar fotografía destacada "+(index+1)} className={"group absolute h-[220px] overflow-hidden rounded-[1.25rem] border-[4px] border-white bg-[#e6eeeb] shadow-[0_12px_32px_rgba(23,63,82,.18)] transition-[transform,box-shadow] duration-700 ease-[cubic-bezier(.2,.75,.25,1)] will-change-transform hover:z-40 hover:scale-[1.055] hover:shadow-[0_20px_44px_rgba(23,63,82,.28)] sm:h-[310px] lg:h-[350px] sm:rounded-[1.5rem] "+positions[index]+" "+widths[index]}><img src={url} alt={selectedPenya.nombre+" · recuerdo "+(index+1)} loading="lazy" decoding="async" className="h-full w-full object-cover"/></button>;
-                      }):<div className="flex h-full items-center justify-center rounded-3xl border border-dashed border-[#cbdcdd] bg-white/55 text-center text-sm text-[#819395]">Aún no hay fotos destacadas</div>}
+                      {[0,1,2].map((slot)=>{const url=profilePhotos[slot];const positions=["left-1/2 top-0 z-30 -translate-x-1/2 rotate-0","left-[7%] top-8 z-10 -rotate-[-9deg]","right-[7%] top-8 z-20 rotate-[9deg]"];const widths=["w-[48%] sm:w-[40%]","w-[43%] sm:w-[38%]","w-[43%] sm:w-[38%]"];return url?<button key={slot} type="button" onClick={()=>setPenyaFotoAmpliada(selectedPenyaGallery.indexOf(url))} aria-label={"Ampliar fotografía destacada "+(slot+1)} className={"group absolute h-[220px] overflow-hidden rounded-[1.25rem] border-[4px] border-white bg-[#e6eeeb] shadow-[0_12px_32px_rgba(23,63,82,.18)] transition-[transform,box-shadow] duration-700 ease-[cubic-bezier(.2,.75,.25,1)] will-change-transform hover:z-40 hover:scale-[1.055] hover:shadow-[0_20px_44px_rgba(23,63,82,.28)] sm:h-[310px] lg:h-[350px] sm:rounded-[1.5rem] "+positions[slot]+" "+widths[slot]}><img src={url} alt={selectedPenya.nombre+" · recuerdo "+(slot+1)} loading="lazy" decoding="async" className="h-full w-full object-cover"/></button>:<div key={slot} aria-hidden="true" className={"absolute flex h-[220px] items-center justify-center overflow-hidden rounded-[1.25rem] border-[4px] border-white bg-gradient-to-br from-[#edf3f1] to-[#dce8e4] text-[#8ba29c] shadow-[0_12px_32px_rgba(23,63,82,.12)] sm:h-[310px] lg:h-[350px] sm:rounded-[1.5rem] "+positions[slot]+" "+widths[slot]}><span className={slot===0?"text-5xl sm:text-6xl":"text-3xl sm:text-4xl"}>▧</span></div>;})}
+                    </div>
+                    <div className="mt-3 flex min-h-9 items-center justify-center">
+                      {accountUser?.email?.toLowerCase()==="gomezandersonalex@gmail.com"?<button type="button" onClick={()=>setEditingFeaturedPenya(selectedPenya)} className="rounded-full bg-[#173f52] px-5 py-2.5 text-xs font-extrabold text-white shadow-md transition hover:bg-[#24566a]">＋ Añadir fotos destacadas</button>:profilePhotos.length===0?<span className="text-xs font-semibold text-[#7b9293]">Esta peña aún no tiene fotos destacadas</span>:null}
                     </div>
                   </section>
                 </>;
