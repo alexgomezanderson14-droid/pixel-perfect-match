@@ -897,10 +897,14 @@ function Home() {
             <div className="grid min-w-0 grid-cols-1 items-stretch gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
               {visiblePenyes.map((p) => {
                 const plans = eventosActivos.filter(e => e.penya_id === p.id);
+                let profileBlocks:any[]=[];
+                try { const profiles=JSON.parse(siteContent["penyes_perfiles_json"]||"{}"); const value=profiles?.[p.id]; if(Array.isArray(value)) profileBlocks=value; } catch {}
+                const profileBanner=profileBlocks.find((block:any)=>block?.type==="banner" && typeof block.url==="string")?.url;
+                const profileTags=profileBlocks.filter((block:any)=>block?.type==="tag" && String(block.title||"").trim()).map((block:any)=>String(block.title).trim());
                 return (
                   <article id={"penya-" + p.id} key={p.id} tabIndex={0} aria-label={`Abrir ficha de ${p.nombre}`} onClick={() => { setPenyaDetailFullscreen(true); setSelectedPenya(p); }} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setPenyaDetailFullscreen(true); setSelectedPenya(p); } }} className="group flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-[1.6rem] border border-white/80 bg-white/75 shadow-[0_12px_36px_rgba(23,63,82,.08)] ring-1 ring-[#173f52]/[.045] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_48px_rgba(23,63,82,.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:rounded-[1.8rem]">
                     <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37]">
-                      {p.foto ? <img src={p.foto} alt={p.nombre} loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.045]" /> : <div className="grid h-full place-items-center text-6xl font-extrabold tracking-tight text-white/80">{p.nombre.trim().charAt(0).toLocaleUpperCase("es")}</div>}
+                      {profileBanner ? <img src={profileBanner} alt={"Banner de "+p.nombre} loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.045]" /> : <div className="grid h-full place-items-center text-6xl font-extrabold tracking-tight text-white/80">{p.nombre.trim().charAt(0).toLocaleUpperCase("es")}</div>}
                       <div className="absolute inset-0 bg-gradient-to-t from-[#102f3d]/75 via-transparent to-black/10"/>
                       <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3.5">
                         {esPenyaCuBaTa(p.nombre) ? <span className="rounded-full border border-[#f5d77c]/60 bg-[#d4af37] px-3 py-1.5 text-[9px] font-extrabold tracking-[.12em] text-[#3b2a0a] shadow-lg">♛ MAYORALES 2027</span> : <span/>}
@@ -908,7 +912,7 @@ function Home() {
                       </div>
                       <div className="absolute inset-x-4 bottom-4">
                         <p className="text-[9px] font-bold uppercase tracking-[.2em] text-white/75">Peña festera</p>
-                        <h3 className="mt-1 line-clamp-2 break-words text-xl font-extrabold leading-tight text-white drop-shadow sm:text-2xl">{p.nombre}</h3>
+                        <div className="flex items-center gap-3"><span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full border-[3px] border-white bg-white text-lg font-black text-[#173f52] shadow-lg">{p.foto?<img src={p.foto} alt={"Logo de "+p.nombre} className="h-full w-full object-cover"/>:p.nombre.trim().charAt(0).toLocaleUpperCase("es")}</span><h3 className="mt-1 line-clamp-2 break-words text-xl font-extrabold leading-tight text-white drop-shadow sm:text-2xl">{p.nombre}</h3></div>
                       </div>
                     </div>
                     <div className="flex flex-1 flex-col p-4 sm:p-5">
