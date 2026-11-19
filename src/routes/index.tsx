@@ -402,7 +402,7 @@ function Home() {
   const loopedPenyes = visiblePenyes.length ? [...visiblePenyes,...visiblePenyes,...visiblePenyes] : [];
   const centerPenyaCard=useCallback((index:number,behavior:ScrollBehavior="auto")=>{const el=penyaCarouselRef.current;const card=el?.children[index] as HTMLElement|undefined;if(!el||!card)return;const delta=card.getBoundingClientRect().left-el.getBoundingClientRect().left;const left=el.scrollLeft+delta-(el.clientWidth-card.clientWidth)/2;el.scrollTo({left,behavior});},[]);
   const handlePenyaCarouselScroll=(el:HTMLDivElement)=>{if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);penyaScrollFrameRef.current=requestAnimationFrame(()=>{const count=visiblePenyes.length;if(!count){penyaScrollFrameRef.current=null;return;}const center=el.getBoundingClientRect().left+el.clientWidth/2;let nearest=0;let distance=Number.POSITIVE_INFINITY;Array.from(el.children).forEach((child,index)=>{const rect=child.getBoundingClientRect();const d=Math.abs(rect.left+rect.width/2-center);if(d<distance){distance=d;nearest=index;}});if(nearest<count||nearest>=count*2){const normalized=((nearest%count)+count)%count;const targetIndex=normalized+count;const target=el.children[targetIndex] as HTMLElement|undefined;if(target){const delta=target.getBoundingClientRect().left-el.getBoundingClientRect().left;el.scrollLeft=el.scrollLeft+delta-(el.clientWidth-target.clientWidth)/2;}nearest=targetIndex;}setActivePenyaCard(current=>current===nearest?current:nearest);penyaScrollFrameRef.current=null;});};
-  useEffect(()=>{if(!visiblePenyes.length){setPenyaCarouselInitialized(false);return;}setPenyaCarouselInitialized(false);const middle=visiblePenyes.length;setActivePenyaCard(middle);const frame=requestAnimationFrame(()=>{const el=penyaCarouselRef.current;const card=el?.children[middle] as HTMLElement|undefined;if(el&&card){const delta=card.getBoundingClientRect().left-el.getBoundingClientRect().left;el.scrollLeft=el.scrollLeft+delta-(el.clientWidth-card.clientWidth)/2;}setPenyaCarouselInitialized(true);});return()=>cancelAnimationFrame(frame);},[visiblePenyes.length,penyaSearch,penyaMusicFilter,penyaOnlyMine,mayoralesPenyaId,misPenyes]);
+  useEffect(()=>{if(currentPage!=="penyes"||!visiblePenyes.length){setPenyaCarouselInitialized(false);return;}setPenyaCarouselInitialized(false);const middle=visiblePenyes.length;setActivePenyaCard(middle);const frame=requestAnimationFrame(()=>{const el=penyaCarouselRef.current;const card=el?.children[middle] as HTMLElement|undefined;if(el&&card){const delta=card.getBoundingClientRect().left-el.getBoundingClientRect().left;el.scrollLeft=el.scrollLeft+delta-(el.clientWidth-card.clientWidth)/2;}setPenyaCarouselInitialized(true);});return()=>cancelAnimationFrame(frame);},[currentPage,visiblePenyes.length,penyaSearch,penyaMusicFilter,penyaOnlyMine,mayoralesPenyaId,misPenyes]);
   useEffect(()=>{if(!penyaCarouselInitialized)return;const handleResize=()=>centerPenyaCard(activePenyaCard);window.addEventListener("resize",handleResize,{passive:true});return()=>window.removeEventListener("resize",handleResize);},[penyaCarouselInitialized,activePenyaCard,centerPenyaCard]);
   useEffect(()=>()=>{if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);},[]);
   const visibleNews = useMemo(()=>noticias.filter((n:any)=>n.publicado&&(!newsSearch.trim()||normalizarBusqueda([n.titulo,n.resumen,n.contenido,n.autor,n.fuente].join(" ")).includes(normalizarBusqueda(newsSearch)))).slice().sort((x:any,y:any)=>new Date(String(y.fecha||y.created_at||"").slice(0,10)+"T12:00:00").getTime()-new Date(String(x.fecha||x.created_at||"").slice(0,10)+"T12:00:00").getTime()),[noticias,newsSearch]);
@@ -870,8 +870,8 @@ function Home() {
               <button type="button" onClick={()=>{setFilterDay("upcoming");setFilterCategory("all");}} className="text-xs font-bold text-primary underline">Quitar todos los filtros</button>
             </div>
           </details>
-          <div className="mb-6 space-y-2">
-            <h3 className="text-2xl font-bold text-primary">Actuaciones y festes al carrer</h3>
+          {filterCategory!=="penyes"&&<><div className="mb-6 space-y-2">
+            <h3 className="text-2xl font-bold text-primary">{filterCategory==="programa"?"Programa oficial":filterCategory==="actuaciones"?"Actuaciones y festes al carrer":"Actos y actuaciones"}</h3>
             <p className="text-sm text-muted-foreground">Pulsa en cada evento para consultar su descripción, fecha y lugar.</p>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
@@ -915,8 +915,9 @@ function Home() {
               </details>;
             })}
           </div>
-          <div className="mt-10 space-y-3">
-            <h3 className="text-2xl font-bold text-primary">Otros eventos de las peñas</h3>
+          </>}
+          {filterCategory!=="programa"&&filterCategory!=="actuaciones"&&<><div className="mt-10 space-y-3">
+            <h3 className="text-2xl font-bold text-primary">Eventos de las peñas</h3>
             {!filteredPenyaEvents.length ? <div className="glass rounded-3xl p-6 text-muted-foreground">{eventosActivos.length?"No hay eventos de peñas que coincidan con estos filtros.":"Todavía no hay eventos de peñas publicados."}</div> : <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">{filteredPenyaEvents.map((e) => {
               const imagen = e.imagen_url || e.imagen || e.foto_url || e.foto;
               const penyaAsociada = penyes.find(p => p.id === e.penya_id) || penyes.find(p => [e.titulo, e.descripcion, e.lugar].some((v) => String(v || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(p.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, ""))));
@@ -939,7 +940,8 @@ function Home() {
                 <div className="flex items-center justify-between gap-2 px-2 py-1.5">{e.lat != null && e.lng != null && <button onClick={() => goMap("evento-" + e.id)} className="text-[10px] font-bold text-[#173f52] sm:text-sm">📍 Ver ubicación</button>}</div>
               </article>;
             })}</div>}
-          </div>
+          </div></>}
+          
 <section id="programa" className="scroll-mt-24">
           <SectionTitle>{ui.nav.programa}</SectionTitle>
           {!dias.length ? (
