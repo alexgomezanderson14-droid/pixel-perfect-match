@@ -364,7 +364,7 @@ function Home() {
   }, [fotoAmpliada, noticiaSeleccionada]);
   const [newsPopup, setNewsPopup] = useState<any[]>([]);
   const [siteContent, setSiteContent] = useState<Record<string,string>>({});
-  const penyaCardSettings = useMemo(()=>{try{const parsed=JSON.parse(siteContent["penyas_cards_json"]||"{}");return parsed&&typeof parsed==="object"?parsed as Record<string,{color?:string;logo_url?:string}>:{ };}catch{return {}; }},[siteContent]);
+  const penyaCardSettings = useMemo(()=>{try{const parsed=JSON.parse(siteContent["penyas_cards_json"]||"{}");return parsed&&typeof parsed==="object"?parsed as Record<string,{color?:string;logo_url?:string;title?:string;description?:string}>:{ };}catch{return {}; }},[siteContent]);
   const [heroImage, setHeroImage] = useState("");
   const [form, setForm] = useState(false);
   const [shareReminder, setShareReminder] = useState(false);
@@ -1036,16 +1036,17 @@ function Home() {
                   const colorSeed=String(p.id||p.nombre||"penya").split("").reduce((hash,char)=>(hash*31+char.charCodeAt(0))>>>0,7);
                   const color=/^#[0-9a-fA-F]{6}$/.test(cardConfig.color||"")?cardConfig.color!:fallbackColors[colorSeed%fallbackColors.length];
                   const logo=cardConfig.logo_url||"";
-                  const shortDescription=String(p.informacion||"").replace(/\\s+/g," ").trim();
+                  const cardTitle=String(cardConfig.title||p.nombre).trim()||p.nombre;
+                  const shortDescription=String(cardConfig.description??p.informacion??"").replace(/\s+/g," ").trim();
                   const cardDescription=shortDescription.length>104?shortDescription.slice(0,101).trimEnd()+"…":shortDescription;
                   const offset=index-activePenyaCard;
                   const centered=offset===0;
-                  return <article id={"penya-"+p.id+"-"+index} key={p.id+"-"+index} tabIndex={0} aria-label={`Abrir ficha de ${p.nombre}`} onClick={()=>{setPenyaDetailFullscreen(true);setSelectedPenya(p);}} onKeyDown={(e)=>{if(e.target===e.currentTarget&&(e.key==="Enter"||e.key===" ")){e.preventDefault();setPenyaDetailFullscreen(true);setSelectedPenya(p);}}} style={{backgroundColor:color,zIndex:30-Math.abs(offset),transform:`perspective(1100px) translateY(${centered?-8:Math.min(22,Math.abs(offset)*10)}px) scale(${centered?1.08:Math.max(.68,.88-Math.max(0,Math.abs(offset)-1)*.08)}) rotateY(${offset===0?0:offset<0?13:-13}deg)`,opacity:Math.abs(offset)>3?.18:Math.max(.35,1-Math.abs(offset)*.18),filter:centered?"saturate(1.08)":"saturate(.88)"}} className={`penya-coverflow-card group relative ${centered?"is-active":Math.abs(offset)===1?"is-side":""} ${index%Math.max(visiblePenyes.length,1)===0?"is-loop-start":""} h-[320px] w-[224px] shrink-0 snap-center cursor-pointer overflow-visible rounded-[2rem] border border-white/25 shadow-[0_18px_42px_rgba(19,38,53,.18)] outline-none transition-[transform,opacity,filter,box-shadow] duration-500 ease-[cubic-bezier(.2,.75,.25,1)] focus-visible:ring-4 focus-visible:ring-primary/40 sm:h-[360px] sm:w-[260px] lg:h-[400px] lg:w-[290px]`}>
+                  return <article id={"penya-"+p.id+"-"+index} key={p.id+"-"+index} tabIndex={0} aria-label={`Abrir ficha de ${cardTitle}`} onClick={()=>{setPenyaDetailFullscreen(true);setSelectedPenya(p);}} onKeyDown={(e)=>{if(e.target===e.currentTarget&&(e.key==="Enter"||e.key===" ")){e.preventDefault();setPenyaDetailFullscreen(true);setSelectedPenya(p);}}} style={{backgroundColor:color,zIndex:30-Math.abs(offset),transform:`perspective(1100px) translateY(${centered?-8:Math.min(22,Math.abs(offset)*10)}px) scale(${centered?1.08:Math.max(.68,.88-Math.max(0,Math.abs(offset)-1)*.08)}) rotateY(${offset===0?0:offset<0?13:-13}deg)`,opacity:Math.abs(offset)>3?.18:Math.max(.35,1-Math.abs(offset)*.18),filter:centered?"saturate(1.08)":"saturate(.88)"}} className={`penya-coverflow-card group relative ${centered?"is-active":Math.abs(offset)===1?"is-side":""} ${index%Math.max(visiblePenyes.length,1)===0?"is-loop-start":""} h-[320px] w-[224px] shrink-0 snap-center cursor-pointer overflow-visible rounded-[2rem] border border-white/25 shadow-[0_18px_42px_rgba(19,38,53,.18)] outline-none transition-[transform,opacity,filter,box-shadow] duration-500 ease-[cubic-bezier(.2,.75,.25,1)] focus-visible:ring-4 focus-visible:ring-primary/40 sm:h-[360px] sm:w-[260px] lg:h-[400px] lg:w-[290px]`}>
                     <div className="absolute inset-0 overflow-hidden rounded-[2rem]">
                       <div className="absolute inset-x-0 top-0 z-10 p-5 sm:p-6">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <h3 className="break-words text-[19px] font-black leading-[1.05] tracking-[-.035em] text-white sm:text-[22px]">{p.nombre}</h3>
+                            <h3 className="break-words text-[19px] font-black leading-[1.05] tracking-[-.035em] text-white sm:text-[22px]">{cardTitle}</h3>
                             {cardDescription&&<p className="mt-2 line-clamp-3 max-w-[30ch] text-[11px] font-medium leading-relaxed text-white/85 sm:text-xs">{cardDescription}</p>}
                           </div>
                           {misPenyes.includes(p.id)&&<span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/20 text-sm text-white ring-1 ring-white/40" aria-label="Mi peña">★</span>}
