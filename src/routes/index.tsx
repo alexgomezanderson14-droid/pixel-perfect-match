@@ -387,9 +387,11 @@ function Home() {
   const featuredNews = visibleNews.filter((n:any)=>n.destacada);
   const regularNews = visibleNews.filter((n:any)=>!n.destacada);
   const proximasActividades = useMemo(() => [...actos.filter((a:any)=>!a._officialOnly).map((a:any)=>({...a,_origen:"programa"})), ...eventos.map((e:any)=>({...e,_origen:"penya"}))].filter((item:any)=>item.dia && eventoSigueActivo(item,now)).sort((a:any,b:any)=>new Date(String(a.dia).slice(0,10)+"T"+String(a.hora||"23:59")).getTime()-new Date(String(b.dia).slice(0,10)+"T"+String(b.hora||"23:59")).getTime()).slice(0,3),[actos,eventos,now]);
-  const avisosNotificaciones = avisos.filter((aviso:any)=>aviso.activo && (!aviso.publicar_en || new Date(aviso.publicar_en).getTime()<=now) && (!String(aviso.destinatario_email||"").trim() || String(aviso.destinatario_email).trim().toLowerCase()===String(accountUser?.email||"").trim().toLowerCase()));
-  const unreadNotifications = avisosNotificaciones.filter((aviso:any)=>!readNotificationIds.includes(String(aviso.id)));
-  const avisosVisibles = avisos.filter((aviso:any)=>aviso.activo && (!aviso.importante || personalPrefs.showImportantNotices) && (!aviso.publicar_en || new Date(aviso.publicar_en).getTime()<=now) && (!String(aviso.destinatario_email||"").trim() || String(aviso.destinatario_email).trim().toLowerCase()===String(accountUser?.email||"").trim().toLowerCase()));
+  const avisosNotificaciones = useMemo(() => avisos
+    .filter((aviso:any)=>aviso.activo && (!aviso.publicar_en || new Date(aviso.publicar_en).getTime()<=now) && (!String(aviso.destinatario_email||"").trim() || String(aviso.destinatario_email).trim().toLowerCase()===String(accountUser?.email||"").trim().toLowerCase()))
+    .sort((a:any,b:any)=>new Date(b.publicar_en||b.created_at||0).getTime()-new Date(a.publicar_en||a.created_at||0).getTime()), [avisos, now, accountUser?.email]);
+  const unreadNotifications = useMemo(() => avisosNotificaciones.filter((aviso:any)=>!readNotificationIds.includes(String(aviso.id))), [avisosNotificaciones, readNotificationIds]);
+  const avisosVisibles = useMemo(() => avisos.filter((aviso:any)=>aviso.activo && (!aviso.importante || personalPrefs.showImportantNotices) && (!aviso.publicar_en || new Date(aviso.publicar_en).getTime()<=now) && (!String(aviso.destinatario_email||"").trim() || String(aviso.destinatario_email).trim().toLowerCase()===String(accountUser?.email||"").trim().toLowerCase())), [avisos, personalPrefs.showImportantNotices, now, accountUser?.email]);
   const searchResults = useMemo(() => {
     const normalize = (value: any) => String(value || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const term = normalize(searchTerm.trim());
@@ -459,6 +461,18 @@ function Home() {
     try { const key = "festalfas-notifications-read:" + String(accountUser?.email||"invitado").toLowerCase(); const saved = JSON.parse(localStorage.getItem(key)||"[]"); setReadNotificationIds(Array.isArray(saved)?saved.map(String):[]); } catch { setReadNotificationIds([]); }
   }, [accountUser?.email]);
   const markNotificationRead = (id:string) => setReadNotificationIds(current => { const next=[...new Set([...current,id])]; try { localStorage.setItem("festalfas-notifications-read:"+String(accountUser?.email||"invitado").toLowerCase(),JSON.stringify(next)); } catch { /* Estado en memoria. */ } return next; });
+  useEffect(() => {
+    const key = "festalfas-notifications-read:" + String(accountUser?.email||"invitado").toLowerCase();
+    const syncReadState = (event: StorageEvent) => {
+      if (event.key !== key) return;
+      try {
+        const parsed = JSON.parse(event.newValue || "[]");
+        setReadNotificationIds(Array.isArray(parsed) ? parsed.map(String) : []);
+      } catch { setReadNotificationIds([]); }
+    };
+    window.addEventListener("storage", syncReadState);
+    return () => window.removeEventListener("storage", syncReadState);
+  }, [accountUser?.email]);
   const markAllNotificationsRead = () => setReadNotificationIds(current => { const next=[...new Set([...current,...avisosNotificaciones.map((item:any)=>String(item.id))])]; try { localStorage.setItem("festalfas-notifications-read:"+String(accountUser?.email||"invitado").toLowerCase(),JSON.stringify(next)); } catch { /* Estado en memoria. */ } return next; });
   useEffect(() => {
     const key = "fiestas-share-reminder-last";
@@ -715,7 +729,7 @@ function Home() {
   };
 
   return (
-    <div className="page-bg min-h-screen" style={{ "--pink": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--secondary": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--accent": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--ring": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--cat-penya": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--background": siteContent["theme_background"] || "oklch(0.975 0.012 90)", "--gradient-page": `linear-gradient(180deg, ${siteContent["theme_background"] || "oklch(0.985 0.008 90)"}, ${siteContent["theme_background"] || "oklch(0.965 0.014 90)"})` } as React.CSSProperties}>
+    <div className="page-bg relative min-h-screen" style={{ "--pink": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--secondary": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--accent": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--ring": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--cat-penya": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--background": siteContent["theme_background"] || "oklch(0.975 0.012 90)", "--gradient-page": `linear-gradient(180deg, ${siteContent["theme_background"] || "oklch(0.985 0.008 90)"}, ${siteContent["theme_background"] || "oklch(0.965 0.014 90)"})` } as React.CSSProperties}>
       <nav aria-label="Navegación principal" className="fixed left-1/2 top-[calc(env(safe-area-inset-top)+8px)] z-[5000] flex h-[52px] w-[calc(100vw-32px)] max-w-[540px] -translate-x-1/2 max-[639px]:left-4 max-[639px]:w-[calc(100vw-104px)] max-[639px]:translate-x-0 items-center justify-between gap-0 overflow-hidden rounded-full border border-white/85 bg-[rgba(245,248,250,.94)] px-1 shadow-[0_5px_18px_rgba(20,39,52,.16),0_1px_4px_rgba(255,255,255,.95)_inset] backdrop-blur-2xl [backdrop-filter:blur(24px)_saturate(155%)]">
         {(["home","eventos","penyes","programa","noticias","info"] as const).map((page,index)=>{
           const labels={home:"Inicio",eventos:"Eventos",penyes:"Peñas",programa:"Programa",noticias:"Noticias",info:"Ajustes"};
@@ -731,7 +745,7 @@ function Home() {
         })}
         <span aria-hidden="true" className="pointer-events-none absolute inset-y-1 left-1 z-0 w-[calc((100%-8px)/6)] rounded-full border border-white/25 bg-[linear-gradient(145deg,rgba(25,43,55,.78),rgba(25,43,55,.58))] shadow-[0_5px_18px_rgba(18,35,47,.22),0_1px_4px_rgba(255,255,255,.22)_inset] backdrop-blur-2xl transition-transform duration-300 ease-[cubic-bezier(.22,.61,.36,1)]" style={{transform:"translateX(calc("+(["home","eventos","penyes","programa","noticias","info"].indexOf(currentPage)*100)+"%))"}}/>
       </nav>
-      {currentPage==="home"&&<div className="fixed right-4 top-[calc(env(safe-area-inset-top)+8px)] z-[5200] flex items-center gap-2 sm:right-6">
+      {currentPage==="home"&&<div className="absolute right-4 top-[calc(env(safe-area-inset-top)+8px)] z-[5200] flex items-center gap-2 sm:right-6">
         <button type="button" onClick={()=>setNotificationsOpen(open=>!open)} aria-label={"Notificaciones"+(unreadNotifications.length?", "+unreadNotifications.length+" sin leer":"")} aria-expanded={notificationsOpen} className="relative grid h-10 w-8 place-items-center border-0 bg-transparent text-white shadow-none transition hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
           <svg viewBox="0 0 24 24" className="h-[21px] w-[21px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
           {unreadNotifications.length>0&&<span className="absolute right-[5px] top-[5px] h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500 shadow-sm" aria-label="Hay notificaciones sin leer"/>}
