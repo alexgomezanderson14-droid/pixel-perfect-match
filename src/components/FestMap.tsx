@@ -96,7 +96,7 @@ export default function FestMap({
         renderWorldCopies: false,
         antialias: window.innerWidth > 700 && (window.devicePixelRatio || 1) <= 1.5,
         attributionControl: { compact: false },
-        canvasContextAttributes: { antialias: true },
+        canvasContextAttributes: { antialias: window.innerWidth > 700 && (window.devicePixelRatio || 1) <= 1.5 },
       });
       map.current = instance;
       instance.addControl(new api.NavigationControl({ visualizePitch: true }), "top-right");
