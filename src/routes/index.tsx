@@ -325,7 +325,7 @@ function Home() {
   const [eventsSearch, setEventsSearch] = useState("");
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
   const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes">("all");
-  const [currentPage, setCurrentPage] = useState<"home"|"noticias"|"buscar"|"programa"|"eventos"|"mapa"|"penyes"|"info">("home");
+  const [currentPage, setCurrentPage] = useState<"home"|"noticias"|"buscar"|"eventos"|"mapa"|"penyes"|"info">("home");
   const [accountUser, setAccountUser] = useState<any>(null);
   const [accountMode, setAccountMode] = useState<"register"|"login">("register");
   const [accountName, setAccountName] = useState("");
@@ -401,7 +401,7 @@ function Home() {
     const results: any[] = [];
     penyes.filter((p) => matches(p.nombre, p.direccion)).forEach((p) => results.push({ key: "penya:" + p.id, label: p.nombre, kind: "Peña", sub: p.direccion || "Ficha de la peña", onSelect: () => { setCurrentPage("penyes"); setPenyaDetailFullscreen(true); setSelectedPenya(p); window.scrollTo({top:0,behavior:"smooth"}); } }));
     eventos.filter((e) => eventoSigueActivo(e,now) && matches(e.titulo, e.descripcion, e.lugar)).forEach((e) => results.push({ key: "evento:" + e.id, label: e.titulo, kind: "Evento de peña", sub: [e.dia, e.hora, e.lugar].filter(Boolean).join(" · "), onSelect: () => { setCurrentPage("eventos"); setFilterDay("all"); setFilterCategory("penyes"); window.scrollTo({top:0,behavior:"smooth"}); } }));
-    actos.filter((a) => !a._officialOnly && eventoSigueActivo(a,now) && matches(a.titulo, a.descripcion, a.lugar)).forEach((a) => results.push({ key: "acto:" + a.id, label: a.titulo, kind: a.tipo === "actuacion" ? "Actuación" : "Programa oficial", sub: [a.dia, a.hora, a.lugar].filter(Boolean).join(" · "), onSelect: () => { const isAct = a.tipo === "actuacion" || /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/i.test(a.titulo || ""); setCurrentPage(isAct ? "eventos" : "programa"); if (!isAct) setDia(a.dia); setFilterDay("all"); setFilterCategory(isAct ? "actuaciones" : "all"); window.scrollTo({top:0,behavior:"smooth"}); } }));
+    actos.filter((a) => !a._officialOnly && eventoSigueActivo(a,now) && matches(a.titulo, a.descripcion, a.lugar)).forEach((a) => results.push({ key: "acto:" + a.id, label: a.titulo, kind: a.tipo === "actuacion" ? "Actuación" : "Programa oficial", sub: [a.dia, a.hora, a.lugar].filter(Boolean).join(" · "), onSelect: () => { const isAct = a.tipo === "actuacion" || /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/i.test(a.titulo || ""); setCurrentPage("eventos"); if (!isAct) setDia(a.dia); setFilterDay("all"); setFilterCategory(isAct ? "actuaciones" : "all"); window.scrollTo({top:0,behavior:"smooth"}); } }));
     mapPoints.filter((p) => matches(p.nombre, p.descripcion)).forEach((p) => results.push({ key: "lugar:" + p.id, label: p.nombre, kind: "Ubicación", sub: p.descripcion || "Punto de interés", onSelect: () => { setCurrentPage("home"); setCat(null); setQ(""); setFocus(null); requestAnimationFrame(() => setFocus(p.id)); window.scrollTo({top:0,behavior:"smooth"}); } }));
     return results.slice(0, 12);
   }, [searchTerm, penyes, eventos, actos, mapPoints, now]);
@@ -731,22 +731,22 @@ function Home() {
 
   return (
     <div className="page-bg relative min-h-screen" style={{ "--pink": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--secondary": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--accent": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--ring": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--cat-penya": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--background": siteContent["theme_background"] || "oklch(0.975 0.012 90)", "--gradient-page": `linear-gradient(180deg, ${siteContent["theme_background"] || "oklch(0.985 0.008 90)"}, ${siteContent["theme_background"] || "oklch(0.965 0.014 90)"})` } as React.CSSProperties}>
-      <nav aria-label="Navegación principal" style={{position:"fixed",left:"50vw",right:"auto",top:"calc(env(safe-area-inset-top) + 8px)",width:"min(540px, calc(100vw - 24px))",maxWidth:"calc(100vw - 24px)",height:"52px",minHeight:"52px",boxSizing:"border-box",transform:"translate3d(-50%, 0, 0)",translate:"none",margin:0,zIndex:2147483000}} className="flex items-center justify-between gap-0 overflow-hidden rounded-full border border-white/85 bg-[rgba(245,248,250,.94)] px-1 shadow-[0_5px_18px_rgba(20,39,52,.16),0_1px_4px_rgba(255,255,255,.95)_inset] backdrop-blur-2xl [backdrop-filter:blur(24px)_saturate(155%)]">
-        {(["home","eventos","penyes","programa","noticias","info"] as const).map((page,index)=>{
-          const labels={home:"Inicio",eventos:"Eventos",penyes:"Peñas",programa:"Programa",noticias:"Noticias",info:"Ajustes"};
+      <nav aria-label="Navegación principal" style={{position:"fixed",left:"50vw",right:"auto",top:"auto",bottom:"calc(env(safe-area-inset-bottom) + 10px)",width:"min(560px, calc(100vw - 24px))",maxWidth:"calc(100vw - 24px)",height:"58px",minHeight:"58px",boxSizing:"border-box",transform:"translate3d(-50%, 0, 0)",translate:"none",margin:0,zIndex:2147483000}} className="flex items-center justify-between gap-0 overflow-hidden rounded-full border border-white/85 bg-[rgba(245,248,250,.94)] px-1 shadow-[0_5px_18px_rgba(20,39,52,.16),0_1px_4px_rgba(255,255,255,.95)_inset] backdrop-blur-2xl [backdrop-filter:blur(24px)_saturate(155%)]">
+        {(["home","eventos","penyes","noticias","info"] as const).map((page,index)=>{
+          const labels={home:"Inicio",eventos:"Eventos",penyes:"Peñas",noticias:"Noticias",info:"Ajustes"};
           const active=currentPage===page;
           return <button key={page} type="button" aria-current={active?"page":undefined} onClick={()=>{setMapFullscreen(false);setSelectedPenya(null);setPenyaDetailFullscreen(false);setEventFormPenya(null);setForm(false);setNewsPopup([]);setShareReminder(false);setNoticiaSeleccionada(null);setCurrentPage(page);window.scrollTo({top:0,behavior:"smooth"});}} className={"relative z-10 flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-0 overflow-hidden rounded-full px-0 py-0 text-center leading-none transition-colors duration-200 "+(active?"text-white":"text-primary/75 hover:text-primary")}>
             <span className="grid h-[20px] w-[20px] shrink-0 place-items-center leading-none">
               <svg viewBox="0 0 24 24" aria-hidden="true" className="block h-[17px] w-[17px] shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                {page==="home"?<><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></>:page==="eventos"?<><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M8 2.8v4M16 2.8v4M3 9h18M8 13h3M8 16.5h6"/></>:page==="penyes"?<><circle cx="9" cy="8" r="3.2"/><path d="M2.8 20c.4-3.5 2.5-5.4 6.2-5.4s5.8 1.9 6.2 5.4M16 5.2a3 3 0 0 1 0 5.7M17 14.8c2.4.5 3.7 2.2 4.1 5.2"/></>:page==="programa"?<><rect x="3" y="3.5" width="18" height="17" rx="2.5"/><path d="M7 8h10M7 12h3M7 16h10M14 12h3"/></>:page==="noticias"?<><path d="M5 4h14a2 2 0 0 1 2 2v14H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M7 8h4v4H7zM14 8h4M14 12h4M7 16h11"/></>:<><path d="M10.2 2.8h3.6l.55 2.05a7.6 7.6 0 0 1 1.55.9l2.02-.62 1.8 3.12-1.48 1.52c.12.58.12 1.18 0 1.76l1.48 1.52-1.8 3.12-2.02-.62a7.6 7.6 0 0 1-1.55.9l-.55 2.05h-3.6l-.55-2.05a7.6 7.6 0 0 1-1.55-.9l-2.02.62-1.8-3.12 1.48-1.52a4.4 4.4 0 0 1 0-1.76L4.28 8.23l1.8-3.12 2.02.62a7.6 7.6 0 0 1 1.55-.9z"/><circle cx="12" cy="10.65" r="2.65"/></>}
+                {page==="home"?<><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></>:page==="eventos"?<><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M8 2.8v4M16 2.8v4M3 9h18M8 13h3M8 16.5h6"/></>:page==="penyes"?<><circle cx="9" cy="8" r="3.2"/><path d="M2.8 20c.4-3.5 2.5-5.4 6.2-5.4s5.8 1.9 6.2 5.4M16 5.2a3 3 0 0 1 0 5.7M17 14.8c2.4.5 3.7 2.2 4.1 5.2"/></>:page==="noticias"?<><path d="M5 4h14a2 2 0 0 1 2 2v14H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M7 8h4v4H7zM14 8h4M14 12h4M7 16h11"/></>:<><path d="M10.2 2.8h3.6l.55 2.05a7.6 7.6 0 0 1 1.55.9l2.02-.62 1.8 3.12-1.48 1.52c.12.58.12 1.18 0 1.76l1.48 1.52-1.8 3.12-2.02-.62a7.6 7.6 0 0 1-1.55.9l-.55 2.05h-3.6l-.55-2.05a7.6 7.6 0 0 1-1.55-.9l-2.02.62-1.8-3.12 1.48-1.52a4.4 4.4 0 0 1 0-1.76L4.28 8.23l1.8-3.12 2.02.62a7.6 7.6 0 0 1 1.55-.9z"/><circle cx="12" cy="10.65" r="2.65"/></>}
               </svg>
             </span>
             <span className={"mt-0.5 block max-w-full shrink-0 whitespace-nowrap text-[8px] leading-[9px] "+(active?"font-bold":"font-medium")}>{labels[page]}</span>
           </button>;
         })}
-        <span aria-hidden="true" className="pointer-events-none absolute inset-y-1 left-1 z-0 w-[calc((100%-8px)/6)] rounded-full border border-white/25 bg-[linear-gradient(145deg,rgba(25,43,55,.78),rgba(25,43,55,.58))] shadow-[0_5px_18px_rgba(18,35,47,.22),0_1px_4px_rgba(255,255,255,.22)_inset] backdrop-blur-2xl transition-transform duration-300 ease-[cubic-bezier(.22,.61,.36,1)]" style={{transform:"translateX(calc("+(["home","eventos","penyes","programa","noticias","info"].indexOf(currentPage)*100)+"%))"}}/>
+        <span aria-hidden="true" className="pointer-events-none absolute inset-y-1 left-1 z-0 w-[calc((100%-8px)/5)] rounded-full border border-white/25 bg-[linear-gradient(145deg,rgba(25,43,55,.78),rgba(25,43,55,.58))] shadow-[0_5px_18px_rgba(18,35,47,.22),0_1px_4px_rgba(255,255,255,.22)_inset] backdrop-blur-2xl transition-transform duration-300 ease-[cubic-bezier(.22,.61,.36,1)]" style={{transform:"translateX(calc("+(["home","eventos","penyes","noticias","info"].indexOf(currentPage)*100)+"%))"}}/>
       </nav>
-      {currentPage==="home"&&<div className="fixed right-2 top-[calc(env(safe-area-inset-top)+68px)] z-[2147483001] flex flex-col items-center gap-0.5 sm:right-6 sm:top-[calc(env(safe-area-inset-top)+8px)] sm:flex-row sm:gap-2">
+      {currentPage==="home"&&<div className="fixed right-2 top-[calc(env(safe-area-inset-top)+8px)] z-[2147483001] flex flex-col items-center gap-0.5 sm:right-6 sm:top-[calc(env(safe-area-inset-top)+8px)] sm:flex-row sm:gap-2">
         <button type="button" onClick={()=>setNotificationsOpen(open=>!open)} aria-label={"Notificaciones"+(unreadNotifications.length?", "+unreadNotifications.length+" sin leer":"")} aria-expanded={notificationsOpen} className="relative grid h-8 w-7 place-items-center border-0 bg-transparent text-white shadow-none transition hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white sm:h-10 sm:w-9">
           <svg viewBox="0 0 24 24" className="h-[17px] w-[17px] sm:h-[21px] sm:w-[21px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
           {unreadNotifications.length>0&&<span className="absolute right-[5px] top-[5px] h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500 shadow-sm" aria-label="Hay notificaciones sin leer"/>}
@@ -756,7 +756,7 @@ function Home() {
         </button>
       </div>}
       {currentPage==="home"&&notificationsOpen&&<div className="fixed inset-0 z-[5300] bg-transparent" onClick={()=>setNotificationsOpen(false)}>
-        <section role="dialog" aria-modal="true" aria-label="Centro de notificaciones" onClick={e=>e.stopPropagation()} className="fixed right-1.5 top-[calc(env(safe-area-inset-top)+106px)] flex h-[min(72dvh,620px)] max-h-[calc(100dvh-env(safe-area-inset-top)-122px)] min-h-[340px] w-[min(78vw,292px)] flex-col overflow-hidden rounded-[1.15rem] border border-white/55 bg-[rgba(248,250,249,.91)] shadow-[0_14px_38px_rgba(4,24,33,.24)] backdrop-blur-2xl animate-in fade-in slide-in-from-top-2 duration-200 sm:right-2 sm:top-[calc(env(safe-area-inset-top)+56px)] sm:w-[min(28vw,310px)]">
+        <section role="dialog" aria-modal="true" aria-label="Centro de notificaciones" onClick={e=>e.stopPropagation()} className="fixed right-1.5 top-[calc(env(safe-area-inset-top)+52px)] flex h-[min(72dvh,620px)] max-h-[calc(100dvh-env(safe-area-inset-top)-122px)] min-h-[340px] w-[min(78vw,292px)] flex-col overflow-hidden rounded-[1.15rem] border border-white/55 bg-[rgba(248,250,249,.91)] shadow-[0_14px_38px_rgba(4,24,33,.24)] backdrop-blur-2xl animate-in fade-in slide-in-from-top-2 duration-200 sm:right-2 sm:top-[calc(env(safe-area-inset-top)+56px)] sm:w-[min(28vw,310px)]">
           <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/55 bg-white/55 px-3 py-3"><div className="min-w-0"><p className="text-[9px] font-extrabold uppercase tracking-[.14em] text-[#a17d32]">Tu espacio</p><h2 className="text-base font-black leading-tight text-[#173f52]">Notificaciones</h2><p className="text-[10px] text-[#71878a]">{unreadNotifications.length?unreadNotifications.length+" sin leer":"Todo al día"}</p></div><div className="flex shrink-0 items-center gap-2"><button type="button" onClick={markAllNotificationsRead} disabled={!unreadNotifications.length} className="text-[9px] font-bold text-[#24576a] disabled:opacity-40">Leer todas</button><button type="button" onClick={()=>setNotificationsOpen(false)} aria-label="Cerrar notificaciones" className="grid h-7 w-7 place-items-center rounded-full bg-[#edf3f1] text-base text-[#24576a] transition hover:bg-[#e2ece8]">×</button></div></div>
           <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto overscroll-contain p-2.5">
             {avisosNotificaciones.length?avisosNotificaciones.map((aviso:any)=><article key={aviso.id} className={"rounded-xl border p-2.5 transition-colors "+(readNotificationIds.includes(String(aviso.id))?"border-[#e0e8e6] bg-white/70":"border-[#e2c5cd] bg-white shadow-[0_2px_8px_rgba(23,63,82,.05)]")}><div className="flex items-start gap-2"><span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full "+(readNotificationIds.includes(String(aviso.id))?"bg-transparent":"bg-red-500")}/><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="text-sm font-extrabold text-[#173f52]">{aviso.titulo}</h3>{aviso.importante&&<span className="rounded-full bg-[#fff2d7] px-2 py-0.5 text-[9px] font-extrabold text-[#8c6822]">Importante</span>}</div><p className="mt-1 whitespace-pre-line text-xs leading-relaxed text-[#53696e]">{aviso.descripcion}</p>{aviso.publicar_en&&<p className="mt-2 text-[10px] text-[#819395]">{new Date(aviso.publicar_en).toLocaleString("es-ES",{dateStyle:"medium",timeStyle:"short"})}</p>}{!readNotificationIds.includes(String(aviso.id))&&<button type="button" onClick={()=>markNotificationRead(String(aviso.id))} className="mt-2 text-[10px] font-extrabold text-[#24576a]">Marcar como leída</button>}</div></div></article>):<div className="rounded-2xl border border-dashed border-[#cadbd7] bg-white/70 px-5 py-10 text-center"><span className="text-3xl">🔔</span><p className="mt-2 text-sm font-extrabold text-[#173f52]">No tienes notificaciones</p><p className="mt-1 text-xs text-[#71878a]">Aquí aparecerán los avisos generales y los dirigidos a tu cuenta.</p></div>}
@@ -842,55 +842,6 @@ function Home() {
         </section>
       </main>
       </>}
-      {currentPage==="programa" && <main className="relative z-0 mx-auto min-h-[75vh] w-full min-w-0 max-w-[1600px] px-4 pb-32 pt-6 sm:px-5 sm:pt-8">
-        <section id="programa" className="scroll-mt-24">
-          <SectionTitle>{ui.nav.programa}</SectionTitle>
-          {!dias.length ? (
-            <div className="glass rounded-3xl p-6 text-muted-foreground">{ui.programaPendiente}</div>
-          ) : (
-            <>
-              <div className="mb-5 rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3">
-                <p className="text-xs font-bold uppercase tracking-wider text-primary">{dia === todayKey ? "Programa de hoy" : "Día seleccionado"}</p>
-                <h3 className="mt-1 text-xl font-bold capitalize text-primary sm:text-2xl">{dia ? fmtDia(dia) : "Selecciona un día"}</h3>
-              </div>
-              <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">Consulta otros días</p>
-              <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
-                {dias.map((d) => (
-                  <Chip key={d} active={dia === d} onClick={() => setDia(d)}>
-                    <span className="inline-block whitespace-nowrap first-letter:uppercase">{d === todayKey ? "Hoy · " : ""}{fmtDia(d)}</span>
-                  </Chip>
-                ))}
-              </div>
-              <div className="space-y-3">
-                {[...actos.filter((a) => a.dia === dia && eventoSigueActivo(a,now))].sort((a, b) => {
-                  const minutes = (h: string) => { const match = (h || "00:00").match(/^(\d{1,2}):(\d{2})/); if (!match) return 0; const value = Number(match[1]) * 60 + Number(match[2]); return value < 5 * 60 ? value + 24 * 60 : value; };
-                  return minutes(a.hora) - minutes(b.hora);
-                }).map((a) => {
-                  const title = String(a.titulo || "").toLocaleLowerCase("es");
-                  const festaCarrer = /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/.test(title);
-                  const esActuacion = !festaCarrer && a.tipo === "actuacion";
-                  const etiqueta = festaCarrer ? "Festa al carrer" : esActuacion ? "Actuación" :
-                    /albaes|maleta|despertà|desperta|pasacalles|visita de los mayorales/.test(title) ? "Tradición" :
-                    /misa|trisagio|jubileo|santísimo|procesión|ofrenda/.test(title) ? "Acto religioso" :
-                    /infantil|niño|niños|familiar|chocolatada/.test(title) ? "Actividad familiar" :
-                    /autobús|bus lanzadera/.test(title) ? "Transporte" : "Actividad";
-                  return <article id={"programa-acto-"+a.id} key={a.id} className="glass flex flex-col gap-1.5 rounded-xl p-2 sm:flex-row sm:items-center sm:gap-3 sm:rounded-3xl sm:p-5">
-                    <div className="font-display text-xl font-bold text-primary sm:w-28 sm:text-3xl">{a.hora || "—"}</div>
-                    <div className="flex-1">
-                      <span className={`mb-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-bold uppercase text-on-image ${esActuacion ? catBg.actuacion : festaCarrer ? "bg-pink" : catBg.evento}`}>{etiqueta}</span>
-                      <h4 className="text-xs font-bold leading-tight sm:text-xl">{a.titulo}</h4>
-                      {a.descripcion && <p className="mt-1 hidden text-sm text-muted-foreground sm:block">{a.descripcion}</p>}
-                      {a.lugar && <p className="mt-2 text-sm text-muted-foreground">📍 {a.lugar}</p>}
-                    </div>
-                    <div className="flex items-center gap-2">{a.lat != null && a.lng != null ? <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa</button> : null}</div>
-                  </article>;
-                })}
-                {!actos.some((a) => a.dia === dia) && <p className="glass rounded-2xl p-5 text-muted-foreground">No hay actos publicados para este día.</p>}
-              </div>
-            </>
-          )}
-        </section>
-      </main>}
       {currentPage==="eventos" && <main className="mx-auto min-h-[75vh] w-full max-w-[min(96vw,1600px)] px-3 pb-32 pt-8 sm:px-5">
         <section id="eventos" className="scroll-mt-24">
           <SectionTitle>Eventos</SectionTitle>
@@ -977,6 +928,53 @@ function Home() {
               </article>;
             })}</div>}
           </div>
+<section id="programa" className="scroll-mt-24">
+          <SectionTitle>{ui.nav.programa}</SectionTitle>
+          {!dias.length ? (
+            <div className="glass rounded-3xl p-6 text-muted-foreground">{ui.programaPendiente}</div>
+          ) : (
+            <>
+              <div className="mb-5 rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-primary">{dia === todayKey ? "Programa de hoy" : "Día seleccionado"}</p>
+                <h3 className="mt-1 text-xl font-bold capitalize text-primary sm:text-2xl">{dia ? fmtDia(dia) : "Selecciona un día"}</h3>
+              </div>
+              <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">Consulta otros días</p>
+              <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
+                {dias.map((d) => (
+                  <Chip key={d} active={dia === d} onClick={() => setDia(d)}>
+                    <span className="inline-block whitespace-nowrap first-letter:uppercase">{d === todayKey ? "Hoy · " : ""}{fmtDia(d)}</span>
+                  </Chip>
+                ))}
+              </div>
+              <div className="space-y-3">
+                {[...actos.filter((a) => a.dia === dia && eventoSigueActivo(a,now))].sort((a, b) => {
+                  const minutes = (h: string) => { const match = (h || "00:00").match(/^(\d{1,2}):(\d{2})/); if (!match) return 0; const value = Number(match[1]) * 60 + Number(match[2]); return value < 5 * 60 ? value + 24 * 60 : value; };
+                  return minutes(a.hora) - minutes(b.hora);
+                }).map((a) => {
+                  const title = String(a.titulo || "").toLocaleLowerCase("es");
+                  const festaCarrer = /tardeo|mañaneo|mananeo|nocheo|festes? al carrer|fiestas? en la calle/.test(title);
+                  const esActuacion = !festaCarrer && a.tipo === "actuacion";
+                  const etiqueta = festaCarrer ? "Festa al carrer" : esActuacion ? "Actuación" :
+                    /albaes|maleta|despertà|desperta|pasacalles|visita de los mayorales/.test(title) ? "Tradición" :
+                    /misa|trisagio|jubileo|santísimo|procesión|ofrenda/.test(title) ? "Acto religioso" :
+                    /infantil|niño|niños|familiar|chocolatada/.test(title) ? "Actividad familiar" :
+                    /autobús|bus lanzadera/.test(title) ? "Transporte" : "Actividad";
+                  return <article id={"programa-acto-"+a.id} key={a.id} className="glass flex flex-col gap-1.5 rounded-xl p-2 sm:flex-row sm:items-center sm:gap-3 sm:rounded-3xl sm:p-5">
+                    <div className="font-display text-xl font-bold text-primary sm:w-28 sm:text-3xl">{a.hora || "—"}</div>
+                    <div className="flex-1">
+                      <span className={`mb-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-bold uppercase text-on-image ${esActuacion ? catBg.actuacion : festaCarrer ? "bg-pink" : catBg.evento}`}>{etiqueta}</span>
+                      <h4 className="text-xs font-bold leading-tight sm:text-xl">{a.titulo}</h4>
+                      {a.descripcion && <p className="mt-1 hidden text-sm text-muted-foreground sm:block">{a.descripcion}</p>}
+                      {a.lugar && <p className="mt-2 text-sm text-muted-foreground">📍 {a.lugar}</p>}
+                    </div>
+                    <div className="flex items-center gap-2">{a.lat != null && a.lng != null ? <button onClick={() => goMap("acto-" + a.id)} className="glass-btn px-4 py-2 text-sm font-bold">Ver en el mapa</button> : null}</div>
+                  </article>;
+                })}
+                {!actos.some((a) => a.dia === dia) && <p className="glass rounded-2xl p-5 text-muted-foreground">No hay actos publicados para este día.</p>}
+              </div>
+            </>
+          )}
+        </section>
         </section>
       </main>}      {currentPage==="penyes" && <main className="relative z-0 mx-auto min-h-[75vh] w-full min-w-0 max-w-[1600px] px-4 pb-32 pt-0 sm:px-5 sm:pt-0">
         <section id="penyes" className="scroll-mt-24">
@@ -1025,7 +1023,7 @@ function Home() {
           ) : visiblePenyes.length===0 ? (
             <div className="glass rounded-3xl p-8 text-center"><p className="font-bold text-primary">No encontramos peñas con esos filtros</p><p className="mt-1 text-sm text-muted-foreground">Prueba con otra búsqueda o limpia los filtros.</p><button onClick={()=>{setPenyaSearch("");setPenyaMusicFilter("Todas");setPenyaOnlyMine(false);}} className="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">Mostrar todas las peñas</button></div>
           ) : (
-            <div className="grid min-w-0 grid-cols-1 items-stretch gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
+            <div className="grid min-w-0 grid-cols-1 items-stretch gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-2 2xl:grid-cols-2">
               {visiblePenyes.map((p) => {
                 const plans = eventosActivos.filter(e => e.penya_id === p.id);
                 return (
@@ -1242,14 +1240,13 @@ function Home() {
             </div>
             <div className="mx-auto w-full max-w-[1600px] px-3 pb-6 pt-3 sm:px-6 sm:pb-8 sm:pt-5 lg:px-8 xl:px-10">
               <div className="relative -mt-[62px] mb-5 flex flex-col items-center gap-3 text-center sm:-mt-[78px] sm:flex-row sm:items-end sm:gap-5 sm:text-left">
-                <div className="grid h-28 w-28 shrink-0 place-items-center overflow-hidden rounded-full border-[5px] border-[#f5f8f7] bg-white text-3xl font-black text-[#173f52] shadow-[0_12px_35px_rgba(4,25,34,.22)] sm:h-36 sm:w-36">{selectedPenya.foto ? <img src={selectedPenya.foto} alt={"Logo de "+selectedPenya.nombre} className="h-full w-full object-cover"/> : selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
+                <div className="grid h-36 w-36 shrink-0 place-items-center overflow-hidden rounded-full border-[5px] border-[#f5f8f7] bg-white text-4xl font-black text-[#173f52] shadow-[0_12px_35px_rgba(4,25,34,.22)] sm:h-40 sm:w-40 lg:h-44 lg:w-44">{selectedPenya.foto ? <img src={selectedPenya.foto} alt={"Logo de "+selectedPenya.nombre} className="h-full w-full object-cover"/> : selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
                 <div className="min-w-0 flex-1 pb-1">
                   {esPenyaCuBaTa(selectedPenya.nombre) && <span className="mb-2 inline-flex items-center gap-1 rounded-full border border-[#B8860B] bg-[#D4AF37] px-3 py-1 text-[10px] font-extrabold tracking-wide text-[#3B2A0A] sm:text-xs">♛ MAYORALES 2027</span>}
                   
                   <h2 className="mt-1 break-words text-3xl font-black leading-tight tracking-tight text-[#173f52] sm:text-4xl md:text-5xl">{selectedPenya.nombre}</h2>
                   {selectedPenya.informacion?.trim() && <p className="mt-2 line-clamp-2 max-w-2xl text-sm leading-relaxed text-[#526b70] sm:text-base">{selectedPenya.informacion}</p>}
-                  <button type="button" onClick={()=>{setSelectedPenya(null);setPenyaDetailFullscreen(false);setCurrentPage("home");setCat("penya");setFocus(selectedPenya.id);window.scrollTo({top:0,behavior:"smooth"});}} className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#cbdcdd] bg-white/85 px-4 py-2 text-xs font-extrabold text-[#24576a] shadow-sm">📍 {selectedPenya.direccion ? "Ver ubicación · "+selectedPenya.direccion : "Ver ubicación en el mapa"}</button>
-                  {selectedPenyaAcceptsVisits && <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-[#cfe2d7] bg-[#f2f8f4] px-3 py-1 text-[10px] font-semibold text-[#47745a]"><span aria-hidden="true">✓</span> Acepta visitas</span> }
+                  <div className="mt-3 flex flex-wrap items-center gap-2"><button type="button" onClick={()=>{setSelectedPenya(null);setPenyaDetailFullscreen(false);setCurrentPage("home");setCat("penya");setFocus(selectedPenya.id);window.scrollTo({top:0,behavior:"smooth"});}} className="inline-flex items-center gap-2 rounded-full border border-[#cbdcdd] bg-white/85 px-4 py-2 text-xs font-extrabold text-[#24576a] shadow-sm">📍 {selectedPenya.direccion ? "Ver ubicación · "+selectedPenya.direccion : "Ver ubicación en el mapa"}</button>{selectedPenyaAcceptsVisits && <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-emerald-300 bg-emerald-50 px-3 py-2 text-[11px] font-extrabold text-emerald-800 shadow-sm"><span aria-hidden="true">✓</span> Esta peña acepta visitas</span>}</div>
                 </div>
               </div>
               {(() => {
@@ -1292,18 +1289,7 @@ function Home() {
                   return null;
                 })}
               </div>}
-              <div className="mt-6 flex flex-wrap items-center gap-2.5 rounded-[1.5rem] border border-[#dce7e4] bg-white p-4 shadow-[0_8px_28px_rgba(23,63,82,.05)] sm:p-5">
-                <button onClick={() => setEventFormPenya(selectedPenya)} className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-sm transition hover:-translate-y-0.5">＋ Proponer un plan</button>
-                 {selectedPenya.lat!=null&&selectedPenya.lng!=null&&<button onClick={()=>{setSelectedPenya(null);setPenyaDetailFullscreen(false);setCurrentPage("home");setCat("penya");setFocus(selectedPenya.id);window.scrollTo({top:0,behavior:"smooth"});}} className="rounded-full border border-border bg-white/70 px-4 py-2 text-sm font-bold text-primary">⌖ Ver en el mapa</button>}
-                 <button onClick={() => toggleMiPenya(selectedPenya.id)} aria-pressed={misPenyes.includes(selectedPenya.id)} className="rounded-full border border-primary/20 bg-white/70 px-4 py-2 text-sm font-bold text-primary">{misPenyes.includes(selectedPenya.id) ? "★ Mi peña" : "☆ Marcar como mi peña"}</button>
-                {instagramUrl(selectedPenya.instagram) && <a className="rounded-full bg-[#173f52] px-4 py-2 text-sm font-bold text-white" href={instagramUrl(selectedPenya.instagram)!} target="_blank" rel="noreferrer">Instagram ↗</a>}
-              </div>
               {selectedPenyaNews.length > 0 && <section id="ficha-novedades" className="mt-4 rounded-[1.5rem] border border-[#dce7e4] bg-white p-4 shadow-[0_8px_28px_rgba(23,63,82,.055)] sm:p-6"><h3 className="mb-3 text-xl font-extrabold text-primary">Lo último de nuestra peña</h3><div className="space-y-3">{selectedPenyaNews.map((n:any)=><button key={n.id} type="button" onClick={()=>{setSelectedPenya(null);setCurrentPage("noticias");setNoticiaSeleccionada(n);window.scrollTo({top:0,behavior:"smooth"});}} className="flex w-full items-center gap-3 rounded-2xl border border-border bg-white/75 p-3 text-left transition hover:border-primary/40 hover:shadow-sm"><span className="min-w-0 flex-1"><span className="block text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{new Date(n.fecha||n.created_at||Date.now()).toLocaleDateString("es-ES",{day:"numeric",month:"short"})}</span><span className="mt-1 block font-bold leading-snug text-primary">{n.titulo}</span><span className="mt-1 block text-xs font-bold text-primary">Ver publicación →</span></span></button>)}</div></section>}
-
-              {selectedPenyaAcceptsVisits&&<div className="flex items-center gap-3 rounded-[1.25rem] border border-[#cfe4dc] bg-[#edf7f2] px-4 py-4 text-[#285f4d]">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-100 text-xl">✓</span>
-                <div><p className="font-bold">Esta peña acepta visitas</p><p className="text-sm text-emerald-700">Pásate a conocer el ambiente y disfrutar de las fiestas.</p></div>
-              </div>}
 
               <div id="ficha-planes" className="min-w-0 rounded-[1.5rem] border border-[#dce7e4] bg-white p-5 shadow-[0_8px_28px_rgba(23,63,82,.055)] sm:p-7 lg:col-span-2">
                 <div className="mb-3 flex items-center justify-between gap-3">
@@ -1338,21 +1324,17 @@ function Home() {
                 )}
               </div>
 
-              {selectedPenya.direccion && <div className="mt-5 flex items-start gap-2 text-sm text-muted-foreground"><span>📍</span><span>{selectedPenya.direccion}</span></div>}
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <a
-                  href={selectedPenya.lat != null && selectedPenya.lng != null
-                    ? "https://www.google.com/maps/dir/?api=1&destination=" + selectedPenya.lat + "," + selectedPenya.lng
-                    : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent((selectedPenya.direccion || selectedPenya.nombre) + ", l'Alfàs del Pi")}
-                  target="_blank" rel="noreferrer"
-                  className="flex min-h-14 items-center justify-center gap-2 rounded-full bg-[#173f52] px-5 py-3 text-center font-bold text-white transition hover:-translate-y-0.5"
-                >📍 Cómo llegar</a>
-                <button onClick={() => void sharePenyaCard(selectedPenya)} className="flex min-h-14 items-center justify-center gap-2 rounded-full border border-primary/20 bg-white/70 px-5 py-3 font-bold text-primary transition hover:-translate-y-0.5">↗ Compartir</button>
-                <button onClick={() => void copyShareLink(window.location.origin + "/#penya-" + selectedPenya.id)} className="flex min-h-14 items-center justify-center gap-2 rounded-full border border-primary/20 bg-white/70 px-5 py-3 font-bold text-primary transition hover:-translate-y-0.5">🔗 Copiar enlace de la ficha</button>
+              <div className="mt-4 flex min-w-0 items-center gap-2 overflow-x-auto rounded-2xl border border-[#dce7e4] bg-white p-2 shadow-sm">
+                <button onClick={() => setEventFormPenya(selectedPenya)} className="min-h-11 shrink-0 rounded-xl bg-primary px-4 text-xs font-bold text-primary-foreground">＋ Proponer un plan</button>
+                <button onClick={() => toggleMiPenya(selectedPenya.id)} aria-pressed={misPenyes.includes(selectedPenya.id)} className="min-h-11 shrink-0 rounded-xl border border-primary/20 bg-white px-3 text-xs font-bold text-primary">{misPenyes.includes(selectedPenya.id) ? "★ Mi peña" : "☆ Marcar como mi peña"}</button>
+                {instagramUrl(selectedPenya.instagram) && <a className="flex min-h-11 shrink-0 items-center rounded-xl bg-[#173f52] px-3 text-xs font-bold text-white" href={instagramUrl(selectedPenya.instagram)!} target="_blank" rel="noreferrer">Instagram ↗</a>}
+                <button onClick={() => setEventFormPenya(selectedPenya)} className="min-h-11 shrink-0 rounded-xl border border-primary/20 bg-white px-3 text-xs font-bold text-primary">{selectedPenya.tiene_evento ? "Añadir evento" : "+ Añadir evento"}</button>
               </div>
-              <div className="mt-4 flex flex-wrap gap-3 text-sm">
-                {instagramUrl(selectedPenya.instagram) && <a className="font-semibold text-primary underline" href={instagramUrl(selectedPenya.instagram)!} target="_blank" rel="noreferrer">{'Instagram · @' + selectedPenya.instagram?.replace(/^@/, "")}</a>}
-                <button onClick={() => setEventFormPenya(selectedPenya)} className="font-semibold text-primary underline">{selectedPenya.tiene_evento ? "Añadir otro evento" : "+ Añadir evento"}</button>
+              <div className="mt-2 flex min-w-0 items-center gap-2 overflow-x-auto rounded-2xl border border-[#dce7e4] bg-white p-2 shadow-sm">
+                {selectedPenya.direccion && <div className="flex min-w-[150px] flex-1 items-center gap-2 px-2 text-xs font-semibold text-[#52666b]"><span className="text-base">📍</span><span className="line-clamp-2">{selectedPenya.direccion}</span></div>}
+                <a href={selectedPenya.lat != null && selectedPenya.lng != null ? "https://www.google.com/maps/dir/?api=1&destination=" + selectedPenya.lat + "," + selectedPenya.lng : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent((selectedPenya.direccion || selectedPenya.nombre) + ", l'Alfàs del Pi")} target="_blank" rel="noreferrer" className="flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#173f52] px-3 text-xs font-bold text-white">📍 Cómo llegar</a>
+                <button onClick={() => void sharePenyaCard(selectedPenya)} className="flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-primary/20 bg-white px-3 text-xs font-bold text-primary">↗ Compartir</button>
+                <button onClick={() => void copyShareLink(window.location.origin + "/#penya-" + selectedPenya.id)} className="flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-primary/20 bg-white px-3 text-xs font-bold text-primary">🔗 Copiar enlace</button>
               </div>
               </div>
             </div>
