@@ -326,6 +326,14 @@ function Home() {
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
   const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes">("all");
   const [currentPage, setCurrentPage] = useState<"home"|"noticias"|"buscar"|"programa"|"eventos"|"mapa"|"penyes"|"info">("home");
+  const [accountUser, setAccountUser] = useState<any>(null);
+  const [accountMode, setAccountMode] = useState<"register"|"login">("register");
+  const [accountName, setAccountName] = useState("");
+  const [accountEmail, setAccountEmail] = useState("");
+  const [accountPassword, setAccountPassword] = useState("");
+  const [accountMessage, setAccountMessage] = useState("");
+  const [accountBusy, setAccountBusy] = useState(false);
+  const [personalPrefs, setPersonalPrefs] = useState({ showImportantNotices: true, reduceMotion: false });
   const [avisos, setAvisos] = useState<any[]>([]);
   const [mapPoints, setMapPoints] = useState<Lugar[]>([]);
   const [cat, setCat] = useState<Categoria | null>(null);
@@ -376,7 +384,7 @@ function Home() {
   const featuredNews = visibleNews.filter((n:any)=>n.destacada);
   const regularNews = visibleNews.filter((n:any)=>!n.destacada);
   const proximasActividades = useMemo(() => [...actos.filter((a:any)=>!a._officialOnly).map((a:any)=>({...a,_origen:"programa"})), ...eventos.map((e:any)=>({...e,_origen:"penya"}))].filter((item:any)=>item.dia && eventoSigueActivo(item,now)).sort((a:any,b:any)=>new Date(String(a.dia).slice(0,10)+"T"+String(a.hora||"23:59")).getTime()-new Date(String(b.dia).slice(0,10)+"T"+String(b.hora||"23:59")).getTime()).slice(0,3),[actos,eventos,now]);
-  const avisosVisibles = avisos.filter((aviso:any)=>aviso.activo && (!aviso.publicar_en || new Date(aviso.publicar_en).getTime()<=now));
+  const avisosVisibles = avisos.filter((aviso:any)=>aviso.activo && (!aviso.importante || personalPrefs.showImportantNotices) && (!aviso.publicar_en || new Date(aviso.publicar_en).getTime()<=now));
   const searchResults = useMemo(() => {
     const normalize = (value: any) => String(value || "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const term = normalize(searchTerm.trim());
@@ -492,7 +500,12 @@ function Home() {
     const combinadas=[...guardadasSinVersionAntigua,...noticiasAutomaticas,...respaldo];
     const unicas=combinadas.filter((noticia:any,index:number,array:any[])=>noticia?.id&&array.findIndex((otra:any)=>String(otra.id)===String(noticia.id))===index&&!noticiasOcultas.includes(String(noticia.id)));
     setNoticias(unicas.filter(esNoticiaFestivaLocal).map((noticia:any)=>({...noticia,destacada:idsDestacadas.includes(String(noticia.id))})));
-    try { const points=JSON.parse(content["mapa_puntos_json"]||"[]"); setMapPoints(Array.isArray(points)?points.filter((p:any)=>Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))&&Number(p.lat)>=-90&&Number(p.lat)<=90&&Number(p.lng)>=-180&&Number(p.lng)<=180):[]); } catch { setMapPoints([]); }
+    try {
+      const points=JSON.parse(content["mapa_puntos_json"]||"[]");
+      const cleanPoints=Array.isArray(points)?points.filter((p:any)=>Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))&&Number(p.lat)>=-90&&Number(p.lat)<=90&&Number(p.lng)>=-180&&Number(p.lng)<=180):[];
+      setMapPoints(cleanPoints);
+      try { localStorage.setItem("festalfas-map-points-cache", JSON.stringify(cleanPoints)); } catch { /* Caché opcional. */ }
+    } catch { setMapPoints([]); }
     if (content["hero_image_path"]) {
       const heroUrl = content["hero_image_path"].startsWith("http") ? content["hero_image_path"] : supabase.storage.from("penyes").getPublicUrl(content["hero_image_path"]).data.publicUrl;
       setHeroImage(heroUrl);
@@ -503,9 +516,44 @@ function Home() {
     }
     if (!data) return;
     const urls = data.map((p) => p.foto_url ? (p.foto_url.startsWith("http") ? p.foto_url : supabase.storage.from("penyes").getPublicUrl(p.foto_url).data.publicUrl) : "");
-    setPenyes(data.map((p, i) => ({ ...p, foto: urls[i] ?? "" })));
+    const cleanPenyes=data.map((p, i) => ({ ...p, foto: urls[i] ?? "" }));
+    setPenyes(cleanPenyes);
+    try { localStorage.setItem("festalfas-penyes-cache", JSON.stringify(cleanPenyes)); } catch { /* Caché opcional. */ }
   }, []);
-  useEffect(() => { cargar(); }, [cargar]);
+  useEffect(() => {
+    try {
+      const cachedPoints = JSON.parse(localStorage.getItem("festalfas-map-points-cache") || "[]");
+      if (Array.isArray(cachedPoints)) setMapPoints(cachedPoints);
+      const cachedPenyes = JSON.parse(localStorage.getItem("festalfas-penyes-cache") || "[]");
+      if (Array.isArray(cachedPenyes)) setPenyes(cachedPenyes);
+    } catch { /* Se cargarán los datos actuales del servidor. */ }
+    cargar();
+  }, [cargar]);
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      const user = data.session?.user ?? null;
+      setAccountUser(user);
+      const saved = user?.user_metadata?.festalfas_preferences;
+      try {
+        const local = JSON.parse(localStorage.getItem("festalfas-personal-preferences") || "{}");
+        setPersonalPrefs({ showImportantNotices: saved?.showImportantNotices ?? local.showImportantNotices ?? true, reduceMotion: saved?.reduceMotion ?? local.reduceMotion ?? false });
+      } catch { setPersonalPrefs({ showImportantNotices: saved?.showImportantNotices ?? true, reduceMotion: saved?.reduceMotion ?? false }); }
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      const user = session?.user ?? null;
+      setAccountUser(user);
+      const saved = user?.user_metadata?.festalfas_preferences;
+      if (saved) setPersonalPrefs({ showImportantNotices: saved.showImportantNotices !== false, reduceMotion: saved.reduceMotion === true });
+    });
+    return () => { active = false; subscription.unsubscribe(); };
+  }, []);
+  useEffect(() => {
+    document.documentElement.classList.toggle("festalfas-reduce-motion", personalPrefs.reduceMotion);
+    try { localStorage.setItem("festalfas-personal-preferences", JSON.stringify(personalPrefs)); } catch { /* Preferencias activas en esta sesión. */ }
+  }, [personalPrefs]);
   useEffect(() => {
     const openPenyaFromHash = () => {
       const match = window.location.hash.match(/^#penya-(.+)$/);
@@ -550,6 +598,35 @@ function Home() {
     return () => { window.clearTimeout(showTimer); if (hideTimer) window.clearTimeout(hideTimer); };
   }, [noticias]);
 
+  const handleAccountSubmit = async (event: React.FormEvent) => {
+    event.preventDefault(); setAccountBusy(true); setAccountMessage("");
+    try {
+      if (accountMode === "register") {
+        if (accountPassword.length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres.");
+        const { data, error } = await supabase.auth.signUp({ email: accountEmail.trim(), password: accountPassword, options: { data: { full_name: accountName.trim() } } });
+        if (error) throw error;
+        setAccountMessage(data.session ? "¡Cuenta creada! Ya has iniciado sesión." : "Registro iniciado. Revisa tu correo para confirmar la cuenta antes de entrar.");
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email: accountEmail.trim(), password: accountPassword });
+        if (error) throw error;
+        setAccountMessage("Sesión iniciada correctamente.");
+      }
+      setAccountPassword("");
+    } catch (error) { setAccountMessage(error instanceof Error ? error.message : "No se ha podido completar la operación."); }
+    finally { setAccountBusy(false); }
+  };
+  const savePersonalPreferences = async () => {
+    setAccountBusy(true); setAccountMessage("");
+    try {
+      if (accountUser) {
+        const { error } = await supabase.auth.updateUser({ data: { festalfas_preferences: personalPrefs } });
+        if (error) throw error;
+      }
+      localStorage.setItem("festalfas-personal-preferences", JSON.stringify(personalPrefs));
+      setAccountMessage("Tus ajustes personales se han guardado.");
+    } catch (error) { setAccountMessage(error instanceof Error ? error.message : "No se han podido guardar los ajustes."); }
+    finally { setAccountBusy(false); }
+  };
   const todos: Lugar[] = useMemo(() => [
     ...lugaresFijos,
     ...mapPoints,
@@ -624,7 +701,7 @@ function Home() {
     <div className="page-bg min-h-screen" style={{ "--pink": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--secondary": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--accent": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--ring": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--cat-penya": siteContent["theme_accent"] || "oklch(0.68 0.12 190)", "--background": siteContent["theme_background"] || "oklch(0.975 0.012 90)", "--gradient-page": `linear-gradient(180deg, ${siteContent["theme_background"] || "oklch(0.985 0.008 90)"}, ${siteContent["theme_background"] || "oklch(0.965 0.014 90)"})` } as React.CSSProperties}>
       <nav aria-label="Navegación principal" className="fixed left-1/2 top-[calc(env(safe-area-inset-top)+8px)] z-[5000] flex h-[52px] w-[calc(100vw-32px)] max-w-[540px] -translate-x-1/2 items-center justify-between gap-0 overflow-hidden rounded-full border border-white/85 bg-[rgba(245,248,250,.94)] px-1 shadow-[0_5px_18px_rgba(20,39,52,.16),0_1px_4px_rgba(255,255,255,.95)_inset] backdrop-blur-2xl [backdrop-filter:blur(24px)_saturate(155%)]">
         {(["home","eventos","penyes","programa","noticias","info"] as const).map((page,index)=>{
-          const labels={home:"Inicio",eventos:"Eventos",penyes:"Peñas",programa:"Programa",noticias:"Noticias",info:"Info"};
+          const labels={home:"Inicio",eventos:"Eventos",penyes:"Peñas",programa:"Programa",noticias:"Noticias",info:"Ajustes"};
           const active=currentPage===page;
           return <button key={page} type="button" aria-current={active?"page":undefined} onClick={()=>{setMapFullscreen(false);setSelectedPenya(null);setPenyaDetailFullscreen(false);setEventFormPenya(null);setForm(false);setNewsPopup([]);setShareReminder(false);setNoticiaSeleccionada(null);setCurrentPage(page);window.scrollTo({top:0,behavior:"smooth"});}} className={"relative z-10 flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-0 overflow-hidden rounded-full px-0 py-0 text-center leading-none transition-colors duration-200 "+(active?"text-white":"text-primary/75 hover:text-primary")}>
             <span className="grid h-[20px] w-[20px] shrink-0 place-items-center leading-none">
@@ -944,12 +1021,22 @@ function Home() {
         </section>
       </main>}
       
-{currentPage==="info" && <main className="mx-auto min-h-[75vh] w-full max-w-[min(96vw,1600px)] px-3 pb-32 pt-8 sm:px-5">
-        <section id="info" className="scroll-mt-24 space-y-6">
-          <div>
-            <SectionTitle>{ui.nav.info}</SectionTitle>
-            <p className="mt-2 text-sm text-muted-foreground">Teléfonos útiles y servicios de l’Alfàs del Pi para residentes y visitantes. En caso de peligro inmediato, llama al 112.</p>
+{currentPage==="info" && <main className="mx-auto min-h-[75vh] w-full max-w-[min(96vw,1600px)] space-y-10 px-3 pb-32 pt-8 sm:px-5">
+        <section aria-labelledby="settings-title" className="space-y-5">
+          <div><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-primary">Tu espacio personal</p><h1 id="settings-title" className="mt-1 text-3xl font-black text-primary sm:text-4xl">Ajustes</h1><p className="mt-2 text-sm text-muted-foreground">Crea tu cuenta o inicia sesión para guardar tus preferencias personales de FestAlfàs.</p></div>
+          <div className="grid gap-5 lg:grid-cols-2">
+            <section className="glass rounded-3xl border border-primary/15 p-5 shadow-sm sm:p-6">
+              {accountUser ? <div className="space-y-4"><div className="flex items-center gap-3"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-2xl">👤</span><div><p className="text-[10px] font-extrabold uppercase tracking-wider text-primary">Sesión iniciada</p><h2 className="text-lg font-extrabold">{accountUser.user_metadata?.full_name || accountUser.email}</h2><p className="text-xs text-muted-foreground">{accountUser.email}</p></div></div><button type="button" disabled={accountBusy} onClick={async()=>{setAccountBusy(true);await supabase.auth.signOut();setAccountMessage("Has cerrado sesión.");setAccountBusy(false);}} className="rounded-full border border-border px-4 py-2 text-sm font-bold">Cerrar sesión</button></div> : <>
+                <div className="mb-4 flex gap-2 rounded-full bg-muted/70 p-1"><button type="button" onClick={()=>{setAccountMode("register");setAccountMessage("");}} className={"flex-1 rounded-full px-3 py-2 text-sm font-bold "+(accountMode==="register"?"bg-primary text-primary-foreground shadow":"text-muted-foreground")}>Crear cuenta</button><button type="button" onClick={()=>{setAccountMode("login");setAccountMessage("");}} className={"flex-1 rounded-full px-3 py-2 text-sm font-bold "+(accountMode==="login"?"bg-primary text-primary-foreground shadow":"text-muted-foreground")}>Iniciar sesión</button></div>
+                <form onSubmit={handleAccountSubmit} className="space-y-3"><h2 className="text-xl font-extrabold text-primary">{accountMode==="register"?"Regístrate en FestAlfàs":"Bienvenido de nuevo"}</h2>{accountMode==="register"&&<label className="block space-y-1 text-sm font-semibold">Nombre<input autoComplete="name" required maxLength={80} value={accountName} onChange={e=>setAccountName(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 outline-none focus:ring-2 focus:ring-ring" placeholder="Tu nombre"/></label>}<label className="block space-y-1 text-sm font-semibold">Correo electrónico<input type="email" autoComplete="email" required value={accountEmail} onChange={e=>setAccountEmail(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 outline-none focus:ring-2 focus:ring-ring" placeholder="nombre@correo.com"/></label><label className="block space-y-1 text-sm font-semibold">Contraseña<input type="password" autoComplete={accountMode==="register"?"new-password":"current-password"} minLength={8} required value={accountPassword} onChange={e=>setAccountPassword(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 outline-none focus:ring-2 focus:ring-ring" placeholder="Mínimo 8 caracteres"/></label><button disabled={accountBusy} className="w-full rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground shadow-sm">{accountBusy?"Procesando…":accountMode==="register"?"Crear mi cuenta":"Entrar"}</button></form>
+              </>}
+              {accountMessage&&<p role="status" className="mt-3 rounded-xl bg-primary/5 p-3 text-sm text-primary">{accountMessage}</p>}
+            </section>
+            <section className="glass space-y-4 rounded-3xl border border-primary/15 p-5 shadow-sm sm:p-6"><div><p className="text-[10px] font-extrabold uppercase tracking-wider text-primary">Personalización</p><h2 className="mt-1 text-xl font-extrabold text-primary">Preferencias de la web</h2><p className="mt-1 text-xs text-muted-foreground">Se guardan en este dispositivo y, al iniciar sesión, también en tu cuenta.</p></div><label className="flex items-start gap-3 rounded-2xl border border-border/70 p-3"><input type="checkbox" className="mt-1 h-4 w-4 accent-primary" checked={personalPrefs.showImportantNotices} onChange={e=>setPersonalPrefs(p=>({...p,showImportantNotices:e.target.checked}))}/><span><span className="block text-sm font-bold">Mostrar avisos importantes</span><span className="block text-xs text-muted-foreground">Controla si aparecen los comunicados destacados mientras navegas.</span></span></label><label className="flex items-start gap-3 rounded-2xl border border-border/70 p-3"><input type="checkbox" className="mt-1 h-4 w-4 accent-primary" checked={personalPrefs.reduceMotion} onChange={e=>setPersonalPrefs(p=>({...p,reduceMotion:e.target.checked}))}/><span><span className="block text-sm font-bold">Reducir animaciones</span><span className="block text-xs text-muted-foreground">Reduce transiciones y movimientos de la interfaz.</span></span></label><button type="button" disabled={accountBusy} onClick={()=>void savePersonalPreferences()} className="rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground">Guardar mis ajustes</button></section>
           </div>
+        </section>
+        <section id="info" className="scroll-mt-24 space-y-6 border-t border-border/70 pt-8">
+          <div><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-primary">Servicios y contacto</p><SectionTitle>Información</SectionTitle><p className="mt-2 text-sm text-muted-foreground">Teléfonos útiles y servicios de l’Alfàs del Pi para residentes y visitantes. En caso de peligro inmediato, llama al 112.</p></div>
 
           <section aria-labelledby="emergencias-title">
             <h3 id="emergencias-title" className="mb-3 text-xl font-bold text-primary">🚨 Emergencias y seguridad</h3>
