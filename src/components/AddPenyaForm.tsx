@@ -14,7 +14,7 @@ const schema = z.object({
   instagram: z.string().trim().max(100),
 });
 
-export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+export default function AddPenyaForm({ onClose, onSaved, autoApprove = false }: { onClose: () => void; onSaved: () => void; autoApprove?: boolean }) {
   const [nombre, setNombre] = useState("");
   const [direccion, setDireccion] = useState("");
   const [tipoMusica, setTipoMusica] = useState("Variada");
@@ -89,7 +89,7 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
         lat: pos?.lat ?? null,
         lng: pos?.lng ?? null,
         foto_url: fotoPath,
-        estado: "pendiente",
+        estado: autoApprove ? "aprobada" : "pendiente",
         tipo_musica: v.data.tipo_musica || "Variada",
         instagram: v.data.instagram.replace(/^@/, ""),
       });
