@@ -1084,12 +1084,31 @@ function Home() {
                 <a href="#ficha-planes" className="shrink-0 rounded-full border border-[#d4e0de] bg-white px-4 py-2.5 text-xs font-bold text-[#173f52] transition hover:border-[#d4af37]">Planes</a>
                 {selectedPenyaNews.length > 0 && <a href="#ficha-novedades" className="shrink-0 rounded-full border border-[#d4e0de] bg-white px-4 py-2.5 text-xs font-bold text-[#173f52] transition hover:border-[#d4af37]">Novedades</a>}
               </nav>
-              <div id="ficha-presentacion" className="flex flex-wrap items-center gap-2.5">
-                <span className="rounded-full bg-[#dcebe8] px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[.12em] text-[#173f52]">Ficha de la peña</span>
-                {selectedPenya.tipo_musica && <span className="rounded-full border border-[#d8e3e1] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#49636b]">♫ {selectedPenya.tipo_musica}</span>}
-                {misPenyes.includes(selectedPenya.id) && <span className="rounded-full bg-[#173f52] px-3.5 py-1.5 text-xs font-bold text-white">★ Mi peña</span>}
-              </div>
-              {selectedPenyaGallery.length > 0 && <section id="ficha-galeria" className="mt-8 rounded-[1.5rem] border border-[#dce7e4] bg-white p-5 shadow-[0_8px_28px_rgba(23,63,82,.055)] sm:p-7"><div className="mb-3 flex items-end justify-between gap-3"><div><h3 className="text-xl font-extrabold text-primary">Momentos de la peña</h3><p className="text-xs text-muted-foreground">Fotografías de sus eventos y actividades</p></div><span className="text-xs font-bold text-muted-foreground">{selectedPenyaGallery.length} {selectedPenyaGallery.length===1?"foto":"fotos"}</span></div><div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{selectedPenyaGallery.map((url:string,index:number)=><img key={url} src={url} alt={selectedPenya.nombre+" · foto "+(index+1)} loading="lazy" className="aspect-square w-full rounded-xl bg-muted object-cover sm:rounded-2xl" />)}</div></section>}
+              {(() => {
+                const profileTags = selectedPenyaCustomBlocks.filter((block:any)=>block.type==="tag" && String(block.title||"").trim()).map((block:any)=>String(block.title).trim());
+                const memberCount = [selectedPenya.miembros_actuales, selectedPenya.numero_miembros, selectedPenya.miembros].find((value)=>typeof value==="number" && Number.isFinite(value) && value>0);
+                const tags = [...(selectedPenya.tipo_musica ? ["♫ "+selectedPenya.tipo_musica] : []), ...(memberCount ? ["👥 "+memberCount+" miembros"] : []), ...profileTags, ...(misPenyes.includes(selectedPenya.id) ? ["★ Mi peña"] : [])].slice(0,4);
+                const photoSlots = [0,1,2];
+                const photoPositions = ["left-0 top-7 z-10 -rotate-6","left-1/2 top-0 z-20 -translate-x-1/2","right-0 top-8 z-10 rotate-6"];
+                return <>
+                  <div id="ficha-presentacion" className="mb-2 flex min-h-8 items-center justify-center gap-2 overflow-hidden whitespace-nowrap sm:justify-start">
+                    {tags.map((tag,index)=><span key={index} className={["rounded-full border px-3 py-1.5 text-[10px] font-bold shadow-sm sm:text-xs", "border-[#f3c5d7] bg-[#fff0f5] text-[#9d4567]", "border-[#c6d9f4] bg-[#edf5ff] text-[#315f9a]", "border-[#d7c8ed] bg-[#f5efff] text-[#70509b]", "border-[#c9e5d8] bg-[#eefaf3] text-[#367457]"][index%5]}>{tag}</span>)}
+                  </div>
+                  <section id="ficha-galeria" className="relative mt-5 overflow-hidden rounded-[1.75rem] border border-[#dce7e4] bg-gradient-to-b from-white to-[#f1f7f5] px-3 pb-5 pt-5 shadow-[0_8px_28px_rgba(23,63,82,.055)] sm:mt-7 sm:px-7 sm:pb-7 sm:pt-6">
+                    <div className="mb-1 flex items-center justify-between gap-3 px-1"><div><h3 className="text-lg font-extrabold text-[#173f52] sm:text-xl">Momentos de la peña</h3><p className="text-[11px] text-[#7b9293] sm:text-xs">Fotos compartidas por sus miembros</p></div>{selectedPenyaGallery.length>0&&<span className="shrink-0 text-[11px] font-bold text-muted-foreground">{selectedPenyaGallery.length} {selectedPenyaGallery.length===1?"foto":"fotos"}</span>}</div>
+                    <div className="relative mx-auto h-[230px] max-w-2xl sm:h-[300px]">
+                      {photoSlots.map((slot:number)=>{
+                        const url=selectedPenyaGallery[slot];
+                        const hasPhoto=Boolean(url);
+                        return <div key={slot} className={"absolute h-[175px] w-[48%] overflow-hidden rounded-[1.5rem] border-[5px] border-white shadow-[0_12px_30px_rgba(23,63,82,.16)] sm:h-[235px] sm:w-[43%] "+photoPositions[slot]}>
+                          {hasPhoto?<img src={url} alt={selectedPenya.nombre+" · foto "+(slot+1)} loading="lazy" className="h-full w-full object-cover"/>:<div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#dcebe8]/85 via-[#eef5f3]/80 to-[#d8e4e9]/85"><span className="text-3xl text-white/80">✦</span></div>}
+                          {!hasPhoto&&selectedPenyaGallery.length===0&&slot===1&&<div className="absolute inset-0 flex flex-col items-center justify-center bg-[#173f52]/25 px-3 text-center text-[#173f52] backdrop-blur-[1px]"><span className="mb-1 text-2xl">📸</span><strong className="text-sm font-black sm:text-base">Añade tus fotos</strong><span className="mt-1 text-[10px] leading-tight sm:text-xs">Comparte recuerdos con tu peña</span><button type="button" onClick={()=>window.location.assign("/admin")} className="mt-3 rounded-full bg-[#173f52] px-4 py-2 text-[10px] font-extrabold text-white shadow-md transition hover:scale-105 sm:text-xs">＋ Añadir fotos</button></div>}
+                        </div>;
+                      })}
+                    </div>
+                  </section>
+                </>;
+              })()}
               {selectedPenya.informacion?.trim() && <section className="mt-5 rounded-[1.5rem] border border-[#dce7e4] bg-white p-5 shadow-[0_8px_28px_rgba(23,63,82,.055)] sm:p-7"><div className="mb-3 flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#e7f0ed] text-lg text-[#173f52]">✦</span><h3 className="text-lg font-extrabold tracking-tight text-[#173f52] sm:text-xl">Quiénes somos</h3></div><p className="whitespace-pre-line text-[15px] leading-7 text-[#40575e] sm:text-base sm:leading-8">{selectedPenya.informacion}</p></section>}
               {selectedPenyaCustomBlocks.length>0 && <div id="ficha-personalizada" className="mt-8 space-y-5 scroll-mt-24">
                 {selectedPenyaCustomBlocks.map((block:any,index:number)=>{
