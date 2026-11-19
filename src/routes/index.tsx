@@ -558,7 +558,7 @@ function Home() {
     ...eventosActivos.filter((e) => e.lat != null && e.lng != null).map((e) => ({ id: "evento-" + e.id, categoria: "evento" as const, nombre: e.titulo, descripcion: e.descripcion || e.lugar || "", lat: Number(e.lat), lng: Number(e.lng), dia:e.dia, hora:e.hora, detalleId:"evento-"+e.id })),
   ], [penyes, actos, eventosActivos, mapPoints, now]);
 
-  const visibles = todos.filter((l) => (!cat || l.categoria === cat) && l.nombre.toLowerCase().includes(q.toLowerCase()));
+  const visibles = useMemo(() => todos.filter((l) => (!cat || l.categoria === cat) && l.nombre.toLowerCase().includes(q.toLowerCase())), [todos, cat, q]);
 
   const selectedPenyaEvents = selectedPenya ? eventos.filter((e) => eventoSigueActivo(e, now) && (e.penya_id === selectedPenya.id || [e.titulo, e.descripcion, e.lugar].some((v) => normalizarBusqueda(v).includes(normalizarBusqueda(selectedPenya.nombre))))) : [];
   const selectedPenyaActs = selectedPenya ? actos.filter((a) => eventoSigueActivo(a, now) && [a.titulo, a.descripcion, a.lugar].some((v) => normalizarBusqueda(v).includes(normalizarBusqueda(selectedPenya.nombre)))) : [];
@@ -1062,13 +1062,25 @@ function Home() {
         <button onClick={() => { setShareReminder(false); void shareWebsite(); }} className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">Compartir</button>
       </aside>}
 
-      {selectedPenya && (mapPenyaPreview ? <div className="fixed inset-0 z-[1900] flex items-center justify-center bg-[#071c25]/75 p-3 backdrop-blur-md" onClick={()=>{setSelectedPenya(null);setMapPenyaPreview(false);}}>
-        <section role="dialog" aria-modal="true" aria-label={"Resumen de "+selectedPenya.nombre} onClick={e=>e.stopPropagation()} className="w-full max-w-md overflow-hidden rounded-[1.75rem] border border-white/70 bg-[#f5f8f7] shadow-2xl">
-          <div className="relative h-28 bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37]">{selectedPenyaBanner&&<img src={selectedPenyaBanner} alt="" className="h-full w-full object-cover"/>}<button type="button" onClick={()=>{setSelectedPenya(null);setMapPenyaPreview(false);}} className="absolute right-3 top-3 rounded-full bg-black/40 px-3 py-2 text-white">✕</button></div>
-          <div className="px-5 pb-5"><div className="-mt-9 flex items-end gap-3"><div className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full border-4 border-[#f5f8f7] bg-white text-2xl font-black text-[#173f52] shadow-lg">{selectedPenya.foto?<img src={selectedPenya.foto} alt="" className="h-full w-full object-cover"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div><h2 className="pb-1 text-xl font-black leading-tight text-[#173f52]">{selectedPenya.nombre}</h2></div>
-            {selectedPenya.informacion?.trim()&&<p className="mt-4 line-clamp-3 text-sm leading-relaxed text-[#40575e]">{selectedPenya.informacion}</p>}
-            {selectedPenya.direccion&&<p className="mt-3 text-xs font-semibold text-[#61777b]">📍 {selectedPenya.direccion}</p>}
-            <button type="button" onClick={()=>{setMapPenyaPreview(false);setCurrentPage("penyes");setPenyaDetailFullscreen(true);window.scrollTo({top:0,behavior:"smooth"});}} className="mt-5 w-full rounded-full bg-[#173f52] px-4 py-3 text-sm font-extrabold text-white">Ver ficha completa en Peñas ↗</button>
+      {selectedPenya && (mapPenyaPreview ? <div className="fixed inset-0 z-[1900] flex items-center justify-center bg-[#092431]/65 p-3 backdrop-blur-sm" onClick={()=>{setSelectedPenya(null);setMapPenyaPreview(false);}}>
+        <section role="dialog" aria-modal="true" aria-label={"Resumen de "+selectedPenya.nombre} onClick={e=>e.stopPropagation()} className="relative w-full max-w-[370px] overflow-hidden rounded-[1.45rem] border border-white/80 bg-white shadow-[0_24px_80px_rgba(4,24,33,.38)]">
+          <div className="relative h-[104px] overflow-hidden bg-gradient-to-br from-[#173f52] via-[#286477] to-[#c6a24b]">
+            {selectedPenyaBanner&&<img src={selectedPenyaBanner} alt="" className="h-full w-full object-cover"/>}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#092431]/55 via-transparent to-black/10"/>
+            <span className="absolute bottom-3 left-4 rounded-full border border-white/35 bg-black/25 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[.16em] text-white backdrop-blur-sm">Peña festera</span>
+            <button type="button" aria-label="Cerrar" onClick={()=>{setSelectedPenya(null);setMapPenyaPreview(false);}} className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full border border-white/35 bg-[#092431]/55 text-sm font-bold text-white shadow-md backdrop-blur-md transition hover:bg-[#092431]/85">✕</button>
+          </div>
+          <div className="px-4 pb-4">
+            <div className="-mt-7 flex min-w-0 items-end gap-3">
+              <div className="grid h-[68px] w-[68px] shrink-0 place-items-center overflow-hidden rounded-2xl border-[3px] border-white bg-[#edf3f3] text-xl font-black text-[#173f52] shadow-lg">{selectedPenya.foto?<img src={selectedPenya.foto} alt="" className="h-full w-full object-cover"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
+              <div className="min-w-0 flex-1 pb-1"><h2 className="line-clamp-2 text-[18px] font-black leading-tight tracking-tight text-[#173f52]">{selectedPenya.nombre}</h2><p className="mt-1 text-[10px] font-semibold uppercase tracking-[.13em] text-[#a1843e]">Fiestas de l’Alfàs del Pi</p></div>
+            </div>
+            {selectedPenya.informacion?.trim()&&<p className="mt-3 line-clamp-3 text-[13px] leading-[1.55] text-[#52666b]">{selectedPenya.informacion}</p>}
+            {selectedPenya.direccion&&<div className="mt-3 flex items-start gap-2 rounded-xl border border-[#e5eceb] bg-[#f5f8f7] px-3 py-2.5 text-[11px] font-semibold leading-snug text-[#52666b]"><span className="text-[#b18d3d]">📍</span><span className="min-w-0">{selectedPenya.direccion}</span></div>}
+            <div className="mt-4 flex gap-2">
+              <button type="button" onClick={()=>{setMapPenyaPreview(false);setCurrentPage("penyes");setPenyaDetailFullscreen(true);window.scrollTo({top:0,behavior:"smooth"});}} className="flex-1 rounded-xl bg-[#173f52] px-3 py-3 text-[12px] font-extrabold text-white shadow-sm transition hover:bg-[#24566a]">Ver ficha completa <span aria-hidden="true">↗</span></button>
+              <button type="button" aria-label="Cerrar ventana" onClick={()=>{setSelectedPenya(null);setMapPenyaPreview(false);}} className="rounded-xl border border-[#dce6e5] bg-white px-4 py-3 text-[12px] font-bold text-[#52666b] transition hover:bg-[#f5f8f7]">Cerrar</button>
+            </div>
           </div>
         </section>
       </div> : (
