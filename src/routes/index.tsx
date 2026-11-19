@@ -911,7 +911,7 @@ function Home() {
                         {misPenyes.includes(p.id) && <span className="rounded-full border border-white/40 bg-white/90 px-3 py-1.5 text-[9px] font-extrabold tracking-wider text-[#173f52] shadow-lg">★ FAVORITA</span>}
                       </div>
                       <div className="absolute inset-x-4 bottom-4">
-                        <p className="text-[9px] font-bold uppercase tracking-[.2em] text-white/75">Peña festera</p>
+                        
                         <h3 className="mt-1 line-clamp-2 break-words text-xl font-extrabold leading-tight text-white drop-shadow sm:text-2xl">{p.nombre}</h3>
                       </div>
                     </div>
@@ -1064,16 +1064,16 @@ function Home() {
 
       {selectedPenya && (mapPenyaPreview ? <div className="fixed inset-0 z-[1900] flex items-center justify-center bg-[#092431]/65 p-3 backdrop-blur-sm" onClick={()=>{setSelectedPenya(null);setMapPenyaPreview(false);}}>
         <section role="dialog" aria-modal="true" aria-label={"Resumen de "+selectedPenya.nombre} onClick={e=>e.stopPropagation()} className="relative w-full max-w-[370px] overflow-hidden rounded-[1.45rem] border border-white/80 bg-white shadow-[0_24px_80px_rgba(4,24,33,.38)]">
-          <div className="relative h-[104px] overflow-hidden bg-gradient-to-br from-[#173f52] via-[#286477] to-[#c6a24b]">
+          <div className="relative z-0 h-[104px] overflow-hidden bg-gradient-to-br from-[#173f52] via-[#286477] to-[#c6a24b]">
             {selectedPenyaBanner&&<img src={selectedPenyaBanner} alt="" className="h-full w-full object-cover"/>}
             <div className="absolute inset-0 bg-gradient-to-t from-[#092431]/55 via-transparent to-black/10"/>
-            <span className="absolute bottom-3 left-4 rounded-full border border-white/35 bg-black/25 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[.16em] text-white backdrop-blur-sm">Peña festera</span>
+            
             <button type="button" aria-label="Cerrar" onClick={()=>{setSelectedPenya(null);setMapPenyaPreview(false);}} className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full border border-white/35 bg-[#092431]/55 text-sm font-bold text-white shadow-md backdrop-blur-md transition hover:bg-[#092431]/85">✕</button>
           </div>
           <div className="px-4 pb-4">
-            <div className="-mt-7 flex min-w-0 items-end gap-3">
-              <div className="grid h-[68px] w-[68px] shrink-0 place-items-center overflow-hidden rounded-2xl border-[3px] border-white bg-[#edf3f3] text-xl font-black text-[#173f52] shadow-lg">{selectedPenya.foto?<img src={selectedPenya.foto} alt="" className="h-full w-full object-cover"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
-              <div className="min-w-0 flex-1 pb-1"><h2 className="line-clamp-2 text-[18px] font-black leading-tight tracking-tight text-[#173f52]">{selectedPenya.nombre}</h2><p className="mt-1 text-[10px] font-semibold uppercase tracking-[.13em] text-[#a1843e]">Fiestas de l’Alfàs del Pi</p></div>
+            <div className="relative z-10 -mt-7 flex min-w-0 items-end gap-3">
+              <div className="relative z-10 grid h-[68px] w-[68px] shrink-0 place-items-center overflow-hidden rounded-2xl border-[3px] border-white bg-[#edf3f3] text-xl font-black text-[#173f52] shadow-lg">{selectedPenya.foto?<img src={selectedPenya.foto} alt="" className="h-full w-full object-cover"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
+              <div className="min-w-0 flex-1 pb-1"><h2 className="line-clamp-2 text-[18px] font-black leading-tight tracking-tight text-[#173f52]">{selectedPenya.nombre}</h2></div>
             </div>
             {selectedPenya.informacion?.trim()&&<p className="mt-3 line-clamp-3 text-[13px] leading-[1.55] text-[#52666b]">{selectedPenya.informacion}</p>}
             {selectedPenya.direccion&&<div className="mt-3 flex items-start gap-2 rounded-xl border border-[#e5eceb] bg-[#f5f8f7] px-3 py-2.5 text-[11px] font-semibold leading-snug text-[#52666b]"><span className="text-[#b18d3d]">📍</span><span className="min-w-0">{selectedPenya.direccion}</span></div>}
@@ -1098,7 +1098,7 @@ function Home() {
                 <div className="grid h-28 w-28 shrink-0 place-items-center overflow-hidden rounded-full border-[5px] border-[#f5f8f7] bg-white text-3xl font-black text-[#173f52] shadow-[0_12px_35px_rgba(4,25,34,.22)] sm:h-36 sm:w-36">{selectedPenya.foto ? <img src={selectedPenya.foto} alt={"Logo de "+selectedPenya.nombre} className="h-full w-full object-cover"/> : selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
                 <div className="min-w-0 flex-1 pb-1">
                   {esPenyaCuBaTa(selectedPenya.nombre) && <span className="mb-2 inline-flex items-center gap-1 rounded-full border border-[#B8860B] bg-[#D4AF37] px-3 py-1 text-[10px] font-extrabold tracking-wide text-[#3B2A0A] sm:text-xs">♛ MAYORALES 2027</span>}
-                  <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#6a8589]">Peña participante · festalfàs</p>
+                  
                   <h2 className="mt-1 break-words text-3xl font-black leading-tight tracking-tight text-[#173f52] sm:text-4xl md:text-5xl">{selectedPenya.nombre}</h2>
                   {selectedPenya.informacion?.trim() && <p className="mt-2 line-clamp-2 max-w-2xl text-sm leading-relaxed text-[#526b70] sm:text-base">{selectedPenya.informacion}</p>}
                   <button type="button" onClick={()=>{setSelectedPenya(null);setPenyaDetailFullscreen(false);setCurrentPage("home");setCat("penya");setFocus(selectedPenya.id);window.scrollTo({top:0,behavior:"smooth"});}} className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#cbdcdd] bg-white/85 px-4 py-2 text-xs font-extrabold text-[#24576a] shadow-sm">📍 {selectedPenya.direccion ? "Ver ubicación · "+selectedPenya.direccion : "Ver ubicación en el mapa"}</button>
