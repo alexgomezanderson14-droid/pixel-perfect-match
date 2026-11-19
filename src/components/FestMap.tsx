@@ -82,9 +82,9 @@ export default function FestMap({
       mapApi.current = api;
       const instance = new api.Map({
         container: el.current,
-        style: "https://tiles.openfreemap.org/styles/liberty",
-        center: [-0.082, 38.581],
-        zoom: 13.35,
+        style: "https://styles.maptoolkit.org/summer-3d.json",
+        center: [-0.103, 38.580],
+        zoom: 13.25,
         pitch: 55,
         bearing: -12,
         maxPitch: 72,
@@ -101,27 +101,7 @@ export default function FestMap({
       instance.addControl(new api.NavigationControl({ visualizePitch: true }), "top-right");
       instance.on("load", () => {
         if (cancelled || !map.current) return;
-        if (!instance.getSource("festalfas-buildings")) {
-          // Huellas de edificios de Maptoolkit: geometría y alturas alternativas a la capa genérica.
-          instance.addSource("festalfas-buildings", { type: "vector", url: "https://tiles.maptoolkit.org/buildings.json", attribution: "© OpenStreetMap contributors · © Maptoolkit" });
-        }
-        const labelLayer = instance.getStyle().layers?.find((layer: any) => layer.type === "symbol" && layer.layout?.["text-field"])?.id;
-        if (!instance.getLayer("festalfas-3d-buildings")) {
-          instance.addLayer({
-            id: "festalfas-3d-buildings",
-            source: "festalfas-buildings",
-            "source-layer": "buildings2d",
-            type: "fill-extrusion",
-            minzoom: 12,
-            paint: {
-              "fill-extrusion-color": ["interpolate", ["linear"], ["coalesce", ["to-number", ["get", "height"]], 7], 0, "#e8e4dc", 12, "#c8c5bd", 40, "#aaa99f"],
-              "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 12, 0, 13, ["coalesce", ["to-number", ["get", "height"]], ["*", ["to-number", ["get", "building:levels"], 2], 3], 7]],
-              "fill-extrusion-base": ["coalesce", ["to-number", ["get", "min_height"]], 0],
-              "fill-extrusion-opacity": 0.92,
-              "fill-extrusion-vertical-gradient": true,
-            },
-          }, labelLayer);
-        }
+        // El estilo Summer 3D aporta cartografía más viva y edificios basados en huellas reales de OpenStreetMap.
         setMapReady(true);
       });
       instance.on("click", (event: any) => pickRef.current?.(event.lngLat.lat, event.lngLat.lng));
