@@ -1191,7 +1191,7 @@ function Home() {
           {selectedPenyaGallery.length>0?<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">{selectedPenyaGallery.map((url,index)=><figure key={url} className="overflow-hidden rounded-xl border border-[#dce7e4] bg-white p-1.5 shadow-sm"><img src={url} alt={"Foto "+(index+1)+" de "+selectedPenya.nombre} loading="lazy" className="aspect-square w-full rounded-lg object-cover"/><figcaption className="px-1 pb-1 pt-2 text-[10px] font-semibold text-[#52666b]">{index<3?"Foto destacada":"Recuerdo de la peña"}</figcaption></figure>)}</div>:<p className="rounded-xl border border-dashed border-[#cbdcdd] p-8 text-center text-sm text-[#6c8285]">Todavía no hay fotografías en esta galería.</p>}
         </section>
       </div>}
-      {selectedPenya && (mapPenyaPreview ? <div className="fixed inset-0 z-[1900] flex items-center justify-center bg-[#092431]/65 p-3 backdrop-blur-sm" onClick={()=>{setSelectedPenya(null);setMapPenyaPreview(false);}}>
+      {selectedPenya && (mapPenyaPreview ? <div className="fixed inset-0 z-[6000] flex items-center justify-center bg-[#092431]/65 p-3 backdrop-blur-sm" onClick={()=>{setSelectedPenya(null);setMapPenyaPreview(false);}}>
         <section role="dialog" aria-modal="true" aria-label={"Resumen de "+selectedPenya.nombre} onClick={e=>e.stopPropagation()} className="relative w-full max-w-[370px] overflow-hidden rounded-[1.45rem] border border-white/80 bg-white shadow-[0_24px_80px_rgba(4,24,33,.38)]">
           <div className="relative z-0 h-[104px] overflow-hidden bg-gradient-to-br from-[#173f52] via-[#286477] to-[#c6a24b]">
             {selectedPenyaBanner&&<img src={selectedPenyaBanner} alt="" className="h-full w-full object-cover"/>}
