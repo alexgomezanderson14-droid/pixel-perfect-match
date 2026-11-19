@@ -98,7 +98,7 @@
   --shadow-glass: 0 10px 40px -12px oklch(0.34 0.075 235 / 18%), inset 0 1px 0 oklch(1 0 0 / 70%);
 }
 @theme inline {
-  --font-display: "Fraunces", serif;
+  --font-display: "Manrope", sans-serif;
   --font-sans: "Manrope", sans-serif;
   --color-brown: var(--brown);
   --color-pink: var(--pink);
@@ -150,7 +150,7 @@
 @layer base {
   * { border-color: var(--color-border); }
   body { background-color: var(--color-background); color: var(--color-foreground); font-family: var(--font-sans); }
-  h1, h2, h3 { font-family: var(--font-display); }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 800; letter-spacing: -0.035em; }
   html { scroll-behavior: smooth; }
 }
 
