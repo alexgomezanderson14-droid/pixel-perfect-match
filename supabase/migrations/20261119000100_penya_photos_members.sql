@@ -29,6 +29,8 @@ create policy "Penya members can add photos"
     or coalesce(auth.jwt()->'app_metadata'->'penya_ids', '[]'::jsonb) ? penya_id::text
     or coalesce(auth.jwt()->'app_metadata'->'penya_memberships', '[]'::jsonb) ? penya_id::text
     or coalesce(auth.jwt()->'app_metadata'->'penya_admin_ids', '[]'::jsonb) ? penya_id::text
+    or coalesce(auth.jwt()->'app_metadata'->>'penya_admin_id', '') = penya_id::text
+    or auth.jwt()->'app_metadata'->'penya_roles'->>penya_id::text = 'admin'
   );
 
 drop policy if exists "Penya members can update photos" on public.penya_fotos;
@@ -39,12 +41,16 @@ create policy "Penya members can update photos"
     or coalesce(auth.jwt()->'app_metadata'->'penya_ids', '[]'::jsonb) ? penya_id::text
     or coalesce(auth.jwt()->'app_metadata'->'penya_memberships', '[]'::jsonb) ? penya_id::text
     or coalesce(auth.jwt()->'app_metadata'->'penya_admin_ids', '[]'::jsonb) ? penya_id::text
+    or coalesce(auth.jwt()->'app_metadata'->>'penya_admin_id', '') = penya_id::text
+    or auth.jwt()->'app_metadata'->'penya_roles'->>penya_id::text = 'admin'
   )
   with check (
     (auth.jwt()->>'email') = 'gomezandersonalex@gmail.com'
     or coalesce(auth.jwt()->'app_metadata'->'penya_ids', '[]'::jsonb) ? penya_id::text
     or coalesce(auth.jwt()->'app_metadata'->'penya_memberships', '[]'::jsonb) ? penya_id::text
     or coalesce(auth.jwt()->'app_metadata'->'penya_admin_ids', '[]'::jsonb) ? penya_id::text
+    or coalesce(auth.jwt()->'app_metadata'->>'penya_admin_id', '') = penya_id::text
+    or auth.jwt()->'app_metadata'->'penya_roles'->>penya_id::text = 'admin'
   );
 
 drop policy if exists "Penya members can delete photos" on public.penya_fotos;
@@ -55,6 +61,8 @@ create policy "Penya members can delete photos"
     or coalesce(auth.jwt()->'app_metadata'->'penya_ids', '[]'::jsonb) ? penya_id::text
     or coalesce(auth.jwt()->'app_metadata'->'penya_memberships', '[]'::jsonb) ? penya_id::text
     or coalesce(auth.jwt()->'app_metadata'->'penya_admin_ids', '[]'::jsonb) ? penya_id::text
+    or coalesce(auth.jwt()->'app_metadata'->>'penya_admin_id', '') = penya_id::text
+    or auth.jwt()->'app_metadata'->'penya_roles'->>penya_id::text = 'admin'
   );
 
 grant select on public.penya_fotos to anon, authenticated;
@@ -74,5 +82,7 @@ create policy "Penya members can upload gallery photos"
       or coalesce(auth.jwt()->'app_metadata'->'penya_ids', '[]'::jsonb) ? (storage.foldername(name))[3]
       or coalesce(auth.jwt()->'app_metadata'->'penya_memberships', '[]'::jsonb) ? (storage.foldername(name))[3]
       or coalesce(auth.jwt()->'app_metadata'->'penya_admin_ids', '[]'::jsonb) ? (storage.foldername(name))[3]
+      or coalesce(auth.jwt()->'app_metadata'->>'penya_admin_id', '') = (storage.foldername(name))[3]
+      or auth.jwt()->'app_metadata'->'penya_roles'->>(storage.foldername(name))[3] = 'admin'
     )
   );
