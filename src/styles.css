@@ -331,7 +331,7 @@ nav[aria-label="Navegación principal"] > button { min-width: 0 !important; flex
 
 
 /* Navegación principal: centrado real respecto al viewport en todos los tamaños. */
-nav[aria-label="Navegación principal"] { position: fixed !important; left: 50vw !important; right: auto !important; inset-inline-start: 50vw !important; inset-inline-end: auto !important; top: calc(env(safe-area-inset-top) + 8px) !important; bottom: auto !important; width: min(540px, calc(100vw - 24px)) !important; max-width: calc(100vw - 24px) !important; height: 52px !important; min-height: 52px !important; box-sizing: border-box !important; transform: translate3d(-50%,0,0) !important; translate: none !important; margin: 0 !important; padding: 3px !important; z-index: 2147483000 !important; }
+nav[aria-label="Navegación principal"] { position: fixed !important; left: 50vw !important; right: auto !important; inset-inline-start: 50vw !important; inset-inline-end: auto !important; top: auto !important; bottom: calc(env(safe-area-inset-bottom) + 10px) !important; width: min(460px, calc(100vw - 24px)) !important; max-width: calc(100vw - 24px) !important; height: 62px !important; min-height: 62px !important; box-sizing: border-box !important; transform: translate3d(-50%,0,0) !important; translate: none !important; margin: 0 !important; padding: 3px !important; z-index: 2147483000 !important; }
 nav[aria-label="Navegación principal"] > button { min-width: 0 !important; min-height: 0 !important; height: 100% !important; flex: 1 1 0 !important; padding-inline: 0 !important; }
 @media (prefers-reduced-motion: no-preference) {
   nav[aria-label="Navegación principal"] > button { transition: color 240ms ease, opacity 240ms ease, background-color 240ms ease; }
