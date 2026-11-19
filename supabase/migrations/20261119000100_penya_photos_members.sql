@@ -1,5 +1,5 @@
 -- Per-penya photo gallery. Members can add photos only to the peña
--- selected in their authenticated user metadata; profile-wide settings remain admin-only.
+-- approved peña membership is stored in trusted app_metadata; profile-wide settings remain admin-only.
 create table if not exists public.penya_fotos (
   id uuid primary key default gen_random_uuid(),
   penya_id uuid not null references public.penyes(id) on delete cascade,
@@ -37,8 +37,7 @@ create policy "Penya members can update photos"
   on public.penya_fotos for update to authenticated
   using (
     (auth.jwt()->>'email') = 'gomezandersonalex@gmail.com'
-    or (auth.jwt()->'user_metadata'->>'penya_id') = penya_id::text
-    or coalesce(auth.jwt()->'user_metadata'->'penya_ids', '[]'::jsonb) ? penya_id::text
+    or coalesce(auth.jwt()->'app_metadata'->'penya_ids', '[]'::jsonb) ? penya_id::text
     or coalesce(auth.jwt()->'app_metadata'->'penya_memberships', '[]'::jsonb) ? penya_id::text
     or coalesce(auth.jwt()->'app_metadata'->'penya_admin_ids', '[]'::jsonb) ? penya_id::text
   )
