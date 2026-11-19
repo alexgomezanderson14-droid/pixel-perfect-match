@@ -441,7 +441,7 @@ function Home() {
   // Primero se respeta la etiqueta vigente de la ficha; la configuración y CuBaTa
   // son respaldos para que el distintivo nunca desaparezca si falla la lectura del perfil.
   const mayoralesPenyaId = useMemo(()=>{
-    const normalizar=(value:any)=>String(value||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").replace(/[^a-z0-9]/g,"");
+    const normalizar=(value:any)=>String(value||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
     try {
       const perfiles=JSON.parse(siteContent["penyes_perfiles_json"]||"{}");
       const tituloVigente=(value:any)=>{
