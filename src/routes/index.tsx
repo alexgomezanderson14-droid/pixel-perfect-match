@@ -440,7 +440,7 @@ function Home() {
   const mayoralesPenyaId = String(siteContent["mayorales_penya_id"]||"");
   const mayoralesAnio = String(siteContent["mayorales_anio"]||"2027");
   const mayoralesColor = String((mayoralesPenyaId && penyaCardSettings[mayoralesPenyaId]?.color) || siteContent["theme_accent"] || "#173f52");
-  const visiblePenyes = useMemo(()=>[...penyes].filter(p=>(!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica,p.informacion].join(" ")).includes(normalizarBusqueda(penyaSearch)))&&(penyaMusicFilter==="Todas"||String(p.tipo_musica||"").trim()===penyaMusicFilter)&&(!penyaOnlyMine||misPenyes.includes(p.id))).sort((a,b)=>Number(mayoralesPenyaId?b.id===mayoralesPenyaId:esPenyaCuBaTa(b.nombre))-Number(mayoralesPenyaId?a.id===mayoralesPenyaId:esPenyaCuBaTa(a.nombre))||a.nombre.localeCompare(b.nombre,"es",{sensitivity:"base"})),[penyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,misPenyes,mayoralesPenyaId]);
+  const visiblePenyes = useMemo(()=>[...penyes].filter(p=>(!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica,p.informacion].join(" ")).includes(normalizarBusqueda(penyaSearch)))&&(penyaMusicFilter==="Todas"||String(p.tipo_musica||"").trim()===penyaMusicFilter)&&(!penyaOnlyMine||misPenyes.includes(p.id))).sort((a,b)=>Number(mayoralesPenyaId?b.id===mayoralesPenyaId:esPenyaCuBaTa(b.nombre))-Number(mayoralesPenyaId?a.id===mayoralesPenyaId:esPenyaCuBaTa(a.nombre))||String(a.nombre??"").localeCompare(String(b.nombre??""),"es",{sensitivity:"base"})),[penyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,misPenyes,mayoralesPenyaId]);
   const loopedPenyes = visiblePenyes.length > 1 ? [...visiblePenyes,...visiblePenyes,...visiblePenyes] : [...visiblePenyes];
   const centerPenyaCard=useCallback((index:number,behavior:ScrollBehavior="auto")=>{const el=penyaCarouselRef.current;const card=el?.children[index] as HTMLElement|undefined;if(!el||!card)return;const delta=card.getBoundingClientRect().left-el.getBoundingClientRect().left;const left=el.scrollLeft+delta-(el.clientWidth-card.clientWidth)/2;el.scrollTo({left,behavior});},[]);
   const handlePenyaCarouselScroll=(el:HTMLDivElement)=>{if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);penyaScrollFrameRef.current=requestAnimationFrame(()=>{const count=visiblePenyes.length;if(count<=1){setActivePenyaCard(0);penyaScrollFrameRef.current=null;return;}const center=el.getBoundingClientRect().left+el.clientWidth/2;let nearest=0;let distance=Number.POSITIVE_INFINITY;Array.from(el.children).forEach((child,index)=>{const rect=child.getBoundingClientRect();const d=Math.abs(rect.left+rect.width/2-center);if(d<distance){distance=d;nearest=index;}});if(nearest<count||nearest>=count*2){const normalized=((nearest%count)+count)%count;const targetIndex=normalized+count;const target=el.children[targetIndex] as HTMLElement|undefined;if(target){const delta=target.getBoundingClientRect().left-el.getBoundingClientRect().left;el.scrollLeft=el.scrollLeft+delta-(el.clientWidth-target.clientWidth)/2;}nearest=targetIndex;}setActivePenyaCard(current=>current===nearest?current:nearest);penyaScrollFrameRef.current=null;});};
@@ -551,7 +551,7 @@ function Home() {
 
   const cargar = useCallback(async () => {
     const [penyaResult, { data: actosData }, { data: eventosData }, { data: contentData }, { data: penyaPhotosData }] = await Promise.all([
-      supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,tiene_evento,instagram,informacion").eq("estado","aprobada").order("nombre"),
+      supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,tiene_evento,instagram,informacion,estado").eq("estado","aprobada").order("nombre"),
       supabase.from("actos").select("*").eq("publicado",true).order("dia").order("hora"),
       supabase.from("eventos").select("*").eq("publicado",true).order("dia").order("hora"),
       supabase.from("site_content").select("clave,valor"),
@@ -559,7 +559,7 @@ function Home() {
     ]);
     let data: any[] | null = penyaResult.data as any[] | null;
     if (penyaResult.error) {
-      const legacyPenyes = await supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,tiene_evento,informacion").eq("estado","aprobada").order("nombre");
+      const legacyPenyes = await supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,tiene_evento,informacion,estado").eq("estado","aprobada").order("nombre");
       data = legacyPenyes.data?.map((p) => ({ ...p, instagram: "" })) ?? null;
     }
     const filas = actosData ?? [];
@@ -604,8 +604,15 @@ function Home() {
       try { localStorage.removeItem("festalfas-hero-image"); } catch { /* Sin caché local. */ }
     }
     if (!data) return;
-    const urls = data.map((p) => p.foto_url ? (p.foto_url.startsWith("http") ? p.foto_url : supabase.storage.from("penyes").getPublicUrl(p.foto_url).data.publicUrl) : "");
-    const cleanPenyes=data.map((p, i) => ({ ...p, foto: urls[i] ?? "" }));
+    // Normaliza filas antes de pasarlas al carrusel y al resto de la interfaz.
+    // Una fila mal formada no debe romper el renderizado de todas las peñas.
+    const cleanPenyes = data
+      .filter((p:any) => p && p.id != null && String(p.nombre ?? "").trim().length > 0 && (!p.estado || p.estado === "aprobada"))
+      .map((p:any) => {
+        const fotoUrl = typeof p.foto_url === "string" ? p.foto_url.trim() : "";
+        const foto = fotoUrl ? (fotoUrl.startsWith("http") ? fotoUrl : supabase.storage.from("penyes").getPublicUrl(fotoUrl).data.publicUrl) : "";
+        return { ...p, id: String(p.id), nombre: String(p.nombre).trim(), foto, direccion: p.direccion ?? "", tipo_musica: p.tipo_musica ?? "Variada", instagram: p.instagram ?? "", informacion: p.informacion ?? "" };
+      });
     setPenyes(cleanPenyes);
     setPenyaPhotos(penyaPhotosData ?? []);
     try { localStorage.setItem("festalfas-penyes-cache", JSON.stringify(cleanPenyes)); } catch { /* Caché opcional. */ }
@@ -617,7 +624,25 @@ function Home() {
       const cachedPenyes = JSON.parse(localStorage.getItem("festalfas-penyes-cache") || "[]");
       if (Array.isArray(cachedPenyes)) setPenyes(cachedPenyes);
     } catch { /* Se cargarán los datos actuales del servidor. */ }
-    cargar();
+    void cargar();
+  }, [cargar]);
+  // Mantiene el directorio sincronizado cuando una solicitud pasa de pendiente
+  // a aprobada desde /admin o cuando se modifica una ficha en otra pestaña.
+  useEffect(() => {
+    const channel = supabase
+      .channel("public-penyes-directory")
+      .on("postgres_changes", { event: "*", schema: "public", table: "penyes" }, () => { void cargar(); })
+      .subscribe();
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void cargar();
+    };
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+      void supabase.removeChannel(channel);
+    };
   }, [cargar]);
   useEffect(() => {
     let active = true;

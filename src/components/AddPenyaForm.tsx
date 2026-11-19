@@ -14,7 +14,7 @@ const schema = z.object({
   instagram: z.string().trim().max(100),
 });
 
-export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+export default function AddPenyaForm({ onClose, onSaved, autoApprove = false }: { onClose: () => void; onSaved: () => void; autoApprove?: boolean }) {
   const [nombre, setNombre] = useState("");
   const [direccion, setDireccion] = useState("");
   const [tipoMusica, setTipoMusica] = useState("Variada");
@@ -89,7 +89,7 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
         lat: pos?.lat ?? null,
         lng: pos?.lng ?? null,
         foto_url: fotoPath,
-        estado: "pendiente",
+        estado: autoApprove ? "aprobada" : "pendiente",
         tipo_musica: v.data.tipo_musica || "Variada",
         instagram: v.data.instagram.replace(/^@/, ""),
       });
@@ -142,7 +142,7 @@ export default function AddPenyaForm({ onClose, onSaved }: { onClose: () => void
           {foto && <p className="text-xs font-normal text-muted-foreground">Imagen seleccionada: {foto.name}</p>}
         </div>
         {error && <p className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
-        <p className="text-xs text-muted-foreground">La nueva peña quedará pendiente de aprobación antes de aparecer en el directorio. La foto y el punto exacto del mapa son opcionales.</p>
+        <p className="text-xs text-muted-foreground">{autoApprove ? "La nueva peña se publicará directamente en el directorio. La foto y el punto exacto del mapa son opcionales." : "La nueva peña quedará pendiente de aprobación antes de aparecer en el directorio. La foto y el punto exacto del mapa son opcionales."}</p>
         <button disabled={busy} className="w-full rounded-full bg-pink px-6 py-3 font-bold text-brown disabled:opacity-60">{busy ? "Guardando…" : "Añadir peña"}</button>
       </form>
     </div>
