@@ -493,11 +493,11 @@ nav[aria-label="Navegación principal"] {
 }
 
 
-/* Tarjetas de peñas: sin transformaciones 3D ni escalado de texto, para evitar rasterización borrosa. */
-.penya-coverflow { perspective:none !important; }
-.penya-coverflow-card { transform-style:flat !important; backface-visibility:visible !important; -webkit-backface-visibility:visible !important; filter:none !important; }
-.penya-card-title { font-family:"Space Grotesk",system-ui,sans-serif; font-weight:700; letter-spacing:-.035em; line-height:1.05; text-wrap:balance; text-rendering:auto; -webkit-font-smoothing:auto; -moz-osx-font-smoothing:auto; text-shadow:none !important; }
-.penya-coverflow-card p { text-shadow:none !important; }
+/* Recupera el carrusel coverflow original; solo se optimiza la legibilidad de sus textos. */
+.penya-coverflow { perspective:1100px !important; }
+.penya-coverflow-card { transform-style:preserve-3d !important; backface-visibility:hidden !important; -webkit-backface-visibility:hidden !important; filter:none !important; }
+.penya-card-title { font-family:"Space Grotesk",system-ui,sans-serif; font-weight:700; letter-spacing:-.035em; line-height:1.05; text-wrap:balance; text-rendering:optimizeLegibility; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-shadow:none !important; }
+.penya-coverflow-card p { text-shadow:none !important; -webkit-font-smoothing:antialiased; }
 
 /* La ficha hereda el fondo cálido elegido para toda la web y aclara sus superficies. */
 .penya-profile-sheet { background:var(--background) !important; border-color:color-mix(in oklab,var(--foreground) 12%,transparent) !important; }
