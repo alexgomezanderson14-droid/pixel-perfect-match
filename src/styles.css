@@ -361,3 +361,13 @@ body { overflow-x: clip; }
 @media (max-width: 639px) {
   .page-bg main { padding-bottom: max(6.25rem, calc(env(safe-area-inset-bottom) + 5.5rem)); }
 }
+
+
+/* Controles flotantes ligeros y capas de ficha por encima de la navegación. */
+nav[aria-label="Navegación principal"] {
+  background: rgba(245,248,250,.62) !important;
+  border-color: rgba(255,255,255,.58) !important;
+  box-shadow: 0 5px 22px rgba(20,39,52,.12), 0 1px 4px rgba(255,255,255,.58) inset !important;
+  -webkit-backdrop-filter: blur(28px) saturate(165%) !important;
+  backdrop-filter: blur(28px) saturate(165%) !important;
+}
