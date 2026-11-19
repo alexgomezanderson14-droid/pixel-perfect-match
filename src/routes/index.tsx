@@ -364,6 +364,7 @@ function Home() {
   const [selectedPenya, setSelectedPenya] = useState<PenyaDb | null>(null);
   const [penyaDetailFullscreen, setPenyaDetailFullscreen] = useState(false);
   const [mapPenyaPreview, setMapPenyaPreview] = useState(false);
+  const [penyaGalleryOpen, setPenyaGalleryOpen] = useState(false);
   const [eventFormPenya, setEventFormPenya] = useState<PenyaDb | null>(null);
   const [communityEventForm, setCommunityEventForm] = useState(false);
   const [mapFullscreen, setMapFullscreen] = useState(false);
@@ -643,7 +644,14 @@ function Home() {
   const selectedPenyaCustomBlocks = (() => { try { const all=JSON.parse(siteContent["penyes_perfiles_json"]||"{}"); const blocks=all?.[selectedPenya?.id||""]; return Array.isArray(blocks)?blocks.filter((block:any)=>block&&typeof block==="object"):[]; } catch { return []; } })();
   const selectedPenyaAcceptsVisits = (() => { try { const settings=JSON.parse(siteContent["penyes_visitas_json"]||"{}"); return settings?.[selectedPenya?.id||""]===true; } catch { return false; } })();
   const selectedPenyaBanner = selectedPenyaCustomBlocks.find((block:any)=>block.type==="banner" && typeof block.url==="string" && /^https?:\/\//i.test(block.url))?.url || "";
-  const selectedPenyaGallery = selectedPenya ? [...new Set([...selectedPenyaEvents.map((e:any) => e.imagen_url || e.imagen || e.foto_url || e.foto), ...selectedPenyaActs.map((a:any) => a.imagen_url || a.imagen || a.foto_url || a.foto), ...selectedPenyaCustomBlocks.filter((block:any)=>block.type==="photo").map((block:any)=>block.url)].filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url) && url !== selectedPenya.foto && url !== selectedPenyaBanner))] : [];
+  const selectedPenyaPhotoBlocks = selectedPenyaCustomBlocks.filter((block:any)=>block.type==="photo" && typeof block.url==="string" && /^https?:\/\//i.test(block.url));
+  const selectedPenyaGallery = selectedPenya ? [...new Set([
+    ...selectedPenyaPhotoBlocks.filter((block:any)=>block.featured===true).slice(0,3).map((block:any)=>block.url),
+    ...selectedPenyaPhotoBlocks.filter((block:any)=>block.featured!==true).map((block:any)=>block.url),
+    ...selectedPenyaEvents.map((e:any) => e.imagen_url || e.imagen || e.foto_url || e.foto),
+    ...selectedPenyaActs.map((a:any) => a.imagen_url || a.imagen || a.foto_url || a.foto)
+  ].filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url) && url !== selectedPenya.foto && url !== selectedPenyaBanner))] : [];
+  const selectedPenyaFeaturedGallery = selectedPenyaGallery.slice(0,3);
   // Las noticias automáticas solo pueden usar la lista creada por el extractor de galerías.
   // No se aceptan los campos heredados "galeria"/"imagenes", que podían contener logos del sitio.
   const noticiaImagenes: string[] = (() => {
@@ -1151,6 +1159,12 @@ function Home() {
         <button onClick={() => { setShareReminder(false); void shareWebsite(); }} className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">Compartir</button>
       </aside>}
 
+      {selectedPenya && penyaGalleryOpen && <div className="fixed inset-0 z-[2200] flex items-center justify-center bg-[#092431]/80 p-3 backdrop-blur-md" role="dialog" aria-modal="true" aria-label={"Galería de "+selectedPenya.nombre} onClick={()=>setPenyaGalleryOpen(false)}>
+        <section className="max-h-[90dvh] w-full max-w-4xl overflow-y-auto rounded-[1.5rem] border border-white/70 bg-[#f5f8f7] p-4 shadow-2xl sm:p-7" onClick={e=>e.stopPropagation()}>
+          <div className="mb-5 flex items-start justify-between gap-3"><div><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#9a7a32]">Recuerdos compartidos</p><h2 className="mt-1 text-xl font-black text-[#173f52] sm:text-2xl">Galería de {selectedPenya.nombre}</h2><p className="mt-1 text-xs text-[#6c8285]">{selectedPenyaGallery.length} fotografías</p></div><button type="button" onClick={()=>setPenyaGalleryOpen(false)} aria-label="Cerrar galería" className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#d6e2df] bg-white text-lg font-bold text-[#173f52]">✕</button></div>
+          {selectedPenyaGallery.length>0?<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">{selectedPenyaGallery.map((url,index)=><figure key={url} className="overflow-hidden rounded-xl border border-[#dce7e4] bg-white p-1.5 shadow-sm"><img src={url} alt={"Foto "+(index+1)+" de "+selectedPenya.nombre} loading="lazy" className="aspect-square w-full rounded-lg object-cover"/><figcaption className="px-1 pb-1 pt-2 text-[10px] font-semibold text-[#52666b]">{index<3?"Foto destacada":"Recuerdo de la peña"}</figcaption></figure>)}</div>:<p className="rounded-xl border border-dashed border-[#cbdcdd] p-8 text-center text-sm text-[#6c8285]">Todavía no hay fotografías en esta galería.</p>}
+        </section>
+      </div>}
       {selectedPenya && (mapPenyaPreview ? <div className="fixed inset-0 z-[1900] flex items-center justify-center bg-[#092431]/65 p-3 backdrop-blur-sm" onClick={()=>{setSelectedPenya(null);setMapPenyaPreview(false);}}>
         <section role="dialog" aria-modal="true" aria-label={"Resumen de "+selectedPenya.nombre} onClick={e=>e.stopPropagation()} className="relative w-full max-w-[370px] overflow-hidden rounded-[1.45rem] border border-white/80 bg-white shadow-[0_24px_80px_rgba(4,24,33,.38)]">
           <div className="relative z-0 h-[104px] overflow-hidden bg-gradient-to-br from-[#173f52] via-[#286477] to-[#c6a24b]">
@@ -1167,7 +1181,7 @@ function Home() {
             {selectedPenya.informacion?.trim()&&<p className="mt-3 line-clamp-3 text-[13px] leading-[1.55] text-[#52666b]">{selectedPenya.informacion}</p>}
             {selectedPenya.direccion&&<div className="mt-3 flex items-start gap-2 rounded-xl border border-[#e5eceb] bg-[#f5f8f7] px-3 py-2.5 text-[11px] font-semibold leading-snug text-[#52666b]"><span className="text-[#b18d3d]">📍</span><span className="min-w-0">{selectedPenya.direccion}</span></div>}
             <div className="mt-3 flex flex-wrap gap-1.5">{selectedPenya.tipo_musica&&<span className="rounded-full bg-[#eaf1f2] px-2.5 py-1 text-[10px] font-bold text-[#24576a]">♫ {selectedPenya.tipo_musica}</span>}{selectedPenyaAcceptsVisits&&<span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-800">✓ Acepta visitas</span>}{(selectedPenyaEvents.length+selectedPenyaActs.length)>0&&<span className="rounded-full bg-[#f7f0df] px-2.5 py-1 text-[10px] font-bold text-[#806a2d]">▣ {selectedPenyaEvents.length+selectedPenyaActs.length} actividades</span>}</div>
-            <div className="mt-3"><div className="mb-1.5 flex items-center justify-between"><span className="text-[10px] font-extrabold uppercase tracking-wider text-[#52666b]">Fotos de la peña</span><span className="text-[10px] font-semibold text-[#809095]">{selectedPenyaGallery.length} fotos</span></div>{selectedPenyaGallery.length>0?<div className="grid grid-cols-3 gap-1.5">{selectedPenyaGallery.slice(0,3).map((url,index)=><img key={url} src={url} alt={"Foto "+(index+1)+" de "+selectedPenya.nombre} loading="lazy" className="h-[68px] w-full rounded-lg object-cover"/>)}</div>:<div className="grid grid-cols-3 gap-1.5">{[0,1,2].map(i=><div key={i} className="flex h-[58px] items-center justify-center rounded-lg border border-dashed border-[#dce6e5] bg-[#f5f8f7] text-[9px] font-semibold text-[#9aa9aa]">Sin foto</div>)}</div>}</div>
+            <div className="mt-3 rounded-2xl border border-[#e2eae8] bg-[#f5f8f7] px-2.5 pb-2.5 pt-2"><div className="mb-2 flex items-center justify-between"><span className="text-[10px] font-extrabold uppercase tracking-wider text-[#52666b]">Momentos de la peña</span><span className="text-[10px] font-semibold text-[#809095]">{selectedPenyaGallery.length} fotos</span></div><div className="grid grid-cols-3 gap-2">{[0,1,2].map(i=>{const url=selectedPenyaFeaturedGallery[i];return <div key={i} className="aspect-[1.08] overflow-hidden rounded-xl border-[3px] border-white bg-[#e8efed] shadow-[0_4px_12px_rgba(23,63,82,.12)]">{url?<img src={url} alt={"Foto "+(i+1)+" de "+selectedPenya.nombre} loading="lazy" className="h-full w-full object-cover"/>:<div className="flex h-full items-center justify-center text-[9px] font-semibold text-[#9aa9aa]">Sin foto</div>}</div>;})}</div></div>
             <div className="mt-4 flex gap-2">
               <button type="button" onClick={()=>{setMapPenyaPreview(false);setCurrentPage("penyes");setPenyaDetailFullscreen(true);window.scrollTo({top:0,behavior:"smooth"});}} className="flex-1 rounded-xl bg-[#173f52] px-3 py-3 text-[12px] font-extrabold text-white shadow-sm transition hover:bg-[#24566a]">Ver ficha completa <span aria-hidden="true">↗</span></button>
               <button type="button" aria-label="Cerrar ventana" onClick={()=>{setSelectedPenya(null);setMapPenyaPreview(false);}} className="rounded-xl border border-[#dce6e5] bg-white px-4 py-3 text-[12px] font-bold text-[#52666b] transition hover:bg-[#f5f8f7]">Cerrar</button>
@@ -1217,7 +1231,7 @@ function Home() {
                     <div className="mb-1 flex items-center justify-between gap-3 px-1"><div><h3 className="text-lg font-extrabold text-[#173f52] sm:text-xl">Momentos de la peña</h3><p className="text-[11px] text-[#7b9293] sm:text-xs">Fotos compartidas por sus miembros</p></div>{selectedPenyaGallery.length>0&&<span className="shrink-0 text-[11px] font-bold text-muted-foreground">{selectedPenyaGallery.length} {selectedPenyaGallery.length===1?"foto":"fotos"}</span>}</div>
                     <div className="relative mx-auto h-[230px] max-w-2xl sm:h-[300px]">
                       {photoSlots.map((slot:number)=>{
-                        const url=selectedPenyaGallery[slot];
+                        const url=selectedPenyaFeaturedGallery[slot];
                         const hasPhoto=Boolean(url);
                         return <div key={slot} className={"absolute h-[175px] w-[48%] overflow-hidden rounded-[1.5rem] border-[5px] border-white shadow-[0_12px_30px_rgba(23,63,82,.16)] sm:h-[235px] sm:w-[43%] "+photoPositions[slot]}>
                           {hasPhoto?<img src={url} alt={selectedPenya.nombre+" · foto "+(slot+1)} loading="lazy" className="h-full w-full object-cover"/>:<div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#dcebe8]/85 via-[#eef5f3]/80 to-[#d8e4e9]/85"><span className="text-3xl text-white/80">✦</span></div>}
@@ -1225,6 +1239,7 @@ function Home() {
                         </div>;
                       })}
                     </div>
+                    {selectedPenyaGallery.length>0&&<button type="button" onClick={()=>setPenyaGalleryOpen(true)} className="mx-auto mt-3 flex items-center gap-2 rounded-full border border-[#cbdcdd] bg-white px-5 py-2.5 text-xs font-extrabold text-[#24576a] shadow-sm transition hover:-translate-y-0.5 hover:border-[#d4af37]">Ver galería completa <span aria-hidden="true">↗</span><span className="rounded-full bg-[#edf3f1] px-2 py-0.5">{selectedPenyaGallery.length}</span></button>}
                   </section>
                 </>;
               })()}
