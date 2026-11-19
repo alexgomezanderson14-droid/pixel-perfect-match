@@ -103,7 +103,7 @@ export default function FestMap({
         if (cancelled || !map.current) return;
         if (!instance.getSource("festalfas-buildings")) {
           // Huellas de edificios de Maptoolkit: geometría y alturas alternativas a la capa genérica.
-          instance.addSource("festalfas-buildings", { type: "vector", url: "https://tiles.maptoolkit.org/buildings.json" });
+          instance.addSource("festalfas-buildings", { type: "vector", url: "https://tiles.maptoolkit.org/buildings.json", attribution: "© OpenStreetMap contributors · © Maptoolkit" });
         }
         const labelLayer = instance.getStyle().layers?.find((layer: any) => layer.type === "symbol" && layer.layout?.["text-field"])?.id;
         if (!instance.getLayer("festalfas-3d-buildings")) {
@@ -115,7 +115,7 @@ export default function FestMap({
             minzoom: 12,
             paint: {
               "fill-extrusion-color": ["interpolate", ["linear"], ["coalesce", ["to-number", ["get", "height"]], 7], 0, "#e8e4dc", 12, "#c8c5bd", 40, "#aaa99f"],
-              "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 13, 0, 14, ["coalesce", ["get", "render_height"], 6], 15, ["coalesce", ["get", "render_height"], 7]],
+              "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 12, 0, 13, ["coalesce", ["to-number", ["get", "height"]], ["*", ["to-number", ["get", "building:levels"], 2], 3], 7]],
               "fill-extrusion-base": ["coalesce", ["to-number", ["get", "min_height"]], 0],
               "fill-extrusion-opacity": 0.92,
               "fill-extrusion-vertical-gradient": true,
