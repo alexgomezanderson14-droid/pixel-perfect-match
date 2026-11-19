@@ -5,6 +5,7 @@ create table if not exists public.penya_fotos (
   penya_id uuid not null references public.penyes(id) on delete cascade,
   url text not null,
   destacada boolean not null default false,
+  visible boolean not null default true,
   created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now()
 );
@@ -26,8 +27,7 @@ create policy "Penya members can add photos"
   on public.penya_fotos for insert to authenticated
   with check (
     (auth.jwt()->>'email') = 'gomezandersonalex@gmail.com'
-    or (auth.jwt()->'user_metadata'->>'penya_id') = penya_id::text
-    or coalesce(auth.jwt()->'user_metadata'->'penya_ids', '[]'::jsonb) ? penya_id::text
+    or coalesce(auth.jwt()->'app_metadata'->'penya_ids', '[]'::jsonb) ? penya_id::text
     or coalesce(auth.jwt()->'app_metadata'->'penya_memberships', '[]'::jsonb) ? penya_id::text
     or coalesce(auth.jwt()->'app_metadata'->'penya_admin_ids', '[]'::jsonb) ? penya_id::text
   );
