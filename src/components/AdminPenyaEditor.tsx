@@ -137,7 +137,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
       <div><h4 className="text-lg font-extrabold text-primary">Personaliza la ficha de esta peña</h4><p className="text-xs leading-relaxed text-muted-foreground">Añade tantos apartados como quieras y ordénalos a tu gusto. Solo aparecerán los que rellenes.</p></div>
       {blocksLoading ? <p className="text-sm text-muted-foreground">Cargando apartados…</p> : <>
         <div className="flex flex-wrap gap-2">
-          {([{type:"text",label:"+ Texto"},{type:"photo",label:"+ Fotografía"},{type:"video",label:"+ Vídeo"},{type:"link",label:"+ Enlace"},{type:"highlight",label:"+ Destacado"},{type:"list",label:"+ Lista"}] as const).map(item=><button key={item.type} type="button" onClick={()=>addBlock(item.type)} className="rounded-full border border-primary/20 bg-background px-3 py-2 text-xs font-bold text-primary hover:bg-primary/5">{item.label}</button>)}
+          {([{type:"banner",label:"+ Banner de cabecera"},{type:"text",label:"+ Texto"},{type:"photo",label:"+ Fotografía"},{type:"video",label:"+ Vídeo"},{type:"link",label:"+ Enlace"},{type:"highlight",label:"+ Destacado"},{type:"list",label:"+ Lista"}] as const).map(item=><button key={item.type} type="button" onClick={()=>addBlock(item.type)} className="rounded-full border border-primary/20 bg-background px-3 py-2 text-xs font-bold text-primary hover:bg-primary/5">{item.label}</button>)}
         </div>
         {blocks.length===0&&<p className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">Todavía no hay apartados adicionales. Añade una historia, fotos, vídeos, enlaces o cualquier otro contenido.</p>}
         <div className="space-y-3">
