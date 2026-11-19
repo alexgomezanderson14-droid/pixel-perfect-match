@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { edicion, lugares as lugaresFijos, ui, type Categoria, type Lugar } from "@/content/fiestas";
 import { supabase } from "@/integrations/supabase/client";
 import AdminPenyaEditor from "@/components/AdminPenyaEditor";
+import PenyaPhotoManager from "@/components/PenyaPhotoManager";
 import CopyrightFooter from "@/components/CopyrightFooter";
 import { noticiaCuBaTa2027 } from "@/content/noticia-cubata-2027";
 import { noticiaCestaNavidad2027 } from "@/content/noticia-cesta-navidad-2027";
@@ -371,7 +372,8 @@ function Home() {
   const [penyaOnlyMine, setPenyaOnlyMine] = useState(false);
   const [activePenyaCard, setActivePenyaCard] = useState(0);
   const [penyaCarouselInitialized, setPenyaCarouselInitialized] = useState(false);
-  const [editingFeaturedPenya, setEditingFeaturedPenya] = useState<PenyaDb | null>(null);
+  const [managingPenyaPhotos, setManagingPenyaPhotos] = useState<PenyaDb | null>(null);
+  const [editingPenyaProfile, setEditingPenyaProfile] = useState<PenyaDb | null>(null);
   const penyaCarouselRef = useRef<HTMLDivElement | null>(null);
   const penyaScrollFrameRef = useRef<number | null>(null);
   const [eventsSearch, setEventsSearch] = useState("");
@@ -381,10 +383,12 @@ function Home() {
   const [accountUser, setAccountUser] = useState<any>(null);
   const [penyaAccessNotice, setPenyaAccessNotice] = useState(false);
   const esAdminWeb = accountUser?.email?.toLowerCase() === "gomezandersonalex@gmail.com";
-  const puedeGestionarPenya = (penyaId: string) => esAdminWeb || [accountUser?.app_metadata?.penya_ids, accountUser?.app_metadata?.penya_memberships].some((ids:any) => Array.isArray(ids) && ids.includes(penyaId));
+  const puedeAdministrarPenya = (penyaId: string) => esAdminWeb || [accountUser?.app_metadata?.penya_admin_ids, accountUser?.app_metadata?.penya_ids].some((ids:any) => Array.isArray(ids) && ids.includes(penyaId)) || accountUser?.app_metadata?.penya_roles?.[penyaId] === "admin";
+  const puedeGestionarPenya = (penyaId: string) => puedeAdministrarPenya(penyaId) || [accountUser?.app_metadata?.penya_memberships, accountUser?.user_metadata?.penya_ids, accountUser?.user_metadata?.penya_id ? [accountUser.user_metadata.penya_id] : []].some((ids:any) => Array.isArray(ids) && ids.includes(penyaId));
   const avisarAccesoPenya = () => setPenyaAccessNotice(true);
   const [accountMode, setAccountMode] = useState<"register"|"login">("register");
   const [accountName, setAccountName] = useState("");
+  const [accountPenyaId, setAccountPenyaId] = useState("");
   const [accountEmail, setAccountEmail] = useState("");
   const [accountPassword, setAccountPassword] = useState("");
   const [accountMessage, setAccountMessage] = useState("");
@@ -683,12 +687,14 @@ function Home() {
     return () => { window.clearTimeout(showTimer); if (hideTimer) window.clearTimeout(hideTimer); };
   }, [noticias]);
 
+  useEffect(() => { setAccountPenyaId(String(accountUser?.user_metadata?.penya_id || "")); }, [accountUser?.id, accountUser?.user_metadata?.penya_id]);
   const handleAccountSubmit = async (event: React.FormEvent) => {
     event.preventDefault(); setAccountBusy(true); setAccountMessage("");
     try {
       if (accountMode === "register") {
         if (accountPassword.length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres.");
-        const { data, error } = await supabase.auth.signUp({ email: accountEmail.trim(), password: accountPassword, options: { data: { full_name: accountName.trim() } } });
+        const selectedPenya = penyes.find(item => item.id === accountPenyaId);
+        const { data, error } = await supabase.auth.signUp({ email: accountEmail.trim(), password: accountPassword, options: { data: { full_name: accountName.trim(), penya_id: accountPenyaId || null, penya_nombre: selectedPenya?.nombre || null, penya_ids: accountPenyaId ? [accountPenyaId] : [] } } });
         if (error) throw error;
         setAccountMessage(data.session ? "¡Cuenta creada! Ya has iniciado sesión." : "Registro iniciado. Revisa tu correo para confirmar la cuenta antes de entrar.");
       } else {
@@ -698,6 +704,18 @@ function Home() {
       }
       setAccountPassword("");
     } catch (error) { setAccountMessage(error instanceof Error ? error.message : "No se ha podido completar la operación."); }
+    finally { setAccountBusy(false); }
+  };
+  const saveAccountPenya = async () => {
+    if (!accountUser) return;
+    setAccountBusy(true); setAccountMessage("");
+    try {
+      const selectedPenya = penyes.find(item => item.id === accountPenyaId);
+      const { data, error } = await supabase.auth.updateUser({ data: { penya_id: accountPenyaId || null, penya_nombre: selectedPenya?.nombre || null, penya_ids: accountPenyaId ? [accountPenyaId] : [] } });
+      if (error) throw error;
+      if (data.user) setAccountUser(data.user);
+      setAccountMessage(selectedPenya ? "Tu peña se ha guardado en tu cuenta." : "Has quitado la peña asociada a tu cuenta.");
+    } catch (error) { setAccountMessage(error instanceof Error ? error.message : "No se ha podido guardar tu peña."); }
     finally { setAccountBusy(false); }
   };
   const savePersonalPreferences = async () => {
@@ -780,7 +798,8 @@ function Home() {
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [fotoAmpliada, noticiaSeleccionada, noticiaImagenes.length]);
-  const featuredPhotoEditorModal = editingFeaturedPenya ? <div className="fixed inset-0 z-[2147483100] flex items-start justify-center overflow-y-auto bg-[#071c25]/80 p-3 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-md sm:p-6"><section className="my-auto w-full max-w-4xl rounded-3xl bg-background p-4 shadow-2xl sm:p-6"><div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-lg font-black">Añadir fotos destacadas · {editingFeaturedPenya.nombre}</h2><button type="button" onClick={()=>setEditingFeaturedPenya(null)} className="rounded-full border px-3 py-2 text-sm font-bold">Cerrar</button></div><AdminPenyaEditor penya={editingFeaturedPenya} onCancel={()=>setEditingFeaturedPenya(null)} onSaved={()=>{setEditingFeaturedPenya(null);void (async()=>{const {data}=await supabase.from("site_content").select("clave,valor");setSiteContent(Object.fromEntries((data||[]).map((x:any)=>[x.clave,x.valor])));})();}}/></section></div> : null;
+  const featuredPhotoEditorModal = managingPenyaPhotos ? <div className="fixed inset-0 z-[2147483100] flex items-start justify-center overflow-y-auto bg-[#071c25]/80 p-3 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-md sm:p-6"><section className="my-auto w-full max-w-4xl rounded-3xl bg-background p-4 shadow-2xl sm:p-6"><PenyaPhotoManager penya={managingPenyaPhotos} onCancel={()=>setManagingPenyaPhotos(null)} onSaved={()=>{void (async()=>{const {data}=await supabase.from("site_content").select("clave,valor");setSiteContent(Object.fromEntries((data||[]).map((x:any)=>[x.clave,x.valor])));})();}}/></section></div> : null;
+  const penyaProfileEditorModal = editingPenyaProfile ? <div className="fixed inset-0 z-[2147483101] flex items-start justify-center overflow-y-auto bg-[#071c25]/80 p-3 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-md sm:p-6"><section className="my-auto w-full max-w-4xl rounded-3xl bg-background p-4 shadow-2xl sm:p-6"><AdminPenyaEditor penya={editingPenyaProfile} onCancel={()=>setEditingPenyaProfile(null)} onSaved={()=>{setEditingPenyaProfile(null);void (async()=>{const {data}=await supabase.from("site_content").select("clave,valor");setSiteContent(Object.fromEntries((data||[]).map((x:any)=>[x.clave,x.valor])));await cargar();})();}}/></section></div> : null;
   const renderNewsCard = (n:any) => <button type="button" key={n.id} onClick={()=>{setNoticiaSeleccionada(n);window.scrollTo({top:0,behavior:"smooth"});}} className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
     {n.tipo!=="video"&&n.imagen_url&&<div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden"><img src={n.imagen_url} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center transition duration-300 group-hover:scale-[1.02]"/></div>}
     <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">
@@ -1234,7 +1253,7 @@ function Home() {
 
       {selectedPenya && penyaGalleryOpen && <div className="fixed inset-0 z-[2147483102] flex items-center justify-center bg-[#092431]/80 p-3 pt-[max(.75rem,env(safe-area-inset-top))] backdrop-blur-md" role="dialog" aria-modal="true" aria-label={"Galería de "+selectedPenya.nombre} onClick={()=>{setPenyaGalleryOpen(false);setPenyaFotoAmpliada(null);setPenyaFotoZoom(1);}}>
         <section className="max-h-[90dvh] w-full max-w-4xl overflow-y-auto rounded-[1.5rem] border border-white/70 bg-[#f5f8f7] p-4 shadow-2xl sm:p-7" onClick={e=>e.stopPropagation()}>
-          <div className="mb-5 flex items-start justify-between gap-3"><div><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#9a7a32]">Recuerdos compartidos</p><h2 className="mt-1 text-xl font-black text-[#173f52] sm:text-2xl">Galería de {selectedPenya.nombre}</h2><p className="mt-1 text-xs text-[#6c8285]">{selectedPenyaGallery.length} fotografías</p></div><div className="flex shrink-0 items-center gap-2">{<button type="button" onClick={()=>{if(puedeGestionarPenya(selectedPenya.id)){setPenyaGalleryOpen(false);setEditingFeaturedPenya(selectedPenya);}else window.alert("Solo los miembros de esta peña pueden añadir o modificar información. Inicia sesión con una cuenta vinculada a esta peña. El administrador de la web también puede gestionarla.");}} className="inline-flex items-center gap-1.5 rounded-full bg-[#173f52] px-3 py-2 text-[10px] font-extrabold text-white shadow-sm transition hover:bg-[#24566a] sm:px-4 sm:text-xs">＋ Añadir imágenes</button>}<button type="button" onClick={()=>{setPenyaGalleryOpen(false);setPenyaFotoAmpliada(null);setPenyaFotoZoom(1);}} aria-label="Cerrar galería" className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#d6e2df] bg-white text-lg font-bold text-[#173f52]">✕</button></div></div>
+          <div className="mb-5 flex items-start justify-between gap-3"><div><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#9a7a32]">Recuerdos compartidos</p><h2 className="mt-1 text-xl font-black text-[#173f52] sm:text-2xl">Galería de {selectedPenya.nombre}</h2><p className="mt-1 text-xs text-[#6c8285]">{selectedPenyaGallery.length} fotografías</p></div><div className="flex shrink-0 items-center gap-2">{<button type="button" onClick={()=>{if(puedeGestionarPenya(selectedPenya.id)){setPenyaGalleryOpen(false);setManagingPenyaPhotos(selectedPenya);}else window.alert("Solo los miembros de esta peña pueden añadir o modificar información. Selecciona tu peña en Ajustes o inicia sesión con una cuenta vinculada a ella.");}} className="inline-flex items-center gap-1.5 rounded-full bg-[#173f52] px-3 py-2 text-[10px] font-extrabold text-white shadow-sm transition hover:bg-[#24566a] sm:px-4 sm:text-xs">＋ Añadir imágenes</button>}<button type="button" onClick={()=>{setPenyaGalleryOpen(false);setPenyaFotoAmpliada(null);setPenyaFotoZoom(1);}} aria-label="Cerrar galería" className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#d6e2df] bg-white text-lg font-bold text-[#173f52]">✕</button></div></div>
           {selectedPenyaGallery.length>0?<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">{selectedPenyaGallery.map((url,index)=><figure key={url} className="overflow-hidden rounded-xl border border-[#dce7e4] bg-white p-1.5 shadow-sm"><button type="button" onClick={()=>{setPenyaFotoZoom(1);setPenyaFotoAmpliada(selectedPenyaGallery.indexOf(url));}} aria-label={"Ampliar fotografía "+(index+1)} className="block h-[124px] w-full overflow-hidden rounded-lg"><img src={url} alt={"Foto "+(index+1)+" de "+selectedPenya.nombre} loading="lazy" style={selectedPenyaPhotoStyle(url)} className="h-full w-full rounded-lg bg-[#edf3f1] object-cover transition-transform duration-500 ease-out hover:scale-[1.02]"/></button><figcaption className="px-1 pb-1 pt-2 text-[10px] font-semibold text-[#52666b]">{selectedPenyaFeaturedGallery.includes(url)?"Foto destacada":"Recuerdo de la peña"}</figcaption></figure>)}</div>:<p className="rounded-xl border border-dashed border-[#cbdcdd] p-8 text-center text-sm text-[#6c8285]">Todavía no hay fotografías en esta galería.</p>}
         </section>
       </div>}
@@ -1259,7 +1278,7 @@ function Home() {
               {[0,1,2].map((slot)=>{const url=selectedPenyaFeaturedGallery[slot];const positions=["left-1/2 top-1 z-30 -translate-x-1/2 rotate-0","left-[12%] top-5 z-10 rotate-[-9deg]","right-[12%] top-5 z-20 rotate-[9deg]"];const widths=["w-[38%]","w-[32%]","w-[32%]"];return url?<button key={slot} type="button" onClick={()=>setPenyaFotoAmpliada(selectedPenyaGallery.indexOf(url))} aria-label={"Ampliar foto destacada "+(slot+1)} className={"absolute h-[124px] overflow-hidden rounded-xl border-[4px] border-white bg-white shadow-lg "+positions[slot]+" "+widths[slot]}><img src={url} alt={"Foto destacada "+(slot+1)+" de "+selectedPenya.nombre} loading="lazy" decoding="async" className="h-full w-full object-cover"/></button>:<div key={slot} aria-hidden="true" className={"absolute flex h-[112px] items-center justify-center rounded-xl border-[4px] border-white bg-gradient-to-br from-[#f2f6f4] to-[#d6e4e1] text-[#8ba29c] shadow-md "+positions[slot]+" "+widths[slot]}><span className="text-2xl">▧</span></div>;})}
             </div>
             <div className="mt-2 flex justify-center">
-              <button type="button" onClick={()=>puedeGestionarPenya(selectedPenya.id)?setEditingFeaturedPenya(selectedPenya):window.alert("Solo los miembros de esta peña pueden añadir o modificar información. Inicia sesión con una cuenta vinculada a esta peña. El administrador de la web también puede gestionarla.")} className="rounded-full bg-[#173f52] px-4 py-2 text-[10px] font-extrabold text-white shadow-md">＋ Añadir fotos destacadas</button>
+              <button type="button" onClick={()=>puedeGestionarPenya(selectedPenya.id)?setManagingPenyaPhotos(selectedPenya):window.alert("Solo los miembros de esta peña pueden añadir o modificar información. Inicia sesión con una cuenta vinculada a esta peña. El administrador de la web también puede gestionarla.")} className="rounded-full bg-[#173f52] px-4 py-2 text-[10px] font-extrabold text-white shadow-md">＋ Añadir fotos destacadas</button>
             </div>
           </div>
             <div className="mt-4 flex gap-2">
@@ -1303,7 +1322,7 @@ function Home() {
                       {[0,1,2].map((slot)=>{const url=profilePhotos[slot];const positions=["left-1/2 top-0 z-30 -translate-x-1/2 rotate-0","left-[7%] top-8 z-10 -rotate-[9deg]","right-[7%] top-8 z-20 rotate-[9deg]"];const widths=["w-[48%] sm:w-[40%] lg:w-[38%] xl:w-[36%]","w-[43%] sm:w-[38%] lg:w-[36%] xl:w-[34%]","w-[43%] sm:w-[38%] lg:w-[36%] xl:w-[34%]"];return url?<button key={slot} type="button" onClick={()=>setPenyaFotoAmpliada(selectedPenyaGallery.indexOf(url))} aria-label={"Ampliar fotografía destacada "+(slot+1)} className={"group absolute h-[220px] overflow-hidden rounded-[1.25rem] border-[4px] border-white bg-[#e6eeeb] shadow-[0_12px_32px_rgba(23,63,82,.18)] transition-[transform,box-shadow] duration-700 ease-[cubic-bezier(.2,.75,.25,1)] will-change-transform hover:z-40 hover:scale-[1.055] hover:shadow-[0_20px_44px_rgba(23,63,82,.28)] sm:h-[310px] lg:h-[350px] sm:rounded-[1.5rem] "+positions[slot]+" "+widths[slot]}><img src={url} alt={selectedPenya.nombre+" · recuerdo "+(slot+1)} loading="lazy" decoding="async" style={selectedPenyaPhotoStyle(url)} className="h-full w-full object-cover"/></button>:<div key={slot} aria-hidden="true" className={"absolute flex h-[220px] items-center justify-center overflow-hidden rounded-[1.25rem] border-[4px] border-white bg-gradient-to-br from-[#edf3f1] to-[#dce8e4] text-[#8ba29c] shadow-[0_12px_32px_rgba(23,63,82,.12)] sm:h-[310px] lg:h-[350px] sm:rounded-[1.5rem] "+positions[slot]+" "+widths[slot]}><span className={slot===0?"text-5xl sm:text-6xl":"text-3xl sm:text-4xl"}>▧</span></div>;})}
                     </div>
                     <div className="mt-3 flex min-h-9 items-center justify-center">
-                      <button type="button" onClick={()=>puedeGestionarPenya(selectedPenya.id)?setEditingFeaturedPenya(selectedPenya):avisarAccesoPenya()} className="rounded-full bg-[#173f52] px-5 py-2.5 text-xs font-extrabold text-white shadow-md transition hover:bg-[#24566a]">＋ Añadir fotos destacadas</button>
+                      <button type="button" onClick={()=>puedeGestionarPenya(selectedPenya.id)?setManagingPenyaPhotos(selectedPenya):avisarAccesoPenya()} className="rounded-full bg-[#173f52] px-5 py-2.5 text-xs font-extrabold text-white shadow-md transition hover:bg-[#24566a]">＋ Añadir fotos destacadas</button>
                     </div>
                   </section>
                 </>;
