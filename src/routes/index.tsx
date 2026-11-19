@@ -1025,7 +1025,7 @@ function Home() {
           ) : visiblePenyes.length===0 ? (
             <div className="glass rounded-3xl p-8 text-center"><p className="font-bold text-primary">No encontramos peñas con esos filtros</p><p className="mt-1 text-sm text-muted-foreground">Prueba con otra búsqueda o limpia los filtros.</p><button onClick={()=>{setPenyaSearch("");setPenyaMusicFilter("Todas");setPenyaOnlyMine(false);}} className="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">Mostrar todas las peñas</button></div>
           ) : (
-            <div className="grid min-w-0 grid-cols-1 items-stretch gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+            <div className="grid min-w-0 grid-cols-1 items-stretch gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
               {visiblePenyes.map((p) => {
                 const plans = eventosActivos.filter(e => e.penya_id === p.id);
                 return (
@@ -1232,7 +1232,7 @@ function Home() {
         </section>
       </div> : (
         <div className={`fixed inset-0 z-[6000] flex justify-center ${penyaDetailFullscreen ? "bg-[#102f3d] items-stretch p-0" : "bg-[#071c25]/75 items-end p-0 pt-[max(1rem,env(safe-area-inset-top))] sm:items-center sm:p-5 backdrop-blur-md"}`} onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }}>
-          <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className={`w-full overflow-auto border border-white/70 bg-[#f5f8f7] shadow-[0_30px_100px_rgba(4,25,34,.42)] ${penyaDetailFullscreen ? "h-[100dvh] max-h-[100dvh] max-w-none rounded-none" : "max-h-[94dvh] max-w-5xl rounded-t-[1.75rem] sm:rounded-[2rem]"}`}>
+          <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className={`w-full overflow-auto border border-white/70 bg-[#f5f8f7] shadow-[0_30px_100px_rgba(4,25,34,.42)] ${penyaDetailFullscreen ? "h-[100dvh] max-h-[100dvh] max-w-none rounded-none" : "max-h-[94dvh] max-w-[min(96vw,1500px)] rounded-t-[1.75rem] sm:rounded-[2rem]"}`}>
             <div className="relative h-[230px] overflow-visible bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37] sm:h-[310px]">
               {selectedPenyaBanner && <img src={selectedPenyaBanner} alt={"Banner de "+selectedPenya.nombre} className="absolute inset-0 h-full w-full object-cover" />}
               <div className="absolute inset-0 bg-gradient-to-b from-[#071c25]/10 via-[#102f3d]/10 to-[#102f3d]/55" />
@@ -1240,7 +1240,7 @@ function Home() {
               <button onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }} aria-label="Cerrar ficha" className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-30 grid h-11 w-11 place-items-center rounded-full border border-white/50 bg-[#102f3d]/75 text-lg font-bold text-white shadow-xl backdrop-blur-xl transition hover:scale-105">✕</button>
               <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-[#f5f8f7]/35 to-transparent" />
             </div>
-            <div className="mx-auto max-w-6xl px-4 pb-8 pt-4 sm:px-8 sm:pb-12 sm:pt-6 lg:px-12">
+            <div className="mx-auto w-full max-w-[1600px] px-3 pb-6 pt-3 sm:px-6 sm:pb-8 sm:pt-5 lg:px-8 xl:px-10">
               <div className="relative -mt-[62px] mb-5 flex flex-col items-center gap-3 text-center sm:-mt-[78px] sm:flex-row sm:items-end sm:gap-5 sm:text-left">
                 <div className="grid h-28 w-28 shrink-0 place-items-center overflow-hidden rounded-full border-[5px] border-[#f5f8f7] bg-white text-3xl font-black text-[#173f52] shadow-[0_12px_35px_rgba(4,25,34,.22)] sm:h-36 sm:w-36">{selectedPenya.foto ? <img src={selectedPenya.foto} alt={"Logo de "+selectedPenya.nombre} className="h-full w-full object-cover"/> : selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
                 <div className="min-w-0 flex-1 pb-1">
@@ -1266,12 +1266,12 @@ function Home() {
                 const photoSlots = [0,1,2];
                 const photoPositions = ["left-0 top-7 z-10 -rotate-6","left-1/2 top-0 z-20 -translate-x-1/2","right-0 top-8 z-10 rotate-6"];
                 return <>
-                  <div id="ficha-presentacion" className="mb-2 flex min-h-8 items-center justify-center gap-2 overflow-hidden whitespace-nowrap sm:justify-start">
+                  <div id="ficha-presentacion" className="mb-1 flex min-h-8 flex-wrap items-center justify-center gap-2 sm:justify-start">
                     {tags.map((tag,index)=><span key={index} className={["rounded-full border px-3 py-1.5 text-[10px] font-bold shadow-sm sm:text-xs", "border-[#f3c5d7] bg-[#fff0f5] text-[#9d4567]", "border-[#c6d9f4] bg-[#edf5ff] text-[#315f9a]", "border-[#d7c8ed] bg-[#f5efff] text-[#70509b]", "border-[#c9e5d8] bg-[#eefaf3] text-[#367457]"][index%5]}>{tag}</span>)}
                   </div>
-                  <section id="ficha-galeria" className="relative mt-5 overflow-hidden rounded-[1.75rem] border border-[#dce7e4] bg-gradient-to-b from-white to-[#f1f7f5] px-3 pb-5 pt-5 shadow-[0_8px_28px_rgba(23,63,82,.055)] sm:mt-7 sm:px-7 sm:pb-7 sm:pt-6">
+                  <section id="ficha-galeria" className="relative mt-3 overflow-hidden rounded-[1.75rem] border border-[#dce7e4] bg-gradient-to-b from-white to-[#f1f7f5] px-3 pb-4 pt-4 shadow-[0_8px_28px_rgba(23,63,82,.055)] sm:mt-4 sm:px-6 sm:pb-5 sm:pt-5">
                     <div className="mb-1 flex items-center justify-between gap-3 px-1"><div><h3 className="text-lg font-extrabold text-[#173f52] sm:text-xl">Momentos de la peña</h3><p className="text-[11px] text-[#7b9293] sm:text-xs">Fotos compartidas por sus miembros</p></div><button type="button" onClick={()=>setPenyaGalleryOpen(true)} className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#d4e0de] bg-white px-3 py-2 text-[10px] font-extrabold text-[#24576a] shadow-sm transition hover:border-[#d4af37] hover:bg-[#fffdf7] sm:px-4 sm:text-xs">Ver galería <span aria-hidden="true">↗</span><span className="rounded-full bg-[#edf3f1] px-1.5 py-0.5">{selectedPenyaGallery.length}</span></button></div>
-                    <div className="relative mx-auto h-[230px] max-w-2xl sm:h-[300px]">
+                    <div className="relative mx-auto h-[230px] w-full max-w-5xl sm:h-[320px] lg:h-[360px]">
                       {photoSlots.map((slot:number)=>{
                         const url=selectedPenyaFeaturedGallery[slot];
                         const hasPhoto=Boolean(url);
@@ -1285,9 +1285,9 @@ function Home() {
                   </section>
                 </>;
               })()}
-              <div className="mt-6 grid grid-cols-1 items-start gap-4 sm:gap-5 lg:grid-cols-2">
+              <div className="mt-4 grid grid-cols-1 items-start gap-3 sm:gap-4 lg:grid-cols-2">
               {selectedPenya.informacion?.trim() && <section className="min-w-0 rounded-[1.5rem] border border-[#dce7e4] bg-white p-5 shadow-[0_8px_28px_rgba(23,63,82,.055)] sm:p-7"><div className="mb-3 flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#e7f0ed] text-lg text-[#173f52]">✦</span><h3 className="text-lg font-extrabold tracking-tight text-[#173f52] sm:text-xl">Quiénes somos</h3></div><p className="whitespace-pre-line text-[15px] leading-7 text-[#40575e] sm:text-base sm:leading-8">{selectedPenya.informacion}</p></section>}
-              {selectedPenyaCustomBlocks.length>0 && <div id="ficha-personalizada" className="mt-8 space-y-5 scroll-mt-24">
+              {selectedPenyaCustomBlocks.length>0 && <div id="ficha-personalizada" className="mt-3 space-y-3 scroll-mt-24">
                 {selectedPenyaCustomBlocks.map((block:any,index:number)=>{
                   const title=String(block.title||"").trim(); const content=String(block.content||"").trim(); const url=safeHttpUrl(block.url);
                   if(block.type==="photo")return null;
@@ -1305,7 +1305,7 @@ function Home() {
                  <button onClick={() => toggleMiPenya(selectedPenya.id)} aria-pressed={misPenyes.includes(selectedPenya.id)} className="rounded-full border border-primary/20 bg-white/70 px-4 py-2 text-sm font-bold text-primary">{misPenyes.includes(selectedPenya.id) ? "★ Mi peña" : "☆ Marcar como mi peña"}</button>
                 {instagramUrl(selectedPenya.instagram) && <a className="rounded-full bg-[#173f52] px-4 py-2 text-sm font-bold text-white" href={instagramUrl(selectedPenya.instagram)!} target="_blank" rel="noreferrer">Instagram ↗</a>}
               </div>
-              {selectedPenyaNews.length > 0 && <section id="ficha-novedades" className="mt-8 rounded-[1.5rem] border border-[#dce7e4] bg-white p-5 shadow-[0_8px_28px_rgba(23,63,82,.055)] sm:p-7"><h3 className="mb-3 text-xl font-extrabold text-primary">Lo último de nuestra peña</h3><div className="space-y-3">{selectedPenyaNews.map((n:any)=><button key={n.id} type="button" onClick={()=>{setSelectedPenya(null);setCurrentPage("noticias");setNoticiaSeleccionada(n);window.scrollTo({top:0,behavior:"smooth"});}} className="flex w-full items-center gap-3 rounded-2xl border border-border bg-white/75 p-3 text-left transition hover:border-primary/40 hover:shadow-sm"><span className="min-w-0 flex-1"><span className="block text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{new Date(n.fecha||n.created_at||Date.now()).toLocaleDateString("es-ES",{day:"numeric",month:"short"})}</span><span className="mt-1 block font-bold leading-snug text-primary">{n.titulo}</span><span className="mt-1 block text-xs font-bold text-primary">Ver publicación →</span></span></button>)}</div></section>}
+              {selectedPenyaNews.length > 0 && <section id="ficha-novedades" className="mt-4 rounded-[1.5rem] border border-[#dce7e4] bg-white p-4 shadow-[0_8px_28px_rgba(23,63,82,.055)] sm:p-6"><h3 className="mb-3 text-xl font-extrabold text-primary">Lo último de nuestra peña</h3><div className="space-y-3">{selectedPenyaNews.map((n:any)=><button key={n.id} type="button" onClick={()=>{setSelectedPenya(null);setCurrentPage("noticias");setNoticiaSeleccionada(n);window.scrollTo({top:0,behavior:"smooth"});}} className="flex w-full items-center gap-3 rounded-2xl border border-border bg-white/75 p-3 text-left transition hover:border-primary/40 hover:shadow-sm"><span className="min-w-0 flex-1"><span className="block text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{new Date(n.fecha||n.created_at||Date.now()).toLocaleDateString("es-ES",{day:"numeric",month:"short"})}</span><span className="mt-1 block font-bold leading-snug text-primary">{n.titulo}</span><span className="mt-1 block text-xs font-bold text-primary">Ver publicación →</span></span></button>)}</div></section>}
 
               {selectedPenyaAcceptsVisits&&<div className="flex items-center gap-3 rounded-[1.25rem] border border-[#cfe4dc] bg-[#edf7f2] px-4 py-4 text-[#285f4d]">
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-100 text-xl">✓</span>
