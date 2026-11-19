@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadMediaFile } from "@/lib/media-upload";
 
-type Props = { penya:any; savedConfig:{color?:string;logo_url?:string;title?:string;description?:string}; onSaved:()=>void };
+type Props = { penya:any; savedConfig:{color?:string;logo_url?:string;title?:string;description?:string;logo_scale?:number;logo_x?:number;logo_y?:number}; onSaved:()=>void };
 const field="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm";
 
 export default function AdminPenyaCardStyleEditor({penya,savedConfig,onSaved}:Props) {
@@ -12,6 +12,9 @@ export default function AdminPenyaCardStyleEditor({penya,savedConfig,onSaved}:Pr
   const [logoFile,setLogoFile]=useState<File|null>(null);
   const [title,setTitle]=useState(savedConfig.title||penya.nombre||"");
   const [description,setDescription]=useState(savedConfig.description??penya.informacion??"");
+  const [logoScale,setLogoScale]=useState(savedConfig.logo_scale??100);
+  const [logoX,setLogoX]=useState(savedConfig.logo_x??50);
+  const [logoY,setLogoY]=useState(savedConfig.logo_y??50);
   const [preview,setPreview]=useState(logoUrl);
   useEffect(()=>{if(!logoFile){setPreview(logoUrl);return;}const objectUrl=URL.createObjectURL(logoFile);setPreview(objectUrl);return()=>URL.revokeObjectURL(objectUrl);},[logoFile,logoUrl]);
   const [busy,setBusy]=useState(false);
@@ -21,8 +24,9 @@ export default function AdminPenyaCardStyleEditor({penya,savedConfig,onSaved}:Pr
     setLogoUrl(savedConfig.logo_url||"");
     setTitle(savedConfig.title||penya.nombre||"");
     setDescription(savedConfig.description??penya.informacion??"");
+    setLogoScale(savedConfig.logo_scale??100);setLogoX(savedConfig.logo_x??50);setLogoY(savedConfig.logo_y??50);
     setLogoFile(null);
-  },[penya.id,penya.nombre,penya.informacion,savedConfig.color,savedConfig.logo_url,savedConfig.title,savedConfig.description]);
+  },[penya.id,penya.nombre,penya.informacion,savedConfig.color,savedConfig.logo_url,savedConfig.title,savedConfig.description,savedConfig.logo_scale,savedConfig.logo_x,savedConfig.logo_y]);
 
   const save=async()=>{
     if(!/^#[0-9a-fA-F]{6}$/.test(color)){setMessage("Selecciona un color válido.");return;}
@@ -34,7 +38,7 @@ export default function AdminPenyaCardStyleEditor({penya,savedConfig,onSaved}:Pr
       let all:any={};try{const parsed=JSON.parse(data?.valor||"{}");all=parsed&&typeof parsed==="object"&&!Array.isArray(parsed)?parsed:{};}catch{all={};}
       let nextLogo=logoUrl;
       if(logoFile)nextLogo=(await uploadMediaFile(logoFile,"penyes/tarjetas/"+penya.id)).url;
-      all[penya.id]={...all[penya.id],color,logo_url:nextLogo,title:title.trim().slice(0,80),description:description.trim().slice(0,160)};
+      all[penya.id]={...all[penya.id],color,logo_url:nextLogo,title:title.trim().slice(0,80),description:description.trim().slice(0,160),logo_scale:logoScale,logo_x:logoX,logo_y:logoY};
       const {error}=await supabase.from("site_content").upsert({clave:"penyas_cards_json",valor:JSON.stringify(all)});
       if(error)throw error;
       setLogoUrl(nextLogo);setLogoFile(null);setMessage("Diseño de tarjeta guardado.");onSaved();
@@ -46,7 +50,8 @@ export default function AdminPenyaCardStyleEditor({penya,savedConfig,onSaved}:Pr
     {open&&<div className="mt-4 grid gap-4 sm:grid-cols-[180px_1fr]">
       <div className="flex min-h-[210px] flex-col items-center justify-between overflow-hidden rounded-2xl p-3 text-white shadow-inner" style={{backgroundColor:color}}>
         <span className="self-start text-xs font-black">{title||penya.nombre}</span><span className="line-clamp-2 w-full text-left text-[10px] text-white/80">{description}</span>
-        {preview?<img src={preview} alt={"Vista previa del logo de "+penya.nombre} className="h-36 w-full object-contain"/>:<span className="text-7xl font-black">{penya.nombre?.trim()?.charAt(0)||"?"}</span>}
+        {preview?<div className="flex h-36 w-full items-center justify-center overflow-hidden"><img src={preview} alt={"Vista previa del logo de "+penya.nombre} className="h-full w-full object-contain" style={{transform:`translate(${(logoX-50)/2}%,${(logoY-50)/2}%) scale(${logoScale/100})`}}/></div>:<span className="text-7xl font-black">{penya.nombre?.trim()?.charAt(0)||"?"}</span>}
+        <div className="w-full space-y-2 text-[10px] font-semibold"><label className="block">Tamaño del logo · {logoScale}%<input type="range" min="50" max="180" value={logoScale} onChange={e=>setLogoScale(Number(e.target.value))} className="w-full accent-white"/></label><label className="block">Posición horizontal · {logoX}%<input type="range" min="0" max="100" value={logoX} onChange={e=>setLogoX(Number(e.target.value))} className="w-full accent-white"/></label><label className="block">Posición vertical · {logoY}%<input type="range" min="0" max="100" value={logoY} onChange={e=>setLogoY(Number(e.target.value))} className="w-full accent-white"/></label></div>
       </div>
       <div className="space-y-3">
         <label className="block space-y-1 text-sm font-semibold">Nombre mostrado<input type="text" maxLength={80} value={title} onChange={e=>setTitle(e.target.value)} className={field}/></label><label className="block space-y-1 text-sm font-semibold">Descripción corta<textarea rows={3} maxLength={160} value={description} onChange={e=>setDescription(e.target.value)} className={field}/></label><label className="block space-y-1 text-sm font-semibold">Color de fondo<input type="color" value={color} onChange={e=>setColor(e.target.value)} className="h-12 w-full cursor-pointer rounded-xl border border-input bg-background p-1"/></label>
