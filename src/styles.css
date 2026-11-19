@@ -244,10 +244,10 @@ img { -webkit-user-drag: none; }
 
 /* Mobile readability: compact navigation, article width and safe-area spacing. */
 @media (max-width: 639px) {
-  nav[aria-label="Navegación principal"] { top: calc(env(safe-area-inset-top) + 8px) !important; bottom: auto !important; left: 50% !important; right: auto !important; width: calc(100vw - 24px) !important; max-width: 540px; height: 52px; transform: translateX(-50%) !important; gap: .2rem; padding: .25rem; }
-  nav[aria-label="Navegación principal"] button { min-height: 3.5rem; border-radius: 1rem; }
-  nav[aria-label="Navegación principal"] button span:first-child { font-size: 1.15rem; }
-  nav[aria-label="Navegación principal"] button span:last-child { font-size: .625rem; letter-spacing: -.01em; }
+  nav[aria-label="Navegación principal"] { position: fixed !important; top: calc(env(safe-area-inset-top) + 8px) !important; bottom: auto !important; left: 50% !important; right: auto !important; width: min(540px, calc(100vw - 16px)) !important; max-width: calc(100vw - 16px) !important; height: 52px !important; min-height: 52px !important; box-sizing: border-box !important; transform: translateX(-50%) !important; margin: 0 !important; gap: 0 !important; padding: 3px !important; z-index: 2147483000 !important; }
+  nav[aria-label="Navegación principal"] button { min-width: 0 !important; min-height: 0 !important; height: 100% !important; flex: 1 1 0 !important; border-radius: 999px; padding-inline: 0 !important; }
+  nav[aria-label="Navegación principal"] button span:first-child { font-size: clamp(.82rem, 3.7vw, 1.05rem); }
+  nav[aria-label="Navegación principal"] button span:last-child { font-size: clamp(.48rem, 2.15vw, .625rem); letter-spacing: -.025em; }
   main { scroll-margin-top: 1rem; }
   article p { overflow-wrap: anywhere; }
   input, select, textarea { max-width: 100%; }
@@ -324,3 +324,7 @@ html.festalfas-reduce-motion *, html.festalfas-reduce-motion *::before, html.fes
   .maplibregl-ctrl button { width: 34px !important; height: 34px !important; }
   .maplibregl-ctrl-top-right { top: max(.5rem, env(safe-area-inset-top)); right: .5rem; }
 }
+
+/* Fixed navigation must stay centered in the viewport at every breakpoint. */
+nav[aria-label="Navegación principal"] { position: fixed !important; left: 50% !important; right: auto !important; transform: translateX(-50%) !important; box-sizing: border-box !important; z-index: 2147483000 !important; }
+nav[aria-label="Navegación principal"] > button { min-width: 0 !important; flex: 1 1 0 !important; }
