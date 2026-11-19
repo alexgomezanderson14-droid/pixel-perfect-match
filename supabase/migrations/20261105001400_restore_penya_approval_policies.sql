@@ -32,5 +32,16 @@ create policy "Anyone can submit a pending penya"
     and char_length(trim(nombre)) between 2 and 80
   );
 
+-- Both anonymous visitors and signed-in users can update only the convenience
+-- event flag on an already approved peña. All other columns remain protected.
+drop policy if exists "Public can update penya event flag" on public.penyes;
+create policy "Public can update penya event flag"
+  on public.penyes
+  for update
+  to anon, authenticated
+  using (estado = 'aprobada')
+  with check (estado = 'aprobada');
+
 grant select, insert on public.penyes to anon, authenticated;
+grant update (tiene_evento) on public.penyes to anon, authenticated;
 notify pgrst, 'reload schema';
