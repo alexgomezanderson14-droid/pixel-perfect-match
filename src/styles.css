@@ -538,3 +538,9 @@ html.festalfas-high-contrast .page-bg [class*="border-border"] { border-color:co
   .maplibregl-ctrl-attrib { font-size:7px !important; line-height:1.1 !important; }
   .maplibregl-ctrl-attrib-inner { max-width:calc(100vw - 110px); }
 }
+
+
+/* Navegación minimalista: iconos sin etiquetas, manteniendo exactamente la altura y posición de la barra. */
+nav[aria-label="Navegación principal"] > button > span:last-child { display:none !important; }
+nav[aria-label="Navegación principal"] > button > span:first-child { width:34px !important; height:34px !important; }
+nav[aria-label="Navegación principal"] > button > span:first-child svg { width:25px !important; height:25px !important; }
