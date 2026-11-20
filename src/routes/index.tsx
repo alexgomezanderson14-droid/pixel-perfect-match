@@ -14,6 +14,21 @@ import { catalogoPenyesHistorico } from "@/content/penyes-catalogo-historico";
 import { getPenyaPhotoImageStyle } from "@/lib/penya-photo";
 const videoCover=(url?:string)=>{if(!url)return "";const match=url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/))([\w-]{11})/i);return match?"https://img.youtube.com/vi/"+match[1]+"/hqdefault.jpg":"";};
 
+// En algunos navegadores móviles o sesiones privadas el almacenamiento puede
+// lanzar SecurityError incluso al leerlo. La web debe seguir funcionando sin caché.
+function safeLocalStorageGet(key: string): string | null {
+  try { return typeof window === "undefined" ? null : window.localStorage.getItem(key); }
+  catch { return null; }
+}
+function safeSessionStorageGet(key: string): string | null {
+  try { return typeof window === "undefined" ? null : window.sessionStorage.getItem(key); }
+  catch { return null; }
+}
+function safeSessionStorageSet(key: string, value: string): void {
+  try { if (typeof window !== "undefined") window.sessionStorage.setItem(key, value); }
+  catch { /* El aviso puede mostrarse igualmente si el navegador bloquea el almacenamiento. */ }
+}
+
 
 const FestMap = lazy(() => import("@/components/FestMap"));
 const AddPenyaForm = lazy(() => import("@/components/AddPenyaForm"));
@@ -674,7 +689,7 @@ function Home() {
   useEffect(() => {
     const key = "fiestas-share-reminder-last";
     const shouldShow = () => {
-      const last = Number(localStorage.getItem(key) || 0);
+      const last = Number(safeLocalStorageGet(key) || 0);
       if (Date.now() - last >= 30 * 60 * 1000) setShareReminder(true);
     };
     const first = window.setTimeout(shouldShow, 90_000);
@@ -842,12 +857,12 @@ function Home() {
     return () => window.removeEventListener("hashchange", openFromHash);
   }, [noticias]);
   useEffect(() => {
-    if (!noticias.length || typeof window === "undefined" || sessionStorage.getItem("festalfas-news-popup-seen")) return;
+    if (!noticias.length || typeof window === "undefined" || safeSessionStorageGet("festalfas-news-popup-seen")) return;
     const latest = noticias.filter((item:any) => item.publicado).slice().sort((a:any,b:any) => String(b.fecha||b.created_at||"").localeCompare(String(a.fecha||a.created_at||""))).slice(0,1);
     if (!latest.length) return;
     const showTimer = window.setTimeout(() => {
       setNewsPopup(latest);
-      sessionStorage.setItem("festalfas-news-popup-seen", "1");
+      safeSessionStorageSet("festalfas-news-popup-seen", "1");
       hideTimer = window.setTimeout(() => setNewsPopup([]), 7000);
     }, 900);
     let hideTimer: number | undefined;
