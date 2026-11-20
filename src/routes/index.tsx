@@ -816,7 +816,7 @@ function Home() {
     ...selectedPenyaPhotoBlocks.filter((block:any)=>block.featured!==true).map((block:any)=>block.url),
     ...selectedPenyaEvents.map((e:any) => e.imagen_url || e.imagen || e.foto_url || e.foto),
     ...selectedPenyaActs.map((a:any) => a.imagen_url || a.imagen || a.foto_url || a.foto)
-  ].filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url) && url !== selectedPenya.foto && url !== selectedPenyaBanner))] : [];
+  ].filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url) && url !== selectedPenya.foto ))] : [];
   const selectedPenyaFeaturedGallery = selectedPenyaPhotoBlocks.filter((block:any)=>block.featured===true).slice(0,3).map((block:any)=>block.url);
   const selectedPenyaPhotoStyle=(url:string)=>{const block=selectedPenyaPhotoBlocks.find((item:any)=>item.url===url);return {objectPosition:`${block?.positionX??50}% ${block?.positionY??50}%`,transform:`translate(${((block?.positionX??50)-50)*1.2}%,${((block?.positionY??50)-50)*1.2}%) scale(${(block?.zoom??100)/100})`};};
   // Las noticias automáticas solo pueden usar la lista creada por el extractor de galerías.
