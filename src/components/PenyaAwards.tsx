@@ -30,21 +30,19 @@ const field="w-full rounded-xl border border-[#cbd9d6] bg-white px-3 py-2.5 text
 export function PenyaAwardMedal({award,compact=false}:{award:PenyaAward;compact?:boolean}){
  const competition=award.competition.toLocaleLowerCase("es");
  const category=competition.includes("paella")?"paellas":competition.includes("desfile")||competition.includes("humor")?"desfile":competition.includes("playback")?"playbacks":"general";
- const palettes:Record<string,string[]>={paellas:["#ffca63","#a95b18","#572b17","#ffe8a8"],desfile:["#c7a5ff","#7043b4","#24184f","#f1dcff"],playbacks:["#70e6ef","#167b91","#10374d","#c6fbff"],general:["#9de7ee","#287c8d","#12394c","#e0ffff"]};
- const rankPalette=award.position===1?["#ffe6a0","#c98722","#70400d","#fff4c5"]:award.position===2?["#f2f5fb","#8d9cac","#394a5c","#ffffff"]:award.position===3?["#ffc39a","#a65a36","#542b24","#ffe0c7"]:palettes[category];
- const colors=rankPalette;
- const categoryMark=category==="paellas"?"♨":category==="desfile"?"✦":category==="playbacks"?"♫":"✧";
- const medalClass="penya-award-medal relative mx-auto grid shrink-0 place-items-center "+(compact?"h-[76px] w-[76px]":"h-[112px] w-[112px] sm:h-[132px] sm:w-[132px]");
- const medalStyle:React.CSSProperties={"--medal-a":colors[0],"--medal-b":colors[1],"--medal-c":colors[2],"--medal-highlight":colors[3]} as React.CSSProperties;
- return <div className={medalClass} data-category={category} data-position={award.position} style={medalStyle}>
-  <span className="penya-medal-ribbon" aria-hidden="true"><i/><i/></span>
-  <span className="penya-medal-coin absolute inset-0 rounded-full" aria-hidden="true"/>
-  <span className="penya-medal-rope absolute inset-[5%] rounded-full" aria-hidden="true"/>
-  <span className="penya-medal-inner absolute inset-[15%] rounded-full" aria-hidden="true"/>
-  <span className="penya-medal-star penya-medal-star-left" aria-hidden="true">✦</span><span className="penya-medal-star penya-medal-star-right" aria-hidden="true">✦</span>
-  <span className="penya-medal-category relative z-10" aria-hidden="true">{categoryMark}</span>
-  <span className="penya-medal-number relative z-10">{award.position}º</span>
-  <span className="penya-medal-caption relative z-10">{award.position===1?"ORO":award.position===2?"PLATA":award.position===3?"BRONCE":"MÉRITO"}</span>
+ const palettes:Record<string,string[]>={paellas:["#ff4e9b","#ff9b35","#ffdf67","#ff4d5c"],desfile:["#38d9ff","#4268ff","#b65cff","#53f1ff"],playbacks:["#9c57ff","#e34dff","#54a7ff","#ff73db"],general:["#28e5c1","#34a9ff","#8b78ff","#b6fff0"]};
+ const colors=palettes[category];
+ const motif=category==="paellas"?"sunburst":category==="desfile"?"star":category==="playbacks"?"orbit":"rays";
+ const medalClass="penya-award-medal relative mx-auto grid shrink-0 place-items-center "+(compact?"h-[76px] w-[76px]":"h-[116px] w-[116px] sm:h-[142px] sm:w-[142px]");
+ const medalStyle:React.CSSProperties={"--holo-a":colors[0],"--holo-b":colors[1],"--holo-c":colors[2],"--holo-d":colors[3]} as React.CSSProperties;
+ return <div className={medalClass} data-category={category} data-position={award.position} data-motif={motif} style={medalStyle}>
+  <span className="penya-glass-body absolute inset-0 rounded-full" aria-hidden="true"/>
+  <span className="penya-glass-rim absolute inset-[5%] rounded-full" aria-hidden="true"/>
+  <span className="penya-glass-inner absolute inset-[12%] rounded-full" aria-hidden="true"/>
+  <span className="penya-glass-motif absolute inset-[20%]" aria-hidden="true"/>
+  <span className="penya-glass-number relative z-10">{award.position}º</span>
+  <span className="penya-glass-glint penya-glass-glint-one" aria-hidden="true"/>
+  <span className="penya-glass-glint penya-glass-glint-two" aria-hidden="true"/>
  </div>;
 }
 export function PenyaAwardsSection({awards,penyaName}:{awards:PenyaAward[];penyaName:string}){
