@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadMediaFile } from "@/lib/media-upload";
 import FestMap from "@/components/FestMap";
+import { getPenyaPhotoImageStyle } from "@/lib/penya-photo";
 
 const field = "w-full rounded-xl border border-input bg-background px-3 py-2 text-sm";
 
@@ -11,7 +12,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     direccion: penya.direccion ?? "",
     tipo_musica: penya.tipo_musica ?? "Variada",
     instagram: penya.instagram ?? "",
-    informacion: penya.informacion ?? "",
+    informacion: "",
     estado: penya.estado ?? "aprobada",
     tiene_evento: Boolean(penya.tiene_evento),
   });
@@ -21,7 +22,6 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
   useEffect(()=>{if(!foto){setFotoPreview("");return;}const url=URL.createObjectURL(foto);setFotoPreview(url);return()=>URL.revokeObjectURL(url);},[foto]);
   const [quitarFoto, setQuitarFoto] = useState(false);
   const [logoZoom,setLogoZoom]=useState(100);
-  const [logoFrameScale,setLogoFrameScale]=useState(100);
   const [logoX,setLogoX]=useState(50);
   const [logoY,setLogoY]=useState(50);
   const imageDrag = useRef<{ pointerId: number; startX: number; startY: number; posX: number; posY: number; width: number; height: number; kind: "logo" | "block"; blockId?: string } | null>(null);
@@ -52,7 +52,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
   const [blocksMessage, setBlocksMessage] = useState("");
   useEffect(() => {
     let active = true;
-    supabase.from("site_content").select("valor").eq("clave", "penyes_logos_ficha_json").maybeSingle().then(({data,error})=>{if(!active)return;if(!error){try{const settings=JSON.parse(data?.valor||"{}");const current=settings?.[penya.id]||{};setLogoZoom(current.zoom??100);setLogoX(current.x??50);setLogoY(current.y??50);setLogoFrameScale(current.frameScale??100);}catch{setLogoZoom(100);setLogoX(50);setLogoY(50);setLogoFrameScale(100);}}});
+    supabase.from("site_content").select("valor").eq("clave", "penyes_logos_ficha_json").maybeSingle().then(({data,error})=>{if(!active)return;if(!error){try{const settings=JSON.parse(data?.valor||"{}");const current=settings?.[penya.id]||{};setLogoZoom(current.zoom??100);setLogoX(current.x??50);setLogoY(current.y??50);}catch{setLogoZoom(100);setLogoX(50);setLogoY(50);}}});
     supabase.from("site_content").select("valor").eq("clave", "penyes_visitas_json").maybeSingle().then(({ data, error }) => {
       if (!active) return;
       if (!error) { try { const settings = JSON.parse(data?.valor || "{}"); setAceptaVisitas(settings?.[penya.id] === true); } catch { setAceptaVisitas(false); } }
@@ -156,8 +156,8 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
       if (visitsWriteError) throw visitsWriteError;
       const {data:logoData,error:logoReadError}=await supabase.from("site_content").select("valor").eq("clave","penyes_logos_ficha_json").maybeSingle();
       if(logoReadError)throw logoReadError;
-      let logoSettings:Record<string,{zoom:number;x:number;y:number;frameScale?:number}>={};try{const parsed=JSON.parse(logoData?.valor||"{}");if(parsed&&typeof parsed==="object"&&!Array.isArray(parsed))logoSettings=parsed;}catch{logoSettings={};}
-      logoSettings[penya.id]={zoom:logoZoom,x:logoX,y:logoY,frameScale:logoFrameScale};
+      let logoSettings:Record<string,{zoom:number;x:number;y:number}>={};try{const parsed=JSON.parse(logoData?.valor||"{}");if(parsed&&typeof parsed==="object"&&!Array.isArray(parsed))logoSettings=parsed;}catch{logoSettings={};}
+      logoSettings[penya.id]={zoom:logoZoom,x:logoX,y:logoY};
       const {error:logoWriteError}=await supabase.from("site_content").upsert({clave:"penyes_logos_ficha_json",valor:JSON.stringify(logoSettings)});
       if(logoWriteError)throw logoWriteError;
       let foto_url = quitarFoto ? null : penya.foto_url;
@@ -204,14 +204,14 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
       <div className="mt-4 space-y-4">
     <label className="block space-y-1 text-sm font-semibold">Tipo de música<input className={field} maxLength={80} value={form.tipo_musica} onChange={e=>change("tipo_musica",e.target.value)} /></label>
     <label className="block space-y-1 text-sm font-semibold">Instagram<input className={field} maxLength={100} value={form.instagram} onChange={e=>change("instagram",e.target.value)} placeholder="@cuenta" /></label>
-    <label className="block space-y-1 text-sm font-semibold">Información / descripción<textarea className={field} rows={3} maxLength={1000} value={form.informacion} onChange={e=>change("informacion",e.target.value)} /></label>
+    <label className="block space-y-1 text-sm font-semibold">Descripción personalizada (opcional)<textarea className={field} rows={3} maxLength={1000} value={form.informacion} onChange={e=>change("informacion",e.target.value)} placeholder="Cada peña puede escribir aquí su propia descripción." /></label>
     <div className="flex flex-wrap gap-4 text-sm"><label className="flex items-center gap-2"><input type="checkbox" checked={form.tiene_evento} onChange={e=>change("tiene_evento",e.target.checked)} /> Organiza evento</label></div>
     <section className="rounded-xl border border-border/70 bg-muted/35 p-3"><label className="flex items-start gap-3 text-sm font-semibold"><input type="checkbox" className="mt-0.5" checked={aceptaVisitas} disabled={visitasLoading} onChange={e=>setAceptaVisitas(e.target.checked)} /><span><span className="block font-bold">Aceptamos visitas</span><span className="mt-0.5 block text-xs font-normal text-muted-foreground">Indica si la peña está abierta a recibir visitas.</span></span></label></section>
     <label className="block space-y-1 text-sm font-semibold">Estado<select className={field} value={form.estado} onChange={e=>change("estado",e.target.value)}><option value="aprobada">Visible en la web</option><option value="pendiente">Pendiente / ocultar</option><option value="rechazada">Rechazada / ocultar</option></select></label>
       </div>
     </details>
-    {(fotoPreview||fotoUrl) && !quitarFoto && <div className="flex justify-center"><div onPointerDown={e=>beginImageDrag(e,"logo")} onPointerMove={moveImageDrag} onPointerUp={endImageDrag} onPointerCancel={endImageDrag} className="h-36 w-36 touch-none cursor-grab overflow-hidden rounded-full border-4 border-white bg-white shadow-md active:cursor-grabbing" style={{transform:`scale(${logoFrameScale/100})`}}><img draggable={false} src={fotoPreview||fotoUrl} alt={"Vista previa de la foto de perfil de "+penya.nombre} style={{objectPosition:`${logoX}% ${logoY}%`,transform:`translate(${(logoX-50)*1.2}%,${(logoY-50)*1.2}%) scale(${logoZoom/100})`}} className="h-full w-full select-none bg-white object-cover"/></div></div>}
-    <details className="rounded-xl border border-border bg-background px-3 py-2"><summary className="cursor-pointer text-xs font-bold text-muted-foreground">Ajustar encuadre de la foto de perfil (opcional)</summary><div className="mt-3"><div className="grid gap-3 rounded-xl border border-primary/15 bg-primary/[.035] p-3 sm:grid-cols-2"><p className="text-xs font-extrabold text-primary sm:col-span-2">Encuadre de la foto de perfil · independiente del logo de la tarjeta</p><label className="block space-y-1 text-xs font-semibold">Tamaño del círculo · {logoFrameScale}%<input type="range" min="70" max="140" value={logoFrameScale} onChange={e=>setLogoFrameScale(Number(e.target.value))} className="w-full accent-primary"/></label><label className="block space-y-1 text-xs font-semibold">Escala de imagen · {logoZoom}%<input type="range" min="70" max="200" value={logoZoom} onChange={e=>setLogoZoom(Number(e.target.value))} className="w-full accent-primary"/></label><p className="self-center text-xs text-muted-foreground sm:col-span-2">Arrastra la foto directamente dentro del círculo para centrarla y recolocarla.</p><button type="button" onClick={()=>{setLogoZoom(100);setLogoX(50);setLogoY(50);setLogoFrameScale(100);}} className="self-end rounded-full border px-3 py-2 text-xs font-bold">Restablecer foto de perfil</button><p className="text-[10px] text-muted-foreground sm:col-span-2">Se guarda al pulsar «Guardar ficha». El círculo y el tamaño de la ficha se mantienen; solo cambia el encuadre de la imagen.</p></div></div></details>
+    {(fotoPreview||fotoUrl) && !quitarFoto && <div className="flex justify-center"><div onPointerDown={e=>beginImageDrag(e,"logo")} onPointerMove={moveImageDrag} onPointerUp={endImageDrag} onPointerCancel={endImageDrag} className="h-36 w-36 touch-none cursor-grab overflow-hidden rounded-full border-4 border-white bg-white shadow-md active:cursor-grabbing"><img draggable={false} src={fotoPreview||fotoUrl} alt={"Vista previa de la foto de perfil de "+penya.nombre} style={getPenyaPhotoImageStyle({zoom:logoZoom,x:logoX,y:logoY})} className="h-full w-full select-none bg-white object-cover"/></div></div>}
+    <details className="rounded-xl border border-border bg-background px-3 py-2"><summary className="cursor-pointer text-xs font-bold text-muted-foreground">Ajustar encuadre de la foto de perfil (opcional)</summary><div className="mt-3"><div className="grid gap-3 rounded-xl border border-primary/15 bg-primary/[.035] p-3 sm:grid-cols-2"><p className="text-xs font-extrabold text-primary sm:col-span-2">Encuadre de la foto de perfil · se aplica igual en el mapa y en la ficha</p><label className="block space-y-1 text-xs font-semibold">Escala de imagen · {logoZoom}%<input type="range" min="70" max="200" value={logoZoom} onChange={e=>setLogoZoom(Number(e.target.value))} className="w-full accent-primary"/></label><p className="self-center text-xs text-muted-foreground sm:col-span-2">Arrastra la foto dentro del círculo para recolocarla. El mismo encuadre se utiliza en el mapa y en la ficha pública.</p><button type="button" onClick={()=>{setLogoZoom(100);setLogoX(50);setLogoY(50);setLogoFrameScale(100);}} className="self-end rounded-full border px-3 py-2 text-xs font-bold">Restablecer foto de perfil</button><p className="text-[10px] text-muted-foreground sm:col-span-2">Se guarda al pulsar «Guardar ficha». El encuadre se sincroniza en todos los círculos de esta peña.</p></div></div></details>
     <div className="space-y-2"><p className="text-sm font-semibold">Cambiar fotografía (JPG, PNG o WEBP, máx. 5 MB)</p><div className="grid grid-cols-1 gap-2 sm:grid-cols-2"><label className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-primary/20 bg-background px-3 py-2 text-center text-xs font-bold text-primary">▧ Elegir de la galería<input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setFoto(e.target.files?.[0]??null)} /></label><label className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-primary/20 bg-background px-3 py-2 text-center text-xs font-bold text-primary">◎ Hacer una foto<input className="sr-only" type="file" accept="image/*" capture="environment" onChange={e=>setFoto(e.target.files?.[0]??null)} /></label></div>{foto&&<p className="text-xs text-muted-foreground">Imagen seleccionada: {foto.name}</p>}</div>
     {fotoUrl && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={quitarFoto} onChange={e=>setQuitarFoto(e.target.checked)} /> Quitar fotografía actual</label>}
     <section className="space-y-4 rounded-2xl border border-border/70 bg-white/55 p-4 sm:p-5">
