@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { uploadMediaFile } from "@/lib/media-upload";
 import FestMap from "@/components/FestMap";
 import { getPenyaPhotoImageStyle } from "@/lib/penya-photo";
-import { getSeededPenyaAwards2026 } from "@/content/penya-awards-2026";
 
 const field = "w-full rounded-xl border border-input bg-background px-3 py-2 text-sm";
 
@@ -53,9 +52,6 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
   const [error, setError] = useState("");
   type ProfileBlock = { id: string; type: "text" | "photo" | "banner" | "video" | "link" | "highlight" | "list" | "tag"; title: string; content: string; url: string; featured?: boolean; zoom?: number; positionX?: number; positionY?: number; height?: number; colorStart?: string; colorEnd?: string };
   const [blocks, setBlocks] = useState<ProfileBlock[]>([]);
-  type PenyaAward = { id: string; position: string; category: string; year: string };
-  const [awards, setAwards] = useState<PenyaAward[]>([]);
-  const [awardsLoading, setAwardsLoading] = useState(true);
 
   const [aceptaVisitas, setAceptaVisitas] = useState(false);
   const [visitasLoading, setVisitasLoading] = useState(true);
@@ -70,12 +66,6 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
       if (!active) return;
       if (!error) { try { const settings = JSON.parse(data?.valor || "{}"); setAceptaVisitas(settings?.[penya.id] === true); } catch { setAceptaVisitas(false); } }
       setVisitasLoading(false);
-    });
-    supabase.from("site_content").select("valor").eq("clave", "penyes_premios_json").maybeSingle().then(({ data, error }) => {
-      if (!active) return;
-      if (!error) { try { const all = JSON.parse(data?.valor || "{}"); const saved = all?.[penya.id]; setAwards(Array.isArray(saved) ? saved.map((item:any)=>({id:String(item.id||crypto.randomUUID()),position:String(item.position||"1.º"),category:String(item.category||""),year:String(item.year||"2026")})) : getSeededPenyaAwards2026(penya.nombre)); } catch { setAwards([]); } }
-      else setBlocksMessage("No se han podido cargar los premios: " + error.message);
-      setAwardsLoading(false);
     });
     supabase.from("site_content").select("valor").eq("clave", "penyes_perfiles_json").maybeSingle().then(({ data, error }) => {
       if (!active) return;
@@ -146,14 +136,6 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
       });
       const { error: writeError } = await supabase.from("site_content").upsert({ clave: "penyes_perfiles_json", valor: JSON.stringify(all) });
       if (writeError) throw writeError;
-      const { data: awardsData, error: awardsReadError } = await supabase.from("site_content").select("valor").eq("clave", "penyes_premios_json").maybeSingle();
-      if (awardsReadError) throw awardsReadError;
-      let allAwards: Record<string, PenyaAward[]> = {};
-      try { const parsed = JSON.parse(awardsData?.valor || "{}"); if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) allAwards = parsed; } catch { allAwards = {}; }
-      allAwards[penya.id] = awards.filter(item => item.category.trim() && item.position.trim() && /^20\d{2}$/.test(item.year) && Number(item.year)>=2026).map(item => ({...item, position:item.position.trim().slice(0,12), category:item.category.trim().slice(0,60), year:item.year}));
-      const { error: awardsWriteError } = await supabase.from("site_content").upsert({ clave: "penyes_premios_json", valor: JSON.stringify(allAwards) });
-      if (awardsWriteError) throw awardsWriteError;
-
       setBlocksMessage("Apartados personalizados guardados.");
       return true;
     } catch (err) { setBlocksMessage("No se han podido guardar los apartados: " + (err instanceof Error ? err.message : String(err))); return false; }
@@ -241,17 +223,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     <details className="rounded-xl border border-border bg-background px-3 py-2"><summary className="cursor-pointer text-xs font-bold text-muted-foreground">Ajustar encuadre de la foto de perfil (opcional)</summary><div className="mt-3"><div className="grid gap-3 rounded-xl border border-primary/15 bg-primary/[.035] p-3 sm:grid-cols-2"><p className="text-xs font-extrabold text-primary sm:col-span-2">Encuadre de la foto de perfil · se aplica igual en el mapa y en la ficha</p><label className="block space-y-1 text-xs font-semibold">Escala de imagen · {logoZoom}%<input type="range" min="25" max="400" value={logoZoom} onChange={e=>setLogoZoom(Number(e.target.value))} className="w-full accent-primary"/></label><p className="self-center text-xs text-muted-foreground sm:col-span-2">Arrastra la foto dentro del círculo para recolocarla. El mismo encuadre se utiliza en el mapa y en la ficha pública.</p><button type="button" onClick={()=>{setLogoZoom(100);setLogoX(50);setLogoY(50);}} className="self-end rounded-full border px-3 py-2 text-xs font-bold">Restablecer foto de perfil</button><p className="text-[10px] text-muted-foreground sm:col-span-2">Se guarda al pulsar «Guardar ficha». El encuadre se sincroniza en todos los círculos de esta peña.</p></div></div></details>
     <div className="space-y-2"><p className="text-sm font-semibold">Cambiar fotografía (JPG, PNG o WEBP, máx. 5 MB)</p><div className="grid grid-cols-1 gap-2 sm:grid-cols-2"><label className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-primary/20 bg-background px-3 py-2 text-center text-xs font-bold text-primary">▧ Elegir de la galería<input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setFoto(e.target.files?.[0]??null)} /></label><label className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-primary/20 bg-background px-3 py-2 text-center text-xs font-bold text-primary">◎ Hacer una foto<input className="sr-only" type="file" accept="image/*" capture="environment" onChange={e=>setFoto(e.target.files?.[0]??null)} /></label></div>{foto&&<p className="text-xs text-muted-foreground">Imagen seleccionada: {foto.name}</p>}</div>
     {fotoUrl && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={quitarFoto} onChange={e=>setQuitarFoto(e.target.checked)} /> Quitar fotografía actual</label>}
-    <section className="space-y-3 rounded-2xl border border-[#e6ce91]/70 bg-[#fffaf0] p-4 sm:p-5">
-      <div><h4 className="text-base font-extrabold text-[#765c25]">Premios de la peña</h4><p className="mt-1 text-xs text-[#806f4c]">Palmarés oficial de la peña. Se han precargado los resultados confirmados de 2026; puedes corregirlos o completar los certámenes pendientes. En la ficha pública se muestra el año más reciente con premios.</p></div>
-      {awards.map((award,index)=><div key={award.id} className="grid grid-cols-1 items-end gap-2 rounded-xl border border-[#e6ce91]/60 bg-white/80 p-3 sm:grid-cols-[.8fr_1.4fr_.8fr_auto]">
-        <label className="block space-y-1 text-xs font-semibold text-[#765c25]">Puesto<input className={field} maxLength={12} value={award.position} onChange={e=>setAwards(old=>old.map(item=>item.id===award.id?{...item,position:e.target.value}:item))} placeholder="1.º"/></label>
-        <label className="block space-y-1 text-xs font-semibold text-[#765c25]">Modalidad<input className={field} maxLength={60} value={award.category} onChange={e=>setAwards(old=>old.map(item=>item.id===award.id?{...item,category:e.target.value}:item))} placeholder="Desfile, paellas, playback…"/></label>
-        <label className="block space-y-1 text-xs font-semibold text-[#765c25]">Año<input className={field} inputMode="numeric" maxLength={4} value={award.year} onChange={e=>setAwards(old=>old.map(item=>item.id===award.id?{...item,year:e.target.value.replace(/[^0-9]/g,"").slice(0,4)}:item))} placeholder="2026"/></label>
-        <button type="button" onClick={()=>setAwards(old=>old.filter(item=>item.id!==award.id))} className="min-h-10 rounded-xl border border-red-200 px-3 py-2 text-xs font-bold text-red-700">Eliminar</button>
-      </div>)}
-      <button type="button" onClick={()=>setAwards(old=>[...old,{id:crypto.randomUUID(),position:"1.º",category:"",year:"2026"}])} className="min-h-10 rounded-full border border-[#d9bd78] bg-white px-4 py-2 text-xs font-extrabold text-[#765c25]">＋ Añadir premio</button>
-      <p className="text-[10px] text-[#806f4c]">Al registrar premios de un año nuevo, la ficha pasará a mostrar ese año y dejará de mostrar los anteriores. Los datos anteriores se conservan por si necesitas consultarlos o corregirlos.</p>
-    </section>
+ion>
     <section className="space-y-4 rounded-2xl border border-border/70 bg-white/55 p-4 sm:p-5">
       <div><h4 className="text-base font-extrabold">Contenido de la ficha</h4><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Añade solo lo que quieras mostrar. Los apartados se pueden abrir para editarlos y se publican en el mismo orden.</p></div>
       {blocksLoading ? <p className="text-sm text-muted-foreground">Cargando apartados…</p> : <>
@@ -280,6 +252,6 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
       </>}
     </section>
     {error && <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
-    <button disabled={busy||blocksLoading||awardsLoading} className="glass-btn w-full rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground disabled:opacity-50">{blocksLoading?"Cargando ficha…":busy ? "Guardando ficha…" : "Guardar ficha completa"}</button>
+    <button disabled={busy||blocksLoading} className="glass-btn w-full rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground disabled:opacity-50">{blocksLoading?"Cargando ficha…":busy ? "Guardando ficha…" : "Guardar ficha completa"}</button>
   </form>;
 }
