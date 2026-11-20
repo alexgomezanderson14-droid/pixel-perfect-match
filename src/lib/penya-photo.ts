@@ -8,7 +8,7 @@ export function getPenyaPhotoImageStyle(settings: PenyaPhotoCrop = {}) {
   return {
     objectPosition: `${x}% ${y}%`,
     transform: `scale(${zoom / 100})`,
-    transformOrigin: "center center",
+    transformOrigin: `${x}% ${y}%`,
   } as const;
 }
 
