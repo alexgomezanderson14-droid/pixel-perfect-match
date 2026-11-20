@@ -426,7 +426,7 @@ function Home() {
   const [now, setNow] = useState(() => Date.now());
   const [selectedPenya, setSelectedPenya] = useState<PenyaDb | null>(null);
   const selectedPenyaFoto = selectedPenya?.foto || "";
-  const selectedPenyaLogo = (selectedPenya as { logo_url?: string } | null)?.logo_url || selectedPenyaFoto;
+  const selectedPenyaLogo = selectedPenyaFoto;
   const [penyaDetailFullscreen, setPenyaDetailFullscreen] = useState(false);
   const [mapPenyaPreview, setMapPenyaPreview] = useState(false);
   const [penyaGalleryOpen, setPenyaGalleryOpen] = useState(false);
@@ -744,7 +744,7 @@ function Home() {
       .map((p:any) => {
         const fotoUrl = typeof p.foto_url === "string" ? p.foto_url.trim() : "";
         const foto = fotoUrl ? (fotoUrl.startsWith("http") ? fotoUrl : supabase.storage.from("penyes").getPublicUrl(fotoUrl).data.publicUrl) : "";
-        return { ...p, id: String(p.id), nombre: String(p.nombre).trim(), foto, direccion: p.direccion ?? "", tipo_musica: p.tipo_musica ?? "Variada", instagram: p.instagram ?? "", informacion: p.informacion ?? "" };
+        const catalogoOriginal=catalogoPenyesHistorico.find((item)=>claveCatalogoPenya(item.nombre)===claveCatalogoPenya(p.nombre));return { ...p, id: String(p.id), nombre: String(p.nombre).trim(), foto, direccion: p.direccion ?? "", tipo_musica: p.tipo_musica ?? "Variada", instagram: p.instagram ?? "", informacion: p.informacion ?? "", asociada: catalogoOriginal?.asociada ?? true, color: catalogoOriginal?.color };
       });
     const nombresExistentes = new Set(penyesExistentes.map((p:any) => claveCatalogoPenya(p.nombre)));
     const penyesCatalogo = catalogoPenyesHistorico
