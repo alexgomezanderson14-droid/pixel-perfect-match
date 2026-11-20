@@ -125,7 +125,7 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
       });
       const keptBlocks = updatedBlocks.filter((item: any) => item !== null);
       for (const block of blocks) {
-        if (!existingUrls.has(block.url)) updatedBlocks.push({
+        if (!existingUrls.has(block.url)) keptBlocks.push({
           id: block.id, type: "photo", title: block.title, content: "", url: block.url,
           zoom: block.zoom, positionX: block.positionX, positionY: block.positionY, featured: block.featured,
         });
