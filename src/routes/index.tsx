@@ -416,12 +416,12 @@ function Home() {
   const [siteContent, setSiteContent] = useState<Record<string,string>>({});
   const penyaCardSettings = useMemo(()=>{try{const parsed=JSON.parse(siteContent["penyas_cards_json"]||"{}");return parsed&&typeof parsed==="object"?parsed as Record<string,{color?:string;logo_url?:string;title?:string;description?:string;logo_scale?:number;logo_x?:number;logo_y?:number}>:{ };}catch{return {}; }},[siteContent]);
   const penyaProfileLogoSettings = useMemo(()=>{try{const parsed=JSON.parse(siteContent["penyes_logos_ficha_json"]||"{}");return parsed&&typeof parsed==="object"?parsed as Record<string,{zoom?:number;x?:number;y?:number;frameScale?:number}>:{ };}catch{return {}; }},[siteContent]);
-  const selectedPenyaLogo = selectedPenya ? (penyaCardSettings[selectedPenya.id]?.logo_url || selectedPenya.foto || "") : "";
   const [heroImage, setHeroImage] = useState("");
   const [form, setForm] = useState(false);
   const [shareReminder, setShareReminder] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [selectedPenya, setSelectedPenya] = useState<PenyaDb | null>(null);
+  const selectedPenyaLogo = selectedPenya ? (penyaCardSettings[selectedPenya.id]?.logo_url || selectedPenya.foto || "") : "";
   const [penyaDetailFullscreen, setPenyaDetailFullscreen] = useState(false);
   const [mapPenyaPreview, setMapPenyaPreview] = useState(false);
   const [penyaGalleryOpen, setPenyaGalleryOpen] = useState(false);
