@@ -762,6 +762,19 @@ html, body, #root { min-width:0; max-width:100%; }
 }
 
 
-/* Recuperar las ilustraciones originales del atlas sin redibujarlas. */
-.penya-award-art{inset:0;background-size:500% 400%;background-repeat:no-repeat;background-position:0 0;image-rendering:auto;transform:translateZ(0);backface-visibility:hidden;}
-.penya-award-insignia{overflow:visible;}
+/* Insignias originales: margen de seguridad para que ningún borde quede cortado. */
+.penya-award-art{
+ position:absolute;
+ inset:6%;
+ background-size:500% 400%;
+ background-repeat:no-repeat;
+ background-position:0 0;
+ background-origin:content-box;
+ background-clip:content-box;
+ image-rendering:auto;
+ filter:saturate(1.1) contrast(1.045);
+ transform:translateZ(0);
+ backface-visibility:hidden;
+ will-change:transform;
+}
+.penya-award-insignia{overflow:visible;contain:paint;}
