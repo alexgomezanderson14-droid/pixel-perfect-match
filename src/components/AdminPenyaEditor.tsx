@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadMediaFile } from "@/lib/media-upload";
+import FestMap from "@/components/FestMap";
 
 const field = "w-full rounded-xl border border-input bg-background px-3 py-2 text-sm";
 
@@ -8,14 +9,13 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
   const [form, setForm] = useState({
     nombre: penya.nombre ?? "",
     direccion: penya.direccion ?? "",
-    lat: penya.lat == null ? "" : String(penya.lat),
-    lng: penya.lng == null ? "" : String(penya.lng),
     tipo_musica: penya.tipo_musica ?? "Variada",
     instagram: penya.instagram ?? "",
     informacion: penya.informacion ?? "",
     estado: penya.estado ?? "aprobada",
     tiene_evento: Boolean(penya.tiene_evento),
   });
+  const [mapPick, setMapPick] = useState<{ lat: number; lng: number } | null>(penya.lat != null && penya.lng != null ? { lat: Number(penya.lat), lng: Number(penya.lng) } : null);
   const [foto, setFoto] = useState<File | null>(null);
   const [fotoPreview,setFotoPreview]=useState("");
   useEffect(()=>{if(!foto){setFotoPreview("");return;}const url=URL.createObjectURL(foto);setFotoPreview(url);return()=>URL.revokeObjectURL(url);},[foto]);
@@ -142,13 +142,9 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     if (foto && (!["image/jpeg", "image/png", "image/webp"].includes(foto.type) || foto.size > 5 * 1024 * 1024)) {
       return setError("La foto debe ser JPG, PNG o WEBP y no superar 5 MB.");
     }
-    // La ubicación es opcional. Si no se han indicado coordenadas, conserva las existentes
-    // (o null en las peñas nuevas que todavía no tienen un punto en el mapa).
-    const lat = form.lat.trim() === "" ? (penya.lat == null ? null : Number(penya.lat)) : Number(form.lat.replace(",", "."));
-    const lng = form.lng.trim() === "" ? (penya.lng == null ? null : Number(penya.lng)) : Number(form.lng.replace(",", "."));
-    if ((lat === null) !== (lng === null)) return setError("Indica las dos coordenadas o deja ambas vacías.");
-    if (lat !== null && lng !== null && (!Number.isFinite(lat) || !Number.isFinite(lng))) return setError("Indica una latitud y longitud válidas para el mapa.");
-    if (lat !== null && lng !== null && (lat < -90 || lat > 90 || lng < -180 || lng > 180)) return setError("Coordenadas fuera de rango. La latitud debe estar entre -90 y 90 y la longitud entre -180 y 180.");
+    // La ubicación se selecciona directamente en el mapa; si no hay marcador, queda sin ubicación.
+    const lat = mapPick?.lat ?? null;
+    const lng = mapPick?.lng ?? null;
     setBusy(true);
     try {
       const { data: visitsData, error: visitsReadError } = await supabase.from("site_content").select("valor").eq("clave", "penyes_visitas_json").maybeSingle();
@@ -202,7 +198,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     <div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-extrabold uppercase tracking-[.16em] text-muted-foreground">Ficha de peña</p><h3 className="text-lg font-bold">Editar {penya.nombre}</h3></div><button type="button" onClick={onCancel} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Cancelar</button></div>
     <label className="block space-y-1 text-sm font-semibold">Nombre de la peña<input className={field} maxLength={80} value={form.nombre} onChange={e=>change("nombre",e.target.value)} required /></label>
     <label className="block space-y-1 text-sm font-semibold">Dirección / ubicación<input className={field} maxLength={200} value={form.direccion} onChange={e=>change("direccion",e.target.value)} /></label>
-    <details className="rounded-xl border border-border bg-background px-3 py-2"><summary className="cursor-pointer text-xs font-bold text-muted-foreground">Opciones avanzadas · Coordenadas del mapa</summary><div className="mt-3"><div className="grid grid-cols-2 gap-2"><label className="text-sm font-semibold">Latitud<input className={field} value={form.lat} onChange={e=>change("lat",e.target.value)} placeholder="38.58..." /></label><label className="text-sm font-semibold">Longitud<input className={field} value={form.lng} onChange={e=>change("lng",e.target.value)} placeholder="-0.10..." /></label></div></div></details>
+    <section className="space-y-2 rounded-2xl border border-border/70 bg-background p-3"><div className="flex items-center justify-between gap-2"><div><p className="text-sm font-bold">Ubicación en el mapa</p><p className="text-xs text-muted-foreground">Pulsa sobre el mapa para colocar el marcador o arrástralo para ajustar el punto.</p></div><button type="button" onClick={()=>setMapPick(null)} disabled={!mapPick} className="shrink-0 rounded-full border px-3 py-2 text-xs font-bold disabled:opacity-40">Quitar ubicación</button></div><div className="h-64 overflow-hidden rounded-xl border border-border sm:h-80"><FestMap lugares={[]} pick={mapPick} onPick={(lat,lng)=>setMapPick({lat,lng})}/></div><p className="text-xs text-muted-foreground">{mapPick ? `Ubicación seleccionada: ${mapPick.lat.toFixed(6)}, ${mapPick.lng.toFixed(6)}` : "Esta peña no tiene ubicación. Selecciona un punto en el mapa si quieres que aparezca en él."}</p></section>
     <details className="rounded-2xl border border-border/70 bg-white/45 px-4 py-3">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-bold"><span>Más información y visibilidad</span><span className="text-xs text-muted-foreground">Opcional ⌄</span></summary>
       <div className="mt-4 space-y-4">
@@ -214,8 +210,8 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     <label className="block space-y-1 text-sm font-semibold">Estado<select className={field} value={form.estado} onChange={e=>change("estado",e.target.value)}><option value="aprobada">Visible en la web</option><option value="pendiente">Pendiente / ocultar</option><option value="rechazada">Rechazada / ocultar</option></select></label>
       </div>
     </details>
-    {(fotoPreview||fotoUrl) && !quitarFoto && <div className="flex justify-center"><div onPointerDown={e=>beginImageDrag(e,"logo")} onPointerMove={moveImageDrag} onPointerUp={endImageDrag} onPointerCancel={endImageDrag} className="h-36 w-36 touch-none cursor-grab overflow-hidden rounded-full border-4 border-white bg-white shadow-md active:cursor-grabbing" style={{transform:`scale(${logoFrameScale/100})`}}><img draggable={false} src={fotoPreview||fotoUrl} alt={"Vista previa del logo de "+penya.nombre} style={{objectPosition:`${logoX}% ${logoY}%`,transform:`translate(${(logoX-50)*1.2}%,${(logoY-50)*1.2}%) scale(${logoZoom/100})`}} className="h-full w-full select-none bg-white object-contain"/></div></div>}
-    <details className="rounded-xl border border-border bg-background px-3 py-2"><summary className="cursor-pointer text-xs font-bold text-muted-foreground">Ajustar encuadre del logo (opcional)</summary><div className="mt-3"><div className="grid gap-3 rounded-xl border border-primary/15 bg-primary/[.035] p-3 sm:grid-cols-2"><p className="text-xs font-extrabold text-primary sm:col-span-2">Encuadre del logo circular de la ficha · independiente de la tarjeta</p><label className="block space-y-1 text-xs font-semibold">Tamaño del círculo · {logoFrameScale}%<input type="range" min="70" max="140" value={logoFrameScale} onChange={e=>setLogoFrameScale(Number(e.target.value))} className="w-full accent-primary"/></label><label className="block space-y-1 text-xs font-semibold">Escala de imagen · {logoZoom}%<input type="range" min="70" max="200" value={logoZoom} onChange={e=>setLogoZoom(Number(e.target.value))} className="w-full accent-primary"/></label><p className="self-center text-xs text-muted-foreground sm:col-span-2">Arrastra el logo directamente dentro del círculo para centrarlo y recolocarlo.</p><button type="button" onClick={()=>{setLogoZoom(100);setLogoX(50);setLogoY(50);setLogoFrameScale(100);}} className="self-end rounded-full border px-3 py-2 text-xs font-bold">Restablecer logo</button><p className="text-[10px] text-muted-foreground sm:col-span-2">Se guarda al pulsar «Guardar ficha». El círculo y el tamaño de la ficha se mantienen; solo cambia el encuadre de la imagen.</p></div></div></details>
+    {(fotoPreview||fotoUrl) && !quitarFoto && <div className="flex justify-center"><div onPointerDown={e=>beginImageDrag(e,"logo")} onPointerMove={moveImageDrag} onPointerUp={endImageDrag} onPointerCancel={endImageDrag} className="h-36 w-36 touch-none cursor-grab overflow-hidden rounded-full border-4 border-white bg-white shadow-md active:cursor-grabbing" style={{transform:`scale(${logoFrameScale/100})`}}><img draggable={false} src={fotoPreview||fotoUrl} alt={"Vista previa de la foto de perfil de "+penya.nombre} style={{objectPosition:`${logoX}% ${logoY}%`,transform:`translate(${(logoX-50)*1.2}%,${(logoY-50)*1.2}%) scale(${logoZoom/100})`}} className="h-full w-full select-none bg-white object-cover"/></div></div>}
+    <details className="rounded-xl border border-border bg-background px-3 py-2"><summary className="cursor-pointer text-xs font-bold text-muted-foreground">Ajustar encuadre de la foto de perfil (opcional)</summary><div className="mt-3"><div className="grid gap-3 rounded-xl border border-primary/15 bg-primary/[.035] p-3 sm:grid-cols-2"><p className="text-xs font-extrabold text-primary sm:col-span-2">Encuadre de la foto de perfil · independiente del logo de la tarjeta</p><label className="block space-y-1 text-xs font-semibold">Tamaño del círculo · {logoFrameScale}%<input type="range" min="70" max="140" value={logoFrameScale} onChange={e=>setLogoFrameScale(Number(e.target.value))} className="w-full accent-primary"/></label><label className="block space-y-1 text-xs font-semibold">Escala de imagen · {logoZoom}%<input type="range" min="70" max="200" value={logoZoom} onChange={e=>setLogoZoom(Number(e.target.value))} className="w-full accent-primary"/></label><p className="self-center text-xs text-muted-foreground sm:col-span-2">Arrastra el logo directamente dentro del círculo para centrarlo y recolocarlo.</p><button type="button" onClick={()=>{setLogoZoom(100);setLogoX(50);setLogoY(50);setLogoFrameScale(100);}} className="self-end rounded-full border px-3 py-2 text-xs font-bold">Restablecer foto de perfil</button><p className="text-[10px] text-muted-foreground sm:col-span-2">Se guarda al pulsar «Guardar ficha». El círculo y el tamaño de la ficha se mantienen; solo cambia el encuadre de la imagen.</p></div></div></details>
     <div className="space-y-2"><p className="text-sm font-semibold">Cambiar fotografía (JPG, PNG o WEBP, máx. 5 MB)</p><div className="grid grid-cols-1 gap-2 sm:grid-cols-2"><label className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-primary/20 bg-background px-3 py-2 text-center text-xs font-bold text-primary">▧ Elegir de la galería<input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setFoto(e.target.files?.[0]??null)} /></label><label className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-primary/20 bg-background px-3 py-2 text-center text-xs font-bold text-primary">◎ Hacer una foto<input className="sr-only" type="file" accept="image/*" capture="environment" onChange={e=>setFoto(e.target.files?.[0]??null)} /></label></div>{foto&&<p className="text-xs text-muted-foreground">Imagen seleccionada: {foto.name}</p>}</div>
     {fotoUrl && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={quitarFoto} onChange={e=>setQuitarFoto(e.target.checked)} /> Quitar fotografía actual</label>}
     <section className="space-y-4 rounded-2xl border border-border/70 bg-white/55 p-4 sm:p-5">
