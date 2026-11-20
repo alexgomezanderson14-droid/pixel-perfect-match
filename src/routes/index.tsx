@@ -474,7 +474,8 @@ function Home() {
     const index=visiblePenyes.findIndex(p=>String(p.id)===String(mayoralesPenyaId));
     return index>0?[visiblePenyes[index],...visiblePenyes.slice(0,index),...visiblePenyes.slice(index+1)]:visiblePenyes;
   },[visiblePenyes,searchingPenyes,mayoralesPenyaId]);
-  const loopedPenyes = !searchingPenyes && carouselPenyes.length > 1 ? [...carouselPenyes,...carouselPenyes,...carouselPenyes,...carouselPenyes,...carouselPenyes] : [...carouselPenyes];
+  // Una sola lista real: evita copias invisibles, saltos de índice y recentrados durante el gesto.
+  const loopedPenyes = carouselPenyes;
   // Calcula el centro usando la geometría real del layout, no getBoundingClientRect:
   // las transformaciones del coverflow no deben alterar qué tarjeta considera centrada.
   const centerPenyaCard=useCallback((index:number,behavior:ScrollBehavior="auto")=>{
@@ -484,33 +485,35 @@ function Home() {
     el.scrollTo({left:card.offsetLeft-(el.clientWidth-card.offsetWidth)/2,behavior});
   },[]);
   const handlePenyaCarouselScroll=(el:HTMLDivElement)=>{
-    if(searchingPenyes){setActivePenyaCard(0);return;}
     if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);
     penyaScrollFrameRef.current=requestAnimationFrame(()=>{
-      const count=visiblePenyes.length;
-      if(count<=1){setActivePenyaCard(0);penyaScrollFrameRef.current=null;return;}
+      const cards=Array.from(el.children) as HTMLElement[];
+      if(!cards.length){setActivePenyaCard(0);penyaScrollFrameRef.current=null;return;}
       const center=el.scrollLeft+el.clientWidth/2;
       let nearest=0;
       let distance=Number.POSITIVE_INFINITY;
-      Array.from(el.children).forEach((child,index)=>{
-        const card=child as HTMLElement;
+      cards.forEach((card,index)=>{
         const d=Math.abs(card.offsetLeft+card.offsetWidth/2-center);
         if(d<distance){distance=d;nearest=index;}
       });
-      // Mantiene el desplazamiento dentro de las copias centrales sin saltos
-      // provocados por el tamaño/rotación visual de las tarjetas vecinas.
-      if(nearest<count*2||nearest>=count*4){
-        const normalized=((nearest%count)+count)%count;
-        const targetIndex=normalized+count*2;
-        const target=el.children[targetIndex] as HTMLElement|undefined;
-        if(target)el.scrollLeft=target.offsetLeft-(el.clientWidth-target.offsetWidth)/2;
-        nearest=targetIndex;
-      }
       setActivePenyaCard(current=>current===nearest?current:nearest);
       penyaScrollFrameRef.current=null;
     });
   };
-  useEffect(()=>{if(currentPage!=="penyes"||!visiblePenyes.length){setPenyaCarouselInitialized(false);return;}if(searchingPenyes){setActivePenyaCard(0);setPenyaCarouselInitialized(true);return;}setPenyaCarouselInitialized(false);const mayoralesIndex=carouselPenyes.findIndex(p=>Boolean(mayoralesPenyaId)&&String(p.id)===String(mayoralesPenyaId));const middle=(carouselPenyes.length>1?carouselPenyes.length*2:0)+Math.max(0,mayoralesIndex);setActivePenyaCard(middle);let secondFrame=0;const firstFrame=requestAnimationFrame(()=>{secondFrame=requestAnimationFrame(()=>{const el=penyaCarouselRef.current;const card=el?.children[middle] as HTMLElement|undefined;if(el&&card){const delta=card.getBoundingClientRect().left-el.getBoundingClientRect().left;el.scrollTo({left:el.scrollLeft+delta-(el.clientWidth-card.clientWidth)/2,behavior:"auto"});}setPenyaCarouselInitialized(true);});});return()=>{cancelAnimationFrame(firstFrame);if(secondFrame)cancelAnimationFrame(secondFrame);};},[currentPage,carouselPenyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,mayoralesPenyaId,misPenyes,searchingPenyes]);
+  useEffect(()=>{
+    if(currentPage!=="penyes"||!visiblePenyes.length){setPenyaCarouselInitialized(false);return;}
+    setPenyaCarouselInitialized(false);
+    const initialIndex=searchingPenyes?0:Math.max(0,carouselPenyes.findIndex(p=>Boolean(mayoralesPenyaId)&&String(p.id)===String(mayoralesPenyaId)));
+    setActivePenyaCard(initialIndex);
+    let secondFrame=0;
+    const firstFrame=requestAnimationFrame(()=>{
+      secondFrame=requestAnimationFrame(()=>{
+        centerPenyaCard(initialIndex,"auto");
+        setPenyaCarouselInitialized(true);
+      });
+    });
+    return()=>{cancelAnimationFrame(firstFrame);if(secondFrame)cancelAnimationFrame(secondFrame);};
+  },[currentPage,searchingPenyes,carouselPenyes,mayoralesPenyaId,centerPenyaCard]);
   useEffect(()=>{if(!penyaCarouselInitialized)return;const handleResize=()=>centerPenyaCard(activePenyaCard);window.addEventListener("resize",handleResize,{passive:true});return()=>window.removeEventListener("resize",handleResize);},[penyaCarouselInitialized,activePenyaCard,centerPenyaCard]);
   useEffect(()=>()=>{if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);},[]);
   const visibleNews = useMemo(()=>noticias.filter((n:any)=>n.publicado&&(!newsSearch.trim()||normalizarBusqueda([n.titulo,n.resumen,n.contenido,n.autor,n.fuente].join(" ")).includes(normalizarBusqueda(newsSearch)))).slice().sort((x:any,y:any)=>new Date(String(y.fecha||y.created_at||"").slice(0,10)+"T12:00:00").getTime()-new Date(String(x.fecha||x.created_at||"").slice(0,10)+"T12:00:00").getTime()),[noticias,newsSearch]);
@@ -1215,7 +1218,7 @@ function Home() {
             <div className="relative mx-auto w-full max-w-[1180px] lg:max-w-none">
               {visiblePenyes.length>1&&!searchingPenyes&&<button type="button" aria-label="Peña anterior" onClick={()=>{const next=activePenyaCard-1;setActivePenyaCard(next);centerPenyaCard(next,"smooth");}} className="absolute left-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">‹</button>}
               {visiblePenyes.length>1&&!searchingPenyes&&<button type="button" aria-label="Peña siguiente" onClick={()=>{const next=activePenyaCard+1;setActivePenyaCard(next);centerPenyaCard(next,"smooth");}} className="absolute right-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">›</button>}
-              <div ref={penyaCarouselRef} onScroll={(event)=>handlePenyaCarouselScroll(event.currentTarget)} className={searchingPenyes?"relative flex flex-wrap justify-center gap-5 overflow-visible px-2 py-6":"penya-coverflow relative "+(penyaCarouselInitialized?"is-ready":"is-initializing")+" flex snap-x snap-mandatory items-center overflow-x-auto overscroll-x-contain px-[calc(50%-112px)] py-16 sm:px-[calc(50%-130px)] lg:px-[calc(50%-150px)]"}>
+              <div ref={penyaCarouselRef} onScroll={(event)=>handlePenyaCarouselScroll(event.currentTarget)} className={searchingPenyes?"relative flex flex-wrap justify-center gap-5 overflow-visible px-2 py-6":"penya-coverflow relative "+(penyaCarouselInitialized?"is-ready":"is-initializing")+" flex snap-x snap-proximity items-center overflow-x-auto overscroll-x-contain [scrollbar-width:none] px-[calc(50%-112px)] py-16 sm:px-[calc(50%-130px)] lg:px-[calc(50%-150px)]"}>
                 {loopedPenyes.map((p,index)=>{
                   const fallbackColors=["#5968D8","#E45D70","#13A6C3","#19A887","#D28B35","#8559C7","#287DAD","#C45D91"];
                   const cardConfig=penyaCardSettings[p.id]||{};
@@ -1235,7 +1238,7 @@ function Home() {
                   const cardDescription=shortDescription.length>104?shortDescription.slice(0,101).trimEnd()+"…":shortDescription;
                   const offset=index-activePenyaCard;
                   const centered=offset===0;
-                  return <article id={"penya-"+p.id+"-"+index} key={p.id+"-"+index} tabIndex={0} aria-label={`Abrir ficha de ${cardTitle}`} onClick={()=>{setPenyaDetailFullscreen(true);setSelectedPenya(p);}} onKeyDown={(e)=>{if(e.target===e.currentTarget&&(e.key==="Enter"||e.key===" ")){e.preventDefault();setPenyaDetailFullscreen(true);setSelectedPenya(p);}}} style={{backgroundColor:color,zIndex:searchingPenyes?1:30-Math.abs(offset),transform:searchingPenyes?"none":`perspective(1100px) translateY(${centered?-8:Math.min(22,Math.abs(offset)*10)}px) scale(${centered?1.08:Math.max(.68,.88-Math.max(0,Math.abs(offset)-1)*.08)}) rotateY(${offset===0?0:offset<0?13:-13}deg)`,opacity:searchingPenyes?1:Math.abs(offset)>3?.18:Math.max(.35,1-Math.abs(offset)*.18)}} className={`penya-coverflow-card group relative ${searchingPenyes?"is-search-result":centered?"is-active":Math.abs(offset)===1?(offset<0?"is-side is-side-left":"is-side is-side-right"):""} ${!searchingPenyes&&index%Math.max(visiblePenyes.length,1)===0?"is-loop-start":""} h-[320px] w-[224px] shrink-0 snap-center cursor-pointer overflow-visible rounded-[2rem] border border-white/25 shadow-[0_18px_42px_rgba(19,38,53,.18)] outline-none transition-[transform,opacity,filter,box-shadow] duration-500 ease-[cubic-bezier(.2,.75,.25,1)] focus-visible:ring-4 focus-visible:ring-primary/40 ${searchingPenyes?"!transition-none":""} sm:h-[360px] sm:w-[260px] lg:h-[400px] lg:w-[290px]`}>
+                  return <article id={"penya-"+p.id+"-"+index} key={p.id+"-"+index} tabIndex={0} aria-label={`Abrir ficha de ${cardTitle}`} onClick={()=>{setPenyaDetailFullscreen(true);setSelectedPenya(p);}} onKeyDown={(e)=>{if(e.target===e.currentTarget&&(e.key==="Enter"||e.key===" ")){e.preventDefault();setPenyaDetailFullscreen(true);setSelectedPenya(p);}}} style={{backgroundColor:color,zIndex:searchingPenyes?1:30-Math.abs(offset),transform:searchingPenyes?"none":`perspective(1100px) translateY(${centered?-8:Math.min(22,Math.abs(offset)*10)}px) scale(${centered?1.08:Math.max(.68,.88-Math.max(0,Math.abs(offset)-1)*.08)}) rotateY(${offset===0?0:offset<0?13:-13}deg)`,opacity:searchingPenyes?1:Math.abs(offset)>3?.18:Math.max(.35,1-Math.abs(offset)*.18)}} className={`penya-coverflow-card group relative ${searchingPenyes?"is-search-result":centered?"is-active":Math.abs(offset)===1?(offset<0?"is-side is-side-left":"is-side is-side-right"):""} ${!searchingPenyes&&index%Math.max(visiblePenyes.length,1)===0?"is-loop-start":""} h-[320px] w-[224px] shrink-0 snap-center cursor-pointer overflow-visible rounded-[2rem] border border-white/25 shadow-[0_18px_42px_rgba(19,38,53,.18)] outline-none transition-[transform,opacity,filter,box-shadow] duration-150 ease-out focus-visible:ring-4 focus-visible:ring-primary/40 ${searchingPenyes?"!transition-none":""} sm:h-[360px] sm:w-[260px] lg:h-[400px] lg:w-[290px]`}>
                     <div className="absolute inset-0 overflow-hidden rounded-[2rem]">
                       <div className="absolute inset-x-0 top-0 z-10 p-5 sm:p-6">
                         <div className="flex items-start justify-between gap-2">
