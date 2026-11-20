@@ -19,7 +19,7 @@ const seededAwardResults=[
  ["Pensat i Fet","Desfile del Humor",8],
  ["Reflotats","Desfile del Humor",9],
 ] as const;
-const normalizePenyaName=(value:string)=>value.normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLocaleLowerCase("es").replace(/^penya\\s+/,"").replace(/[^a-z0-9]/g,"");
+const normalizePenyaName=(value:string)=>value.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es").replace(/^penya\s+/,"").replace(/[^a-z0-9]/g,"");
 export function getSeededPenyaAwards(penyes:any[]=[]):PenyaAward[]{
  return seededAwardResults.map(([name,competition,position],index)=>{
   const penya=penyes.find(p=>normalizePenyaName(String(p.nombre||""))===normalizePenyaName(name));
