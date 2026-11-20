@@ -631,3 +631,16 @@ nav[aria-label="Navegación principal"] > button > span:first-child svg { width:
  .admin-settings-save > span { max-width:55%; }
  .admin-settings-save > button { min-height:2.6rem; padding:.55rem .9rem; }
 }
+
+/* Carrusel de peñas: tarjetas independientes y desplazamiento continuo sin clones ni solapamientos forzados. */
+.penya-coverflow {
+  column-gap:12px !important;
+  scroll-snap-type:x proximity !important;
+  scroll-behavior:auto !important;
+}
+.penya-coverflow-card {
+  margin-left:0 !important;
+  scroll-snap-stop:normal !important;
+  transition:transform 150ms ease-out, opacity 150ms ease-out, box-shadow 150ms ease-out !important;
+  will-change:transform,opacity;
+}
