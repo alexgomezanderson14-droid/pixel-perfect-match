@@ -925,7 +925,7 @@ function Home() {
     ...selectedPenyaActs.map((a:any) => a.imagen_url || a.imagen || a.foto_url || a.foto)
   ].filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url) && url !== selectedPenyaFoto ))] : [];
   const selectedPenyaFeaturedGallery = selectedPenyaPhotoBlocks.filter((block:any)=>block.featured===true).slice(0,3).map((block:any)=>block.url);
-  const selectedPenyaPhotoStyle=(url:string)=>{const block=selectedPenyaPhotoBlocks.find((item:any)=>item.url===url);return {objectPosition:`${block?.positionX??50}% ${block?.positionY??50}%`,transform:`scale(${(block?.zoom??100)/100})`,transformOrigin:"center center"};};
+  const selectedPenyaPhotoStyle=(url:string)=>{const block=selectedPenyaPhotoBlocks.find((item:any)=>item.url===url);return {objectPosition:`${block?.positionX??50}% ${block?.positionY??50}%`,transform:`scale(${(block?.zoom??100)/100})`,transformOrigin:`${block?.positionX??50}% ${block?.positionY??50}%`};};
   // Las noticias automáticas solo pueden usar la lista creada por el extractor de galerías.
   // No se aceptan los campos heredados "galeria"/"imagenes", que podían contener logos del sitio.
   const noticiaImagenes: string[] = (() => {
