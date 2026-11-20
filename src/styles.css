@@ -726,3 +726,32 @@ html, body, #root { min-width:0; max-width:100%; }
  .penya-awards-panel:before{inset:-1rem -.65rem;border-radius:2rem;filter:blur(7px)}
 }
 @media(prefers-reduced-motion:reduce){.penya-award-item{opacity:1;animation:none}}
+
+
+/* Insignias originales del palmarés: brillo por puesto y movimiento sutil. */
+.penya-award-insignia{
+ isolation:isolate;
+ background-repeat:no-repeat;
+ filter:drop-shadow(0 0 7px var(--award-glow-soft)) drop-shadow(0 10px 13px rgba(0,0,0,.42));
+ animation:penya-insignia-float 5.2s ease-in-out infinite;
+ transform:translateZ(0);
+}
+.penya-award-insignia:before{
+ content:"";
+ position:absolute;
+ z-index:-1;
+ inset:16%;
+ border-radius:50%;
+ background:radial-gradient(circle,var(--award-glow) 0%,var(--award-glow-soft) 44%,transparent 74%);
+ filter:blur(15px);
+ opacity:.8;
+ animation:penya-insignia-halo 3.8s ease-in-out infinite alternate;
+ pointer-events:none;
+}
+.penya-award-item:nth-child(3n+2) .penya-award-insignia{animation-delay:-1.7s}
+.penya-award-item:nth-child(3n) .penya-award-insignia{animation-delay:-3.1s}
+@keyframes penya-insignia-float{0%,100%{translate:0 0}50%{translate:0 -4px}}
+@keyframes penya-insignia-halo{from{opacity:.55;scale:.92}to{opacity:.95;scale:1.08}}
+@media(prefers-reduced-motion:reduce){
+ .penya-award-insignia,.penya-award-insignia:before{animation:none}
+}
