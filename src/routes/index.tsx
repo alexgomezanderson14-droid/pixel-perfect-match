@@ -470,11 +470,8 @@ function Home() {
   const visiblePenyes = useMemo(()=>[...penyes].filter(p=>(!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica,p.informacion].join(" ")).includes(normalizarBusqueda(penyaSearch)))&&(penyaMusicFilter==="Todas"||String(p.tipo_musica||"").trim()===penyaMusicFilter)&&(!penyaOnlyMine||misPenyes.includes(p.id))).sort((a,b)=>nombrePenyaParaOrden(a.nombre).localeCompare(nombrePenyaParaOrden(b.nombre),"es",{sensitivity:"base",numeric:true})||String(a.nombre??"").localeCompare(String(b.nombre??""),"es",{sensitivity:"base"})),[penyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,misPenyes]);
   const searchingPenyes = Boolean(penyaSearch.trim()) || penyaMusicFilter !== "Todas" || penyaOnlyMine;
   // En la entrada al directorio, Mayorales ocupa la primera posición del carrusel; las demás siguen alfabéticamente.
-  const carouselPenyes = useMemo(()=>{
-    if(searchingPenyes||!mayoralesPenyaId)return visiblePenyes;
-    const index=visiblePenyes.findIndex(p=>String(p.id)===String(mayoralesPenyaId));
-    return index>0?[visiblePenyes[index],...visiblePenyes.slice(0,index),...visiblePenyes.slice(index+1)]:visiblePenyes;
-  },[visiblePenyes,searchingPenyes,mayoralesPenyaId]);
+  // El carrusel mantiene el orden alfabético en todo momento, también al incorporar nuevas peñas.
+  const carouselPenyes = visiblePenyes;
   // Copias alrededor de la lista central para conservar el carrusel circular sin saltos visibles.
   const loopedPenyes = !searchingPenyes && carouselPenyes.length > 1 ? [...carouselPenyes,...carouselPenyes,...carouselPenyes,...carouselPenyes,...carouselPenyes] : [...carouselPenyes];
   // Cachea los centros de las tarjetas: durante el gesto de desplazamiento no
