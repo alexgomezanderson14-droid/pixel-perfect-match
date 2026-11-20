@@ -1,7 +1,31 @@
 import {useEffect,useMemo,useState} from "react";
 import {supabase} from "@/integrations/supabase/client";
-export type PenyaAward={id:string;penya_id:string;year:number;competition:string;position:number;created_at?:string};
+export type PenyaAward={id:string;penya_id:string;penya_name?:string;year:number;competition:string;position:number;created_at?:string};
 const KEY="penyes_premios_json";
+const seededAwardResults=[
+ ["Els 4 Gats","Paellas Mig Any",1],
+ ["Destronats-Popa","Paellas Mig Any",2],
+ ["La Clau","Paellas Mig Any",3],
+ ["Reflotats","Paellas l'Albir",1],
+ ["Enredats","Paellas l'Albir",2],
+ ["Descontrol","Paellas l'Albir",3],
+ ["Guirigall","Desfile del Humor",1],
+ ["La Clau","Desfile del Humor",2],
+ ["Enredats","Desfile del Humor",3],
+ ["Castanyeta-Mal de Cap","Desfile del Humor",4],
+ ["Això ho pague jo","Desfile del Humor",5],
+ ["Inducció","Desfile del Humor",6],
+ ["Mussol Matiner","Desfile del Humor",7],
+ ["Pensat i Fet","Desfile del Humor",8],
+ ["Reflotats","Desfile del Humor",9],
+] as const;
+const normalizePenyaName=(value:string)=>value.normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLocaleLowerCase("es").replace(/^penya\\s+/,"").replace(/[^a-z0-9]/g,"");
+export function getSeededPenyaAwards(penyes:any[]=[]):PenyaAward[]{
+ return seededAwardResults.map(([name,competition,position],index)=>{
+  const penya=penyes.find(p=>normalizePenyaName(String(p.nombre||""))===normalizePenyaName(name));
+  return {id:"award-2026-"+(index+1),penya_id:penya?String(penya.id):"",penya_name:name,year:2026,competition,position};
+ });
+}
 const field="w-full rounded-xl border border-[#cbd9d6] bg-white px-3 py-2.5 text-sm text-[#173f52]";
 export function PenyaAwardMedal({award,compact=false}:{award:PenyaAward;compact?:boolean}){
  const colors=award.position===1?["#ffb547","#ff4d83","#6b173f"]:award.position===2?["#d9f5ff","#5c9fcb","#163c68"]:award.position===3?["#ffbd83","#b66b3f","#542b28"]:["#75f1ff","#9b67ff","#17245e"];
@@ -12,12 +36,12 @@ export function PenyaAwardMedal({award,compact=false}:{award:PenyaAward;compact?
 export function PenyaAwardsSection({awards,penyaName}:{awards:PenyaAward[];penyaName:string}){
  const[expanded,setExpanded]=useState(false);const sorted=useMemo(()=>[...awards].sort((a,b)=>b.year-a.year||a.position-b.position||a.competition.localeCompare(b.competition,"es")),[awards]);
  const visible=expanded?sorted:sorted.slice(0,3);
- return <section id="ficha-premios" className="penya-awards-panel relative isolate my-7 overflow-hidden rounded-[1.7rem] p-4 text-white sm:my-9 sm:rounded-[2rem] sm:p-7"><div className="penya-awards-orb penya-awards-orb-one"/><div className="penya-awards-orb penya-awards-orb-two"/><div className="relative z-10"><div className="mb-5 flex flex-wrap items-end justify-between gap-3 sm:mb-7"><div><p className="text-[10px] font-black uppercase tracking-[.28em] text-cyan-100/75">Historia · Méritos · Orgullo</p><h3 className="mt-1 text-2xl font-black tracking-tight text-white sm:text-3xl">Palmarés</h3><p className="mt-1 text-xs text-white/65 sm:text-sm">Reconocimientos oficiales de {penyaName}</p></div><span className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-extrabold tracking-wider text-white/90">{sorted.length} {sorted.length===1?"PREMIO":"PREMIOS"}</span></div><>{sorted.length>0?<div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-9">{visible.map((a,i)=><article key={a.id} className="penya-award-item min-w-0 text-center" style={{animationDelay:(i%6)*75+"ms"}}><PenyaAwardMedal award={a}/><p className="mt-3 text-sm font-black tracking-[.12em] text-white sm:text-base">{a.year}</p><p className="mx-auto mt-1 max-w-[15rem] text-xs font-semibold leading-snug text-white/70 sm:text-sm">{a.competition}</p></article>)}</div>:<div className="mx-auto flex max-w-xl flex-col items-center rounded-2xl border border-white/15 bg-white/[.06] px-5 py-8 text-center backdrop-blur-sm"><span className="mb-3 text-4xl" aria-hidden="true">🏆</span><p className="text-base font-extrabold text-white">¡Ups! Esta peña no tiene premios... todavía.</p><p className="mt-2 text-xs text-white/60">Todo gran palmarés empieza con una primera victoria. 😉</p></div>}</>{sorted.length>3&&<button type="button" onClick={()=>setExpanded(v=>!v)} className="mx-auto mt-7 flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-xs font-extrabold text-white shadow-lg backdrop-blur-md transition hover:bg-white/20">{expanded?"Mostrar menos":"Ver todos los premios"} <span className={expanded?"rotate-180":""}>⌄</span></button>}</div></section>;
+ return <section id="ficha-premios" className="penya-awards-panel relative isolate my-7 overflow-hidden rounded-[1.7rem] p-4 text-white sm:my-9 sm:rounded-[2rem] sm:p-7"><div className="penya-awards-orb penya-awards-orb-one"/><div className="penya-awards-orb penya-awards-orb-two"/><div className="relative z-10"><div className="mb-5 flex flex-wrap items-end justify-between gap-3 sm:mb-7"><div><p className="text-[10px] font-black uppercase tracking-[.28em] text-cyan-100/75">Historia · Méritos · Orgullo</p><h3 className="mt-1 text-2xl font-black tracking-tight text-white sm:text-3xl">Palmarés</h3><p className="mt-1 text-xs text-white/65 sm:text-sm">Reconocimientos oficiales de la peña {penyaName}</p></div><span className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-extrabold tracking-wider text-white/90">{sorted.length} {sorted.length===1?"PREMIO":"PREMIOS"}</span></div><>{sorted.length>0?<div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-9">{visible.map((a,i)=><article key={a.id} className="penya-award-item min-w-0 text-center" style={{animationDelay:(i%6)*75+"ms"}}><PenyaAwardMedal award={a}/><p className="mt-3 text-sm font-black tracking-[.12em] text-white sm:text-base">{a.year}</p><p className="mx-auto mt-1 max-w-[15rem] text-xs font-semibold leading-snug text-white/70 sm:text-sm">{a.competition}</p></article>)}</div>:<div className="mx-auto flex max-w-xl flex-col items-center rounded-2xl border border-white/15 bg-white/[.06] px-5 py-8 text-center backdrop-blur-sm"><span className="mb-3 text-4xl" aria-hidden="true">🏆</span><p className="text-base font-extrabold text-white">¡Ups! Esta peña no tiene premios... todavía.</p><p className="mt-2 text-xs text-white/60">Todo gran palmarés empieza con una primera victoria. 😉</p></div>}</>{sorted.length>3&&<button type="button" onClick={()=>setExpanded(v=>!v)} className="mx-auto mt-7 flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-xs font-extrabold text-white shadow-lg backdrop-blur-md transition hover:bg-white/20">{expanded?"Mostrar menos":"Ver todos los premios"} <span className={expanded?"rotate-180":""}>⌄</span></button>}</div></section>;
 }
 export default function PenyaAwardsManager({penyes}:{penyes:any[]}){
  const[awards,setAwards]=useState<PenyaAward[]>([]),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[message,setMessage]=useState("");
  const[penyaId,setPenyaId]=useState(""),[competition,setCompetition]=useState(""),[year,setYear]=useState("2026"),[position,setPosition]=useState("1"),[editingId,setEditingId]=useState(""),[filter,setFilter]=useState("");
- useEffect(()=>{let active=true;supabase.from("site_content").select("valor").eq("clave",KEY).maybeSingle().then(({data,error})=>{if(!active)return;if(error)setMessage("No se pudieron cargar los premios: "+error.message);else{try{const v=JSON.parse(data?.valor||"[]");setAwards(Array.isArray(v)?v.filter((a:any)=>a&&a.penya_id&&Number(a.year)>=2026&&a.competition&&Number(a.position)>0):[])}catch{setAwards([])}}setLoading(false)});return()=>{active=false}},[]);
+ useEffect(()=>{let active=true;supabase.from("site_content").select("valor").eq("clave",KEY).maybeSingle().then(({data,error})=>{if(!active)return;if(error)setMessage("No se pudieron cargar los premios: "+error.message);else{try{if(data?.valor){const v=JSON.parse(data.valor);setAwards(Array.isArray(v)?v.filter((a:any)=>a&&a.penya_id&&Number(a.year)>=2026&&a.competition&&Number(a.position)>0):[])}else{setAwards(getSeededPenyaAwards(penyes))}}catch{setAwards(getSeededPenyaAwards(penyes))}}setLoading(false)});return()=>{active=false}},[]);
  const ordered=useMemo(()=>[...awards].sort((a,b)=>b.year-a.year||a.position-b.position),[awards]);
  const reset=()=>{setCompetition("");setYear("2026");setPosition("1");setEditingId("")};
  const save=async(e:React.FormEvent)=>{e.preventDefault();const y=Number(year),p=Number(position);if(!penyaId||!competition.trim())return setMessage("Selecciona una peña e indica el concurso.");if(!Number.isInteger(y)||y<2026||!Number.isInteger(p)||p<1||p>99)return setMessage("Revisa el año (desde 2026) y el puesto.");setSaving(true);setMessage("");try{const a:PenyaAward={id:editingId||crypto.randomUUID(),penya_id:penyaId,year:y,competition:competition.trim().slice(0,100),position:p,created_at:awards.find(x=>x.id===editingId)?.created_at||new Date().toISOString()};const next=editingId?awards.map(x=>x.id===editingId?a:x):[...awards,a];const{error}=await supabase.from("site_content").upsert({clave:KEY,valor:JSON.stringify(next)});if(error)throw error;setAwards(next);reset();setMessage(editingId?"Premio actualizado.":"Premio añadido al palmarés.")}catch(e){setMessage("No se pudo guardar: "+(e instanceof Error?e.message:String(e)))}finally{setSaving(false)}};
