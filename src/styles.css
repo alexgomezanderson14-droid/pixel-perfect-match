@@ -777,4 +777,4 @@ html, body, #root { min-width:0; max-width:100%; }
  backface-visibility:hidden;
  will-change:transform;
 }
-.penya-award-insignia{overflow:visible;contain:paint;}
+.penya-award-insignia{overflow:visible;}
