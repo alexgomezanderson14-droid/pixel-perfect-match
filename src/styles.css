@@ -694,29 +694,13 @@ html, body, #root { min-width:0; max-width:100%; }
 @media(max-width:639px){.penya-award-feature{flex-basis:29%;max-width:29%}.penya-award-feature.is-featured-center{flex-basis:36%;max-width:36%;transform:scale(1.08) translateY(-4px)}.penya-award-feature.is-featured-left,.penya-award-feature.is-featured-right{transform:scale(.9) translateY(8px)}.penya-glass-number{font-size:30px}}
 @media(prefers-reduced-motion:reduce){.penya-award-item{opacity:1;animation:none}.penya-award-medal{animation:none}.penya-award-feature{transition:none}}
 
-/* Palmarés integrado en la ficha: sin tarjeta independiente ni fondo ajeno al diseño. */
-.penya-awards-panel{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding-left:0!important;padding-right:0!important}
-.penya-awards-panel:before{display:none!important}
-.penya-awards-orb{opacity:.09;filter:blur(72px)}
+/* Palmarés: conserva el fondo oscuro, integrado mediante un degradado suave con la ficha. */
+.penya-awards-panel{background:linear-gradient(135deg,rgba(5,18,33,.94) 0%,rgba(9,25,43,.91) 42%,rgba(12,22,43,.88) 72%,rgba(6,17,32,.94) 100%)!important;border:1px solid rgba(132,205,225,.2)!important;border-radius:1.7rem!important;box-shadow:0 18px 42px rgba(3,13,26,.2),inset 0 1px 0 rgba(255,255,255,.08)!important}
+.penya-awards-panel:before{display:block!important;opacity:.55;background:linear-gradient(115deg,transparent 12%,rgba(255,255,255,.045) 42%,transparent 68%)!important}
+.penya-awards-orb{opacity:.12;filter:blur(76px)}
 .penya-awards-orb-one{background:#34d8e8}
 .penya-awards-orb-two{background:#9c67ff}
-.penya-award-medal{isolation:isolate;filter:drop-shadow(0 0 12px color-mix(in srgb,var(--holo-a) 45%,transparent)) drop-shadow(0 15px 17px rgba(0,0,0,.5));animation:penya-glass-float 5.2s ease-in-out infinite;transform-style:preserve-3d}
-.penya-glass-body,.penya-glass-rim,.penya-glass-inner{border-radius:50%;transition:filter .35s ease,transform .35s ease}
-.penya-glass-body{background:radial-gradient(ellipse at 27% 16%,rgba(255,255,255,.92),transparent 10%),radial-gradient(ellipse at 73% 82%,color-mix(in srgb,var(--holo-a) 34%,transparent),transparent 43%),linear-gradient(135deg,rgba(255,255,255,.34),rgba(255,255,255,.025) 22%,rgba(8,19,40,.74) 49%,rgba(255,255,255,.14) 76%,rgba(255,255,255,.36));border:3px solid rgba(255,255,255,.74);box-shadow:inset 0 2px 4px rgba(255,255,255,.92),inset 0 -8px 13px rgba(0,0,0,.48),inset 0 0 22px color-mix(in srgb,var(--holo-a) 65%,transparent),0 2px 0 rgba(0,0,0,.65),0 0 0 2px color-mix(in srgb,var(--holo-b) 90%,white),0 0 18px color-mix(in srgb,var(--holo-a) 75%,transparent),0 0 35px color-mix(in srgb,var(--holo-c) 35%,transparent)}
-.penya-glass-rim{inset:4%!important;border:3px solid transparent;background:linear-gradient(128deg,rgba(255,255,255,.98),var(--holo-a),rgba(255,255,255,.82),var(--holo-c),var(--holo-b),rgba(255,255,255,.95)) border-box;mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);mask-composite:exclude;box-shadow:0 0 8px var(--holo-a),inset 0 0 9px rgba(255,255,255,.8)}
-.penya-glass-inner{inset:12%!important;border:1px solid rgba(255,255,255,.48);background:radial-gradient(ellipse at 30% 22%,color-mix(in srgb,var(--holo-a) 40%,transparent),transparent 45%),linear-gradient(145deg,rgba(255,255,255,.15),rgba(5,13,31,.72) 58%,color-mix(in srgb,var(--holo-b) 28%,transparent));box-shadow:inset 0 2px 7px rgba(255,255,255,.55),inset 0 -7px 13px rgba(0,0,0,.48),0 0 13px color-mix(in srgb,var(--holo-a) 45%,transparent)}
-/* Forma física distinta por concurso: paellas cuadrada, desfile circular, playback facetada. */
-.penya-award-medal[data-shape="square"] .penya-glass-body,.penya-award-medal[data-shape="square"] .penya-glass-rim,.penya-award-medal[data-shape="square"] .penya-glass-inner{border-radius:23%!important}
-.penya-award-medal[data-shape="hexagon"] .penya-glass-body,.penya-award-medal[data-shape="hexagon"] .penya-glass-rim,.penya-award-medal[data-shape="hexagon"] .penya-glass-inner{border-radius:0!important;clip-path:polygon(25% 3%,75% 3%,98% 50%,75% 97%,25% 97%,2% 50%)}
-.penya-award-medal[data-shape="hexagon"] .penya-glass-motif{clip-path:polygon(25% 3%,75% 3%,98% 50%,75% 97%,25% 97%,2% 50%)}
-.penya-glass-motif{border-radius:50%;opacity:1;filter:drop-shadow(0 0 4px var(--holo-a)) drop-shadow(0 0 10px var(--holo-c))}
-.penya-glass-motif:before,.penya-glass-motif:after{content:"";position:absolute;inset:0;border-radius:inherit;border:1px solid color-mix(in srgb,var(--holo-a) 82%,white);box-shadow:0 0 9px var(--holo-a),inset 0 0 8px color-mix(in srgb,var(--holo-c) 65%,transparent)}
-.penya-glass-motif:after{inset:9%;border-color:color-mix(in srgb,var(--holo-b) 85%,white);opacity:.8}
-.penya-glass-number{font-family:Georgia,serif;font-size:clamp(31px,4.4vw,45px);font-weight:900;letter-spacing:-.08em;line-height:1;color:color-mix(in srgb,var(--holo-c) 65%,white);-webkit-text-stroke:1px rgba(255,255,255,.68);text-shadow:0 1px 0 rgba(255,255,255,.95),0 2px 0 color-mix(in srgb,var(--holo-a) 70%,white),0 3px 0 color-mix(in srgb,var(--holo-b) 75%,#243044),0 4px 0 color-mix(in srgb,var(--holo-c) 65%,#111827),0 5px 2px rgba(0,0,0,.85),0 0 9px var(--holo-a),0 0 19px var(--holo-b);transform:translateZ(10px);paint-order:stroke fill}
-.penya-glass-glint{z-index:5;pointer-events:none;border-radius:999px;transform:rotate(-34deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.98),transparent);box-shadow:0 0 10px rgba(255,255,255,.9)}
-.penya-glass-glint-one{width:42%;height:2px;top:19%;left:7%;opacity:.9}
-.penya-glass-glint-two{width:24%;height:1.5px;right:8%;bottom:22%;opacity:.7}
-.penya-award-medal:hover .penya-glass-body{filter:brightness(1.18) saturate(1.25)}
-.penya-award-medal:hover{filter:drop-shadow(0 0 17px color-mix(in srgb,var(--holo-a) 68%,transparent)) drop-shadow(0 18px 18px rgba(0,0,0,.52))}
-@media(max-width:639px){.penya-awards-panel{margin-top:1.5rem!important;margin-bottom:1.5rem!important}.penya-glass-number{font-size:30px}}
-@media(prefers-reduced-motion:reduce){.penya-award-medal{animation:none}}
+/* Evita que los reconocimientos queden invisibles si se desactiva la animación. */
+.penya-award-item{opacity:1;animation:penya-award-appear .65s cubic-bezier(.2,.8,.2,1) both}
+@media(max-width:639px){.penya-awards-panel{margin-top:1.5rem!important;margin-bottom:1.5rem!important;border-radius:1.4rem!important}}
+@media(prefers-reduced-motion:reduce){.penya-award-item{opacity:1;animation:none}}
