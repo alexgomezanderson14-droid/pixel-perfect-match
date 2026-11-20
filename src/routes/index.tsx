@@ -454,7 +454,7 @@ function Home() {
       const tituloVigente=(value:any)=>{
         const title=normalizarNombrePenya(value);
         if(!title.includes("mayorales")&&!title.includes("mejorales"))return false;
-        const year=String(value||"").match(/20\\d{2}/)?.[0];
+        const year=String(value||"").match(/20\d{2}/)?.[0];
         return !year || year===mayoralesAnio;
       };
       const taggedPenya=penyes.find(p=>Array.isArray(perfiles?.[String(p.id)])&&perfiles[String(p.id)].some((block:any)=>block?.type==="tag"&&tituloVigente(block.title)));
