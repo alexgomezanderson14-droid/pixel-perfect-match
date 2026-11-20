@@ -323,6 +323,7 @@ const penyaStickerArt:Record<string,ReactNode>={
 const safeHttpUrl=(value:any)=>{try{const url=new URL(String(value||""));return url.protocol==="https:"||url.protocol==="http:"?url.toString():"";}catch{return "";}};
 const penyaVideoEmbed=(value:any)=>{const raw=safeHttpUrl(value);if(!raw)return "";try{const url=new URL(raw);if(url.hostname==="youtu.be")return "https://www.youtube-nocookie.com/embed/"+url.pathname.slice(1).split("/")[0];if(url.hostname.endsWith("youtube.com")){const id=url.searchParams.get("v")||url.pathname.split("/").filter(Boolean).pop();return id?"https://www.youtube-nocookie.com/embed/"+id:"";}if(url.hostname.endsWith("vimeo.com")){const id=url.pathname.split("/").filter(Boolean).pop();return id?"https://player.vimeo.com/video/"+id:"";}return /\.mp4(?:$|[?#])/i.test(url.pathname)?raw:"";}catch{return "";}};
 const normalizarBusqueda=(value:any)=>String(value||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
+const normalizarNombrePenya=(value:any)=>String(value||"").trim().toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
 const limpiarTextoNoticia=(value:any)=>{
   const text=String(value||"")
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi," ")
@@ -438,30 +439,40 @@ function Home() {
   const visibleActs = useMemo(()=>filteredActs.filter(a=>!/despertà|desperta|despertada|nit de albaes|nit d'albaes|nit de les albaes|albaes/.test(String(a.titulo||"").toLocaleLowerCase("es"))).sort((a,b)=>a.dia.localeCompare(b.dia)||(a.hora||"").localeCompare(b.hora||"")),[filteredActs]);
   const penyaMusicOptions = useMemo(()=>["Todas",...Array.from(new Set(penyes.map(p=>String(p.tipo_musica||"").trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b,"es"))],[penyes]);
   const mayoralesAnio = String(siteContent["mayorales_anio"]||"2027");
-  // La etiqueta personalizada de Mayorales vigente en la ficha es la única fuente de verdad.
+  // Prioridad: peña configurada, etiqueta Mayorales del año vigente y, como respaldo, CuBaTa.
   const mayoralesPenyaId = useMemo(()=>{
     const configuredId=String(siteContent["mayorales_penya_id"]||"").trim();
     if(configuredId&&penyes.some(p=>String(p.id)===configuredId))return configuredId;
     try {
       const perfiles=JSON.parse(siteContent["penyes_perfiles_json"]||"{}");
       const tituloVigente=(value:any)=>{
-        const title=String(value||"").trim().toLocaleLowerCase("es").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"");
-        if(!/mayorales|mejorales/.test(title))return false;
-        const year=title.match(/20\\d{2}/)?.[0];
+        const title=normalizarNombrePenya(value);
+        if(!title.includes("mayorales")&&!title.includes("mejorales"))return false;
+        const year=String(value||"").match(/20\d{2}/)?.[0];
         return !year || year===mayoralesAnio;
       };
-      const taggedPenya=penyes.find(p=>Array.isArray(perfiles?.[p.id])&&perfiles[p.id].some((block:any)=>block?.type==="tag"&&tituloVigente(block.title)));
-      if(taggedPenya)return taggedPenya.id;
-    } catch { /* Si no hay etiquetas legibles, se usa la peña confirmada de esta edición. */ }
-    return penyes.find(p=>String(p.nombre||"").trim().toLocaleLowerCase("es").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"")==="cubata")?.id||"";
+      const taggedPenya=penyes.find(p=>Array.isArray(perfiles?.[String(p.id)])&&perfiles[String(p.id)].some((block:any)=>block?.type==="tag"&&tituloVigente(block.title)));
+      if(taggedPenya)return String(taggedPenya.id);
+    } catch { /* Si no hay etiquetas legibles, se usa CuBaTa como respaldo de Mayorales 2027. */ }
+    const cubata=penyes.find(p=>{
+      const name=normalizarNombrePenya(p.nombre);
+      return name==="cubata"||name.includes("cobrebariotantalo");
+    });
+    return cubata?String(cubata.id):"";
   },[penyes,siteContent["penyes_perfiles_json"],siteContent["mayorales_penya_id"],mayoralesAnio]);
   const mayoralesColor = String((mayoralesPenyaId && penyaCardSettings[mayoralesPenyaId]?.color) || siteContent["theme_accent"] || "#173f52");
-  const visiblePenyes = useMemo(()=>[...penyes].filter(p=>(!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica,p.informacion].join(" ")).includes(normalizarBusqueda(penyaSearch)))&&(penyaMusicFilter==="Todas"||String(p.tipo_musica||"").trim()===penyaMusicFilter)&&(!penyaOnlyMine||misPenyes.includes(p.id))).sort((a,b)=>String(a.nombre??"").localeCompare(String(b.nombre??""),"es",{sensitivity:"base"})),[penyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,misPenyes,mayoralesPenyaId]);
+  const visiblePenyes = useMemo(()=>[...penyes].filter(p=>(!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica,p.informacion].join(" ")).includes(normalizarBusqueda(penyaSearch)))&&(penyaMusicFilter==="Todas"||String(p.tipo_musica||"").trim()===penyaMusicFilter)&&(!penyaOnlyMine||misPenyes.includes(p.id))).sort((a,b)=>String(a.nombre??"").localeCompare(String(b.nombre??""),"es",{sensitivity:"base"})),[penyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,misPenyes]);
   const searchingPenyes = Boolean(penyaSearch.trim()) || penyaMusicFilter !== "Todas" || penyaOnlyMine;
-  const loopedPenyes = !searchingPenyes && visiblePenyes.length > 1 ? [...visiblePenyes,...visiblePenyes,...visiblePenyes,...visiblePenyes,...visiblePenyes] : [...visiblePenyes];
+  // En la entrada al directorio, Mayorales ocupa la primera posición del carrusel; las demás siguen alfabéticamente.
+  const carouselPenyes = useMemo(()=>{
+    if(searchingPenyes||!mayoralesPenyaId)return visiblePenyes;
+    const index=visiblePenyes.findIndex(p=>String(p.id)===String(mayoralesPenyaId));
+    return index>0?[visiblePenyes[index],...visiblePenyes.slice(0,index),...visiblePenyes.slice(index+1)]:visiblePenyes;
+  },[visiblePenyes,searchingPenyes,mayoralesPenyaId]);
+  const loopedPenyes = !searchingPenyes && carouselPenyes.length > 1 ? [...carouselPenyes,...carouselPenyes,...carouselPenyes,...carouselPenyes,...carouselPenyes] : [...carouselPenyes];
   const centerPenyaCard=useCallback((index:number,behavior:ScrollBehavior="auto")=>{const el=penyaCarouselRef.current;const card=el?.children[index] as HTMLElement|undefined;if(!el||!card)return;const delta=card.getBoundingClientRect().left-el.getBoundingClientRect().left;const left=el.scrollLeft+delta-(el.clientWidth-card.clientWidth)/2;el.scrollTo({left,behavior});},[]);
   const handlePenyaCarouselScroll=(el:HTMLDivElement)=>{if(searchingPenyes){setActivePenyaCard(0);return;}if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);penyaScrollFrameRef.current=requestAnimationFrame(()=>{const count=visiblePenyes.length;if(count<=1){setActivePenyaCard(0);penyaScrollFrameRef.current=null;return;}const center=el.getBoundingClientRect().left+el.clientWidth/2;let nearest=0;let distance=Number.POSITIVE_INFINITY;Array.from(el.children).forEach((child,index)=>{const rect=child.getBoundingClientRect();const d=Math.abs(rect.left+rect.width/2-center);if(d<distance){distance=d;nearest=index;}});if(nearest<count*2||nearest>=count*4){const normalized=((nearest%count)+count)%count;const targetIndex=normalized+count*2;const target=el.children[targetIndex] as HTMLElement|undefined;if(target){const delta=target.getBoundingClientRect().left-el.getBoundingClientRect().left;el.scrollLeft=el.scrollLeft+delta-(el.clientWidth-target.clientWidth)/2;}nearest=targetIndex;}setActivePenyaCard(current=>current===nearest?current:nearest);penyaScrollFrameRef.current=null;});};
-  useEffect(()=>{if(currentPage!=="penyes"||!visiblePenyes.length){setPenyaCarouselInitialized(false);return;}if(searchingPenyes){setActivePenyaCard(0);setPenyaCarouselInitialized(true);return;}setPenyaCarouselInitialized(false);const mayoralesIndex=visiblePenyes.findIndex(p=>Boolean(mayoralesPenyaId)&&String(p.id)===String(mayoralesPenyaId));const middle=(visiblePenyes.length>1?visiblePenyes.length*2:0)+Math.max(0,mayoralesIndex);setActivePenyaCard(middle);let secondFrame=0;const firstFrame=requestAnimationFrame(()=>{secondFrame=requestAnimationFrame(()=>{const el=penyaCarouselRef.current;const card=el?.children[middle] as HTMLElement|undefined;if(el&&card){const delta=card.getBoundingClientRect().left-el.getBoundingClientRect().left;el.scrollTo({left:el.scrollLeft+delta-(el.clientWidth-card.clientWidth)/2,behavior:"auto"});}setPenyaCarouselInitialized(true);});});return()=>{cancelAnimationFrame(firstFrame);if(secondFrame)cancelAnimationFrame(secondFrame);};},[currentPage,visiblePenyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,mayoralesPenyaId,misPenyes,searchingPenyes]);
+  useEffect(()=>{if(currentPage!=="penyes"||!visiblePenyes.length){setPenyaCarouselInitialized(false);return;}if(searchingPenyes){setActivePenyaCard(0);setPenyaCarouselInitialized(true);return;}setPenyaCarouselInitialized(false);const mayoralesIndex=carouselPenyes.findIndex(p=>Boolean(mayoralesPenyaId)&&String(p.id)===String(mayoralesPenyaId));const middle=(carouselPenyes.length>1?carouselPenyes.length*2:0)+Math.max(0,mayoralesIndex);setActivePenyaCard(middle);let secondFrame=0;const firstFrame=requestAnimationFrame(()=>{secondFrame=requestAnimationFrame(()=>{const el=penyaCarouselRef.current;const card=el?.children[middle] as HTMLElement|undefined;if(el&&card){const delta=card.getBoundingClientRect().left-el.getBoundingClientRect().left;el.scrollTo({left:el.scrollLeft+delta-(el.clientWidth-card.clientWidth)/2,behavior:"auto"});}setPenyaCarouselInitialized(true);});});return()=>{cancelAnimationFrame(firstFrame);if(secondFrame)cancelAnimationFrame(secondFrame);};},[currentPage,carouselPenyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,mayoralesPenyaId,misPenyes,searchingPenyes]);
   useEffect(()=>{if(!penyaCarouselInitialized)return;const handleResize=()=>centerPenyaCard(activePenyaCard);window.addEventListener("resize",handleResize,{passive:true});return()=>window.removeEventListener("resize",handleResize);},[penyaCarouselInitialized,activePenyaCard,centerPenyaCard]);
   useEffect(()=>()=>{if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);},[]);
   const visibleNews = useMemo(()=>noticias.filter((n:any)=>n.publicado&&(!newsSearch.trim()||normalizarBusqueda([n.titulo,n.resumen,n.contenido,n.autor,n.fuente].join(" ")).includes(normalizarBusqueda(newsSearch)))).slice().sort((x:any,y:any)=>new Date(String(y.fecha||y.created_at||"").slice(0,10)+"T12:00:00").getTime()-new Date(String(x.fecha||x.created_at||"").slice(0,10)+"T12:00:00").getTime()),[noticias,newsSearch]);
