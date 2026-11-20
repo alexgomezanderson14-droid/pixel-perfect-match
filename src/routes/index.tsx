@@ -423,6 +423,7 @@ function Home() {
   const [now, setNow] = useState(() => Date.now());
   const [selectedPenya, setSelectedPenya] = useState<PenyaDb | null>(null);
   const selectedPenyaFoto = selectedPenya?.foto || "";
+  const selectedPenyaLogo = (selectedPenya as { logo_url?: string } | null)?.logo_url || selectedPenyaFoto;
   const [penyaDetailFullscreen, setPenyaDetailFullscreen] = useState(false);
   const [mapPenyaPreview, setMapPenyaPreview] = useState(false);
   const [penyaGalleryOpen, setPenyaGalleryOpen] = useState(false);
