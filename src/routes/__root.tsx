@@ -18,7 +18,8 @@ function MotionEffects() {
   useEffect(() => {
     // En móviles el CSS ya elimina estas animaciones; evitar además el observador
     // global ahorra trabajo en cada cambio del DOM y mejora el scroll.
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || window.matchMedia("(max-width: 639px)").matches) return;
+    const media = typeof window.matchMedia === "function" ? window.matchMedia.bind(window) : null;
+    if ((media && media("(prefers-reduced-motion: reduce)").matches) || (media && media("(max-width: 639px)").matches)) return;
 
     const selector = "main > section, main article, main details, .copyright-footer";
     const observed = new WeakSet<Element>();
@@ -51,6 +52,7 @@ function MotionEffects() {
     }
 
     collect(document);
+    if (typeof MutationObserver === "undefined") return () => observer?.disconnect();
     const mutations = new MutationObserver((records) => {
       records.forEach((record) => record.addedNodes.forEach((node) => {
         if (!(node instanceof HTMLElement)) return;
