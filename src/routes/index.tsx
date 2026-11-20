@@ -5,7 +5,7 @@ import { edicion, lugares as lugaresFijos, ui, type Categoria, type Lugar } from
 import { supabase } from "@/integrations/supabase/client";
 import AdminPenyaEditor from "@/components/AdminPenyaEditor";
 import PenyaPhotoManager from "@/components/PenyaPhotoManager";
-import {PenyaAwardsSection,type PenyaAward,getSeededPenyaAwards} from "@/components/PenyaAwards";
+import {PenyaAwardsSection,type PenyaAward,mergeSeededPenyaAwards,penyaAwardBelongsTo} from "@/components/PenyaAwards";
 import CopyrightFooter from "@/components/CopyrightFooter";
 import { noticiaCuBaTa2027 } from "@/content/noticia-cubata-2027";
 import { noticiaCestaNavidad2027 } from "@/content/noticia-cesta-navidad-2027";
@@ -493,7 +493,7 @@ function Home() {
   // El carrusel mantiene el orden alfabético en todo momento, también al incorporar nuevas peñas.
   const carouselPenyes = visiblePenyes;
   // Copias alrededor de la lista central para conservar el carrusel circular sin saltos visibles.
-  const loopedPenyes = !searchingPenyes && carouselPenyes.length > 1 ? [...carouselPenyes,...carouselPenyes,...carouselPenyes,...carouselPenyes,...carouselPenyes] : [...carouselPenyes];
+  const loopedPenyes = !searchingPenyes && carouselPenyes.length > 1 ? [...carouselPenyes,...carouselPenyes,...carouselPenyes] : [...carouselPenyes];
   // Cachea los centros de las tarjetas: durante el gesto de desplazamiento no
   // se fuerzan lecturas de layout de todas las tarjetas en cada frame.
   const rebuildPenyaCardCenters=useCallback(()=>{
@@ -543,9 +543,9 @@ function Home() {
     if(!el||searchingPenyes||count<2)return;
     if(!penyaCardCentersRef.current.length||penyaCardCentersRef.current.length!==el.children.length)rebuildPenyaCardCenters();
     const nearest=nearestPenyaCardIndex(el);
-    if(nearest<count||nearest>=count*4){
+    if(nearest<count||nearest>=count*2){
       const normalized=((nearest%count)+count)%count;
-      const targetIndex=normalized+count*2;
+      const targetIndex=normalized+count;
       const firstCenter=penyaCardCentersRef.current[normalized];
       const equivalentCenter=penyaCardCentersRef.current[targetIndex];
       if(firstCenter!==undefined&&equivalentCenter!==undefined){
@@ -564,7 +564,7 @@ function Home() {
     if(!visiblePenyes.length||penyaEntryInitializedRef.current)return;
     setPenyaCarouselInitialized(false);
     const mayoralesIndex=carouselPenyes.findIndex(p=>Boolean(mayoralesPenyaId)&&String(p.id)===String(mayoralesPenyaId));
-    const initialIndex=searchingPenyes?0:(carouselPenyes.length>1?carouselPenyes.length*2:0)+Math.max(0,mayoralesIndex);
+    const initialIndex=searchingPenyes?0:(carouselPenyes.length>1?carouselPenyes.length:0)+Math.max(0,mayoralesIndex);
     setActivePenyaCard(initialIndex);
     let secondFrame=0;
     const firstFrame=requestAnimationFrame(()=>{
@@ -933,7 +933,7 @@ function Home() {
   const selectedPenyaNews = selectedPenya ? noticias.filter((n:any) => n.publicado && (n.penya_id === selectedPenya.id || normalizarBusqueda([n.penya_nombre, n.autor].join(" ")).includes(normalizarBusqueda(selectedPenya.nombre)))).slice().sort((a:any,b:any) => String(b.fecha||b.created_at||"").localeCompare(String(a.fecha||a.created_at||""))).slice(0,3) : [];
   const selectedPenyaCustomBlocks = (() => { try { const all=JSON.parse(siteContent["penyes_perfiles_json"]||"{}"); const blocks=all?.[selectedPenya?.id||""]; return Array.isArray(blocks)?blocks.filter((block:any)=>block&&typeof block==="object"):[]; } catch { return []; } })();
   const selectedPenyaAcceptsVisits = (() => { try { const settings=JSON.parse(siteContent["penyes_visitas_json"]||"{}"); return settings?.[selectedPenya?.id||""]===true; } catch { return false; } })();
-  const selectedPenyaAwards: PenyaAward[] = (() => { try { const stored=siteContent["penyes_premios_json"]; const parsed=stored?JSON.parse(stored):[]; const all=Array.isArray(parsed)&&parsed.length?parsed:getSeededPenyaAwards(penyes); const normalize=(value:string)=>String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es").replace(/^penya\s+/,"").replace(/[^a-z0-9]/g,""); return Array.isArray(all)?all.filter((a:any)=>a&&(String(a.penya_id||"")===String(selectedPenya?.id||"")||normalize(a.penya_name||"")===normalize(selectedPenya?.nombre||""))&&Number(a.year)>=2026&&Number(a.position)>0&&String(a.competition||"").trim()):[]; } catch { return getSeededPenyaAwards(penyes).filter(a=>String(a.penya_id)===String(selectedPenya?.id||"")||String(a.penya_name||"")===String(selectedPenya?.nombre||"")); } })();
+  const selectedPenyaAwards: PenyaAward[] = (() => { try { const parsed=JSON.parse(siteContent["penyes_premios_json"]||"[]"); const omitted=JSON.parse(siteContent["penyes_premios_omitidos_json"]||"[]"); const all=mergeSeededPenyaAwards(Array.isArray(parsed)?parsed:[],penyes,Array.isArray(omitted)?omitted.map(String):[]); return all.filter(a=>penyaAwardBelongsTo(a,selectedPenya)); } catch { return []; } })();
   const selectedPenyaBannerBlock = selectedPenyaCustomBlocks.find((block:any)=>block.type==="banner");
   const selectedPenyaBannerGradient = `linear-gradient(110deg, ${/^#[0-9a-fA-F]{6}$/.test(selectedPenyaBannerBlock?.colorStart||"")?selectedPenyaBannerBlock.colorStart:"#173f52"} 0%, color-mix(in srgb, ${/^#[0-9a-fA-F]{6}$/.test(selectedPenyaBannerBlock?.colorStart||"")?selectedPenyaBannerBlock.colorStart:"#173f52"} 78%, ${/^#[0-9a-fA-F]{6}$/.test(selectedPenyaBannerBlock?.colorEnd||"")?selectedPenyaBannerBlock.colorEnd:"#c6a24b"}) 24%, color-mix(in srgb, ${/^#[0-9a-fA-F]{6}$/.test(selectedPenyaBannerBlock?.colorStart||"")?selectedPenyaBannerBlock.colorStart:"#173f52"} 48%, ${/^#[0-9a-fA-F]{6}$/.test(selectedPenyaBannerBlock?.colorEnd||"")?selectedPenyaBannerBlock.colorEnd:"#c6a24b"}) 50%, color-mix(in srgb, ${/^#[0-9a-fA-F]{6}$/.test(selectedPenyaBannerBlock?.colorStart||"")?selectedPenyaBannerBlock.colorStart:"#173f52"} 18%, ${/^#[0-9a-fA-F]{6}$/.test(selectedPenyaBannerBlock?.colorEnd||"")?selectedPenyaBannerBlock.colorEnd:"#c6a24b"}) 76%, ${/^#[0-9a-fA-F]{6}$/.test(selectedPenyaBannerBlock?.colorEnd||"")?selectedPenyaBannerBlock.colorEnd:"#c6a24b"} 100%)`;
   const selectedPenyaPhotoBlocks = (() => { const legacy=selectedPenyaCustomBlocks.filter((block:any)=>block.type==="photo" && typeof block.url==="string" && /^https?:\/\//i.test(block.url)); const merged=new Map<string,any>(legacy.map((block:any)=>[block.url,{...block,visible:block.visible!==false}])); penyaPhotos.filter((photo:any)=>photo.penya_id===selectedPenya?.id).forEach((photo:any)=>{const previous=merged.get(photo.url)||{type:"photo",title:"Fotografía",content:"",url:photo.url};merged.set(photo.url,{...previous,id:photo.id,featured:photo.destacada===true,visible:photo.visible!==false,url:photo.url});});return [...merged.values()].filter((block:any)=>block.visible!==false); })();
