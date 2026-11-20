@@ -31,7 +31,6 @@ export function PenyaAwardMedal({award,compact=false}:{award:PenyaAward;compact?
  const competition=award.competition.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es");
  const category=competition.includes("paella")?"paellas":competition.includes("desfile")||competition.includes("humor")?"desfile":competition.includes("playback")?"playbacks":"general";
  const supported=category==="desfile"?(award.position>=1&&award.position<=9):category==="paellas"?(award.position>=1&&award.position<=3):category==="playbacks"?(award.position>=1&&award.position<=5):false;
- const index=category==="desfile"?award.position-1:category==="paellas"?9+award.position-1:12+award.position-1;
  const palettes:Record<string,string[]>={desfile:["#ff3dc8","#36fff2","#baff28","#fff34a","#ffd5ff","#37eaff","#65f8ff","#ffe347","#ffb52d"],paellas:["#fff34a","#ffd5ff","#37eaff"],playbacks:["#37eaff","#65f8ff","#ffe347","#ffb52d","#ff3dc8"]};
  const glow=supported?(palettes[category]?.[award.position-1]||"#38bdf8"):"#38bdf8";
  const shape=category==="paellas"?"square":category==="playbacks"?"hexagon":"round";
