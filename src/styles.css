@@ -762,12 +762,6 @@ html, body, #root { min-width:0; max-width:100%; }
 }
 
 
-/* Palmarés: marco integrado, halo cromático visible y movimiento perceptible. */
-.penya-awards-panel{border:1px solid rgba(132,205,222,.42)!important;outline:1px solid rgba(255,255,255,.09);outline-offset:-6px;box-shadow:0 18px 44px rgba(4,10,27,.34),inset 0 1px 0 rgba(255,255,255,.16),inset 0 0 0 5px rgba(126,190,211,.045)!important;background:radial-gradient(ellipse at 50% -25%,rgba(76,211,231,.17),transparent 52%),linear-gradient(145deg,#080f20 0%,#121a32 52%,#080e1d 100%)!important}
-.penya-awards-panel:after{content:"";position:absolute;inset:5px;border:1px solid rgba(255,255,255,.075);border-radius:calc(1.7rem - 5px);pointer-events:none}
-.penya-award-insignia{isolation:isolate;filter:drop-shadow(0 0 12px var(--award-glow-soft)) drop-shadow(0 0 23px color-mix(in srgb,var(--award-glow) 34%,transparent)) drop-shadow(0 9px 12px rgba(0,0,0,.4));animation:penya-insignia-float 3.1s ease-in-out infinite;transform:translateZ(0)}
-.penya-award-vector{display:block;width:100%;height:100%;overflow:visible;object-fit:contain}
-.penya-award-insignia:before{content:"";position:absolute;z-index:-1;inset:8%;border-radius:50%;background:radial-gradient(circle,var(--award-glow) 0%,var(--award-glow-soft) 43%,transparent 74%);filter:blur(17px);opacity:.9;animation:penya-insignia-halo 2.2s ease-in-out infinite alternate;pointer-events:none}
-@keyframes penya-insignia-float{0%,100%{translate:0 0;scale:1}50%{translate:0 -7px;scale:1.035}}
-@keyframes penya-insignia-halo{from{opacity:.62;scale:.82}to{opacity:1;scale:1.22}}
-@media(prefers-reduced-motion:reduce){.penya-award-insignia,.penya-award-insignia:before{animation:none}}
+/* Recuperar las ilustraciones originales del atlas sin redibujarlas. */
+.penya-award-art{inset:0;background-size:500% 400%;background-repeat:no-repeat;background-position:0 0;image-rendering:auto;transform:translateZ(0);backface-visibility:hidden;}
+.penya-award-insignia{overflow:visible;}
