@@ -32,17 +32,17 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
       const merged: PhotoBlock[] = savedRows.map((row: any) => ({
         id: row.id, url: row.url, title: legacy.find(item => item.url === row.url)?.title || "Fotografía",
         featured: row.destacada === true, visible: row.visible !== false,
-        zoom: Number(legacy.find(item => item.url === row.url)?.zoom) || 100,
-        positionX: Number(legacy.find(item => item.url === row.url)?.positionX) || 50,
-        positionY: Number(legacy.find(item => item.url === row.url)?.positionY) || 50,
+        zoom: Number(legacy.find(item => item.url === row.url)?.zoom ?? 100),
+        positionX: Number(legacy.find(item => item.url === row.url)?.positionX ?? 50),
+        positionY: Number(legacy.find(item => item.url === row.url)?.positionY ?? 50),
         legacy: legacy.some(item => item.url === row.url),
       }));
       for (const item of legacy) {
         if (!rowsByUrl.has(item.url)) merged.push({
           id: crypto.randomUUID(), url: item.url, title: item.title || "Fotografía",
           featured: item.featured === true, visible: true,
-          zoom: Number(item.zoom) || 100, positionX: Number(item.positionX) || 50,
-          positionY: Number(item.positionY) || 50, legacy: true,
+          zoom: Number(item.zoom ?? 100), positionX: Number(item.positionX ?? 50),
+          positionY: Number(item.positionY ?? 50), legacy: true,
         });
       }
       setBlocks(merged);
@@ -69,7 +69,7 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
         const { error } = await supabase.storage.from("penyes").upload(path, file, { contentType: file.type, cacheControl: "3600", upsert: false });
         if (error) throw error;
         const url = supabase.storage.from("penyes").getPublicUrl(path).data.publicUrl;
-        added.push({ id: crypto.randomUUID(), url, title: file.name.replace(/\.[^.]+$/, "").slice(0, 100) || "Fotografía", featured: false, visible: true });
+        added.push({ id: crypto.randomUUID(), url, title: file.name.replace(/\.[^.]+$/, "").slice(0, 100) || "Fotografía", featured: false, visible: true, zoom: 100, positionX: 50, positionY: 50 });
       }
       setBlocks(current => [...current, ...added]);
       setMessage(added.length === 1 ? "Imagen subida. Recuerda guardar los cambios." : added.length + " imágenes subidas. Recuerda guardar los cambios.");
@@ -121,15 +121,16 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
       const updatedBlocks = existingBlocks.map((item: any) => {
         if (item?.type !== "photo" || typeof item.url !== "string") return item;
         const setting = photoSettings.get(item.url);
-        return setting ? { ...item, zoom: setting.zoom, positionX: setting.positionX, positionY: setting.positionY, featured: setting.featured } : item;
+        return setting ? { ...item, zoom: setting.zoom, positionX: setting.positionX, positionY: setting.positionY, featured: setting.featured, visible: setting.visible } : null;
       });
+      const keptBlocks = updatedBlocks.filter((item: any) => item !== null);
       for (const block of blocks) {
         if (!existingUrls.has(block.url)) updatedBlocks.push({
           id: block.id, type: "photo", title: block.title, content: "", url: block.url,
           zoom: block.zoom, positionX: block.positionX, positionY: block.positionY, featured: block.featured,
         });
       }
-      allProfiles[penya.id] = updatedBlocks;
+      allProfiles[penya.id] = keptBlocks;
       const { error: profileWriteError } = await supabase.from("site_content").upsert({ clave: "penyes_perfiles_json", valor: JSON.stringify(allProfiles) });
       if (profileWriteError) throw profileWriteError;
       const keepIds = new Set(rows.map(row => row.id));
