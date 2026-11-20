@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadMediaFile } from "@/lib/media-upload";
 
 type PhotoBlock = { id: string; url: string; title: string; featured: boolean; visible: boolean; zoom: number; positionX: number; positionY: number; legacy?: boolean };
+type LogoBlock = { id: string; url: string; title: string };
 
 export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya: any; onSaved: () => void; onCancel: () => void }) {
   const [blocks, setBlocks] = useState<PhotoBlock[]>([]);
+  const [logos, setLogos] = useState<LogoBlock[]>([]);
   const [originalIds, setOriginalIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -41,11 +44,14 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
       const savedRows = photoResult.data ?? [];
       setOriginalIds(savedRows.map((row: any) => row.id));
       let legacy: any[] = [];
+      let savedLogos: any[] = [];
       if (!contentResult.error) {
         try {
           const all = JSON.parse(contentResult.data?.valor || "{}");
-          legacy = Array.isArray(all?.[penya.id]) ? all[penya.id].filter((item: any) => item?.type === "photo" && typeof item.url === "string" && /^https?:\/\//i.test(item.url)) : [];
-        } catch { legacy = []; }
+          const profileBlocks = Array.isArray(all?.[penya.id]) ? all[penya.id] : [];
+          legacy = profileBlocks.filter((item: any) => item?.type === "photo" && typeof item.url === "string" && /^https?:\/\//i.test(item.url));
+          savedLogos = profileBlocks.filter((item: any) => item?.type === "logo" && typeof item.url === "string" && /^https?:\/\//i.test(item.url));
+        } catch { legacy = []; savedLogos = []; }
       }
       const rowsByUrl = new Map<string, any>(savedRows.map((row: any) => [row.url, row]));
       const merged: PhotoBlock[] = savedRows.map((row: any) => ({
@@ -56,6 +62,7 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
         positionY: Number(legacy.find(item => item.url === row.url)?.positionY ?? 50),
         legacy: legacy.some(item => item.url === row.url),
       }));
+      setLogos(savedLogos.map((item:any)=>({id:String(item.id||crypto.randomUUID()),url:String(item.url),title:String(item.title||"Logo oficial")})));
       for (const item of legacy) {
         if (!rowsByUrl.has(item.url)) merged.push({
           id: crypto.randomUUID(), url: item.url, title: item.title || "Fotografía",
@@ -97,6 +104,27 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
     } finally { setUploading(false); }
   };
 
+  const uploadLogos = async (files: FileList | null) => {
+    const selected = Array.from(files ?? []);
+    if (!selected.length) return;
+    if (selected.some(file => !["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024)) {
+      setMessage("Cada logo debe ser JPG, PNG o WEBP y no superar 5 MB.");
+      return;
+    }
+    setUploading(true); setMessage("");
+    try {
+      const added: LogoBlock[] = [];
+      for (const file of selected) {
+        const uploaded = await uploadMediaFile(file, "penyes/perfiles/" + penya.id);
+        added.push({ id: crypto.randomUUID(), url: uploaded.url, title: file.name.replace(/\.[^.]+$/, "").slice(0, 100) || "Logo oficial" });
+      }
+      setLogos(current => [...current, ...added]);
+      setMessage(added.length === 1 ? "Logo subido. Guarda la galería para conservarlo." : added.length + " logos subidos. Guarda la galería para conservarlos.");
+    } catch (error) {
+      setMessage("No se han podido subir los logos: " + (error instanceof Error ? error.message : String(error)));
+    } finally { setUploading(false); }
+  };
+
   const toggleFeatured = (id: string) => {
     setBlocks(current => {
       const target = current.find(block => block.id === id);
@@ -116,7 +144,7 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
     return [];
   }));
 
-  const save = async () => {
+  const save = async (profileLogoUrl?: string) => {
     if (featuredCount > 3) { setMessage("Solo puedes destacar 3 imágenes como máximo."); return; }
     setSaving(true); setMessage("");
     try {
@@ -137,12 +165,13 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
       const existingBlocks: any[] = Array.isArray(allProfiles[penya.id]) ? (allProfiles[penya.id] as any[]) : [];
       const photoSettings = new Map(blocks.map(block => [block.url, block]));
       const existingUrls = new Set(existingBlocks.filter((item: any) => item?.type === "photo").map((item: any) => item.url));
-      const updatedBlocks = existingBlocks.map((item: any) => {
+      const updatedBlocks = existingBlocks.filter((item:any)=>item?.type!=="logo").map((item: any) => {
         if (item?.type !== "photo" || typeof item.url !== "string") return item;
         const setting = photoSettings.get(item.url);
         return setting ? { ...item, zoom: setting.zoom, positionX: setting.positionX, positionY: setting.positionY, featured: setting.featured, visible: setting.visible } : null;
       });
       const keptBlocks = updatedBlocks.filter((item: any) => item !== null);
+      for (const logo of logos) keptBlocks.push({ id: logo.id, type: "logo", title: logo.title, content: "", url: logo.url });
       for (const block of blocks) {
         if (!existingUrls.has(block.url)) keptBlocks.push({
           id: block.id, type: "photo", title: block.title, content: "", url: block.url,
@@ -152,6 +181,10 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
       allProfiles[penya.id] = keptBlocks;
       const { error: profileWriteError } = await supabase.from("site_content").upsert({ clave: "penyes_perfiles_json", valor: JSON.stringify(allProfiles) });
       if (profileWriteError) throw profileWriteError;
+      if (profileLogoUrl) {
+        const { error: logoUpdateError } = await supabase.from("penyes").update({ foto_url: profileLogoUrl }).eq("id", penya.id);
+        if (logoUpdateError) throw logoUpdateError;
+      }
       const keepIds = new Set(rows.map(row => row.id));
       const removedIds = originalIds.filter(id => !keepIds.has(id));
       if (removedIds.length) {
@@ -160,7 +193,7 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
       }
       setOriginalIds(rows.map(row => row.id));
       setBlocks(current => current.map(block => ({ ...block, legacy: false })));
-      setMessage("Galería guardada. Las imágenes destacadas ya aparecen en la ficha.");
+      setMessage(profileLogoUrl ? "Galería guardada y logo aplicado a la foto de perfil." : "Galería guardada. Las imágenes destacadas ya aparecen en la ficha.");
       onSaved();
     } catch (error) {
       setMessage("No se han podido guardar las imágenes. Si acabas de seleccionar tu peña, puede que tu cuenta aún no tenga permisos de miembro. " + (error instanceof Error ? error.message : String(error)));
@@ -169,6 +202,11 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
 
   return <div className="space-y-5 rounded-2xl border border-primary/15 bg-background p-4 sm:p-5">
     <div><h3 className="text-lg font-extrabold text-primary">Galería de {penya.nombre}</h3><p className="mt-1 text-sm text-muted-foreground">Añade y organiza las fotografías de esta peña. Puedes destacar hasta 3; aparecerán en el apartado «Momentos destacados».</p></div>
+    <section className="space-y-3 rounded-2xl border border-[#e6ce91]/70 bg-[#fffaf0] p-3.5 sm:p-4">
+      <div><h4 className="text-sm font-extrabold text-[#765c25]">Logos oficiales de la peña</h4><p className="mt-1 text-xs leading-relaxed text-[#806f4c]">Un espacio separado para guardar versiones nítidas o corregidas del emblema. Puedes conservar varias propuestas y elegir cuál sustituye al logo circular de la ficha.</p></div>
+      <label className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-dashed border-[#d9bd78] bg-white px-3 py-2 text-xs font-extrabold text-[#765c25] hover:bg-[#fff7df]">{uploading ? "Subiendo archivo…" : "＋ Añadir logos oficiales"}<input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={uploading || saving} onChange={event=>{void uploadLogos(event.target.files);event.currentTarget.value="";}}/></label>
+      {logos.length>0 ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{logos.map(logo=><article key={logo.id} className="rounded-xl border border-[#e6ce91]/60 bg-white p-2"><div className="flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-white p-3"><img src={logo.url} alt={logo.title} className="max-h-full max-w-full object-contain"/></div><p className="mt-2 truncate text-[10px] font-bold text-[#765c25]">{logo.title}</p><button type="button" disabled={saving} onClick={()=>void save(logo.url)} className="mt-2 w-full rounded-full bg-[#765c25] px-2 py-2 text-[10px] font-extrabold text-white disabled:opacity-50">Usar como logo de perfil</button><button type="button" disabled={saving} onClick={()=>setLogos(current=>current.filter(item=>item.id!==logo.id))} className="mt-2 w-full py-1 text-[10px] font-bold text-red-700 underline">Eliminar de logos</button></article>)}</div> : <p className="rounded-xl border border-dashed border-[#e6ce91] bg-white/70 p-4 text-center text-xs text-[#806f4c]">Todavía no hay logos oficiales. Este espacio es independiente de las fotografías de la peña.</p>}
+    </section>
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-primary/[.045] p-3"><span className="text-sm font-extrabold text-primary">Imágenes destacadas</span><span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-primary">{featuredCount}/3 seleccionadas</span></div>
     <label className="flex min-h-12 cursor-pointer items-center justify-center rounded-xl border border-dashed border-primary/35 bg-primary/[.035] px-4 py-3 text-sm font-extrabold text-primary hover:bg-primary/[.07]">{uploading ? "Subiendo imágenes…" : "＋ Añadir imágenes"}<input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={uploading || saving} onChange={event => { void upload(event.target.files); event.currentTarget.value = ""; }} /></label>
     {loading ? <p className="py-8 text-center text-sm text-muted-foreground">Cargando imágenes…</p> : blocks.filter(block => block.visible).length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{blocks.filter(block => block.visible).map(block => <article key={block.id} className="overflow-hidden rounded-xl border border-border bg-white p-2">
