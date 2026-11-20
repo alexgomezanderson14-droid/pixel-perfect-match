@@ -212,7 +212,11 @@ export default function FestMap({
     if (!pickMarker.current) {
       const element = document.createElement("div");
       element.innerHTML = '<div class="fest-pin fest-pin-penya">★</div>';
-      pickMarker.current = new api.Marker({ element, anchor: "center" }).setLngLat([pick.lng, pick.lat]).addTo(instance);
+      pickMarker.current = new api.Marker({ element, anchor: "center", draggable: true }).setLngLat([pick.lng, pick.lat]).addTo(instance);
+      pickMarker.current.on("dragend", () => {
+        const position = pickMarker.current?.getLngLat();
+        if (position) pickRef.current?.(position.lat, position.lng);
+      });
     } else pickMarker.current.setLngLat([pick.lng, pick.lat]);
     instance.easeTo({ center: [pick.lng, pick.lat], duration: 450 });
   }, [pick, mapReady]);
