@@ -1450,7 +1450,7 @@ function Home() {
           </div>
           <div className="px-4 pb-4">
             <div className="relative z-10 -mt-7 flex min-w-0 items-end gap-3">
-              <div className="relative z-10 grid h-[68px] w-[68px] shrink-0 place-items-center overflow-hidden rounded-2xl border-[3px] border-white bg-[#edf3f3] text-xl font-black text-[#173f52] shadow-lg">{selectedPenyaLogo?<img src={selectedPenyaLogo} alt="" style={getPenyaPhotoImageStyle(penyaProfileLogoSettings[selectedPenya.id])} className="h-full w-full bg-white object-cover"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
+              <div className="relative z-10 grid h-[68px] w-[68px] shrink-0 place-items-center overflow-hidden rounded-full border-4 border-white bg-[#edf3f3] text-xl font-black text-[#173f52] shadow-lg">{selectedPenyaLogo?<img src={selectedPenyaLogo} alt="" style={getPenyaPhotoImageStyle(penyaProfileLogoSettings[selectedPenya.id])} className="h-full w-full bg-white object-cover"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
               <div className="min-w-0 flex-1 pb-1"><h2 className="line-clamp-2 text-[18px] font-black leading-tight tracking-tight text-[#173f52]">{selectedPenya.nombre}</h2></div>
             </div>
             
