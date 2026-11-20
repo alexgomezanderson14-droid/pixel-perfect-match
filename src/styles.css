@@ -577,3 +577,30 @@ html.festalfas-high-contrast .page-bg [class*="border-border"] { border-color:co
 nav[aria-label="Navegación principal"] > button > span:last-child { display:none !important; }
 nav[aria-label="Navegación principal"] > button > span:first-child { width:34px !important; height:34px !important; }
 nav[aria-label="Navegación principal"] > button > span:first-child svg { width:25px !important; height:25px !important; }
+
+
+/* Nuevo centro de administración: navegación por secciones y contenido adaptable. */
+.admin-control-layout { align-items:start; }
+.admin-control-sidebar { min-width:0; }
+.admin-control-link { display:flex; width:100%; min-height:2.8rem; align-items:center; gap:.7rem; border:1px solid transparent; border-radius:.9rem; padding:.65rem .75rem; color:var(--foreground); text-align:left; font-size:.84rem; font-weight:650; transition:background .18s ease,border-color .18s ease,color .18s ease; }
+.admin-control-link:hover { background:color-mix(in oklab,var(--primary) 7%,transparent); border-color:color-mix(in oklab,var(--primary) 18%,transparent); }
+.admin-control-link.is-active { background:var(--primary); border-color:var(--primary); color:var(--primary-foreground); box-shadow:0 5px 14px color-mix(in oklab,var(--primary) 18%,transparent); }
+.admin-control-icon { display:grid; width:1.65rem; height:1.65rem; flex:none; place-items:center; border-radius:.55rem; background:color-mix(in oklab,var(--foreground) 6%,transparent); font-size:1rem; }
+.admin-control-link.is-active .admin-control-icon { background:color-mix(in oklab,var(--primary-foreground) 16%,transparent); }
+.admin-control-count { margin-left:auto; min-width:1.35rem; border-radius:999px; background:color-mix(in oklab,var(--foreground) 9%,transparent); padding:.12rem .4rem; text-align:center; font-size:.68rem; font-weight:800; }
+.admin-control-count.is-alert { background:#fbbf24; color:#422006; }
+.admin-mobile-switch select { width:100%; }
+.admin-control-layout .admin-overview-stats { margin-top:0; }
+@media (max-width:1023px) {
+ .admin-control-layout { display:block; }
+ .admin-control-layout > div { width:100%; }
+}
+@media (max-width:639px) {
+ .admin-workspace { padding:1rem .75rem max(2rem,env(safe-area-inset-bottom)); }
+ .admin-workspace header { margin-bottom:1rem; }
+ .admin-control-layout { gap:0; }
+ .admin-mobile-switch { position:sticky; top:.35rem; z-index:20; border:1px solid color-mix(in oklab,var(--foreground) 10%,transparent); border-radius:1rem; background:color-mix(in oklab,var(--background) 92%,transparent); padding:.65rem; backdrop-filter:blur(16px); }
+ .admin-control-layout .admin-overview-stats { display:none; }
+ .admin-workspace section { min-width:0; }
+ .admin-workspace form.glass, .admin-workspace article.glass { min-width:0; }
+}
