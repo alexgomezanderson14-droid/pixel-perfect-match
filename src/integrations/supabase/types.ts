@@ -151,12 +151,6 @@ export type Database = {
         }
         Relationships: []
       }
-      site_feedback: {
-        Row: { id: string; tipo: string; titulo: string; descripcion: string; email: string | null; pagina: string | null; estado: string; respuesta: string | null; created_at: string; responded_at: string | null }
-        Insert: { id?: string; tipo: string; titulo: string; descripcion: string; email?: string | null; pagina?: string | null; estado?: string; respuesta?: string | null; created_at?: string; responded_at?: string | null }
-        Update: { id?: string; tipo?: string; titulo?: string; descripcion?: string; email?: string | null; pagina?: string | null; estado?: string; respuesta?: string | null; created_at?: string; responded_at?: string | null }
-        Relationships: []
-      }
       site_content: {
         Row: {
           clave: string
