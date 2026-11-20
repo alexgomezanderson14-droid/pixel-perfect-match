@@ -36,7 +36,7 @@ export function PenyaAwardMedal({award,compact=false}:{award:PenyaAward;compact?
  const motif=category==="paellas"?"sunburst":category==="desfile"?"star":category==="playbacks"?"orbit":"rays";
  const medalClass="penya-award-medal relative mx-auto grid shrink-0 place-items-center "+(compact?"h-[76px] w-[76px]":"h-[116px] w-[116px] sm:h-[142px] sm:w-[142px]");
  const medalStyle:React.CSSProperties={"--holo-a":colors[0],"--holo-b":colors[1],"--holo-c":colors[2],"--holo-d":colors[3]} as React.CSSProperties;
- return <div className={medalClass} data-category={category} data-position={award.position} data-motif={motif} style={medalStyle}>
+ return <div className={medalClass} data-category={category} data-shape={category==="paellas"?"square":category==="desfile"?"round":category==="playbacks"?"hexagon":"round"} data-position={award.position} data-motif={motif} style={medalStyle}>
   <span className="penya-glass-body absolute inset-0 rounded-full" aria-hidden="true"/>
   <span className="penya-glass-rim absolute inset-[5%] rounded-full" aria-hidden="true"/>
   <span className="penya-glass-inner absolute inset-[12%] rounded-full" aria-hidden="true"/>
