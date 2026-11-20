@@ -323,6 +323,7 @@ const penyaStickerArt:Record<string,ReactNode>={
 const safeHttpUrl=(value:any)=>{try{const url=new URL(String(value||""));return url.protocol==="https:"||url.protocol==="http:"?url.toString():"";}catch{return "";}};
 const penyaVideoEmbed=(value:any)=>{const raw=safeHttpUrl(value);if(!raw)return "";try{const url=new URL(raw);if(url.hostname==="youtu.be")return "https://www.youtube-nocookie.com/embed/"+url.pathname.slice(1).split("/")[0];if(url.hostname.endsWith("youtube.com")){const id=url.searchParams.get("v")||url.pathname.split("/").filter(Boolean).pop();return id?"https://www.youtube-nocookie.com/embed/"+id:"";}if(url.hostname.endsWith("vimeo.com")){const id=url.pathname.split("/").filter(Boolean).pop();return id?"https://player.vimeo.com/video/"+id:"";}return /\.mp4(?:$|[?#])/i.test(url.pathname)?raw:"";}catch{return "";}};
 const normalizarBusqueda=(value:any)=>String(value||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
+const normalizarNombrePenya=(value:any)=>String(value||"").trim().toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
 const limpiarTextoNoticia=(value:any)=>{
   const text=String(value||"")
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi," ")
@@ -438,7 +439,6 @@ function Home() {
   const visibleActs = useMemo(()=>filteredActs.filter(a=>!/despertà|desperta|despertada|nit de albaes|nit d'albaes|nit de les albaes|albaes/.test(String(a.titulo||"").toLocaleLowerCase("es"))).sort((a,b)=>a.dia.localeCompare(b.dia)||(a.hora||"").localeCompare(b.hora||"")),[filteredActs]);
   const penyaMusicOptions = useMemo(()=>["Todas",...Array.from(new Set(penyes.map(p=>String(p.tipo_musica||"").trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b,"es"))],[penyes]);
   const mayoralesAnio = String(siteContent["mayorales_anio"]||"2027");
-  const normalizarNombrePenya = (value:any) => String(value||"").trim().toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
   // Prioridad: peña configurada, etiqueta Mayorales del año vigente y, como respaldo, CuBaTa.
   const mayoralesPenyaId = useMemo(()=>{
     const configuredId=String(siteContent["mayorales_penya_id"]||"").trim();
