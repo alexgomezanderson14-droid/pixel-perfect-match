@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-type PhotoBlock = { id: string; url: string; title: string; featured: boolean; visible: boolean; legacy?: boolean };
+type PhotoBlock = { id: string; url: string; title: string; featured: boolean; visible: boolean; zoom: number; positionX: number; positionY: number; legacy?: boolean };
 
 export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya: any; onSaved: () => void; onCancel: () => void }) {
   const [blocks, setBlocks] = useState<PhotoBlock[]>([]);
@@ -32,12 +32,17 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
       const merged: PhotoBlock[] = savedRows.map((row: any) => ({
         id: row.id, url: row.url, title: legacy.find(item => item.url === row.url)?.title || "Fotografía",
         featured: row.destacada === true, visible: row.visible !== false,
+        zoom: Number(legacy.find(item => item.url === row.url)?.zoom ?? 100),
+        positionX: Number(legacy.find(item => item.url === row.url)?.positionX ?? 50),
+        positionY: Number(legacy.find(item => item.url === row.url)?.positionY ?? 50),
         legacy: legacy.some(item => item.url === row.url),
       }));
       for (const item of legacy) {
         if (!rowsByUrl.has(item.url)) merged.push({
           id: crypto.randomUUID(), url: item.url, title: item.title || "Fotografía",
-          featured: item.featured === true, visible: true, legacy: true,
+          featured: item.featured === true, visible: true,
+          zoom: Number(item.zoom ?? 100), positionX: Number(item.positionX ?? 50),
+          positionY: Number(item.positionY ?? 50), legacy: true,
         });
       }
       setBlocks(merged);
@@ -64,7 +69,7 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
         const { error } = await supabase.storage.from("penyes").upload(path, file, { contentType: file.type, cacheControl: "3600", upsert: false });
         if (error) throw error;
         const url = supabase.storage.from("penyes").getPublicUrl(path).data.publicUrl;
-        added.push({ id: crypto.randomUUID(), url, title: file.name.replace(/\.[^.]+$/, "").slice(0, 100) || "Fotografía", featured: false, visible: true });
+        added.push({ id: crypto.randomUUID(), url, title: file.name.replace(/\.[^.]+$/, "").slice(0, 100) || "Fotografía", featured: false, visible: true, zoom: 100, positionX: 50, positionY: 50 });
       }
       setBlocks(current => [...current, ...added]);
       setMessage(added.length === 1 ? "Imagen subida. Recuerda guardar los cambios." : added.length + " imágenes subidas. Recuerda guardar los cambios.");
@@ -101,6 +106,33 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
         const { error } = await supabase.from("penya_fotos").upsert(rows, { onConflict: "id" });
         if (error) throw error;
       }
+      // Los ajustes visuales viven junto a los bloques del perfil para que se
+      // apliquen también a la galería, destacadas y visor ampliado.
+      const { data: profileData, error: profileReadError } = await supabase.from("site_content").select("valor").eq("clave", "penyes_perfiles_json").maybeSingle();
+      if (profileReadError) throw profileReadError;
+      let allProfiles: Record<string, any[]> = {};
+      try {
+        const parsed = JSON.parse(profileData?.valor || "{}");
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) allProfiles = parsed;
+      } catch { allProfiles = {}; }
+      const existingBlocks = Array.isArray(allProfiles[penya.id]) ? allProfiles[penya.id] : [];
+      const photoSettings = new Map(blocks.map(block => [block.url, block]));
+      const existingUrls = new Set(existingBlocks.filter((item: any) => item?.type === "photo").map((item: any) => item.url));
+      const updatedBlocks = existingBlocks.map((item: any) => {
+        if (item?.type !== "photo" || typeof item.url !== "string") return item;
+        const setting = photoSettings.get(item.url);
+        return setting ? { ...item, zoom: setting.zoom, positionX: setting.positionX, positionY: setting.positionY, featured: setting.featured, visible: setting.visible } : null;
+      });
+      const keptBlocks = updatedBlocks.filter((item: any) => item !== null);
+      for (const block of blocks) {
+        if (!existingUrls.has(block.url)) keptBlocks.push({
+          id: block.id, type: "photo", title: block.title, content: "", url: block.url,
+          zoom: block.zoom, positionX: block.positionX, positionY: block.positionY, featured: block.featured,
+        });
+      }
+      allProfiles[penya.id] = keptBlocks;
+      const { error: profileWriteError } = await supabase.from("site_content").upsert({ clave: "penyes_perfiles_json", valor: JSON.stringify(allProfiles) });
+      if (profileWriteError) throw profileWriteError;
       const keepIds = new Set(rows.map(row => row.id));
       const removedIds = originalIds.filter(id => !keepIds.has(id));
       if (removedIds.length) {
@@ -121,8 +153,14 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-primary/[.045] p-3"><span className="text-sm font-extrabold text-primary">Imágenes destacadas</span><span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-primary">{featuredCount}/3 seleccionadas</span></div>
     <label className="flex min-h-12 cursor-pointer items-center justify-center rounded-xl border border-dashed border-primary/35 bg-primary/[.035] px-4 py-3 text-sm font-extrabold text-primary hover:bg-primary/[.07]">{uploading ? "Subiendo imágenes…" : "＋ Añadir imágenes"}<input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={uploading || saving} onChange={event => { void upload(event.target.files); event.currentTarget.value = ""; }} /></label>
     {loading ? <p className="py-8 text-center text-sm text-muted-foreground">Cargando imágenes…</p> : blocks.filter(block => block.visible).length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{blocks.filter(block => block.visible).map(block => <article key={block.id} className="overflow-hidden rounded-xl border border-border bg-white p-2">
-      <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-[#edf3f1]"><img src={block.url} alt={block.title || "Fotografía de la peña"} className="h-full w-full object-cover"/>{block.featured && <span className="absolute left-2 top-2 rounded-full bg-[#f4d77a] px-2 py-1 text-[9px] font-extrabold text-[#684b08]">★ DESTACADA</span>}</div>
+      <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-[#edf3f1]"><img src={block.url} alt={block.title || "Fotografía de la peña"} style={{objectPosition:`${block.positionX}% ${block.positionY}%`,transform:`translate(${(block.positionX-50)*1.2}%,${(block.positionY-50)*1.2}%) scale(${block.zoom/100})`}} className="h-full w-full object-cover"/>{block.featured && <span className="absolute left-2 top-2 rounded-full bg-[#f4d77a] px-2 py-1 text-[9px] font-extrabold text-[#684b08]">★ DESTACADA</span>}</div>
       <p className="mt-2 truncate text-xs font-bold text-primary">{block.title || "Fotografía"}</p>
+      <div className="mt-2 space-y-2 rounded-lg bg-primary/[.04] p-2">
+        <label className="block text-[10px] font-semibold text-primary">Zoom · {block.zoom}%<input type="range" min="100" max="220" value={block.zoom} onChange={e=>setBlocks(current=>current.map(item=>item.id===block.id?{...item,zoom:Number(e.target.value)}:item))} className="w-full accent-primary"/></label>
+        <label className="block text-[10px] font-semibold text-primary">Horizontal · {block.positionX}%<input type="range" min="0" max="100" value={block.positionX} onChange={e=>setBlocks(current=>current.map(item=>item.id===block.id?{...item,positionX:Number(e.target.value)}:item))} className="w-full accent-primary"/></label>
+        <label className="block text-[10px] font-semibold text-primary">Vertical · {block.positionY}%<input type="range" min="0" max="100" value={block.positionY} onChange={e=>setBlocks(current=>current.map(item=>item.id===block.id?{...item,positionY:Number(e.target.value)}:item))} className="w-full accent-primary"/></label>
+        <button type="button" onClick={()=>setBlocks(current=>current.map(item=>item.id===block.id?{...item,zoom:100,positionX:50,positionY:50}:item))} className="text-[10px] font-bold text-primary underline">Restablecer encuadre</button>
+      </div>
       <label className="mt-2 flex cursor-pointer items-center gap-2 text-xs font-semibold text-primary"><input type="checkbox" checked={Boolean(block.featured)} onChange={() => toggleFeatured(block.id)} className="h-4 w-4 accent-primary"/><span>Mostrar en destacadas</span></label>
       <button type="button" onClick={() => removePhoto(block.id)} className="mt-2 text-xs font-bold text-red-700 underline underline-offset-2">Eliminar imagen</button>
     </article>)}</div> : <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Todavía no hay imágenes. Añade las primeras fotografías de esta peña.</p>}
