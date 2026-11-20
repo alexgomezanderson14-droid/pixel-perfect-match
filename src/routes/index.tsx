@@ -9,6 +9,7 @@ import CopyrightFooter from "@/components/CopyrightFooter";
 import { noticiaCuBaTa2027 } from "@/content/noticia-cubata-2027";
 import { noticiaCestaNavidad2027 } from "@/content/noticia-cesta-navidad-2027";
 import { noticiaDesfileHumor2026 } from "@/content/noticia-desfile-humor-2026";
+import { catalogoPenyesHistorico } from "@/content/penyes-catalogo-historico";
 const videoCover=(url?:string)=>{if(!url)return "";const match=url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/))([\w-]{11})/i);return match?"https://img.youtube.com/vi/"+match[1]+"/hqdefault.jpg":"";};
 
 
@@ -280,7 +281,7 @@ async function sharePenyaCard(p: PenyaDb) {
     window.alert("Plantilla de Instagram descargada. Ya puedes subirla a tus historias.");
   }
 }
-type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number | null; lng: number | null; foto: string; tipo_musica: string; tiene_evento?: boolean; instagram?: string | null; informacion?: string | null };
+type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number | null; lng: number | null; foto: string; tipo_musica: string; tiene_evento?: boolean; instagram?: string | null; informacion?: string | null; asociada?: boolean; color?: string };
 const penyaStickerTypes = ["confetti","firework","bomb","flame","trumpet"] as const;
 function getPenyaStickerSeed(id:string){
   return Array.from(id).reduce((sum,char)=>((sum*31)+char.charCodeAt(0))>>>0,17);
@@ -324,6 +325,7 @@ const safeHttpUrl=(value:any)=>{try{const url=new URL(String(value||""));return 
 const penyaVideoEmbed=(value:any)=>{const raw=safeHttpUrl(value);if(!raw)return "";try{const url=new URL(raw);if(url.hostname==="youtu.be")return "https://www.youtube-nocookie.com/embed/"+url.pathname.slice(1).split("/")[0];if(url.hostname.endsWith("youtube.com")){const id=url.searchParams.get("v")||url.pathname.split("/").filter(Boolean).pop();return id?"https://www.youtube-nocookie.com/embed/"+id:"";}if(url.hostname.endsWith("vimeo.com")){const id=url.pathname.split("/").filter(Boolean).pop();return id?"https://player.vimeo.com/video/"+id:"";}return /\.mp4(?:$|[?#])/i.test(url.pathname)?raw:"";}catch{return "";}};
 const normalizarBusqueda=(value:any)=>String(value||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
 const normalizarNombrePenya=(value:any)=>String(value||"").trim().toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
+const claveCatalogoPenya=(value:any)=>normalizarNombrePenya(value).replace(/^(?:penya|pena)/,"");
 const nombrePenyaParaOrden=(value:any)=>String(value||"").trim().replace(/^(?:penya|peña)\s+/i,"").trim();
 const limpiarTextoNoticia=(value:any)=>{
   const text=String(value||"")
@@ -419,6 +421,7 @@ function Home() {
   const [shareReminder, setShareReminder] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [selectedPenya, setSelectedPenya] = useState<PenyaDb | null>(null);
+  const selectedPenyaLogo = selectedPenya ? (penyaCardSettings[selectedPenya.id]?.logo_url || selectedPenya.foto || "") : "";
   const [penyaDetailFullscreen, setPenyaDetailFullscreen] = useState(false);
   const [mapPenyaPreview, setMapPenyaPreview] = useState(false);
   const [penyaGalleryOpen, setPenyaGalleryOpen] = useState(false);
@@ -633,16 +636,20 @@ function Home() {
       setHeroImage("");
       try { localStorage.removeItem("festalfas-hero-image"); } catch { /* Sin caché local. */ }
     }
-    if (!data) return;
-    // Normaliza filas antes de pasarlas al carrusel y al resto de la interfaz.
-    // Una fila mal formada no debe romper el renderizado de todas las peñas.
-    const cleanPenyes = data
+    // Normaliza primero las filas existentes. Nunca se sustituyen ni se editan:
+    // el catálogo histórico solo añade nombres que no estén ya registrados.
+    const penyesExistentes = (data ?? [])
       .filter((p:any) => p && p.id != null && String(p.nombre ?? "").trim().length > 0 && (!p.estado || p.estado === "aprobada"))
       .map((p:any) => {
         const fotoUrl = typeof p.foto_url === "string" ? p.foto_url.trim() : "";
         const foto = fotoUrl ? (fotoUrl.startsWith("http") ? fotoUrl : supabase.storage.from("penyes").getPublicUrl(fotoUrl).data.publicUrl) : "";
         return { ...p, id: String(p.id), nombre: String(p.nombre).trim(), foto, direccion: p.direccion ?? "", tipo_musica: p.tipo_musica ?? "Variada", instagram: p.instagram ?? "", informacion: p.informacion ?? "" };
       });
+    const nombresExistentes = new Set(penyesExistentes.map((p:any) => claveCatalogoPenya(p.nombre)));
+    const penyesCatalogo = catalogoPenyesHistorico
+      .filter((p) => !nombresExistentes.has(claveCatalogoPenya(p.nombre)))
+      .map((p) => ({ id: p.id, nombre: p.nombre, direccion: null, lat: null, lng: null, foto: "", tipo_musica: "Variada", informacion: p.informacion, asociada: p.asociada, color: p.color }));
+    const cleanPenyes = [...penyesExistentes, ...penyesCatalogo];
     setPenyes(cleanPenyes);
     setPenyaPhotos(penyaPhotosData ?? []);
     try { localStorage.setItem("festalfas-penyes-cache", JSON.stringify(cleanPenyes)); } catch { /* Caché opcional. */ }
@@ -817,7 +824,7 @@ function Home() {
     ...selectedPenyaPhotoBlocks.filter((block:any)=>block.featured!==true).map((block:any)=>block.url),
     ...selectedPenyaEvents.map((e:any) => e.imagen_url || e.imagen || e.foto_url || e.foto),
     ...selectedPenyaActs.map((a:any) => a.imagen_url || a.imagen || a.foto_url || a.foto)
-  ].filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url) && url !== selectedPenya.foto ))] : [];
+  ].filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url) && url !== selectedPenyaLogo ))] : [];
   const selectedPenyaFeaturedGallery = selectedPenyaPhotoBlocks.filter((block:any)=>block.featured===true).slice(0,3).map((block:any)=>block.url);
   const selectedPenyaPhotoStyle=(url:string)=>{const block=selectedPenyaPhotoBlocks.find((item:any)=>item.url===url);return {objectPosition:`${block?.positionX??50}% ${block?.positionY??50}%`,transform:`translate(${((block?.positionX??50)-50)*1.2}%,${((block?.positionY??50)-50)*1.2}%) scale(${(block?.zoom??100)/100})`};};
   // Las noticias automáticas solo pueden usar la lista creada por el extractor de galerías.
@@ -1180,8 +1187,8 @@ function Home() {
                   const fallbackColors=["#5968D8","#E45D70","#13A6C3","#19A887","#D28B35","#8559C7","#287DAD","#C45D91"];
                   const cardConfig=penyaCardSettings[p.id]||{};
                   const colorSeed=String(p.id||p.nombre||"penya").split("").reduce((hash,char)=>(hash*31+char.charCodeAt(0))>>>0,7);
-                  const color=/^#[0-9a-fA-F]{6}$/.test(cardConfig.color||"")?cardConfig.color!:fallbackColors[colorSeed%fallbackColors.length];
-                  const logo=cardConfig.logo_url||"";
+                  const color=/^#[0-9a-fA-F]{6}$/.test(cardConfig.color||"")?cardConfig.color!:(/^#[0-9a-fA-F]{6}$/.test(p.color||"")?p.color!:fallbackColors[colorSeed%fallbackColors.length]);
+                  const logo=cardConfig.logo_url||p.foto||"";
                   const logoScale=Number.isFinite(cardConfig.logo_scale)?Math.max(50,Math.min(180,cardConfig.logo_scale!)):100;
                   const logoX=Number.isFinite(cardConfig.logo_x)?Math.max(0,Math.min(100,cardConfig.logo_x!)):50;
                   const logoY=Number.isFinite(cardConfig.logo_y)?Math.max(0,Math.min(100,cardConfig.logo_y!)):50;
@@ -1205,7 +1212,7 @@ function Home() {
                           </div>
                           {misPenyes.includes(p.id)&&<span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/20 text-sm text-white ring-1 ring-white/40" aria-label="Mi peña">★</span>}
                         </div>
-                        {(mayoralesPenyaId&&String(p.id)===String(mayoralesPenyaId))&&<span className="mt-3 inline-flex items-center gap-1 rounded-full border border-[#d4af37] bg-gradient-to-r from-[#fff4c2] via-[#f4d77a] to-[#d4af37] px-2.5 py-1 text-[9px] font-extrabold tracking-wide text-[#684b08] shadow-[0_2px_8px_rgba(142,103,20,.22)]">♛ MAYORALES {mayoralesAnio}</span>}{!p.direccion&&<span className="mt-3 inline-flex rounded-full border border-white/35 bg-black/10 px-2.5 py-1 text-[9px] font-bold tracking-wide" style={{color:cardTextColor}}>Sin ubicación registrada</span>}
+                        {(mayoralesPenyaId&&String(p.id)===String(mayoralesPenyaId))&&<span className="mt-3 inline-flex items-center gap-1 rounded-full border border-[#d4af37] bg-gradient-to-r from-[#fff4c2] via-[#f4d77a] to-[#d4af37] px-2.5 py-1 text-[9px] font-extrabold tracking-wide text-[#684b08] shadow-[0_2px_8px_rgba(142,103,20,.22)]">♛ MAYORALES {mayoralesAnio}</span>}{p.asociada===false&&<span className="mt-3 inline-flex rounded-full border border-white/40 bg-black/15 px-2.5 py-1 text-[9px] font-extrabold tracking-wide" style={{color:cardTextColor}}>No asociada</span>}{p.id.startsWith("catalogo-")&&!logo&&<span className="mt-3 inline-flex rounded-full border border-white/40 bg-black/10 px-2.5 py-1 text-[9px] font-bold tracking-wide" style={{color:cardTextColor}}>Logo pendiente</span>}{!p.direccion&&<span className="mt-3 inline-flex rounded-full border border-white/35 bg-black/10 px-2.5 py-1 text-[9px] font-bold tracking-wide" style={{color:cardTextColor}}>Sin ubicación registrada</span>}
                       </div>
                       <div className="absolute inset-x-0 bottom-0 h-[78%]">
                         {logo?<img src={logo} alt={"Logo de "+p.nombre} loading="lazy" decoding="async" style={{objectPosition:`${logoX}% ${logoY}%`,transform:`translate(${(logoX-50)/2}%,${(logoY-50)/2}%) scale(${logoScale/100})`}} className="absolute inset-x-1 bottom-[-8px] h-full w-[calc(100%-8px)] object-contain transition-transform duration-500 ease-[cubic-bezier(.2,.75,.25,1)] group-hover:-translate-y-2"/>:<div className="absolute inset-x-0 bottom-4 text-center text-8xl font-black text-white/90">{p.nombre.trim().charAt(0).toLocaleUpperCase("es")}</div>}
@@ -1356,7 +1363,7 @@ function Home() {
           </div>
           <div className="px-4 pb-4">
             <div className="relative z-10 -mt-7 flex min-w-0 items-end gap-3">
-              <div className="relative z-10 grid h-[68px] w-[68px] shrink-0 place-items-center overflow-hidden rounded-2xl border-[3px] border-white bg-[#edf3f3] text-xl font-black text-[#173f52] shadow-lg">{selectedPenya.foto?<img src={selectedPenya.foto} alt="" className="h-full w-full bg-white object-contain"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
+              <div className="relative z-10 grid h-[68px] w-[68px] shrink-0 place-items-center overflow-hidden rounded-2xl border-[3px] border-white bg-[#edf3f3] text-xl font-black text-[#173f52] shadow-lg">{selectedPenyaLogo?<img src={selectedPenyaLogo} alt="" className="h-full w-full bg-white object-contain"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
               <div className="min-w-0 flex-1 pb-1"><h2 className="line-clamp-2 text-[18px] font-black leading-tight tracking-tight text-[#173f52]">{selectedPenya.nombre}</h2></div>
             </div>
             {selectedPenya.informacion?.trim()&&<p className="mt-3 line-clamp-3 text-[13px] leading-[1.55] text-[#52666b]">{selectedPenya.informacion}</p>}
@@ -1388,16 +1395,16 @@ function Home() {
             </div>
             <div className="relative z-30 mx-auto -mt-[112px] w-full max-w-[1500px] px-4 pb-5 sm:-mt-[142px] sm:px-7 lg:px-12 xl:px-16 2xl:px-20">
               <div className="relative flex flex-col items-center text-center">
-                <div className="relative z-30 grid h-44 w-44 shrink-0 place-items-center overflow-hidden rounded-full border-[7px] border-background bg-white text-5xl font-black text-[#173f52] shadow-[0_10px_34px_rgba(4,25,34,.22)] sm:h-56 sm:w-56 sm:border-[8px] lg:h-72 lg:w-72 xl:h-80 xl:w-80" style={{transform:`scale(${(penyaProfileLogoSettings[selectedPenya.id]?.frameScale??100)/100})`}}>{selectedPenya.foto?<img src={selectedPenya.foto} alt={"Logo de "+selectedPenya.nombre} style={{objectPosition:`${penyaProfileLogoSettings[selectedPenya.id]?.x??50}% ${penyaProfileLogoSettings[selectedPenya.id]?.y??50}%`,transform:`translate(${((penyaProfileLogoSettings[selectedPenya.id]?.x??50)-50)*1.2}%,${((penyaProfileLogoSettings[selectedPenya.id]?.y??50)-50)*1.2}%) scale(${(penyaProfileLogoSettings[selectedPenya.id]?.zoom??100)/100})`}} className="h-full w-full bg-white object-contain"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
+                <div className="relative z-30 grid h-44 w-44 shrink-0 place-items-center overflow-hidden rounded-full border-[7px] border-background bg-white text-5xl font-black text-[#173f52] shadow-[0_10px_34px_rgba(4,25,34,.22)] sm:h-56 sm:w-56 sm:border-[8px] lg:h-72 lg:w-72 xl:h-80 xl:w-80" style={{transform:`scale(${(penyaProfileLogoSettings[selectedPenya.id]?.frameScale??100)/100})`}}>{selectedPenyaLogo?<img src={selectedPenyaLogo} alt={"Logo de "+selectedPenya.nombre} style={{objectPosition:`${penyaProfileLogoSettings[selectedPenya.id]?.x??50}% ${penyaProfileLogoSettings[selectedPenya.id]?.y??50}%`,transform:`translate(${((penyaProfileLogoSettings[selectedPenya.id]?.x??50)-50)*1.2}%,${((penyaProfileLogoSettings[selectedPenya.id]?.y??50)-50)*1.2}%) scale(${(penyaProfileLogoSettings[selectedPenya.id]?.zoom??100)/100})`}} className="h-full w-full bg-white object-contain"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
                 {(mayoralesPenyaId&&String(selectedPenya.id)===String(mayoralesPenyaId))&&<div className="mt-2"><span className="inline-flex items-center gap-1 rounded-full border border-[#e6ce91] bg-[#fff7df] px-3 py-1 text-[10px] font-extrabold tracking-wide text-[#765c25] sm:text-xs">♛ MAYORALES {mayoralesAnio}</span></div>}
                 <h2 className="mt-2 max-w-4xl break-words text-[26px] font-black leading-tight tracking-tight text-[#173f52] sm:mt-3 sm:text-4xl lg:text-[2.65rem]">{selectedPenya.nombre}</h2>
-                {selectedPenya.informacion?.trim()&&<p className="mx-auto mt-2 max-w-2xl line-clamp-2 text-sm leading-relaxed text-[#61777b] sm:text-base">{selectedPenya.informacion}</p>}
+                {selectedPenya.informacion?.trim()&&<p className="mx-auto mt-2 max-w-2xl line-clamp-2 text-sm leading-relaxed text-[#61777b] sm:text-base">{selectedPenya.informacion}</p>}{selectedPenya.id.startsWith("catalogo-")&&!selectedPenyaLogo&&<p className="mt-2 text-[10px] font-bold text-muted-foreground">Logotipo pendiente de incorporar</p>}
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2"><button type="button" onClick={()=>{setSelectedPenya(null);setPenyaDetailFullscreen(false);setCurrentPage("home");setCat("penya");setFocus(selectedPenya.id);window.scrollTo({top:0,behavior:"smooth"});}} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#d8e5e2] bg-white/90 px-4 py-2 text-xs font-extrabold text-[#24576a] shadow-sm transition hover:-translate-y-0.5">📍 Ver en el mapa</button>{selectedPenyaAcceptsVisits&&<span className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] font-extrabold text-emerald-800"><span aria-hidden="true">✓</span> Esta peña acepta visitas</span>}</div>
               </div>
               {(() => {
                 const profileTags = selectedPenyaCustomBlocks.filter((block:any)=>block.type==="tag" && String(block.title||"").trim() && !/^(acepta visitas|esta peña acepta visitas|puertas abiertas)$/i.test(String(block.title).trim())).map((block:any)=>String(block.title).trim());
                 const memberCount = [selectedPenya.miembros_actuales, selectedPenya.numero_miembros, selectedPenya.miembros].find((value)=>typeof value==="number" && Number.isFinite(value) && value>0);
-                const tags = [...(selectedPenya.tipo_musica ? ["♫ "+selectedPenya.tipo_musica] : []), ...(memberCount ? ["👥 "+memberCount+" miembros"] : []), ...profileTags, ...(misPenyes.includes(selectedPenya.id) ? ["★ Mi peña"] : [])].slice(0,4);
+                const tags = [...(selectedPenya.asociada===false ? ["No asociada"] : []), ...(selectedPenya.tipo_musica ? ["♫ "+selectedPenya.tipo_musica] : []), ...(memberCount ? ["👥 "+memberCount+" miembros"] : []), ...profileTags, ...(misPenyes.includes(selectedPenya.id) ? ["★ Mi peña"] : [])].slice(0,4);
                 const profilePhotos = selectedPenyaFeaturedGallery.slice(0,3);
                 return <>
                   <div id="ficha-presentacion" className="mb-1 flex min-h-8 flex-wrap items-center justify-center gap-2 sm:justify-start">
