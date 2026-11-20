@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { uploadMediaFile } from "@/lib/media-upload";
 import FestMap from "@/components/FestMap";
 import { getPenyaPhotoImageStyle } from "@/lib/penya-photo";
+import { getSeededPenyaAwards2026 } from "@/content/penya-awards-2026";
 
 const field = "w-full rounded-xl border border-input bg-background px-3 py-2 text-sm";
 
@@ -72,7 +73,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     });
     supabase.from("site_content").select("valor").eq("clave", "penyes_premios_json").maybeSingle().then(({ data, error }) => {
       if (!active) return;
-      if (!error) { try { const all = JSON.parse(data?.valor || "{}"); const saved = all?.[penya.id]; setAwards(Array.isArray(saved) ? saved.map((item:any)=>({id:String(item.id||crypto.randomUUID()),position:String(item.position||"1.º"),category:String(item.category||""),year:String(item.year||"2026")})) : []); } catch { setAwards([]); } }
+      if (!error) { try { const all = JSON.parse(data?.valor || "{}"); const saved = all?.[penya.id]; setAwards(Array.isArray(saved) ? saved.map((item:any)=>({id:String(item.id||crypto.randomUUID()),position:String(item.position||"1.º"),category:String(item.category||""),year:String(item.year||"2026")})) : getSeededPenyaAwards2026(penya.nombre)); } catch { setAwards([]); } }
       else setBlocksMessage("No se han podido cargar los premios: " + error.message);
       setAwardsLoading(false);
     });
@@ -241,7 +242,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     <div className="space-y-2"><p className="text-sm font-semibold">Cambiar fotografía (JPG, PNG o WEBP, máx. 5 MB)</p><div className="grid grid-cols-1 gap-2 sm:grid-cols-2"><label className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-primary/20 bg-background px-3 py-2 text-center text-xs font-bold text-primary">▧ Elegir de la galería<input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setFoto(e.target.files?.[0]??null)} /></label><label className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-primary/20 bg-background px-3 py-2 text-center text-xs font-bold text-primary">◎ Hacer una foto<input className="sr-only" type="file" accept="image/*" capture="environment" onChange={e=>setFoto(e.target.files?.[0]??null)} /></label></div>{foto&&<p className="text-xs text-muted-foreground">Imagen seleccionada: {foto.name}</p>}</div>
     {fotoUrl && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={quitarFoto} onChange={e=>setQuitarFoto(e.target.checked)} /> Quitar fotografía actual</label>}
     <section className="space-y-3 rounded-2xl border border-[#e6ce91]/70 bg-[#fffaf0] p-4 sm:p-5">
-      <div><h4 className="text-base font-extrabold text-[#765c25]">Premios de la peña</h4><p className="mt-1 text-xs text-[#806f4c]">Guarda los premios de cada año festero. En la ficha pública solo se mostrarán los del año más reciente que tenga premios registrados, para evitar acumular distintivos.</p></div>
+      <div><h4 className="text-base font-extrabold text-[#765c25]">Premios de la peña</h4><p className="mt-1 text-xs text-[#806f4c]">Palmarés oficial de la peña. Se han precargado los resultados confirmados de 2026; puedes corregirlos o completar los certámenes pendientes. En la ficha pública se muestra el año más reciente con premios.</p></div>
       {awards.map((award,index)=><div key={award.id} className="grid grid-cols-1 items-end gap-2 rounded-xl border border-[#e6ce91]/60 bg-white/80 p-3 sm:grid-cols-[.8fr_1.4fr_.8fr_auto]">
         <label className="block space-y-1 text-xs font-semibold text-[#765c25]">Puesto<input className={field} maxLength={12} value={award.position} onChange={e=>setAwards(old=>old.map(item=>item.id===award.id?{...item,position:e.target.value}:item))} placeholder="1.º"/></label>
         <label className="block space-y-1 text-xs font-semibold text-[#765c25]">Modalidad<input className={field} maxLength={60} value={award.category} onChange={e=>setAwards(old=>old.map(item=>item.id===award.id?{...item,category:e.target.value}:item))} placeholder="Desfile, paellas, playback…"/></label>
