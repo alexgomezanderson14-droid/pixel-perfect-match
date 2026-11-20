@@ -146,7 +146,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
       if (awardsReadError) throw awardsReadError;
       let allAwards: Record<string, PenyaAward[]> = {};
       try { const parsed = JSON.parse(awardsData?.valor || "{}"); if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) allAwards = parsed; } catch { allAwards = {}; }
-      allAwards[penya.id] = awards.filter(item => item.category.trim() && item.position.trim() && /^20\\d{2}$/.test(item.year)).map(item => ({...item, position:item.position.trim().slice(0,12), category:item.category.trim().slice(0,60), year:item.year}));
+      allAwards[penya.id] = awards.filter(item => item.category.trim() && item.position.trim() && /^20\d{2}$/.test(item.year) && Number(item.year)>=2026).map(item => ({...item, position:item.position.trim().slice(0,12), category:item.category.trim().slice(0,60), year:item.year}));
       const { error: awardsWriteError } = await supabase.from("site_content").upsert({ clave: "penyes_premios_json", valor: JSON.stringify(allAwards) });
       if (awardsWriteError) throw awardsWriteError;
 
