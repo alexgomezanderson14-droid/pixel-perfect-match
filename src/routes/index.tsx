@@ -374,6 +374,7 @@ function Home() {
   const [editingPenyaProfile, setEditingPenyaProfile] = useState<PenyaDb | null>(null);
   const penyaCarouselRef = useRef<HTMLDivElement | null>(null);
   const penyaScrollFrameRef = useRef<number | null>(null);
+  const penyaCardCentersRef = useRef<number[]>([]);
   const [eventsSearch, setEventsSearch] = useState("");
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
   const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes">("all");
@@ -476,6 +477,29 @@ function Home() {
   },[visiblePenyes,searchingPenyes,mayoralesPenyaId]);
   // Copias alrededor de la lista central para conservar el carrusel circular sin saltos visibles.
   const loopedPenyes = !searchingPenyes && carouselPenyes.length > 1 ? [...carouselPenyes,...carouselPenyes,...carouselPenyes,...carouselPenyes,...carouselPenyes] : [...carouselPenyes];
+  // Cachea los centros de las tarjetas: durante el gesto de desplazamiento no
+  // se fuerzan lecturas de layout de todas las tarjetas en cada frame.
+  const rebuildPenyaCardCenters=useCallback(()=>{
+    const el=penyaCarouselRef.current;
+    if(!el)return;
+    penyaCardCentersRef.current=Array.from(el.children,(child)=>{
+      const card=child as HTMLElement;
+      return card.offsetLeft+card.offsetWidth/2;
+    });
+  },[]);
+  const nearestPenyaCardIndex=useCallback((el:HTMLDivElement)=>{
+    const centers=penyaCardCentersRef.current;
+    if(!centers.length)return 0;
+    const target=el.scrollLeft+el.clientWidth/2;
+    let low=0,high=centers.length-1;
+    while(low<high){
+      const middle=(low+high)>>1;
+      if(centers[middle]!<target)low=middle+1;
+      else high=middle;
+    }
+    if(low>0&&Math.abs(centers[low-1]!-target)<=Math.abs(centers[low]!-target))return low-1;
+    return low;
+  },[]);
   // Calcula el centro usando la geometría real del layout, no getBoundingClientRect:
   // las transformaciones del coverflow no deben alterar qué tarjeta considera centrada.
   const centerPenyaCard=useCallback((index:number,behavior:ScrollBehavior="auto")=>{
@@ -487,28 +511,30 @@ function Home() {
   const handlePenyaCarouselScroll=(el:HTMLDivElement)=>{
     if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);
     penyaScrollFrameRef.current=requestAnimationFrame(()=>{
-      const cards=Array.from(el.children) as HTMLElement[];
-      if(!cards.length){setActivePenyaCard(0);penyaScrollFrameRef.current=null;return;}
-      const center=el.scrollLeft+el.clientWidth/2;
-      let nearest=0;
-      let distance=Number.POSITIVE_INFINITY;
-      cards.forEach((child,index)=>{
-        const card=child as HTMLElement;
-        const d=Math.abs(card.offsetLeft+card.offsetWidth/2-center);
-        if(d<distance){distance=d;nearest=index;}
-      });
-      const count=carouselPenyes.length;
-      if(!searchingPenyes&&count>1&&(nearest<count||nearest>=count*4)){
-        const normalized=((nearest%count)+count)%count;
-        const targetIndex=normalized+count*2;
-        const target=cards[targetIndex];
-        if(target)el.scrollLeft=target.offsetLeft-(el.clientWidth-target.offsetWidth)/2;
-        nearest=targetIndex;
-      }
+      if(!penyaCardCentersRef.current.length||penyaCardCentersRef.current.length!==el.children.length)rebuildPenyaCardCenters();
+      const nearest=nearestPenyaCardIndex(el);
       setActivePenyaCard(current=>current===nearest?current:nearest);
       penyaScrollFrameRef.current=null;
     });
   };
+  // El bucle solo se recoloca cuando el gesto ha terminado. Hacerlo durante la
+  // inercia del scroll interrumpe el movimiento nativo y provoca saltos a otra peña.
+  const handlePenyaCarouselScrollEnd=useCallback(()=>{
+    const el=penyaCarouselRef.current;
+    const count=carouselPenyes.length;
+    if(!el||searchingPenyes||count<2)return;
+    if(!penyaCardCentersRef.current.length||penyaCardCentersRef.current.length!==el.children.length)rebuildPenyaCardCenters();
+    const nearest=nearestPenyaCardIndex(el);
+    if(nearest<count||nearest>=count*4){
+      const normalized=((nearest%count)+count)%count;
+      const targetIndex=normalized+count*2;
+      const target=el.children[targetIndex] as HTMLElement|undefined;
+      if(target){
+        el.scrollLeft=target.offsetLeft-(el.clientWidth-target.offsetWidth)/2;
+        setActivePenyaCard(targetIndex);
+      }
+    }
+  },[carouselPenyes.length,searchingPenyes,rebuildPenyaCardCenters,nearestPenyaCardIndex]);
   useEffect(()=>{
     if(currentPage!=="penyes"||!visiblePenyes.length){setPenyaCarouselInitialized(false);return;}
     setPenyaCarouselInitialized(false);
@@ -518,13 +544,29 @@ function Home() {
     let secondFrame=0;
     const firstFrame=requestAnimationFrame(()=>{
       secondFrame=requestAnimationFrame(()=>{
+        rebuildPenyaCardCenters();
         centerPenyaCard(initialIndex,"auto");
         setPenyaCarouselInitialized(true);
       });
     });
     return()=>{cancelAnimationFrame(firstFrame);if(secondFrame)cancelAnimationFrame(secondFrame);};
-  },[currentPage,searchingPenyes,carouselPenyes,mayoralesPenyaId,centerPenyaCard]);
-  useEffect(()=>{if(!penyaCarouselInitialized)return;const handleResize=()=>centerPenyaCard(activePenyaCard);window.addEventListener("resize",handleResize,{passive:true});return()=>window.removeEventListener("resize",handleResize);},[penyaCarouselInitialized,activePenyaCard,centerPenyaCard]);
+  },[currentPage,searchingPenyes,carouselPenyes,mayoralesPenyaId,centerPenyaCard,rebuildPenyaCardCenters]);
+  useEffect(()=>{
+    const el=penyaCarouselRef.current;
+    if(!el||!penyaCarouselInitialized)return;
+    const handleResize=()=>{
+      const currentIndex=nearestPenyaCardIndex(el);
+      rebuildPenyaCardCenters();
+      requestAnimationFrame(()=>centerPenyaCard(currentIndex,"auto"));
+    };
+    const handleScrollEnd=()=>handlePenyaCarouselScrollEnd();
+    window.addEventListener("resize",handleResize,{passive:true});
+    el.addEventListener("scrollend",handleScrollEnd);
+    return()=>{
+      window.removeEventListener("resize",handleResize);
+      el.removeEventListener("scrollend",handleScrollEnd);
+    };
+  },[penyaCarouselInitialized,centerPenyaCard,rebuildPenyaCardCenters,nearestPenyaCardIndex,handlePenyaCarouselScrollEnd]);
   useEffect(()=>()=>{if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);},[]);
   const visibleNews = useMemo(()=>noticias.filter((n:any)=>n.publicado&&(!newsSearch.trim()||normalizarBusqueda([n.titulo,n.resumen,n.contenido,n.autor,n.fuente].join(" ")).includes(normalizarBusqueda(newsSearch)))).slice().sort((x:any,y:any)=>new Date(String(y.fecha||y.created_at||"").slice(0,10)+"T12:00:00").getTime()-new Date(String(x.fecha||x.created_at||"").slice(0,10)+"T12:00:00").getTime()),[noticias,newsSearch]);
   const featuredNews = visibleNews.filter((n:any)=>n.destacada);
