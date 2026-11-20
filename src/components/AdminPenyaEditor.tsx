@@ -54,6 +54,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
   const [blocks, setBlocks] = useState<ProfileBlock[]>([]);
   type PenyaAward = { id: string; position: string; category: string; year: string };
   const [awards, setAwards] = useState<PenyaAward[]>([]);
+  const [awardsLoading, setAwardsLoading] = useState(true);
 
   const [aceptaVisitas, setAceptaVisitas] = useState(false);
   const [visitasLoading, setVisitasLoading] = useState(true);
@@ -72,6 +73,8 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     supabase.from("site_content").select("valor").eq("clave", "penyes_premios_json").maybeSingle().then(({ data, error }) => {
       if (!active) return;
       if (!error) { try { const all = JSON.parse(data?.valor || "{}"); const saved = all?.[penya.id]; setAwards(Array.isArray(saved) ? saved.map((item:any)=>({id:String(item.id||crypto.randomUUID()),position:String(item.position||"1.º"),category:String(item.category||""),year:String(item.year||"2026")})) : []); } catch { setAwards([]); } }
+      else setBlocksMessage("No se han podido cargar los premios: " + error.message);
+      setAwardsLoading(false);
     });
     supabase.from("site_content").select("valor").eq("clave", "penyes_perfiles_json").maybeSingle().then(({ data, error }) => {
       if (!active) return;
@@ -276,6 +279,6 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
       </>}
     </section>
     {error && <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
-    <button disabled={busy||blocksLoading} className="glass-btn w-full rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground disabled:opacity-50">{blocksLoading?"Cargando ficha…":busy ? "Guardando ficha…" : "Guardar ficha completa"}</button>
+    <button disabled={busy||blocksLoading||awardsLoading} className="glass-btn w-full rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground disabled:opacity-50">{blocksLoading?"Cargando ficha…":busy ? "Guardando ficha…" : "Guardar ficha completa"}</button>
   </form>;
 }
