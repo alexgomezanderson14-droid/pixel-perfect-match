@@ -14,8 +14,8 @@ const schema = z.object({
   instagram: z.string().trim().max(100),
 });
 
-export default function AddPenyaForm({ onClose, onSaved, autoApprove = false }: { onClose: () => void; onSaved: () => void; autoApprove?: boolean }) {
-  const [nombre, setNombre] = useState("");
+export default function AddPenyaForm({ onClose, onSaved, autoApprove = false, initialName = "" }: { onClose: () => void; onSaved: () => void; autoApprove?: boolean; initialName?: string }) {
+  const [nombre, setNombre] = useState(initialName);
   const [direccion, setDireccion] = useState("");
   const [tipoMusica, setTipoMusica] = useState("Variada");
   const [instagram, setInstagram] = useState("");
@@ -104,7 +104,7 @@ export default function AddPenyaForm({ onClose, onSaved, autoApprove = false }: 
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-end justify-center bg-brown/60 p-3 sm:items-center" onClick={onClose}>
-      <form onSubmit={enviar} onClick={(e) => e.stopPropagation()} className="glass max-h-[92vh] w-full max-w-lg space-y-4 overflow-auto rounded-[2rem] bg-background p-6">
+      <form onSubmit={enviar} onClick={(e) => e.stopPropagation()} className="glass max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-1rem)] w-full max-w-lg space-y-4 overflow-y-auto overscroll-contain rounded-[2rem] bg-background p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-6">
         <div className="flex items-center justify-between">
           <h3 className="text-2xl font-bold text-primary">Añadir peña</h3>
           <button type="button" onClick={onClose} aria-label="Cerrar" className="glass-btn h-9 w-9">✕</button>
