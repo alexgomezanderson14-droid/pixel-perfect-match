@@ -445,9 +445,8 @@ function Home() {
   const penyaMusicOptions = useMemo(()=>["Todas",...Array.from(new Set(penyes.map(p=>String(p.tipo_musica||"").trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b,"es"))],[penyes]);
   const mayoralesAnio = String(siteContent["mayorales_anio"]||"2027");
   // Prioridad: peña configurada, etiqueta Mayorales del año vigente y, como respaldo, CuBaTa.
+  // La configuración explícita y las etiquetas de la ficha tienen prioridad; CuBaTa solo es respaldo.
   const mayoralesPenyaId = useMemo(()=>{
-    const cubata=penyes.find(p=>{const name=normalizarNombrePenya(p.nombre);return name==="cubata"||name.includes("cobrebariotantalo");});
-    if(cubata)return String(cubata.id);
     const configuredId=String(siteContent["mayorales_penya_id"]||"").trim();
     if(configuredId&&penyes.some(p=>String(p.id)===configuredId))return configuredId;
     try {
@@ -455,13 +454,14 @@ function Home() {
       const tituloVigente=(value:any)=>{
         const title=normalizarNombrePenya(value);
         if(!title.includes("mayorales")&&!title.includes("mejorales"))return false;
-        const year=String(value||"").match(/20\d{2}/)?.[0];
+        const year=String(value||"").match(/20\\d{2}/)?.[0];
         return !year || year===mayoralesAnio;
       };
       const taggedPenya=penyes.find(p=>Array.isArray(perfiles?.[String(p.id)])&&perfiles[String(p.id)].some((block:any)=>block?.type==="tag"&&tituloVigente(block.title)));
       if(taggedPenya)return String(taggedPenya.id);
     } catch { /* Si no hay etiquetas legibles, se usa CuBaTa como respaldo de Mayorales 2027. */ }
-    return "";
+    const cubata=penyes.find(p=>{const name=normalizarNombrePenya(p.nombre);return name==="cubata"||name.includes("cobrebariotantalo");});
+    return cubata?String(cubata.id):"";
   },[penyes,siteContent["penyes_perfiles_json"],siteContent["mayorales_penya_id"],mayoralesAnio]);
   const mayoralesColor = String((mayoralesPenyaId && penyaCardSettings[mayoralesPenyaId]?.color) || siteContent["theme_accent"] || "#173f52");
   // El color de la peña define la identidad visual, pero los tonos semánticos se oscurecen para mantener contraste en textos y controles.
@@ -475,8 +475,41 @@ function Home() {
     return index>0?[visiblePenyes[index],...visiblePenyes.slice(0,index),...visiblePenyes.slice(index+1)]:visiblePenyes;
   },[visiblePenyes,searchingPenyes,mayoralesPenyaId]);
   const loopedPenyes = !searchingPenyes && carouselPenyes.length > 1 ? [...carouselPenyes,...carouselPenyes,...carouselPenyes,...carouselPenyes,...carouselPenyes] : [...carouselPenyes];
-  const centerPenyaCard=useCallback((index:number,behavior:ScrollBehavior="auto")=>{const el=penyaCarouselRef.current;const card=el?.children[index] as HTMLElement|undefined;if(!el||!card)return;const delta=card.getBoundingClientRect().left-el.getBoundingClientRect().left;const left=el.scrollLeft+delta-(el.clientWidth-card.clientWidth)/2;el.scrollTo({left,behavior});},[]);
-  const handlePenyaCarouselScroll=(el:HTMLDivElement)=>{if(searchingPenyes){setActivePenyaCard(0);return;}if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);penyaScrollFrameRef.current=requestAnimationFrame(()=>{const count=visiblePenyes.length;if(count<=1){setActivePenyaCard(0);penyaScrollFrameRef.current=null;return;}const center=el.getBoundingClientRect().left+el.clientWidth/2;let nearest=0;let distance=Number.POSITIVE_INFINITY;Array.from(el.children).forEach((child,index)=>{const rect=child.getBoundingClientRect();const d=Math.abs(rect.left+rect.width/2-center);if(d<distance){distance=d;nearest=index;}});if(nearest<count*2||nearest>=count*4){const normalized=((nearest%count)+count)%count;const targetIndex=normalized+count*2;const target=el.children[targetIndex] as HTMLElement|undefined;if(target){const delta=target.getBoundingClientRect().left-el.getBoundingClientRect().left;el.scrollLeft=el.scrollLeft+delta-(el.clientWidth-target.clientWidth)/2;}nearest=targetIndex;}setActivePenyaCard(current=>current===nearest?current:nearest);penyaScrollFrameRef.current=null;});};
+  // Calcula el centro usando la geometría real del layout, no getBoundingClientRect:
+  // las transformaciones del coverflow no deben alterar qué tarjeta considera centrada.
+  const centerPenyaCard=useCallback((index:number,behavior:ScrollBehavior="auto")=>{
+    const el=penyaCarouselRef.current;
+    const card=el?.children[index] as HTMLElement|undefined;
+    if(!el||!card)return;
+    el.scrollTo({left:card.offsetLeft-(el.clientWidth-card.offsetWidth)/2,behavior});
+  },[]);
+  const handlePenyaCarouselScroll=(el:HTMLDivElement)=>{
+    if(searchingPenyes){setActivePenyaCard(0);return;}
+    if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);
+    penyaScrollFrameRef.current=requestAnimationFrame(()=>{
+      const count=visiblePenyes.length;
+      if(count<=1){setActivePenyaCard(0);penyaScrollFrameRef.current=null;return;}
+      const center=el.scrollLeft+el.clientWidth/2;
+      let nearest=0;
+      let distance=Number.POSITIVE_INFINITY;
+      Array.from(el.children).forEach((child,index)=>{
+        const card=child as HTMLElement;
+        const d=Math.abs(card.offsetLeft+card.offsetWidth/2-center);
+        if(d<distance){distance=d;nearest=index;}
+      });
+      // Mantiene el desplazamiento dentro de las copias centrales sin saltos
+      // provocados por el tamaño/rotación visual de las tarjetas vecinas.
+      if(nearest<count*2||nearest>=count*4){
+        const normalized=((nearest%count)+count)%count;
+        const targetIndex=normalized+count*2;
+        const target=el.children[targetIndex] as HTMLElement|undefined;
+        if(target)el.scrollLeft=target.offsetLeft-(el.clientWidth-target.offsetWidth)/2;
+        nearest=targetIndex;
+      }
+      setActivePenyaCard(current=>current===nearest?current:nearest);
+      penyaScrollFrameRef.current=null;
+    });
+  };
   useEffect(()=>{if(currentPage!=="penyes"||!visiblePenyes.length){setPenyaCarouselInitialized(false);return;}if(searchingPenyes){setActivePenyaCard(0);setPenyaCarouselInitialized(true);return;}setPenyaCarouselInitialized(false);const mayoralesIndex=carouselPenyes.findIndex(p=>Boolean(mayoralesPenyaId)&&String(p.id)===String(mayoralesPenyaId));const middle=(carouselPenyes.length>1?carouselPenyes.length*2:0)+Math.max(0,mayoralesIndex);setActivePenyaCard(middle);let secondFrame=0;const firstFrame=requestAnimationFrame(()=>{secondFrame=requestAnimationFrame(()=>{const el=penyaCarouselRef.current;const card=el?.children[middle] as HTMLElement|undefined;if(el&&card){const delta=card.getBoundingClientRect().left-el.getBoundingClientRect().left;el.scrollTo({left:el.scrollLeft+delta-(el.clientWidth-card.clientWidth)/2,behavior:"auto"});}setPenyaCarouselInitialized(true);});});return()=>{cancelAnimationFrame(firstFrame);if(secondFrame)cancelAnimationFrame(secondFrame);};},[currentPage,carouselPenyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,mayoralesPenyaId,misPenyes,searchingPenyes]);
   useEffect(()=>{if(!penyaCarouselInitialized)return;const handleResize=()=>centerPenyaCard(activePenyaCard);window.addEventListener("resize",handleResize,{passive:true});return()=>window.removeEventListener("resize",handleResize);},[penyaCarouselInitialized,activePenyaCard,centerPenyaCard]);
   useEffect(()=>()=>{if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);},[]);
