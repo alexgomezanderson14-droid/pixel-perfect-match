@@ -383,7 +383,7 @@ nav[aria-label="Navegación principal"] {
   overflow-y:visible;
   overscroll-behavior-x:contain;
   -webkit-overflow-scrolling:touch;
-  scroll-snap-type:x mandatory;
+  scroll-snap-type:x proximity;
   scroll-behavior:auto;
   scrollbar-width:none;
   perspective:1200px;
@@ -404,6 +404,7 @@ nav[aria-label="Navegación principal"] {
 .penya-coverflow-card.is-loop-start { margin-left:0; }
 .penya-coverflow-card.is-active { z-index:30; box-shadow:0 24px 54px rgba(19,63,82,.24); }
 .penya-coverflow-card.is-side { z-index:20; }
+.penya-coverflow-card.is-active,.penya-coverflow-card.is-side { will-change:transform,opacity; }
 @media (max-width:639px) {
   .penya-coverflow {
     gap:0 !important;
@@ -429,7 +430,6 @@ nav[aria-label="Navegación principal"] {
     scroll-snap-align:center;
     scroll-snap-stop:normal;
     transition:transform 240ms cubic-bezier(.2,.75,.25,1), opacity 240ms ease, filter 240ms ease, box-shadow 240ms ease;
-    will-change:transform,opacity;
   }
   .penya-coverflow-card.is-loop-start { margin-left:0; }
 }

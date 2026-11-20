@@ -376,6 +376,8 @@ function Home() {
   const penyaCarouselRef = useRef<HTMLDivElement | null>(null);
   const penyaScrollFrameRef = useRef<number | null>(null);
   const penyaCardCentersRef = useRef<number[]>([]);
+  const penyaCarouselScrollLeftRef = useRef<number | null>(null);
+  const penyaEntryInitializedRef = useRef(false);
   const [eventsSearch, setEventsSearch] = useState("");
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
   const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes">("all");
@@ -508,6 +510,7 @@ function Home() {
     el.scrollTo({left:card.offsetLeft-(el.clientWidth-card.offsetWidth)/2,behavior});
   },[]);
   const handlePenyaCarouselScroll=(el:HTMLDivElement)=>{
+    penyaCarouselScrollLeftRef.current=el.scrollLeft;
     if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);
     penyaScrollFrameRef.current=requestAnimationFrame(()=>{
       if(!penyaCardCentersRef.current.length||penyaCardCentersRef.current.length!==el.children.length)rebuildPenyaCardCenters();
@@ -527,15 +530,22 @@ function Home() {
     if(nearest<count||nearest>=count*4){
       const normalized=((nearest%count)+count)%count;
       const targetIndex=normalized+count*2;
-      const target=el.children[targetIndex] as HTMLElement|undefined;
-      if(target){
-        el.scrollLeft=target.offsetLeft-(el.clientWidth-target.offsetWidth)/2;
+      const firstCenter=penyaCardCentersRef.current[normalized];
+      const equivalentCenter=penyaCardCentersRef.current[targetIndex];
+      if(firstCenter!==undefined&&equivalentCenter!==undefined){
+        el.scrollLeft+=equivalentCenter-firstCenter;
+        penyaCarouselScrollLeftRef.current=el.scrollLeft;
         setActivePenyaCard(targetIndex);
       }
     }
   },[carouselPenyes.length,searchingPenyes,rebuildPenyaCardCenters,nearestPenyaCardIndex]);
   useEffect(()=>{
-    if(currentPage!=="penyes"||!visiblePenyes.length){setPenyaCarouselInitialized(false);return;}
+    if(currentPage!=="penyes"){
+      penyaEntryInitializedRef.current=false;
+      setPenyaCarouselInitialized(false);
+      return;
+    }
+    if(!visiblePenyes.length||penyaEntryInitializedRef.current)return;
     setPenyaCarouselInitialized(false);
     const mayoralesIndex=carouselPenyes.findIndex(p=>Boolean(mayoralesPenyaId)&&String(p.id)===String(mayoralesPenyaId));
     const initialIndex=searchingPenyes?0:(carouselPenyes.length>1?carouselPenyes.length*2:0)+Math.max(0,mayoralesIndex);
@@ -545,11 +555,13 @@ function Home() {
       secondFrame=requestAnimationFrame(()=>{
         rebuildPenyaCardCenters();
         centerPenyaCard(initialIndex,"auto");
+        penyaCarouselScrollLeftRef.current=penyaCarouselRef.current?.scrollLeft??null;
+        penyaEntryInitializedRef.current=true;
         setPenyaCarouselInitialized(true);
       });
     });
     return()=>{cancelAnimationFrame(firstFrame);if(secondFrame)cancelAnimationFrame(secondFrame);};
-  },[currentPage,searchingPenyes,carouselPenyes,mayoralesPenyaId,centerPenyaCard,rebuildPenyaCardCenters]);
+  },[currentPage,visiblePenyes.length,searchingPenyes,carouselPenyes,mayoralesPenyaId,centerPenyaCard,rebuildPenyaCardCenters]);
   useEffect(()=>{
     const el=penyaCarouselRef.current;
     if(!el||!penyaCarouselInitialized)return;
@@ -983,12 +995,22 @@ function Home() {
   const goMap = (id?: string) => {
     if (!id) return;
     setCurrentPage("home");
-    setCat("penya");
+    const mapCategory:Categoria|null=id.startsWith("evento-")?"evento":id.startsWith("acto-")?(actos.find((item:any)=>"acto-"+item.id===id)?.tipo??null):"penya";
+    setCat(mapCategory);
     setQ("");
     setFocus(null);
-    requestAnimationFrame(() => {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      document.getElementById("mapa")?.scrollIntoView({ behavior: "smooth", block: "start" });
       setFocus(id);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+    }));
+  };
+  const closePenyaDetail = () => {
+    setSelectedPenya(null);
+    setPenyaDetailFullscreen(false);
+    const savedScrollLeft=penyaCarouselScrollLeftRef.current;
+    requestAnimationFrame(()=>{
+      const carousel=penyaCarouselRef.current;
+      if(carousel&&savedScrollLeft!==null)carousel.scrollLeft=savedScrollLeft;
     });
   };
 
@@ -1240,7 +1262,7 @@ function Home() {
 
           <div className="mb-4 flex min-w-0 justify-end gap-2 sm:mb-5">
             <button onClick={()=>{setPenyaMusicFilter("Todas");setPenyaOnlyMine(false);setPenyaSearch("");}} className="rounded-full border border-border px-4 py-2 text-xs font-bold text-primary transition hover:bg-primary/5">Limpiar filtros</button>
-            <button onClick={() => setForm(true)} className="rounded-full bg-pink px-5 py-2.5 text-sm font-bold text-brown transition hover:-translate-y-0.5">+ {ui.addPenya}</button>
+            <button onClick={() => setForm(true)} className="rounded-full bg-pink px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5">+ {ui.addPenya}</button>
           </div>
 
           <div className="mb-5 flex min-w-0 flex-col gap-3 rounded-2xl border border-border/70 bg-card/70 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
@@ -1290,7 +1312,7 @@ function Home() {
                   const offset=index-activePenyaCard;
                   const visualOffset=searchingPenyes?offset:((offset+visiblePenyes.length/2)%visiblePenyes.length+visiblePenyes.length)%visiblePenyes.length-visiblePenyes.length/2;
                   const centered=visualOffset===0;
-                  return <article id={"penya-"+p.id+"-"+index} key={p.id+"-"+index} tabIndex={0} aria-label={`Abrir ficha de ${cardTitle}`} onClick={()=>{setPenyaDetailFullscreen(true);setSelectedPenya(p);}} onKeyDown={(e)=>{if(e.target===e.currentTarget&&(e.key==="Enter"||e.key===" ")){e.preventDefault();setPenyaDetailFullscreen(true);setSelectedPenya(p);}}} style={{backgroundColor:color,zIndex:searchingPenyes?1:30-Math.abs(visualOffset),transform:searchingPenyes?"none":`perspective(1100px) translateY(${centered?-8:Math.min(22,Math.abs((((offset+visiblePenyes.length/2)%visiblePenyes.length)+visiblePenyes.length)%visiblePenyes.length-visiblePenyes.length/2)*10)}px) scale(${centered?1.08:Math.max(.68,.88-Math.max(0,Math.abs(visualOffset)-1)*.08)}) rotateY(${visualOffset===0?0:visualOffset<0?13:-13}deg)`,opacity:searchingPenyes?1:Math.abs(visualOffset)>3?.18:Math.max(.35,1-Math.abs(visualOffset)*.18)}} className={`penya-coverflow-card group relative ${searchingPenyes?"is-search-result":centered?"is-active":Math.abs(visualOffset)===1?(visualOffset<0?"is-side is-side-left":"is-side is-side-right"):""} ${!searchingPenyes&&index%Math.max(visiblePenyes.length,1)===0?"is-loop-start":""} h-[320px] w-[224px] shrink-0 snap-center cursor-pointer overflow-visible rounded-[2rem] border border-white/25 shadow-[0_18px_42px_rgba(19,38,53,.18)] outline-none transition-[transform,opacity,filter,box-shadow] duration-500 ease-[cubic-bezier(.2,.75,.25,1)] focus-visible:ring-4 focus-visible:ring-primary/40 ${searchingPenyes?"!transition-none":""} sm:h-[360px] sm:w-[260px] lg:h-[400px] lg:w-[290px]`}>
+                  return <article id={"penya-"+p.id+"-"+index} key={p.id+"-"+index} tabIndex={0} aria-label={`Abrir ficha de ${cardTitle}`} onClick={()=>{penyaCarouselScrollLeftRef.current=penyaCarouselRef.current?.scrollLeft??null;setPenyaDetailFullscreen(true);setSelectedPenya(p);}} onKeyDown={(e)=>{if(e.target===e.currentTarget&&(e.key==="Enter"||e.key===" ")){e.preventDefault();penyaCarouselScrollLeftRef.current=penyaCarouselRef.current?.scrollLeft??null;setPenyaDetailFullscreen(true);setSelectedPenya(p);}}} style={{backgroundColor:color,zIndex:searchingPenyes?1:30-Math.abs(visualOffset),transform:searchingPenyes?"none":`perspective(1100px) translateY(${centered?-8:Math.min(22,Math.abs((((offset+visiblePenyes.length/2)%visiblePenyes.length)+visiblePenyes.length)%visiblePenyes.length-visiblePenyes.length/2)*10)}px) scale(${centered?1.08:Math.max(.68,.88-Math.max(0,Math.abs(visualOffset)-1)*.08)}) rotateY(${visualOffset===0?0:visualOffset<0?13:-13}deg)`,opacity:searchingPenyes?1:Math.abs(visualOffset)>3?.18:Math.max(.35,1-Math.abs(visualOffset)*.18)}} className={`penya-coverflow-card group relative ${searchingPenyes?"is-search-result":centered?"is-active":Math.abs(visualOffset)===1?(visualOffset<0?"is-side is-side-left":"is-side is-side-right"):""} ${!searchingPenyes&&index%Math.max(visiblePenyes.length,1)===0?"is-loop-start":""} h-[320px] w-[224px] shrink-0 snap-center cursor-pointer overflow-visible rounded-[2rem] border border-white/25 shadow-[0_18px_42px_rgba(19,38,53,.18)] outline-none transition-[transform,opacity,filter,box-shadow] duration-500 ease-[cubic-bezier(.2,.75,.25,1)] focus-visible:ring-4 focus-visible:ring-primary/40 ${searchingPenyes?"!transition-none":""} sm:h-[360px] sm:w-[260px] lg:h-[400px] lg:w-[290px]`}>
                     <div className="absolute inset-0 overflow-hidden rounded-[2rem]">
                       <div className="absolute inset-x-0 top-0 z-10 p-5 sm:p-6">
                         <div className="flex items-start justify-between gap-2">
@@ -1300,7 +1322,7 @@ function Home() {
                           </div>
                           {misPenyes.includes(p.id)&&<span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/20 text-sm text-white ring-1 ring-white/40" aria-label="Mi peña">★</span>}
                         </div>
-                        {(mayoralesPenyaId&&String(p.id)===String(mayoralesPenyaId))&&<span className="mt-3 inline-flex items-center gap-1 rounded-full border border-[#d4af37] bg-gradient-to-r from-[#fff4c2] via-[#f4d77a] to-[#d4af37] px-2.5 py-1 text-[9px] font-extrabold tracking-wide text-[#684b08] shadow-[0_2px_8px_rgba(142,103,20,.22)]">♛ MAYORALES {mayoralesAnio}</span>}{p.asociada===false&&<span className="mt-3 inline-flex rounded-full border border-white/40 bg-black/15 px-2.5 py-1 text-[9px] font-extrabold tracking-wide" style={{color:cardTextColor}}>No asociada</span>}{p.id.startsWith("catalogo-")&&!logo&&<span className="mt-3 inline-flex rounded-full border border-white/40 bg-black/10 px-2.5 py-1 text-[9px] font-bold tracking-wide" style={{color:cardTextColor}}>Logo pendiente</span>}{!p.direccion&&<span className="mt-3 inline-flex rounded-full border border-white/35 bg-black/10 px-2.5 py-1 text-[9px] font-bold tracking-wide" style={{color:cardTextColor}}>Sin ubicación registrada</span>}
+                        {(mayoralesPenyaId&&String(p.id)===String(mayoralesPenyaId))&&<span className="mt-3 inline-flex items-center gap-1 rounded-full border border-[#d4af37] bg-gradient-to-r from-[#fff4c2] via-[#f4d77a] to-[#d4af37] px-2.5 py-1 text-[9px] font-extrabold tracking-wide text-[#684b08] shadow-[0_2px_8px_rgba(142,103,20,.22)]">♛ MAYORALES {mayoralesAnio}</span>}{p.asociada===false&&<span className="mt-3 inline-flex rounded-full border border-white/40 bg-black/15 px-2.5 py-1 text-[9px] font-extrabold tracking-wide" style={{color:cardTextColor}}>No asociada</span>}
                       </div>
                       <div className="absolute inset-x-0 bottom-0 h-[78%]">
                         {logo?<img src={logo} alt={"Logo de "+p.nombre} loading="lazy" decoding="async" style={{objectPosition:`${logoX}% ${logoY}%`,transform:`translate(${(logoX-50)/2}%,${(logoY-50)/2}%) scale(${logoScale/100})`}} className="absolute inset-x-1 bottom-[-8px] h-full w-[calc(100%-8px)] object-contain transition-transform duration-500 ease-[cubic-bezier(.2,.75,.25,1)] group-hover:-translate-y-2"/>:<div className="absolute inset-x-0 bottom-4 text-center text-8xl font-black text-white/90">{p.nombre.trim().charAt(0).toLocaleUpperCase("es")}</div>}
@@ -1452,7 +1474,7 @@ function Home() {
           <div className="px-4 pb-4">
             <div className="relative z-10 -mt-7 flex min-w-0 items-end gap-3">
               <div className="relative z-10 grid h-[68px] w-[68px] shrink-0 place-items-center overflow-hidden rounded-full border-4 border-white bg-[#edf3f3] text-xl font-black text-[#173f52] shadow-lg">{selectedPenyaLogo?<img src={selectedPenyaLogo} alt="" style={getPenyaPhotoImageStyle(penyaProfileLogoSettings[selectedPenya.id])} className="h-full w-full bg-white object-cover"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
-              <div className="min-w-0 flex-1 pb-1"><h2 className="line-clamp-2 text-[18px] font-black leading-tight tracking-tight text-[#173f52]">{selectedPenya.nombre}</h2></div>
+              <div className="min-w-0 flex-1 pb-1"><h2 className="line-clamp-2 text-[18px] font-black leading-tight tracking-tight text-[#173f52]">{selectedPenya.nombre}</h2>{mayoralesPenyaId&&String(selectedPenya.id)===String(mayoralesPenyaId)&&<span className="mt-1 inline-flex items-center gap-1 rounded-full border border-[#e6ce91] bg-[#fff7df] px-2.5 py-1 text-[9px] font-extrabold tracking-wide text-[#765c25]">♛ MAYORALES {mayoralesAnio}</span>}</div>
             </div>
             
             {selectedPenya.direccion&&<div className="mt-3 flex items-start gap-2 rounded-xl border border-[#e5eceb] bg-[#f5f8f7] px-3 py-2.5 text-[11px] font-semibold leading-snug text-[#52666b]"><span className="text-[#b18d3d]">📍</span><span className="min-w-0">{selectedPenya.direccion}</span></div>}
@@ -1471,7 +1493,7 @@ function Home() {
           </div>
         </section>
       </div> : (
-        <div className={`fixed inset-0 z-[2147483002] flex justify-center ${penyaDetailFullscreen ? "bg-[#102f3d] items-stretch p-0" : "bg-[#071c25]/75 items-end p-0 pt-[max(1rem,env(safe-area-inset-top))] sm:items-center sm:p-5 backdrop-blur-md"}`} onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }}>
+        <div className={`fixed inset-0 z-[2147483002] flex justify-center ${penyaDetailFullscreen ? "bg-[#102f3d] items-stretch p-0" : "bg-[#071c25]/75 items-end p-0 pt-[max(1rem,env(safe-area-inset-top))] sm:items-center sm:p-5 backdrop-blur-md"}`} onClick={() => closePenyaDetail()}>
           <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className={`penya-profile-sheet w-full overflow-auto overscroll-contain border border-border bg-background pb-[calc(105px+env(safe-area-inset-bottom))] shadow-[0_30px_100px_rgba(4,25,34,.42)] ${penyaDetailFullscreen ? "h-[100dvh] max-h-[100dvh] max-w-none rounded-none" : "max-h-[94dvh] max-w-[min(96vw,1500px)] rounded-t-[1.75rem] sm:rounded-[2rem]"}`}>
             <div className="relative isolate h-[250px] overflow-hidden bg-[#c9e9f1] sm:h-[330px] lg:h-[370px]" style={{height:`clamp(250px,25vw,${selectedPenyaBannerBlock?.height??370}px)`,background:selectedPenyaBannerBlock?selectedPenyaBannerGradient:"linear-gradient(90deg,#173f52,#286477 55%,#c6a24b)"}}>
               <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
@@ -1479,15 +1501,15 @@ function Home() {
               </div>
               <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-b from-transparent via-transparent to-background"/>
               <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-28 bg-gradient-to-t from-background via-background/75 to-transparent sm:h-40"/>
-              <button onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }} aria-label="Cerrar ficha" className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-30 grid h-10 w-10 place-items-center rounded-full border border-white/65 bg-white/65 text-lg font-bold text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105">✕</button>
+              <button onClick={() => closePenyaDetail()} aria-label="Cerrar ficha" className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-30 grid h-10 w-10 place-items-center rounded-full border border-white/65 bg-white/65 text-lg font-bold text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105">✕</button>
             </div>
             <div className="relative z-30 mx-auto -mt-[112px] w-full max-w-[1500px] px-4 pb-5 sm:-mt-[142px] sm:px-7 lg:px-12 xl:px-16 2xl:px-20">
               <div className="relative flex flex-col items-center text-center">
                 <div className="relative z-30 grid h-44 w-44 shrink-0 place-items-center overflow-hidden rounded-full border-4 border-white bg-white text-5xl font-black text-[#173f52] shadow-[0_10px_34px_rgba(4,25,34,.22)] sm:h-56 sm:w-56  lg:h-72 lg:w-72 xl:h-80 xl:w-80" >{selectedPenyaLogo?<img src={selectedPenyaLogo} alt={"Foto de perfil de "+selectedPenya.nombre} style={getPenyaPhotoImageStyle(penyaProfileLogoSettings[selectedPenya.id])} className="h-full w-full bg-white object-cover"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
                 {(mayoralesPenyaId&&String(selectedPenya.id)===String(mayoralesPenyaId))&&<div className="mt-2"><span className="inline-flex items-center gap-1 rounded-full border border-[#e6ce91] bg-[#fff7df] px-3 py-1 text-[10px] font-extrabold tracking-wide text-[#765c25] sm:text-xs">♛ MAYORALES {mayoralesAnio}</span></div>}
                 <h2 className="mt-2 max-w-4xl break-words text-[26px] font-black leading-tight tracking-tight text-[#173f52] sm:mt-3 sm:text-4xl lg:text-[2.65rem]">{selectedPenya.nombre}</h2>
-                {selectedPenya.id.startsWith("catalogo-")&&!selectedPenyaLogo&&<p className="mt-2 text-[10px] font-bold text-muted-foreground">Logotipo pendiente de incorporar</p>}
-                <div className="mt-3 flex flex-wrap items-center justify-center gap-2"><button type="button" onClick={()=>{setSelectedPenya(null);setPenyaDetailFullscreen(false);setCurrentPage("home");setCat("penya");setFocus(selectedPenya.id);window.scrollTo({top:0,behavior:"smooth"});}} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#d8e5e2] bg-white/90 px-4 py-2 text-xs font-extrabold text-[#24576a] shadow-sm transition hover:-translate-y-0.5">📍 Ver en el mapa</button>{selectedPenyaAcceptsVisits&&<span className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] font-extrabold text-emerald-800"><span aria-hidden="true">✓</span> Esta peña acepta visitas</span>}</div>
+                
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">{selectedPenya.lat!=null&&selectedPenya.lng!=null&&<button type="button" onClick={()=>{const id=selectedPenya.id;setSelectedPenya(null);setPenyaDetailFullscreen(false);goMap(id);}} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#d8e5e2] bg-white/90 px-4 py-2 text-xs font-extrabold text-[#24576a] shadow-sm transition hover:-translate-y-0.5">📍 Ver en el mapa</button>}{!selectedPenya.direccion&&<span className="inline-flex min-h-9 items-center rounded-full border border-[#e5eceb] bg-[#f5f8f7] px-3 py-2 text-[11px] font-bold text-[#52666b]">Sin ubicación registrada</span>}{selectedPenyaAcceptsVisits&&<span className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] font-extrabold text-emerald-800"><span aria-hidden="true">✓</span> Esta peña acepta visitas</span>}</div>
               </div>
               {(() => {
                 const profileTags = selectedPenyaCustomBlocks.filter((block:any)=>block.type==="tag" && String(block.title||"").trim() && !/^(acepta visitas|esta peña acepta visitas|puertas abiertas)$/i.test(String(block.title).trim())).map((block:any)=>String(block.title).trim());
