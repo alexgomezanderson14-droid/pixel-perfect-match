@@ -658,3 +658,12 @@ html, body, #root { min-width:0; max-width:100%; }
   .penya-card-enter { animation-duration: 360ms; }
 }
 /* Las fotos destacadas rellenan su marco sin bandas ni huecos. */
+
+
+/* Palmarés: medallas de cristal, reflejos y animación de entrada. */
+.penya-awards-panel{background:radial-gradient(ellipse at 50% -25%,rgba(76,211,231,.22),transparent 52%),linear-gradient(145deg,#071b2c 0%,#101d39 52%,#071725 100%);border:1px solid rgba(133,220,240,.3);box-shadow:0 22px 55px rgba(7,29,48,.22),inset 0 1px 0 rgba(255,255,255,.12)}
+.penya-awards-panel:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 12%,rgba(255,255,255,.045) 42%,transparent 68%)}
+.penya-awards-orb{position:absolute;width:17rem;height:17rem;border-radius:50%;filter:blur(55px);opacity:.16;pointer-events:none}.penya-awards-orb-one{top:-10rem;left:-7rem;background:#19d5ec}.penya-awards-orb-two{right:-8rem;bottom:-12rem;background:#8b5cf6}
+.penya-award-medal{isolation:isolate;background:radial-gradient(circle at 32% 25%,rgba(255,255,255,.58),transparent 17%),radial-gradient(circle at 50% 50%,var(--medal-c) 0%,#071321 72%);border:2px solid color-mix(in srgb,var(--medal-a) 75%,white);box-shadow:0 0 0 3px rgba(255,255,255,.07),0 0 18px color-mix(in srgb,var(--medal-b) 68%,transparent),inset 0 0 0 4px rgba(255,255,255,.12),inset 0 0 22px color-mix(in srgb,var(--medal-a) 55%,transparent);animation:penya-medal-float 5s ease-in-out infinite}
+.penya-award-medal:before{content:"";position:absolute;inset:5%;border-radius:50%;border:1px solid color-mix(in srgb,var(--medal-a) 72%,transparent);box-shadow:inset 0 0 14px rgba(255,255,255,.12)}.penya-award-medal:after{content:"";position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,.34),transparent 28%,transparent 68%,rgba(255,255,255,.17));mix-blend-mode:screen}.penya-award-medal-inner{border:1px solid color-mix(in srgb,var(--medal-a) 65%,transparent);box-shadow:inset 0 0 18px color-mix(in srgb,var(--medal-b) 30%,transparent)}
+.penya-award-item{opacity:0;animation:penya-award-appear .65s cubic-bezier(.2,.8,.2,1) forwards}@keyframes penya-award-appear{from{opacity:0;transform:translateY(22px) scale(.92);filter:blur(5px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}@keyframes penya-medal-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}@media(prefers-reduced-motion:reduce){.penya-award-item{opacity:1;animation:none}.penya-award-medal{animation:none}}
