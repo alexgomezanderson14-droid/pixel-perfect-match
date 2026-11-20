@@ -635,3 +635,18 @@ nav[aria-label="Navegación principal"] > button > span:first-child svg { width:
 /* Optimización del coverflow: mantiene intacto el efecto y prepara solo las tarjetas visibles para la transición. */
 .penya-coverflow-card.is-active,
 .penya-coverflow-card.is-side { will-change:transform,opacity; }
+
+
+/* Refuerzo de usabilidad en pantallas pequeñas: evita desbordamientos horizontales y modales inaccesibles. */
+html, body, #root { min-width:0; max-width:100%; }
+@media (max-width:639px) {
+  html, body { overflow-x:clip; }
+  .admin-workspace, .admin-workspace main, .admin-workspace section, .admin-settings-body, .admin-settings-card { min-width:0; max-width:100%; }
+  .admin-workspace input, .admin-workspace select, .admin-workspace textarea { max-width:100%; }
+  .admin-workspace .admin-settings-body > *, .admin-workspace article > * { min-width:0; }
+  .admin-workspace article .flex { flex-wrap:wrap; }
+  .admin-workspace article button { min-height:2.65rem; }
+  .admin-workspace .admin-tabs { max-height:calc(100dvh - env(safe-area-inset-top) - 1rem); overflow-y:auto; }
+  .maplibregl-ctrl-top-right { top:3.5rem !important; right:.5rem !important; }
+  .maplibregl-ctrl-group button { width:30px !important; height:30px !important; }
+}
