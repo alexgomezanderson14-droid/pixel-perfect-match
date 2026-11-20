@@ -731,10 +731,15 @@ html, body, #root { min-width:0; max-width:100%; }
 /* Insignias originales del palmarés: brillo por puesto y movimiento sutil. */
 .penya-award-insignia{
  isolation:isolate;
- background-repeat:no-repeat;
  filter:drop-shadow(0 0 7px var(--award-glow-soft)) drop-shadow(0 10px 13px rgba(0,0,0,.42));
  animation:penya-insignia-float 5.2s ease-in-out infinite;
  transform:translateZ(0);
+}
+.penya-award-art{
+ position:absolute;
+ inset:0;
+ background-repeat:no-repeat;
+ background-size:500% 400%;
 }
 .penya-award-insignia:before{
  content:"";
