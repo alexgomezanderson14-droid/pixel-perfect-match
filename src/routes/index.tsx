@@ -445,9 +445,8 @@ function Home() {
   const penyaMusicOptions = useMemo(()=>["Todas",...Array.from(new Set(penyes.map(p=>String(p.tipo_musica||"").trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b,"es"))],[penyes]);
   const mayoralesAnio = String(siteContent["mayorales_anio"]||"2027");
   // Prioridad: peña configurada, etiqueta Mayorales del año vigente y, como respaldo, CuBaTa.
+  // La configuración explícita y las etiquetas de la ficha tienen prioridad; CuBaTa solo es respaldo.
   const mayoralesPenyaId = useMemo(()=>{
-    const cubata=penyes.find(p=>{const name=normalizarNombrePenya(p.nombre);return name==="cubata"||name.includes("cobrebariotantalo");});
-    if(cubata)return String(cubata.id);
     const configuredId=String(siteContent["mayorales_penya_id"]||"").trim();
     if(configuredId&&penyes.some(p=>String(p.id)===configuredId))return configuredId;
     try {
@@ -461,7 +460,8 @@ function Home() {
       const taggedPenya=penyes.find(p=>Array.isArray(perfiles?.[String(p.id)])&&perfiles[String(p.id)].some((block:any)=>block?.type==="tag"&&tituloVigente(block.title)));
       if(taggedPenya)return String(taggedPenya.id);
     } catch { /* Si no hay etiquetas legibles, se usa CuBaTa como respaldo de Mayorales 2027. */ }
-    return "";
+    const cubata=penyes.find(p=>{const name=normalizarNombrePenya(p.nombre);return name==="cubata"||name.includes("cobrebariotantalo");});
+    return cubata?String(cubata.id):"";
   },[penyes,siteContent["penyes_perfiles_json"],siteContent["mayorales_penya_id"],mayoralesAnio]);
   const mayoralesColor = String((mayoralesPenyaId && penyaCardSettings[mayoralesPenyaId]?.color) || siteContent["theme_accent"] || "#173f52");
   // El color de la peña define la identidad visual, pero los tonos semánticos se oscurecen para mantener contraste en textos y controles.
@@ -475,8 +475,41 @@ function Home() {
     return index>0?[visiblePenyes[index],...visiblePenyes.slice(0,index),...visiblePenyes.slice(index+1)]:visiblePenyes;
   },[visiblePenyes,searchingPenyes,mayoralesPenyaId]);
   const loopedPenyes = !searchingPenyes && carouselPenyes.length > 1 ? [...carouselPenyes,...carouselPenyes,...carouselPenyes,...carouselPenyes,...carouselPenyes] : [...carouselPenyes];
-  const centerPenyaCard=useCallback((index:number,behavior:ScrollBehavior="auto")=>{const el=penyaCarouselRef.current;const card=el?.children[index] as HTMLElement|undefined;if(!el||!card)return;const delta=card.getBoundingClientRect().left-el.getBoundingClientRect().left;const left=el.scrollLeft+delta-(el.clientWidth-card.clientWidth)/2;el.scrollTo({left,behavior});},[]);
-  const handlePenyaCarouselScroll=(el:HTMLDivElement)=>{if(searchingPenyes){setActivePenyaCard(0);return;}if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);penyaScrollFrameRef.current=requestAnimationFrame(()=>{const count=visiblePenyes.length;if(count<=1){setActivePenyaCard(0);penyaScrollFrameRef.current=null;return;}const center=el.getBoundingClientRect().left+el.clientWidth/2;let nearest=0;let distance=Number.POSITIVE_INFINITY;Array.from(el.children).forEach((child,index)=>{const rect=child.getBoundingClientRect();const d=Math.abs(rect.left+rect.width/2-center);if(d<distance){distance=d;nearest=index;}});if(nearest<count*2||nearest>=count*4){const normalized=((nearest%count)+count)%count;const targetIndex=normalized+count*2;const target=el.children[targetIndex] as HTMLElement|undefined;if(target){const delta=target.getBoundingClientRect().left-el.getBoundingClientRect().left;el.scrollLeft=el.scrollLeft+delta-(el.clientWidth-target.clientWidth)/2;}nearest=targetIndex;}setActivePenyaCard(current=>current===nearest?current:nearest);penyaScrollFrameRef.current=null;});};
+  // Calcula el centro usando la geometría real del layout, no getBoundingClientRect:
+  // las transformaciones del coverflow no deben alterar qué tarjeta considera centrada.
+  const centerPenyaCard=useCallback((index:number,behavior:ScrollBehavior="auto")=>{
+    const el=penyaCarouselRef.current;
+    const card=el?.children[index] as HTMLElement|undefined;
+    if(!el||!card)return;
+    el.scrollTo({left:card.offsetLeft-(el.clientWidth-card.offsetWidth)/2,behavior});
+  },[]);
+  const handlePenyaCarouselScroll=(el:HTMLDivElement)=>{
+    if(searchingPenyes){setActivePenyaCard(0);return;}
+    if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);
+    penyaScrollFrameRef.current=requestAnimationFrame(()=>{
+      const count=visiblePenyes.length;
+      if(count<=1){setActivePenyaCard(0);penyaScrollFrameRef.current=null;return;}
+      const center=el.scrollLeft+el.clientWidth/2;
+      let nearest=0;
+      let distance=Number.POSITIVE_INFINITY;
+      Array.from(el.children).forEach((child,index)=>{
+        const card=child as HTMLElement;
+        const d=Math.abs(card.offsetLeft+card.offsetWidth/2-center);
+        if(d<distance){distance=d;nearest=index;}
+      });
+      // Mantiene el desplazamiento dentro de las copias centrales sin saltos
+      // provocados por el tamaño/rotación visual de las tarjetas vecinas.
+      if(nearest<count*2||nearest>=count*4){
+        const normalized=((nearest%count)+count)%count;
+        const targetIndex=normalized+count*2;
+        const target=el.children[targetIndex] as HTMLElement|undefined;
+        if(target)el.scrollLeft=target.offsetLeft-(el.clientWidth-target.offsetWidth)/2;
+        nearest=targetIndex;
+      }
+      setActivePenyaCard(current=>current===nearest?current:nearest);
+      penyaScrollFrameRef.current=null;
+    });
+  };
   useEffect(()=>{if(currentPage!=="penyes"||!visiblePenyes.length){setPenyaCarouselInitialized(false);return;}if(searchingPenyes){setActivePenyaCard(0);setPenyaCarouselInitialized(true);return;}setPenyaCarouselInitialized(false);const mayoralesIndex=carouselPenyes.findIndex(p=>Boolean(mayoralesPenyaId)&&String(p.id)===String(mayoralesPenyaId));const middle=(carouselPenyes.length>1?carouselPenyes.length*2:0)+Math.max(0,mayoralesIndex);setActivePenyaCard(middle);let secondFrame=0;const firstFrame=requestAnimationFrame(()=>{secondFrame=requestAnimationFrame(()=>{const el=penyaCarouselRef.current;const card=el?.children[middle] as HTMLElement|undefined;if(el&&card){const delta=card.getBoundingClientRect().left-el.getBoundingClientRect().left;el.scrollTo({left:el.scrollLeft+delta-(el.clientWidth-card.clientWidth)/2,behavior:"auto"});}setPenyaCarouselInitialized(true);});});return()=>{cancelAnimationFrame(firstFrame);if(secondFrame)cancelAnimationFrame(secondFrame);};},[currentPage,carouselPenyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,mayoralesPenyaId,misPenyes,searchingPenyes]);
   useEffect(()=>{if(!penyaCarouselInitialized)return;const handleResize=()=>centerPenyaCard(activePenyaCard);window.addEventListener("resize",handleResize,{passive:true});return()=>window.removeEventListener("resize",handleResize);},[penyaCarouselInitialized,activePenyaCard,centerPenyaCard]);
   useEffect(()=>()=>{if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);},[]);
@@ -1180,9 +1213,9 @@ function Home() {
             <div className="glass rounded-3xl p-8 text-center"><p className="font-bold text-primary">No encontramos peñas con esos filtros</p><p className="mt-1 text-sm text-muted-foreground">Prueba con otra búsqueda o limpia los filtros.</p><button onClick={()=>{setPenyaSearch("");setPenyaMusicFilter("Todas");setPenyaOnlyMine(false);}} className="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">Mostrar todas las peñas</button></div>
           ) : (
             <div className="relative mx-auto w-full max-w-[1180px] lg:max-w-none">
-              {visiblePenyes.length>1&&!searchingPenyes&&<button type="button" aria-label="Peña anterior" onClick={()=>{const next=Math.max(0,activePenyaCard-1);setActivePenyaCard(next);centerPenyaCard(next,"smooth");}} className="absolute left-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">‹</button>}
-              {visiblePenyes.length>1&&!searchingPenyes&&<button type="button" aria-label="Peña siguiente" onClick={()=>{const next=Math.min(loopedPenyes.length-1,activePenyaCard+1);setActivePenyaCard(next);centerPenyaCard(next,"smooth");}} className="absolute right-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">›</button>}
-              <div ref={penyaCarouselRef} onScroll={(event)=>handlePenyaCarouselScroll(event.currentTarget)} className={searchingPenyes?"flex flex-wrap justify-center gap-5 overflow-visible px-2 py-6":"penya-coverflow "+(penyaCarouselInitialized?"is-ready":"is-initializing")+" flex snap-x snap-mandatory items-center overflow-x-auto overscroll-x-contain px-[calc(50%-112px)] py-16 sm:px-[calc(50%-130px)] lg:px-[calc(50%-150px)]"}>
+              {visiblePenyes.length>1&&!searchingPenyes&&<button type="button" aria-label="Peña anterior" onClick={()=>{const count=carouselPenyes.length;const next=activePenyaCard<=count*2?count*3-1:activePenyaCard-1;setActivePenyaCard(next);centerPenyaCard(next,"smooth");}} className="absolute left-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">‹</button>}
+              {visiblePenyes.length>1&&!searchingPenyes&&<button type="button" aria-label="Peña siguiente" onClick={()=>{const count=carouselPenyes.length;const next=activePenyaCard>=count*4-1?count*2:activePenyaCard+1;setActivePenyaCard(next);centerPenyaCard(next,"smooth");}} className="absolute right-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">›</button>}
+              <div ref={penyaCarouselRef} onScroll={(event)=>handlePenyaCarouselScroll(event.currentTarget)} className={searchingPenyes?"relative flex flex-wrap justify-center gap-5 overflow-visible px-2 py-6":"penya-coverflow relative "+(penyaCarouselInitialized?"is-ready":"is-initializing")+" flex snap-x snap-mandatory items-center overflow-x-auto overscroll-x-contain px-[calc(50%-112px)] py-16 sm:px-[calc(50%-130px)] lg:px-[calc(50%-150px)]"}>
                 {loopedPenyes.map((p,index)=>{
                   const fallbackColors=["#5968D8","#E45D70","#13A6C3","#19A887","#D28B35","#8559C7","#287DAD","#C45D91"];
                   const cardConfig=penyaCardSettings[p.id]||{};
