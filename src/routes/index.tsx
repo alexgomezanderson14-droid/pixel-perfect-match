@@ -546,7 +546,6 @@ function Home() {
       return;
     }
     if(!visiblePenyes.length||penyaEntryInitializedRef.current)return;
-    penyaEntryInitializedRef.current=true;
     setPenyaCarouselInitialized(false);
     const mayoralesIndex=carouselPenyes.findIndex(p=>Boolean(mayoralesPenyaId)&&String(p.id)===String(mayoralesPenyaId));
     const initialIndex=searchingPenyes?0:(carouselPenyes.length>1?carouselPenyes.length*2:0)+Math.max(0,mayoralesIndex);
@@ -557,6 +556,7 @@ function Home() {
         rebuildPenyaCardCenters();
         centerPenyaCard(initialIndex,"auto");
         penyaCarouselScrollLeftRef.current=penyaCarouselRef.current?.scrollLeft??null;
+        penyaEntryInitializedRef.current=true;
         setPenyaCarouselInitialized(true);
       });
     });
@@ -995,7 +995,8 @@ function Home() {
   const goMap = (id?: string) => {
     if (!id) return;
     setCurrentPage("home");
-    setCat("penya");
+    const mapCategory:Categoria|null=id.startsWith("evento-")?"evento":id.startsWith("acto-")?(actos.find((item:any)=>"acto-"+item.id===id)?.tipo??null):"penya";
+    setCat(mapCategory);
     setQ("");
     setFocus(null);
     requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -1492,7 +1493,7 @@ function Home() {
           </div>
         </section>
       </div> : (
-        <div className={`fixed inset-0 z-[2147483002] flex justify-center ${penyaDetailFullscreen ? "bg-[#102f3d] items-stretch p-0" : "bg-[#071c25]/75 items-end p-0 pt-[max(1rem,env(safe-area-inset-top))] sm:items-center sm:p-5 backdrop-blur-md"}`} onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }}>
+        <div className={`fixed inset-0 z-[2147483002] flex justify-center ${penyaDetailFullscreen ? "bg-[#102f3d] items-stretch p-0" : "bg-[#071c25]/75 items-end p-0 pt-[max(1rem,env(safe-area-inset-top))] sm:items-center sm:p-5 backdrop-blur-md"}`} onClick={() => closePenyaDetail()}>
           <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className={`penya-profile-sheet w-full overflow-auto overscroll-contain border border-border bg-background pb-[calc(105px+env(safe-area-inset-bottom))] shadow-[0_30px_100px_rgba(4,25,34,.42)] ${penyaDetailFullscreen ? "h-[100dvh] max-h-[100dvh] max-w-none rounded-none" : "max-h-[94dvh] max-w-[min(96vw,1500px)] rounded-t-[1.75rem] sm:rounded-[2rem]"}`}>
             <div className="relative isolate h-[250px] overflow-hidden bg-[#c9e9f1] sm:h-[330px] lg:h-[370px]" style={{height:`clamp(250px,25vw,${selectedPenyaBannerBlock?.height??370}px)`,background:selectedPenyaBannerBlock?selectedPenyaBannerGradient:"linear-gradient(90deg,#173f52,#286477 55%,#c6a24b)"}}>
               <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
