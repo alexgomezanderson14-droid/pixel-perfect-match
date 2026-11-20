@@ -28,7 +28,7 @@ export function getSeededPenyaAwards(penyes:any[]=[]):PenyaAward[]{
 }
 const field="w-full rounded-xl border border-[#cbd9d6] bg-white px-3 py-2.5 text-sm text-[#173f52]";
 export function PenyaAwardMedal({award,compact=false}:{award:PenyaAward;compact?:boolean}){
- const competition=award.competition.normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLocaleLowerCase("es");
+ const competition=award.competition.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es");
  const category=competition.includes("paella")?"paellas":competition.includes("desfile")||competition.includes("humor")?"desfile":competition.includes("playback")?"playbacks":"general";
  const supported=category==="desfile"?(award.position>=1&&award.position<=9):category==="paellas"?(award.position>=1&&award.position<=3):category==="playbacks"?(award.position>=1&&award.position<=5):false;
  const index=category==="desfile"?award.position-1:category==="paellas"?9+award.position-1:12+award.position-1;
