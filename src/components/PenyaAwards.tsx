@@ -5,7 +5,9 @@ const KEY="penyes_premios_json";
 const field="w-full rounded-xl border border-[#cbd9d6] bg-white px-3 py-2.5 text-sm text-[#173f52]";
 export function PenyaAwardMedal({award,compact=false}:{award:PenyaAward;compact?:boolean}){
  const colors=award.position===1?["#ffb547","#ff4d83","#6b173f"]:award.position===2?["#d9f5ff","#5c9fcb","#163c68"]:award.position===3?["#ffbd83","#b66b3f","#542b28"]:["#75f1ff","#9b67ff","#17245e"];
- return <div className={"penya-award-medal relative mx-auto grid "+(compact?"h-[88px] w-[88px]":"h-[104px] w-[104px] sm:h-[124px] sm:w-[124px"])+" shrink-0 place-items-center rounded-full"} style={{"--medal-a":colors[0],"--medal-b":colors[1],"--medal-c":colors[2]} as React.CSSProperties}><span className="penya-award-medal-inner absolute inset-[10%] rounded-full"/><span className="relative z-10 font-light tracking-tight text-white drop-shadow-[0_1px_7px_rgba(255,255,255,.45)]" style={{fontSize:compact?"1.65rem":"2rem"}}>{award.position}º</span></div>;
+  const medalClass = "penya-award-medal relative mx-auto grid shrink-0 place-items-center rounded-full " + (compact ? "h-[88px] w-[88px]" : "h-[104px] w-[104px] sm:h-[124px] sm:w-[124px]");
+  const medalStyle: React.CSSProperties = { "--medal-a": colors[0], "--medal-b": colors[1], "--medal-c": colors[2] } as React.CSSProperties;
+  return <div className={medalClass} style={medalStyle}><span className="penya-award-medal-inner absolute inset-[10%] rounded-full" /><span className="relative z-10 font-light tracking-tight text-white drop-shadow-[0_1px_7px_rgba(255,255,255,.45)]" style={{ fontSize: compact ? "1.65rem" : "2rem" }}>{award.position}º</span></div>;
 }
 export function PenyaAwardsSection({awards,penyaName}:{awards:PenyaAward[];penyaName:string}){
  const[expanded,setExpanded]=useState(false);const sorted=useMemo(()=>[...awards].sort((a,b)=>b.year-a.year||a.position-b.position||a.competition.localeCompare(b.competition,"es")),[awards]);
