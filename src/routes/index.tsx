@@ -324,6 +324,7 @@ const safeHttpUrl=(value:any)=>{try{const url=new URL(String(value||""));return 
 const penyaVideoEmbed=(value:any)=>{const raw=safeHttpUrl(value);if(!raw)return "";try{const url=new URL(raw);if(url.hostname==="youtu.be")return "https://www.youtube-nocookie.com/embed/"+url.pathname.slice(1).split("/")[0];if(url.hostname.endsWith("youtube.com")){const id=url.searchParams.get("v")||url.pathname.split("/").filter(Boolean).pop();return id?"https://www.youtube-nocookie.com/embed/"+id:"";}if(url.hostname.endsWith("vimeo.com")){const id=url.pathname.split("/").filter(Boolean).pop();return id?"https://player.vimeo.com/video/"+id:"";}return /\.mp4(?:$|[?#])/i.test(url.pathname)?raw:"";}catch{return "";}};
 const normalizarBusqueda=(value:any)=>String(value||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
 const normalizarNombrePenya=(value:any)=>String(value||"").trim().toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
+const nombrePenyaParaOrden=(value:any)=>String(value||"").trim().replace(/^(?:penya|peña)\s+/i,"").trim();
 const limpiarTextoNoticia=(value:any)=>{
   const text=String(value||"")
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi," ")
@@ -441,6 +442,8 @@ function Home() {
   const mayoralesAnio = String(siteContent["mayorales_anio"]||"2027");
   // Prioridad: peña configurada, etiqueta Mayorales del año vigente y, como respaldo, CuBaTa.
   const mayoralesPenyaId = useMemo(()=>{
+    const cubata=penyes.find(p=>{const name=normalizarNombrePenya(p.nombre);return name==="cubata"||name.includes("cobrebariotantalo");});
+    if(cubata)return String(cubata.id);
     const configuredId=String(siteContent["mayorales_penya_id"]||"").trim();
     if(configuredId&&penyes.some(p=>String(p.id)===configuredId))return configuredId;
     try {
@@ -454,16 +457,12 @@ function Home() {
       const taggedPenya=penyes.find(p=>Array.isArray(perfiles?.[String(p.id)])&&perfiles[String(p.id)].some((block:any)=>block?.type==="tag"&&tituloVigente(block.title)));
       if(taggedPenya)return String(taggedPenya.id);
     } catch { /* Si no hay etiquetas legibles, se usa CuBaTa como respaldo de Mayorales 2027. */ }
-    const cubata=penyes.find(p=>{
-      const name=normalizarNombrePenya(p.nombre);
-      return name==="cubata"||name.includes("cobrebariotantalo");
-    });
-    return cubata?String(cubata.id):"";
+    return "";
   },[penyes,siteContent["penyes_perfiles_json"],siteContent["mayorales_penya_id"],mayoralesAnio]);
   const mayoralesColor = String((mayoralesPenyaId && penyaCardSettings[mayoralesPenyaId]?.color) || siteContent["theme_accent"] || "#173f52");
   // El color de la peña define la identidad visual, pero los tonos semánticos se oscurecen para mantener contraste en textos y controles.
   const mayoralesPrimaryColor = `color-mix(in srgb, ${mayoralesColor} 28%, #173f52)`;
-  const visiblePenyes = useMemo(()=>[...penyes].filter(p=>(!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica,p.informacion].join(" ")).includes(normalizarBusqueda(penyaSearch)))&&(penyaMusicFilter==="Todas"||String(p.tipo_musica||"").trim()===penyaMusicFilter)&&(!penyaOnlyMine||misPenyes.includes(p.id))).sort((a,b)=>String(a.nombre??"").localeCompare(String(b.nombre??""),"es",{sensitivity:"base"})),[penyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,misPenyes]);
+  const visiblePenyes = useMemo(()=>[...penyes].filter(p=>(!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica,p.informacion].join(" ")).includes(normalizarBusqueda(penyaSearch)))&&(penyaMusicFilter==="Todas"||String(p.tipo_musica||"").trim()===penyaMusicFilter)&&(!penyaOnlyMine||misPenyes.includes(p.id))).sort((a,b)=>nombrePenyaParaOrden(a.nombre).localeCompare(nombrePenyaParaOrden(b.nombre),"es",{sensitivity:"base",numeric:true})||String(a.nombre??"").localeCompare(String(b.nombre??""),"es",{sensitivity:"base"})),[penyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,misPenyes]);
   const searchingPenyes = Boolean(penyaSearch.trim()) || penyaMusicFilter !== "Todas" || penyaOnlyMine;
   // En la entrada al directorio, Mayorales ocupa la primera posición del carrusel; las demás siguen alfabéticamente.
   const carouselPenyes = useMemo(()=>{
@@ -809,15 +808,15 @@ function Home() {
   const selectedPenyaNews = selectedPenya ? noticias.filter((n:any) => n.publicado && (n.penya_id === selectedPenya.id || normalizarBusqueda([n.penya_nombre, n.autor].join(" ")).includes(normalizarBusqueda(selectedPenya.nombre)))).slice().sort((a:any,b:any) => String(b.fecha||b.created_at||"").localeCompare(String(a.fecha||a.created_at||""))).slice(0,3) : [];
   const selectedPenyaCustomBlocks = (() => { try { const all=JSON.parse(siteContent["penyes_perfiles_json"]||"{}"); const blocks=all?.[selectedPenya?.id||""]; return Array.isArray(blocks)?blocks.filter((block:any)=>block&&typeof block==="object"):[]; } catch { return []; } })();
   const selectedPenyaAcceptsVisits = (() => { try { const settings=JSON.parse(siteContent["penyes_visitas_json"]||"{}"); return settings?.[selectedPenya?.id||""]===true; } catch { return false; } })();
-  const selectedPenyaBannerBlock = selectedPenyaCustomBlocks.find((block:any)=>block.type==="banner" && typeof block.url==="string" && /^https?:\/\//i.test(block.url));
-  const selectedPenyaBanner = selectedPenyaBannerBlock?.url || "";
+  const selectedPenyaBannerBlock = selectedPenyaCustomBlocks.find((block:any)=>block.type==="banner");
+  const selectedPenyaBannerGradient = `linear-gradient(90deg, ${/^#[0-9a-fA-F]{6}$/.test(selectedPenyaBannerBlock?.colorStart||"")?selectedPenyaBannerBlock.colorStart:"#173f52"}, ${/^#[0-9a-fA-F]{6}$/.test(selectedPenyaBannerBlock?.colorEnd||"")?selectedPenyaBannerBlock.colorEnd:"#c6a24b"})`;
   const selectedPenyaPhotoBlocks = (() => { const legacy=selectedPenyaCustomBlocks.filter((block:any)=>block.type==="photo" && typeof block.url==="string" && /^https?:\/\//i.test(block.url)); const merged=new Map<string,any>(legacy.map((block:any)=>[block.url,{...block,visible:true}])); penyaPhotos.filter((photo:any)=>photo.penya_id===selectedPenya?.id).forEach((photo:any)=>{const previous=merged.get(photo.url)||{type:"photo",title:"Fotografía",content:"",url:photo.url};merged.set(photo.url,{...previous,id:photo.id,featured:photo.destacada===true,visible:photo.visible!==false,url:photo.url});});return [...merged.values()].filter((block:any)=>block.visible!==false); })();
   const selectedPenyaGallery = selectedPenya ? [...new Set([
     ...selectedPenyaPhotoBlocks.filter((block:any)=>block.featured===true).slice(0,3).map((block:any)=>block.url),
     ...selectedPenyaPhotoBlocks.filter((block:any)=>block.featured!==true).map((block:any)=>block.url),
     ...selectedPenyaEvents.map((e:any) => e.imagen_url || e.imagen || e.foto_url || e.foto),
     ...selectedPenyaActs.map((a:any) => a.imagen_url || a.imagen || a.foto_url || a.foto)
-  ].filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url) && url !== selectedPenya.foto && url !== selectedPenyaBanner))] : [];
+  ].filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url) && url !== selectedPenya.foto ))] : [];
   const selectedPenyaFeaturedGallery = selectedPenyaPhotoBlocks.filter((block:any)=>block.featured===true).slice(0,3).map((block:any)=>block.url);
   const selectedPenyaPhotoStyle=(url:string)=>{const block=selectedPenyaPhotoBlocks.find((item:any)=>item.url===url);return {objectPosition:`${block?.positionX??50}% ${block?.positionY??50}%`,transform:`translate(${((block?.positionX??50)-50)*1.2}%,${((block?.positionY??50)-50)*1.2}%) scale(${(block?.zoom??100)/100})`};};
   // Las noticias automáticas solo pueden usar la lista creada por el extractor de galerías.
@@ -1349,8 +1348,7 @@ function Home() {
       {selectedPenya && penyaFotoAmpliada!==null && selectedPenyaGallery[penyaFotoAmpliada] && <div role="dialog" aria-modal="true" aria-label="Fotografía ampliada" className="fixed inset-0 z-[2147483103] flex items-center justify-center bg-[#06151d]/95 p-3 backdrop-blur-md animate-in fade-in duration-300" onClick={()=>{setPenyaFotoAmpliada(null);setPenyaFotoZoom(1);}}><button type="button" aria-label="Cerrar fotografía" onClick={()=>{setPenyaFotoAmpliada(null);setPenyaFotoZoom(1);}} className="absolute right-4 top-4 z-10 grid h-11 w-11 place-items-center rounded-full border border-white/25 bg-white/10 text-3xl text-white transition duration-300 hover:rotate-90 hover:bg-white/20">×</button><button type="button" aria-label="Fotografía anterior" onClick={e=>{e.stopPropagation();setPenyaFotoZoom(1);setPenyaFotoAmpliada(i=>(i===null?0:(i-1+selectedPenyaGallery.length)%selectedPenyaGallery.length));}} className="absolute left-2 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/30 bg-black/40 text-2xl text-white sm:left-5">‹</button><button type="button" aria-label="Fotografía siguiente" onClick={e=>{e.stopPropagation();setPenyaFotoZoom(1);setPenyaFotoAmpliada(i=>(i===null?0:(i+1)%selectedPenyaGallery.length));}} className="absolute right-2 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/30 bg-black/40 text-2xl text-white sm:right-5">›</button><div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-full border border-white/20 bg-black/45 px-4 py-2 text-xs font-bold text-white"><button type="button" onClick={e=>{e.stopPropagation();setPenyaFotoZoom(v=>Math.max(1,v-.25));}}>−</button><span>{penyaFotoAmpliada+1} / {selectedPenyaGallery.length} · {Math.round(penyaFotoZoom*100)}%</span><button type="button" onClick={e=>{e.stopPropagation();setPenyaFotoZoom(v=>Math.min(3,v+.25));}}>＋</button></div><img src={selectedPenyaGallery[penyaFotoAmpliada]} alt={"Fotografía ampliada de "+selectedPenya.nombre} onClick={e=>{e.stopPropagation();setPenyaFotoZoom(v=>v>=2.5?1:v+0.5);}} onTouchStart={e=>{(e.currentTarget as HTMLImageElement).dataset.touchX=String(e.touches[0]?.clientX??0);}} onTouchEnd={e=>{const start=Number((e.currentTarget as HTMLImageElement).dataset.touchX||0);const delta=(e.changedTouches[0]?.clientX??start)-start;if(Math.abs(delta)>55)setPenyaFotoAmpliada(current=>current===null?null:(current+(delta<0?1:-1)+selectedPenyaGallery.length)%selectedPenyaGallery.length);}} style={{...selectedPenyaPhotoStyle(selectedPenyaGallery[penyaFotoAmpliada]),transform:`scale(${penyaFotoZoom*((selectedPenyaPhotoBlocks.find((block:any)=>block.url===selectedPenyaGallery[penyaFotoAmpliada])?.zoom??100)/100)})`}} className="max-h-[82dvh] max-w-[94vw] cursor-zoom-in rounded-xl object-contain shadow-2xl transition-transform duration-200 animate-in zoom-in-90 ease-out"/></div>}
       {selectedPenya && (mapPenyaPreview ? <div className="fixed inset-0 z-[6000] flex items-center justify-center bg-[#092431]/65 p-3 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-sm" onClick={()=>{setSelectedPenya(null);setMapPenyaPreview(false);}}>
         <section role="dialog" aria-modal="true" aria-label={"Resumen de "+selectedPenya.nombre} onClick={e=>e.stopPropagation()} className="relative w-full max-w-[370px] overflow-hidden rounded-[1.45rem] border border-white/80 bg-white shadow-[0_24px_80px_rgba(4,24,33,.38)]">
-          <div className="relative z-0 h-[104px] overflow-hidden bg-gradient-to-br from-[#173f52] via-[#286477] to-[#c6a24b]">
-            {selectedPenyaBanner&&<img src={selectedPenyaBanner} alt="" className="h-full w-full object-cover"/>}
+          <div className="relative z-0 h-[104px] overflow-hidden" style={{background:selectedPenyaBannerBlock?selectedPenyaBannerGradient:"linear-gradient(135deg,#173f52,#286477 55%,#c6a24b)"}}>
             <div className="absolute inset-0 bg-gradient-to-t from-[#092431]/55 via-transparent to-black/10"/>
             
             <button type="button" aria-label="Cerrar" onClick={()=>{setSelectedPenya(null);setMapPenyaPreview(false);}} className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full border border-white/35 bg-[#092431]/55 text-sm font-bold text-white shadow-md backdrop-blur-md transition hover:bg-[#092431]/85">✕</button>
@@ -1379,8 +1377,7 @@ function Home() {
       </div> : (
         <div className={`fixed inset-0 z-[2147483002] flex justify-center ${penyaDetailFullscreen ? "bg-[#102f3d] items-stretch p-0" : "bg-[#071c25]/75 items-end p-0 pt-[max(1rem,env(safe-area-inset-top))] sm:items-center sm:p-5 backdrop-blur-md"}`} onClick={() => { setSelectedPenya(null); setPenyaDetailFullscreen(false); }}>
           <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className={`penya-profile-sheet w-full overflow-auto overscroll-contain border border-border bg-background pb-[calc(105px+env(safe-area-inset-bottom))] shadow-[0_30px_100px_rgba(4,25,34,.42)] ${penyaDetailFullscreen ? "h-[100dvh] max-h-[100dvh] max-w-none rounded-none" : "max-h-[94dvh] max-w-[min(96vw,1500px)] rounded-t-[1.75rem] sm:rounded-[2rem]"}`}>
-            <div className="relative isolate h-[250px] overflow-hidden bg-[#c9e9f1] sm:h-[330px] lg:h-[370px]" style={{height:`clamp(250px,25vw,${selectedPenyaBannerBlock?.height??370}px)`}}>
-              {selectedPenyaBanner&&<img src={selectedPenyaBanner} alt={"Portada de "+selectedPenya.nombre} style={{objectPosition:`${selectedPenyaBannerBlock?.positionX??50}% ${selectedPenyaBannerBlock?.positionY??50}%`,transform:`translate(${((selectedPenyaBannerBlock?.positionX??50)-50)*1.2}%,${((selectedPenyaBannerBlock?.positionY??50)-50)*1.2}%) scale(${(selectedPenyaBannerBlock?.zoom??100)/100})`}} className="absolute inset-0 h-full w-full object-cover object-center"/>}
+            <div className="relative isolate h-[250px] overflow-hidden bg-[#c9e9f1] sm:h-[330px] lg:h-[370px]" style={{height:`clamp(250px,25vw,${selectedPenyaBannerBlock?.height??370}px)`,background:selectedPenyaBannerBlock?selectedPenyaBannerGradient:"linear-gradient(90deg,#173f52,#286477 55%,#c6a24b)"}}>
               <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
                 {/* Zona reservada para las pegatinas personalizadas de cada peña. */}
               </div>
