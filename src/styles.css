@@ -694,13 +694,35 @@ html, body, #root { min-width:0; max-width:100%; }
 @media(max-width:639px){.penya-award-feature{flex-basis:29%;max-width:29%}.penya-award-feature.is-featured-center{flex-basis:36%;max-width:36%;transform:scale(1.08) translateY(-4px)}.penya-award-feature.is-featured-left,.penya-award-feature.is-featured-right{transform:scale(.9) translateY(8px)}.penya-glass-number{font-size:30px}}
 @media(prefers-reduced-motion:reduce){.penya-award-item{opacity:1;animation:none}.penya-award-medal{animation:none}.penya-award-feature{transition:none}}
 
-/* Palmarés: conserva el fondo oscuro, integrado mediante un degradado suave con la ficha. */
-.penya-awards-panel{background:linear-gradient(135deg,rgba(5,18,33,.94) 0%,rgba(9,25,43,.91) 42%,rgba(12,22,43,.88) 72%,rgba(6,17,32,.94) 100%)!important;border:1px solid rgba(132,205,225,.2)!important;border-radius:1.7rem!important;box-shadow:0 18px 42px rgba(3,13,26,.2),inset 0 1px 0 rgba(255,255,255,.08)!important}
-.penya-awards-panel:before{display:block!important;opacity:.55;background:linear-gradient(115deg,transparent 12%,rgba(255,255,255,.045) 42%,transparent 68%)!important}
-.penya-awards-orb{opacity:.12;filter:blur(76px)}
-.penya-awards-orb-one{background:#34d8e8}
-.penya-awards-orb-two{background:#9c67ff}
-/* Evita que los reconocimientos queden invisibles si se desactiva la animación. */
+/* Palmarés: recuperar el degradado profundo original e integrarlo por difusión, no como tarjeta. */
+.penya-awards-panel{
+ background:transparent!important;
+ border:0!important;
+ border-radius:2rem!important;
+ box-shadow:none!important;
+ isolation:isolate;
+}
+.penya-awards-panel:before{
+ content:"";
+ position:absolute;
+ z-index:0;
+ inset:-1.6rem -1.2rem;
+ pointer-events:none;
+ border-radius:3rem;
+ background:
+  radial-gradient(ellipse at 50% 48%,rgba(11,42,67,.98) 0%,rgba(9,34,57,.96) 34%,rgba(8,27,49,.82) 58%,rgba(7,22,40,.4) 76%,transparent 100%),
+  radial-gradient(ellipse at 18% 12%,rgba(13,111,133,.25),transparent 52%),
+  radial-gradient(ellipse at 86% 88%,rgba(74,55,145,.24),transparent 54%);
+ filter:blur(9px);
+ opacity:1;
+}
+.penya-awards-orb{z-index:0;opacity:.2;filter:blur(82px)}
+.penya-awards-orb-one{background:#16b9d1}
+.penya-awards-orb-two{background:#6552bb}
+.penya-awards-panel>.relative{position:relative;z-index:2}
 .penya-award-item{opacity:1;animation:penya-award-appear .65s cubic-bezier(.2,.8,.2,1) both}
-@media(max-width:639px){.penya-awards-panel{margin-top:1.5rem!important;margin-bottom:1.5rem!important;border-radius:1.4rem!important}}
+@media(max-width:639px){
+ .penya-awards-panel{margin-top:1.25rem!important;margin-bottom:1.25rem!important;padding:1.1rem!important}
+ .penya-awards-panel:before{inset:-1rem -.65rem;border-radius:2rem;filter:blur(7px)}
+}
 @media(prefers-reduced-motion:reduce){.penya-award-item{opacity:1;animation:none}}
