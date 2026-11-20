@@ -250,6 +250,6 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
       </>}
     </section>
     {error && <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
-    <button disabled={busy} className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50">{busy ? "Guardando ficha…" : "Guardar ficha completa"}</button>
+    <button disabled={busy||blocksLoading} className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50">{blocksLoading?"Cargando ficha…":busy ? "Guardando ficha…" : "Guardar ficha completa"}</button>
   </form>;
 }
