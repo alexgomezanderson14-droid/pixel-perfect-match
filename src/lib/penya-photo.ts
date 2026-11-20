@@ -1,4 +1,4 @@
-export type PenyaPhotoCrop = { zoom?: number | null; x?: number | null; y?: number | null };
+export type PenyaPhotoCrop = { zoom?: number | null | undefined; x?: number | null | undefined; y?: number | null | undefined };
 
 /** Shared crop for every circular rendering of a peña profile photo. Position also anchors zoom. */
 export function getPenyaPhotoImageStyle(settings: PenyaPhotoCrop = {}) {
