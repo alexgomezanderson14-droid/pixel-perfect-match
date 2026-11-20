@@ -160,18 +160,19 @@ export default function FestMap({
       }
     });
     lugares.forEach((l) => {
-      const signature = JSON.stringify([l.lng,l.lat,l.categoria,l.foto,l.nombre,l.descripcion,l.dia,l.hora,l.detalleId]);
+      const signature = JSON.stringify([l.lng,l.lat,l.categoria,l.foto,l.fotoZoom,l.fotoX,l.fotoY,l.nombre,l.descripcion,l.dia,l.hora,l.detalleId]);
       if (markers.current[l.id] && markerSignatures.current[l.id] === signature) return;
       markers.current[l.id]?.remove();
       delete markers.current[l.id];
       const normalizedPenyaName = l.nombre.toLocaleLowerCase("es").normalize("NFD").replace(/[^a-z0-9]/g, "");
       const isCuBaTa = l.categoria === "penya" && (normalizedPenyaName.includes("cubata") || normalizedPenyaName.includes("cobrebariotantalo") || (normalizedPenyaName.includes("cobre") && normalizedPenyaName.includes("bario") && normalizedPenyaName.includes("tantal")));
+      const profilePhotoStyle = `object-position:${l.fotoX ?? 50}% ${l.fotoY ?? 50}%;transform:translate(${((l.fotoX ?? 50) - 50) * 1.2}%,${((l.fotoY ?? 50) - 50) * 1.2}%) scale(${(l.fotoZoom ?? 100) / 100});`;
       const markerHtml = isCuBaTa
         ? l.foto
-          ? `<div style="position:relative;width:56px;height:56px;display:flex;align-items:center;justify-content:center;"><div style="width:50px;height:50px;box-sizing:border-box;overflow:hidden;border-radius:50%;border:3px solid #D4AF37;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.4);"><img src="${esc(l.foto)}" alt="" loading="lazy" referrerpolicy="no-referrer" style="display:block;width:100%;height:100%;object-fit:cover;border:0;border-radius:50%;margin:0;padding:0;" /></div><span style="position:absolute;top:-1px;right:-1px;width:23px;height:23px;border:2px solid #fff;border-radius:50%;background:#D4AF37;color:#3B2A0A;font-size:14px;font-weight:900;line-height:19px;text-align:center;box-shadow:0 2px 5px #0005;">♛</span></div>`
+          ? `<div style="position:relative;width:56px;height:56px;display:flex;align-items:center;justify-content:center;"><div style="width:50px;height:50px;box-sizing:border-box;overflow:hidden;border-radius:50%;border:3px solid #D4AF37;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.4);"><img src="${esc(l.foto)}" alt="" loading="lazy" referrerpolicy="no-referrer" style="display:block;width:100%;height:100%;object-fit:cover;border:0;border-radius:50%;margin:0;padding:0;${profilePhotoStyle}" /></div><span style="position:absolute;top:-1px;right:-1px;width:23px;height:23px;border:2px solid #fff;border-radius:50%;background:#D4AF37;color:#3B2A0A;font-size:14px;font-weight:900;line-height:19px;text-align:center;box-shadow:0 2px 5px #0005;">♛</span></div>`
           : `<div style="position:relative;width:50px;height:50px;display:flex;align-items:center;justify-content:center;border:3px solid #B8860B;border-radius:50%;background:#D4AF37;color:#3B2A0A;font-size:23px;line-height:1;box-shadow:0 2px 8px #0005;">♛</div>`
         : l.categoria === "penya" && l.foto
-        ? `<div class="fest-pin fest-pin-penya fest-pin-photo" style="width:50px;height:50px;box-sizing:border-box;overflow:hidden;border-radius:50%;border:3px solid #fff;background:#e6b6c7;box-shadow:0 2px 8px rgba(0,0,0,.35);padding:0;display:block;"><img src="${esc(l.foto)}" alt="" loading="lazy" referrerpolicy="no-referrer" style="display:block;width:100%;height:100%;object-fit:cover;border:0;border-radius:50%;margin:0;padding:0;" /></div>`
+        ? `<div class="fest-pin fest-pin-penya fest-pin-photo" style="width:50px;height:50px;box-sizing:border-box;overflow:hidden;border-radius:50%;border:3px solid #fff;background:#e6b6c7;box-shadow:0 2px 8px rgba(0,0,0,.35);padding:0;display:block;"><img src="${esc(l.foto)}" alt="" loading="lazy" referrerpolicy="no-referrer" style="display:block;width:100%;height:100%;object-fit:cover;border:0;border-radius:50%;margin:0;padding:0;${profilePhotoStyle}" /></div>`
         : `<div class="fest-pin fest-pin-${esc(l.categoria)}">${icons[l.categoria] || "•"}</div>`;
       const element = document.createElement("div");
       element.className = "festalfas-map-marker";
@@ -211,7 +212,11 @@ export default function FestMap({
     if (!pickMarker.current) {
       const element = document.createElement("div");
       element.innerHTML = '<div class="fest-pin fest-pin-penya">★</div>';
-      pickMarker.current = new api.Marker({ element, anchor: "center" }).setLngLat([pick.lng, pick.lat]).addTo(instance);
+      pickMarker.current = new api.Marker({ element, anchor: "center", draggable: true }).setLngLat([pick.lng, pick.lat]).addTo(instance);
+      pickMarker.current.on("dragend", () => {
+        const position = pickMarker.current?.getLngLat();
+        if (position) pickRef.current?.(position.lat, position.lng);
+      });
     } else pickMarker.current.setLngLat([pick.lng, pick.lat]);
     instance.easeTo({ center: [pick.lng, pick.lat], duration: 450 });
   }, [pick, mapReady]);
