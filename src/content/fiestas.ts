@@ -14,6 +14,7 @@ export type Lugar = {
   fotoZoom?: number;
   fotoX?: number;
   fotoY?: number;
+  esMayorales?: boolean;
   dia?: string;
   hora?: string;
   detalleId?: string;
