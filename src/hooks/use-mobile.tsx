@@ -6,13 +6,30 @@ export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined);
 
   React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    const query = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`;
+    const mql = typeof window.matchMedia === "function" ? window.matchMedia(query) : null;
     const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+      setIsMobile(mql ? mql.matches : window.innerWidth < MOBILE_BREAKPOINT);
     };
-    mql.addEventListener("change", onChange);
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    return () => mql.removeEventListener("change", onChange);
+
+    // Safari/iOS versions before MediaQueryList.addEventListener only expose
+    // addListener/removeListener. Keep both paths so the hook cannot crash
+    // while the application is mounting on older mobile browsers.
+    if (mql?.addEventListener) {
+      mql.addEventListener("change", onChange);
+    } else {
+      mql?.addListener(onChange);
+    }
+
+    onChange();
+
+    return () => {
+      if (mql?.removeEventListener) {
+        mql.removeEventListener("change", onChange);
+      } else {
+        mql?.removeListener(onChange);
+      }
+    };
   }, []);
 
   return !!isMobile;
