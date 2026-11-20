@@ -28,22 +28,21 @@ export function getSeededPenyaAwards(penyes:any[]=[]):PenyaAward[]{
 }
 const field="w-full rounded-xl border border-[#cbd9d6] bg-white px-3 py-2.5 text-sm text-[#173f52]";
 export function PenyaAwardMedal({award,compact=false}:{award:PenyaAward;compact?:boolean}){
- const competition=award.competition.toLocaleLowerCase("es");
+ const competition=award.competition.normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLocaleLowerCase("es");
  const category=competition.includes("paella")?"paellas":competition.includes("desfile")||competition.includes("humor")?"desfile":competition.includes("playback")?"playbacks":"general";
- // El color identifica siempre el puesto, independientemente de la categoría.
- const rankPalettes:Record<number,string[]>={1:["#ff3f8e","#ff8a38","#ffe56b","#ff4b65"],2:["#ffb52e","#ffe66d","#fff3a0","#ff8a24"],3:["#24c9ef","#398cff","#9af5ff","#35e5d5"],4:["#35d86a","#a8f56a","#e2ff8a","#16b978"],5:["#22d9c4","#39b7ff","#a5fff0","#31e9e9"],6:["#347dff","#43c9ff","#a0eaff","#665cff"],7:["#4165ff","#8a79ff","#b9a7ff","#2ed5ff"],8:["#a44cff","#ed65ff","#d5a0ff","#5c5bff"],9:["#17bfe5","#4b83ff","#9ceeff","#42e8d5"],10:["#bfc8d2","#f5f8ff","#ffffff","#7d8a9a"]};
- const colors=rankPalettes[award.position]??rankPalettes[1];
- const motif=category==="paellas"?"sunburst":category==="desfile"?"star":category==="playbacks"?"orbit":"rays";
- const medalClass="penya-award-medal relative mx-auto grid shrink-0 place-items-center "+(compact?"h-[76px] w-[76px]":"h-[116px] w-[116px] sm:h-[142px] sm:w-[142px]");
- const medalStyle:React.CSSProperties={"--holo-a":colors[0],"--holo-b":colors[1],"--holo-c":colors[2],"--holo-d":colors[3]} as React.CSSProperties;
- return <div className={medalClass} data-category={category} data-shape={category==="paellas"?"square":category==="desfile"?"round":category==="playbacks"?"hexagon":"round"} data-position={award.position} data-motif={motif} style={medalStyle}>
-  <span className="penya-glass-body absolute inset-0 rounded-full" aria-hidden="true"/>
-  <span className="penya-glass-rim absolute inset-[5%] rounded-full" aria-hidden="true"/>
-  <span className="penya-glass-inner absolute inset-[12%] rounded-full" aria-hidden="true"/>
-  <span className="penya-glass-motif absolute inset-[20%]" aria-hidden="true"/>
-  <span className="penya-glass-number relative z-10">{award.position}º</span>
-  <span className="penya-glass-glint penya-glass-glint-one" aria-hidden="true"/>
-  <span className="penya-glass-glint penya-glass-glint-two" aria-hidden="true"/>
+ const supported=category==="desfile"?(award.position>=1&&award.position<=9):category==="paellas"?(award.position>=1&&award.position<=3):category==="playbacks"?(award.position>=1&&award.position<=5):false;
+ const index=category==="desfile"?award.position-1:category==="paellas"?9+award.position-1:12+award.position-1;
+ const column=index%5,row=Math.floor(index/5);
+ const glowByCategory:Record<string,string[]>={desfile:["#a855f7","#06b6d4","#84cc16","#f97316","#ec4899","#2563eb","#6366f1","#84cc16","#f97316"],paellas:["#a855f7","#06b6d4","#ec4899"],playbacks:["#a855f7","#2563eb","#84cc16","#f97316","#ec4899"]};
+ const glow=supported?(glowByCategory[category]?.[award.position-1]||"#38bdf8"):"#38bdf8";
+ const style:React.CSSProperties={
+  "--award-glow":glow,
+  "--award-glow-soft":`color-mix(in srgb,${glow} 48%, transparent)`,
+  ...(supported?{backgroundImage:"url('/premios-insignias.avif')",backgroundSize:"500% 400%",backgroundPosition:`${column/4*100}% ${row/3*100}%`}:{}),
+ } as React.CSSProperties;
+ const size=compact?"h-[76px] w-[76px]":"h-[116px] w-[116px] sm:h-[142px] sm:w-[142px]";
+ return <div className={`penya-award-insignia relative mx-auto grid shrink-0 place-items-center ${size}`} style={style} role="img" aria-label={supported?`${award.position}º puesto, ${award.competition}`:`Premio de ${award.competition}, puesto ${award.position}`} data-category={category} data-shape={category==="paellas"?"square":category==="playbacks"?"hexagon":"round"} data-position={award.position}>
+  {!supported&&<span className="text-4xl drop-shadow-[0_0_12px_var(--award-glow)]" aria-hidden="true">🏆</span>}
  </div>;
 }
 export function PenyaAwardsSection({awards,penyaName}:{awards:PenyaAward[];penyaName:string}){
