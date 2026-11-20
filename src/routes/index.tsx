@@ -701,6 +701,8 @@ function Home() {
     setEventos(eventosData ?? []);
     const content = Object.fromEntries((contentData ?? []).map((x:any)=>[x.clave,x.valor]));
     setSiteContent(content);
+    let catalogoPenyesOcultas:string[]=[];
+    try { const ids=JSON.parse(content["penyas_catalogo_oculto_json"]||"[]"); if(Array.isArray(ids)) catalogoPenyesOcultas=ids.map((id:any)=>String(id)); } catch { catalogoPenyesOcultas=[]; }
     try { const parsed=JSON.parse(content["avisos_json"]||"[]"); setAvisos(Array.isArray(parsed)?parsed:[]); } catch { setAvisos([]); }
     let noticiasAutomaticas: any[] = [];
     try {
@@ -746,7 +748,7 @@ function Home() {
       });
     const nombresExistentes = new Set(penyesExistentes.map((p:any) => claveCatalogoPenya(p.nombre)));
     const penyesCatalogo = catalogoPenyesHistorico
-      .filter((p) => !nombresExistentes.has(claveCatalogoPenya(p.nombre)))
+      .filter((p) => !catalogoPenyesOcultas.includes(p.id) && !nombresExistentes.has(claveCatalogoPenya(p.nombre)))
       .map((p) => ({ id: p.id, nombre: p.nombre, direccion: null, lat: null, lng: null, foto: "", tipo_musica: "Variada", informacion: p.informacion, asociada: p.asociada, color: p.color }));
     const cleanPenyes = [...penyesExistentes, ...penyesCatalogo];
     setPenyes(cleanPenyes);
