@@ -34,8 +34,8 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
   const moveImageDrag = (event: React.PointerEvent<HTMLDivElement>) => {
     const drag = imageDrag.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
-    const x = Math.max(0, Math.min(100, drag.posX + (event.clientX - drag.startX) / Math.max(1, drag.width) * 100));
-    const y = Math.max(0, Math.min(100, drag.posY + (event.clientY - drag.startY) / Math.max(1, drag.height) * 100));
+    const x = Math.max(0, Math.min(100, drag.posX - (event.clientX - drag.startX) / Math.max(1, drag.width) * 100));
+    const y = Math.max(0, Math.min(100, drag.posY - (event.clientY - drag.startY) / Math.max(1, drag.height) * 100));
     if (drag.kind === "logo") { setLogoX(x); setLogoY(y); }
     else if (drag.blockId) setBlocks(old => old.map(block => block.id === drag.blockId ? { ...block, positionX: x, positionY: y } : block));
   };
