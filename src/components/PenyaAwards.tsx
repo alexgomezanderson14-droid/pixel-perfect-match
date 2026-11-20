@@ -33,17 +33,20 @@ export function PenyaAwardMedal({award,compact=false}:{award:PenyaAward;compact?
  const supported=category==="desfile"?(award.position>=1&&award.position<=9):category==="paellas"?(award.position>=1&&award.position<=3):category==="playbacks"?(award.position>=1&&award.position<=5):false;
  const index=category==="desfile"?award.position-1:category==="paellas"?9+award.position-1:12+award.position-1;
  const column=index%5,row=Math.floor(index/5);
- const glowByCategory:Record<string,string[]>={desfile:["#a855f7","#06b6d4","#84cc16","#f97316","#ec4899","#2563eb","#6366f1","#84cc16","#f97316"],paellas:["#a855f7","#06b6d4","#ec4899"],playbacks:["#a855f7","#2563eb","#84cc16","#f97316","#ec4899"]};
- const glow=supported?(glowByCategory[category]?.[award.position-1]||"#38bdf8"):"#38bdf8";
- const style:React.CSSProperties={
-  "--award-glow":glow,
-  "--award-glow-soft":`color-mix(in srgb,${glow} 48%, transparent)`,
-  
- } as React.CSSProperties;
+ const palettes:Record<string,string[]>={desfile:["#ff3dc8","#36fff2","#baff28","#fff34a","#ffd5ff","#37eaff","#65f8ff","#ffe347","#ffb52d"],paellas:["#fff34a","#ffd5ff","#37eaff"],playbacks:["#37eaff","#65f8ff","#ffe347","#ffb52d","#ff3dc8"]};
+ const glow=supported?(palettes[category]?.[award.position-1]||"#38bdf8"):"#38bdf8";
+ const shape=category==="paellas"?"square":category==="playbacks"?"hexagon":"round";
  const size=compact?"h-[76px] w-[76px]":"h-[116px] w-[116px] sm:h-[142px] sm:w-[142px]";
- return <div className={`penya-award-insignia relative mx-auto grid shrink-0 place-items-center ${size}`} style={style} role="img" aria-label={supported?`${award.position}º puesto, ${award.competition}`:`Premio de ${award.competition}, puesto ${award.position}`} data-category={category} data-shape={category==="paellas"?"square":category==="playbacks"?"hexagon":"round"} data-position={award.position}>
-  {supported&&<span className="penya-award-art" aria-hidden="true" style={{backgroundImage:"url('/premios-insignias.avif')",backgroundPosition:`${column/4*100}% ${row/3*100}%`}}/>}
-  {!supported&&<span className="text-4xl drop-shadow-[0_0_12px_var(--award-glow)]" aria-hidden="true">🏆</span>}
+ const clipId=`award-clip-${award.id.replace(/[^a-zA-Z0-9_-]/g,"")}`;
+ const gradientId=`award-rim-${award.id.replace(/[^a-zA-Z0-9_-]/g,"")}`;
+ const geometry=shape==="round"?<circle cx="150" cy="150" r="128"/>:shape==="square"?<rect x="20" y="20" width="260" height="260" rx="42"/>:<polygon points="150,12 270,78 270,222 150,288 30,222 30,78"/>;
+ return <div className={`penya-award-insignia relative mx-auto grid shrink-0 place-items-center ${size}`} style={{"--award-glow":glow,"--award-glow-soft":`color-mix(in srgb,${glow} 58%, transparent)`} as React.CSSProperties} role="img" aria-label={supported?`${award.position}º puesto, ${award.competition}`:`Premio de ${award.competition}, puesto ${award.position}`} data-category={category} data-shape={shape} data-position={award.position}>
+  {supported?<svg className="penya-award-vector" viewBox="0 0 300 300" aria-hidden="true" focusable="false">
+   <defs><linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1"><stop stopColor="#fff"/><stop offset=".2" stopColor={glow}/><stop offset=".48" stopColor="#fff"/><stop offset=".72" stopColor={glow}/><stop offset="1" stopColor="#fff"/></linearGradient><clipPath id={clipId}>{geometry}</clipPath></defs>
+   <g clipPath={`url(#${clipId})`}><rect x="0" y="0" width="300" height="300" fill="#10182c"/><rect x="0" y="0" width="300" height="300" fill={glow} opacity=".13"/><path d="M-20 60 Q80 -15 170 35 T330 70" fill="none" stroke="#fff" strokeWidth="16" opacity=".28"/><path d="M15 230 Q80 280 150 255 T300 240" fill="none" stroke={glow} strokeWidth="5" opacity=".8"/><path d="M40 40 Q130 5 245 60" fill="none" stroke="#fff" strokeWidth="5" opacity=".45"/></g>
+   <use href={`#${clipId}`} fill="none" stroke="#fff" strokeWidth="3" opacity=".75"/><use href={`#${clipId}`} fill="none" stroke={`url(#${gradientId})`} strokeWidth="8" filter="drop-shadow(0 0 7px var(--award-glow))"/>
+   <text x="145" y="178" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="116" fontWeight="800" fill="#fff" stroke={glow} strokeWidth="2" paintOrder="stroke fill" filter="drop-shadow(0 0 4px var(--award-glow))">{award.position}</text><text x="213" y="115" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="50" fontWeight="800" fill="#fff">º</text>
+  </svg>:<span className="text-4xl drop-shadow-[0_0_12px_var(--award-glow)]" aria-hidden="true">🏆</span>}
  </div>;
 }
 export function PenyaAwardsSection({awards,penyaName}:{awards:PenyaAward[];penyaName:string}){
