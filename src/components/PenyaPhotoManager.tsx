@@ -115,7 +115,7 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
         const parsed = JSON.parse(profileData?.valor || "{}");
         if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) allProfiles = parsed;
       } catch { allProfiles = {}; }
-      const existingBlocks = Array.isArray(allProfiles[penya.id]) ? allProfiles[penya.id] : [];
+      const existingBlocks: any[] = Array.isArray(allProfiles[penya.id]) ? (allProfiles[penya.id] as any[]) : [];
       const photoSettings = new Map(blocks.map(block => [block.url, block]));
       const existingUrls = new Set(existingBlocks.filter((item: any) => item?.type === "photo").map((item: any) => item.url));
       const updatedBlocks = existingBlocks.map((item: any) => {

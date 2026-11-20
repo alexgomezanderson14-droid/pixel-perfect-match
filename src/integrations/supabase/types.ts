@@ -25,6 +25,7 @@ export type Database = {
           lat: number | null
           lng: number | null
           lugar: string
+          penya_id: string | null
           publicado: boolean
           tipo: string
           titulo: string
@@ -39,6 +40,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           lugar?: string
+          penya_id?: string | null
           publicado?: boolean
           tipo?: string
           titulo: string
@@ -53,6 +55,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           lugar?: string
+          penya_id?: string | null
           publicado?: boolean
           tipo?: string
           titulo?: string
@@ -105,6 +108,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      penya_fotos: {
+        Row: {
+          created_at: string
+          descripcion: string
+          destacada: boolean
+          id: string
+          penya_id: string
+          url: string
+          visible: boolean
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string
+          destacada?: boolean
+          id?: string
+          penya_id: string
+          url: string
+          visible?: boolean
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string
+          destacada?: boolean
+          id?: string
+          penya_id?: string
+          url?: string
+          visible?: boolean
+        }
+        Relationships: []
       }
       penyes: {
         Row: {
@@ -166,6 +199,39 @@ export type Database = {
           clave?: string
           updated_at?: string
           valor?: string
+        }
+        Relationships: []
+      }
+      site_feedback: {
+        Row: {
+          created_at: string
+          descripcion: string
+          email: string | null
+          estado: string
+          id: string
+          pagina: string | null
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string
+          email?: string | null
+          estado?: string
+          id?: string
+          pagina?: string | null
+          tipo?: string
+          titulo: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string
+          email?: string | null
+          estado?: string
+          id?: string
+          pagina?: string | null
+          tipo?: string
+          titulo?: string
         }
         Relationships: []
       }

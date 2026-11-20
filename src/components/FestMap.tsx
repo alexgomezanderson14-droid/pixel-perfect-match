@@ -33,7 +33,7 @@ function loadMapLibre(): Promise<MapLibreApi> {
       const script = document.createElement("script");
       script.src = "https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js";
       script.async = true;
-      script.dataset.festalfasMaplibre = "true";
+      script.dataset["festalfasMaplibre"] = "true";
       script.onload = () => window.maplibregl ? resolve(window.maplibregl) : reject(new Error("MapLibre no disponible"));
       script.onerror = () => reject(new Error("No se pudo cargar MapLibre"));
       document.head.appendChild(script);
@@ -191,7 +191,7 @@ export default function FestMap({
         const popup = new api.Popup({ offset: 18, closeButton: true, maxWidth: "280px" }).setHTML(popupHtml);
         marker.setPopup(popup);
         popup.on("open", () => {
-          const button = popup.getElement()?.querySelector<HTMLButtonElement>("[data-detail-id]");
+          const button = popup.getElement()?.querySelector("[data-detail-id]") as HTMLButtonElement | null;
           button?.addEventListener("click", () => itemClickRef.current?.(l.detalleId!));
         });
       }

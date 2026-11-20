@@ -43,6 +43,13 @@
       "when": 1794819557575,
       "tag": "0005_restrict_storage_and_site_content",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795184173217,
+      "tag": "0006_add_feedback_and_penya_photos",
+      "breakpoints": true
     }
   ]
 }
