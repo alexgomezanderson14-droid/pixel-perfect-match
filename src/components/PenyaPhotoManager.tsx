@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 type PhotoBlock = { id: string; url: string; title: string; featured: boolean; visible: boolean; zoom: number; positionX: number; positionY: number; legacy?: boolean };
@@ -10,6 +10,25 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const photoDrag = useRef<{ id: string; pointerId: number; startX: number; startY: number; positionX: number; positionY: number; overflowX: number; overflowY: number } | null>(null);
+  const beginPhotoDrag = (event: React.PointerEvent<HTMLDivElement>, block: PhotoBlock) => {
+    event.preventDefault();
+    const rect = event.currentTarget.getBoundingClientRect();
+    const image = event.currentTarget.querySelector("img");
+    if (!image || !image.naturalWidth || !image.naturalHeight) return;
+    const coverScale = Math.max(rect.width / image.naturalWidth, rect.height / image.naturalHeight) * block.zoom / 100;
+    photoDrag.current = { id: block.id, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, positionX: block.positionX, positionY: block.positionY, overflowX: Math.max(0, image.naturalWidth * coverScale - rect.width), overflowY: Math.max(0, image.naturalHeight * coverScale - rect.height) };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+  const movePhotoDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = photoDrag.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    const positionX = drag.overflowX > 0 ? Math.max(0, Math.min(100, drag.positionX - (event.clientX - drag.startX) / drag.overflowX * 100)) : drag.positionX;
+    const positionY = drag.overflowY > 0 ? Math.max(0, Math.min(100, drag.positionY - (event.clientY - drag.startY) / drag.overflowY * 100)) : drag.positionY;
+    setBlocks(current => current.map(item => item.id === drag.id ? { ...item, positionX, positionY } : item));
+  };
+  const endPhotoDrag = (event: React.PointerEvent<HTMLDivElement>) => { if (photoDrag.current?.pointerId === event.pointerId) photoDrag.current = null; };
 
   useEffect(() => {
     let active = true;
@@ -153,7 +172,7 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-primary/[.045] p-3"><span className="text-sm font-extrabold text-primary">Imágenes destacadas</span><span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-primary">{featuredCount}/3 seleccionadas</span></div>
     <label className="flex min-h-12 cursor-pointer items-center justify-center rounded-xl border border-dashed border-primary/35 bg-primary/[.035] px-4 py-3 text-sm font-extrabold text-primary hover:bg-primary/[.07]">{uploading ? "Subiendo imágenes…" : "＋ Añadir imágenes"}<input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={uploading || saving} onChange={event => { void upload(event.target.files); event.currentTarget.value = ""; }} /></label>
     {loading ? <p className="py-8 text-center text-sm text-muted-foreground">Cargando imágenes…</p> : blocks.filter(block => block.visible).length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{blocks.filter(block => block.visible).map(block => <article key={block.id} className="overflow-hidden rounded-xl border border-border bg-white p-2">
-      <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-[#edf3f1]"><img src={block.url} alt={block.title || "Fotografía de la peña"} style={{objectPosition:`${block.positionX}% ${block.positionY}%`,transform:`translate(${(block.positionX-50)*1.2}%,${(block.positionY-50)*1.2}%) scale(${block.zoom/100})`}} className="h-full w-full object-cover"/>{block.featured && <span className="absolute left-2 top-2 rounded-full bg-[#f4d77a] px-2 py-1 text-[9px] font-extrabold text-[#684b08]">★ DESTACADA</span>}</div>
+      <div onPointerDown={event=>beginPhotoDrag(event,block)} onPointerMove={movePhotoDrag} onPointerUp={endPhotoDrag} onPointerCancel={endPhotoDrag} onLostPointerCapture={endPhotoDrag} className="relative aspect-[4/3] touch-none cursor-grab overflow-hidden rounded-lg bg-[#edf3f1] active:cursor-grabbing"><img draggable={false} src={block.url} alt={block.title || "Fotografía de la peña"} style={{objectPosition:`${block.positionX}% ${block.positionY}%`,transform:`scale(${block.zoom/100})`,transformOrigin:"center center"}} className="pointer-events-none h-full w-full select-none object-cover"/>{block.featured && <span className="absolute left-2 top-2 rounded-full bg-[#f4d77a] px-2 py-1 text-[9px] font-extrabold text-[#684b08]">★ DESTACADA</span>}</div>
       <p className="mt-2 truncate text-xs font-bold text-primary">{block.title || "Fotografía"}</p>
       <div className="mt-2 space-y-2 rounded-lg bg-primary/[.04] p-2">
         <label className="block text-[10px] font-semibold text-primary">Zoom · {block.zoom}%<input type="range" min="100" max="220" value={block.zoom} onChange={e=>setBlocks(current=>current.map(item=>item.id===block.id?{...item,zoom:Number(e.target.value)}:item))} className="w-full accent-primary"/></label>
