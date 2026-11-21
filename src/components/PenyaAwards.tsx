@@ -2,7 +2,7 @@ import {useEffect,useMemo,useState} from "react";
 import {createPortal} from "react-dom";
 import {supabase} from "@/integrations/supabase/client";
 import {loadPenyaInsignias, type PenyaInsigniaMap} from "@/lib/penya-insignias";
-export type PenyaAward={id:string;penya_id:string;penya_name?:string;year:number;competition:string;position:number;created_at?:string};
+export type PenyaAward={id:string;penya_id:string;penya_name?:string;year:number;competition:string;position:number;created_at?:string;automatico?:boolean;source_name?:string;source_url?:string;source_date?:string};
 const KEY="penyes_premios_json";
 const OMITTED_KEY="penyes_premios_omitidos_json";
 const seededAwardResults=[] as const;
