@@ -547,23 +547,15 @@ function Home() {
     el.scrollTo({left:card.offsetLeft-(el.clientWidth-card.offsetWidth)/2,behavior});
   },[]);
   const handlePenyaCarouselScroll=(el:HTMLDivElement)=>{
+    // Durante el gesto solo guardamos la posición y reiniciamos un fallback
+    // ligero. No actualizamos React en cada frame: eso repintaba toda la página
+    // y podía agotar la memoria/GPU en móviles.
     penyaCarouselScrollLeftRef.current=el.scrollLeft;
-    // Usa el evento nativo cuando existe. El temporizador solo es fallback
-    // y espera a que termine realmente la inercia en navegadores antiguos.
-    if(penyaScrollEndTimerRef.current!==null){window.clearTimeout(penyaScrollEndTimerRef.current);penyaScrollEndTimerRef.current=null;}
-    if(!("onscrollend" in el)){
-      penyaScrollEndTimerRef.current=window.setTimeout(()=>{
-        penyaScrollEndTimerRef.current=null;
-        handlePenyaCarouselScrollEnd();
-      },500);
-    }
-    if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);
-    penyaScrollFrameRef.current=requestAnimationFrame(()=>{
-      if(!penyaCardCentersRef.current.length||penyaCardCentersRef.current.length!==el.children.length)rebuildPenyaCardCenters();
-      const nearest=nearestPenyaCardIndex(el);
-      setActivePenyaCard(current=>current===nearest?current:nearest);
-      penyaScrollFrameRef.current=null;
-    });
+    if(penyaScrollEndTimerRef.current!==null)window.clearTimeout(penyaScrollEndTimerRef.current);
+    penyaScrollEndTimerRef.current=window.setTimeout(()=>{
+      penyaScrollEndTimerRef.current=null;
+      handlePenyaCarouselScrollEnd();
+    },220);
   };
   // El bucle solo se recoloca cuando el gesto ha terminado. Hacerlo durante la
   // inercia del scroll interrumpe el movimiento nativo y provoca saltos a otra peña.
@@ -574,6 +566,7 @@ function Home() {
     if(!el||searchingPenyes||count<2)return;
     if(!penyaCardCentersRef.current.length||penyaCardCentersRef.current.length!==el.children.length)rebuildPenyaCardCenters();
     const nearest=nearestPenyaCardIndex(el);
+    setActivePenyaCard(nearest);
     if(nearest<count||nearest>=count*2){
       const normalized=((nearest%count)+count)%count;
       const targetIndex=normalized+count;
@@ -1361,7 +1354,7 @@ function Home() {
                   const offset=index-activePenyaCard;
                   const visualOffset=searchingPenyes?offset:((offset+visiblePenyes.length/2)%visiblePenyes.length+visiblePenyes.length)%visiblePenyes.length-visiblePenyes.length/2;
                   const centered=visualOffset===0;
-                  return <article id={"penya-"+p.id+"-"+index} key={p.id+"-"+index} tabIndex={0} aria-label={`Abrir ficha de ${cardTitle}`} onClick={()=>{penyaCarouselScrollLeftRef.current=penyaCarouselRef.current?.scrollLeft??null;setPenyaDetailFullscreen(true);setSelectedPenya(p);}} onKeyDown={(e)=>{if(e.target===e.currentTarget&&(e.key==="Enter"||e.key===" ")){e.preventDefault();penyaCarouselScrollLeftRef.current=penyaCarouselRef.current?.scrollLeft??null;setPenyaDetailFullscreen(true);setSelectedPenya(p);}}} style={{backgroundColor:color,zIndex:searchingPenyes?1:30-Math.abs(visualOffset),transform:searchingPenyes?"none":`perspective(1100px) translateY(${centered?-8:Math.min(22,Math.abs((((offset+visiblePenyes.length/2)%visiblePenyes.length)+visiblePenyes.length)%visiblePenyes.length-visiblePenyes.length/2)*10)}px) scale(${centered?1.08:Math.max(.68,.88-Math.max(0,Math.abs(visualOffset)-1)*.08)}) rotateY(${visualOffset===0?0:visualOffset<0?13:-13}deg)`,opacity:searchingPenyes?1:Math.abs(visualOffset)>3?.18:Math.max(.35,1-Math.abs(visualOffset)*.18)}} className={`penya-coverflow-card group relative ${searchingPenyes?"is-search-result":centered?"is-active":Math.abs(visualOffset)===1?(visualOffset<0?"is-side is-side-left":"is-side is-side-right"):""} ${!searchingPenyes&&index%Math.max(visiblePenyes.length,1)===0?"is-loop-start":""} h-[320px] w-[224px] shrink-0 snap-center cursor-pointer overflow-visible rounded-[2rem] border border-white/25 shadow-[0_18px_42px_rgba(19,38,53,.18)] outline-none transition-[transform,opacity,filter,box-shadow] duration-500 ease-[cubic-bezier(.2,.75,.25,1)] focus-visible:ring-4 focus-visible:ring-primary/40 ${searchingPenyes?"!transition-none":""} sm:h-[360px] sm:w-[260px] lg:h-[400px] lg:w-[290px]`}>
+                  return <article id={"penya-"+p.id+"-"+index} key={p.id+"-"+index} tabIndex={0} aria-label={`Abrir ficha de ${cardTitle}`} onClick={()=>{penyaCarouselScrollLeftRef.current=penyaCarouselRef.current?.scrollLeft??null;setPenyaDetailFullscreen(true);setSelectedPenya(p);}} onKeyDown={(e)=>{if(e.target===e.currentTarget&&(e.key==="Enter"||e.key===" ")){e.preventDefault();penyaCarouselScrollLeftRef.current=penyaCarouselRef.current?.scrollLeft??null;setPenyaDetailFullscreen(true);setSelectedPenya(p);}}} style={{backgroundColor:color,zIndex:searchingPenyes?1:30-Math.abs(visualOffset),transform:searchingPenyes?"none":`perspective(1100px) translateY(${centered?-8:Math.min(22,Math.abs((((offset+visiblePenyes.length/2)%visiblePenyes.length)+visiblePenyes.length)%visiblePenyes.length-visiblePenyes.length/2)*10)}px) scale(${centered?1.08:Math.max(.68,.88-Math.max(0,Math.abs(visualOffset)-1)*.08)}) rotateY(${visualOffset===0?0:visualOffset<0?13:-13}deg)`,opacity:searchingPenyes?1:Math.abs(visualOffset)>3?.18:Math.max(.35,1-Math.abs(visualOffset)*.18)}} className={`penya-coverflow-card group relative ${searchingPenyes?"is-search-result":centered?"is-active":Math.abs(visualOffset)===1?(visualOffset<0?"is-side is-side-left":"is-side is-side-right"):""} ${!searchingPenyes&&index%Math.max(visiblePenyes.length,1)===0?"is-loop-start":""} h-[320px] w-[224px] shrink-0 snap-center cursor-pointer overflow-visible rounded-[2rem] border border-white/25 shadow-[0_18px_42px_rgba(19,38,53,.18)] outline-none transition-[transform,opacity,filter,box-shadow] duration-350 ease-out focus-visible:ring-4 focus-visible:ring-primary/40 ${searchingPenyes?"!transition-none":""} sm:h-[360px] sm:w-[260px] lg:h-[400px] lg:w-[290px]`}>
                     <div className="absolute inset-0 overflow-hidden rounded-[2rem]">
                       <div className="absolute inset-x-0 top-0 z-10 p-5 sm:p-6">
                         <div className="flex items-start justify-between gap-2">
