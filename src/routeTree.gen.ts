@@ -65,8 +65,6 @@ export interface FileRoutesByFullPath {
   '/eventos': typeof EventosRoute
   '/noticias': typeof NoticiasRoute
   '/novedades/$slug': typeof NovedadesSlugRoute
-  '/novedades/$slug': typeof NovedadesSlugRoute
-  '/novedades/$slug': typeof NovedadesSlugRoute
   '/penyes': typeof PenyesRoute
   '/programa-fiestas': typeof ProgramaFiestasRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -76,6 +74,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/eventos': typeof EventosRoute
   '/noticias': typeof NoticiasRoute
+  '/novedades/$slug': typeof NovedadesSlugRoute
   '/penyes': typeof PenyesRoute
   '/programa-fiestas': typeof ProgramaFiestasRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -86,6 +85,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/eventos': typeof EventosRoute
   '/noticias': typeof NoticiasRoute
+  '/novedades/$slug': typeof NovedadesSlugRoute
   '/penyes': typeof PenyesRoute
   '/programa-fiestas': typeof ProgramaFiestasRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -107,6 +107,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/eventos'
     | '/noticias'
+    | '/novedades/$slug'
     | '/penyes'
     | '/programa-fiestas'
     | '/sitemap.xml'
@@ -116,6 +117,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/eventos'
     | '/noticias'
+    | '/novedades/$slug'
     | '/penyes'
     | '/programa-fiestas'
     | '/sitemap.xml'
