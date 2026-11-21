@@ -1,3 +1,4 @@
+/* eslint-disable no-empty */
 import {useEffect,useMemo,useState,lazy,Suspense} from "react";import{createFileRoute,Link,ClientOnly}from"@tanstack/react-router";import{supabase}from"@/integrations/supabase/client";import AdminPenyaEditor from "@/components/AdminPenyaEditor";
 import PenyaAwardsManager from "@/components/PenyaAwards";
 import PenyaInsigniaManager from "@/components/PenyaInsigniaManager";
