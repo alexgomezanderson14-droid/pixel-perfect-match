@@ -4,16 +4,20 @@ import SeoLandingPage from "@/components/SeoLandingPage";
 export const Route = createFileRoute("/eventos")({
   head: () => ({
     meta: [
-      { title: "Eventos y actividades de las fiestas de l’Alfàs del Pi | PENYERA" },
-      { name: "description", content: "Agenda de eventos y actividades de las fiestas de l’Alfàs del Pi: propuestas de las peñas, encuentros, actuaciones, fechas, horarios y ubicaciones." },
+      { title: "Fiestas de Alfaz del Pi: eventos y actividades | PENYERA" },
+      { name: "description", content: "Agenda festera de l’Alfàs del Pi: eventos, actividades de las peñas, encuentros, actuaciones, fechas, horarios y lugares de celebración." },
       { name: "keywords", content: "eventos Alfaz del Pi, actividades fiestas Alfàs, agenda festera l'Alfàs, eventos peñas Alfaz, PENYERA" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
-      { property: "og:title", content: "Eventos y actividades en l’Alfàs del Pi | PENYERA" },
+      { property: "og:title", content: "Eventos y actividades de las fiestas de l’Alfàs del Pi" },
       { property: "og:description", content: "Descubre la agenda festera, las actividades de las peñas y los eventos de l’Alfàs del Pi." },
-      { property: "og:url", content: "https://festalfas.vercel.app/eventos" },
+      { property: "og:url", content: "https://pixel-perfect-match-ten-tau.vercel.app/eventos" },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "PENYERA" },
+      { property: "og:locale", content: "es_ES" },
+      { name: "twitter:title", content: "Fiestas de Alfaz del Pi: eventos y actividades | PENYERA" },
+      { name: "twitter:description", content: "Agenda festera de l’Alfàs del Pi: eventos, actividades de las peñas, encuentros, actuaciones, fechas, horarios y lugares de celebración." },
     ],
-    links: [{ rel: "canonical", href: "https://festalfas.vercel.app/eventos" }],
+    links: [{ rel: "canonical", href: "https://pixel-perfect-match-ten-tau.vercel.app/eventos" }],
   }),
   component: EventosPage,
 });
