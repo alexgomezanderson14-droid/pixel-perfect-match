@@ -844,3 +844,29 @@ html, body, #root { min-width:0; max-width:100%; }
 @media(prefers-reduced-motion:reduce){
  .penya-award-current-item{transition:none}
 }
+
+
+/* Palmarés móvil: cada insignia conserva el mismo eje horizontal que su año y concurso. */
+.penya-award-current-item{
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ justify-content:flex-end;
+ justify-self:stretch;
+ transform-origin:50% 50%;
+}
+.penya-award-current-item>.penya-award-insignia{
+ margin-left:auto!important;
+ margin-right:auto!important;
+ flex:none;
+}
+.penya-award-current-item>p{
+ align-self:stretch;
+}
+@media(max-width:639px){
+ .penya-awards-grid{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:.15rem}
+ .penya-award-current-item{min-width:0}
+ .penya-award-current-item.is-current-award-center{transform:scale(1.04) translateY(-3px)}
+ .penya-award-current-item.is-current-award-left,
+ .penya-award-current-item.is-current-award-right{transform:scale(.96) translateY(5px)}
+}
