@@ -39,8 +39,8 @@ export default function PenyaInsigniaManager(){
    const id=insigniaId(group.kind,position),item=items[id],busy=busyId===id,inputId="penya-insignia-"+group.kind+"-"+position;
    return <article key={position} className="flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-border bg-background/70 p-2">
     <label htmlFor={inputId} aria-label={(item?"Sustituir":"Añadir")+" insignia "+position+" de "+group.title} className={"group relative grid h-24 w-full cursor-pointer place-items-center rounded-xl transition-colors hover:bg-muted/60 "+(busy?"pointer-events-none opacity-60":"")}>
-     <span className="grid h-20 w-20 place-items-center overflow-hidden rounded-full bg-muted/30">
-      {item?<img src={item.url} alt={"Insignia "+position} className="h-full w-full object-contain"/>:<span className="px-1 text-center text-xs text-muted-foreground">＋ Añadir</span>}
+     <span className={"grid h-20 w-20 place-items-center bg-muted/20 p-1 "+(group.kind==="redonda"?"rounded-full":group.kind==="cuadrada"?"rounded-xl":"[clip-path:polygon(25%_5%,75%_5%,100%_50%,75%_95%,25%_95%,0_50%)]")}>
+      {item?<img src={item.url} alt={"Insignia "+position} className="block h-full w-full object-contain"/>:<span className="px-1 text-center text-xs text-muted-foreground">＋ Añadir</span>}
      </span>
      <span className="absolute inset-x-1 bottom-0 rounded-lg bg-background/90 px-1 py-1 text-center text-[10px] font-bold text-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">{busy?"Guardando…":item?"Pulsar para sustituir":"Pulsar para añadir"}</span>
     </label>
