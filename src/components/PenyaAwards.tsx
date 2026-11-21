@@ -53,7 +53,7 @@ function penyaAwardCompetitionOrder(competition:string){
  }
  return 0;
 }
-function penyaAwardCompetitionLabel(value:string){return /paellas?\\s+fiestas/i.test(value)&&/santisimo|jubileo/i.test(value)?"Paellas Fiestas":value;}
+function penyaAwardCompetitionLabel(value:string){return /paellas?\s+fiestas/i.test(value)&&/santisimo|jubileo/i.test(value)?"Paellas Fiestas":value;}
 function penyaAwardCompetitionKey(value:string){
  const name=normalizePenyaAwardName(value);
  if(name.includes("desfile")||name.includes("humor"))return "desfile-del-humor";
