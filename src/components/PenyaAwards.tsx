@@ -53,10 +53,43 @@ function penyaAwardCompetitionOrder(competition:string){
  }
  return 0;
 }
-function penyaAwardCompetitionLabel(value:string){return /paellas?\s+fiestas/i.test(value)&&/santisimo|jubileo/i.test(value)?"Paellas Fiestas":value;}
+function penyaAwardCompetitionLabel(value:string){return /paellas?\\s+fiestas/i.test(value)&&/santisimo|jubileo/i.test(value)?"Paellas Fiestas":value;}
+function penyaAwardCompetitionKey(value:string){
+ const name=normalizePenyaAwardName(value);
+ if(name.includes("desfile")||name.includes("humor"))return "desfile-del-humor";
+ if(name.includes("playback"))return "playbacks";
+ if(name.includes("solidaria")||(name.includes("donacion")&&name.includes("sangre")))return "pena-mas-solidaria";
+ if(name.includes("paella")){
+  if(name.includes("migany"))return "paellas-mig-any";
+  if(name.includes("albir"))return "paellas-albir";
+  return "paellas-fiestas";
+ }
+ return name;
+}
 export function PenyaAwardsSection({awards,penyaName}:{awards:PenyaAward[];penyaName:string}){
  const [showAll,setShowAll]=useState(false);
- const sorted=useMemo(()=>[...awards].filter(a=>Number(a.year)>=2026).sort((a,b)=>Number(b.year)-Number(a.year)||penyaAwardCompetitionOrder(b.competition)-penyaAwardCompetitionOrder(a.competition)||Date.parse(b.created_at||"")-Date.parse(a.created_at||"")||a.position-b.position||a.competition.localeCompare(b.competition,"es")),[awards]);
+ const [automaticAwards,setAutomaticAwards]=useState<PenyaAward[]>([]);
+ useEffect(()=>{
+  let active=true;
+  fetch("/premios-automaticos.json",{cache:"no-store"})
+   .then(response=>response.ok?response.json():[])
+   .then(value=>{if(active&&Array.isArray(value))setAutomaticAwards(value.filter((item:any)=>item&&item.automatico===true&&item.penya_name&&item.competition&&Number(item.year)>=2026&&Number(item.position)>0));})
+   .catch(()=>{if(active)setAutomaticAwards([]);});
+  return()=>{active=false};
+ },[]);
+ const combinedAwards=useMemo(()=>{
+  const manual=Array.isArray(awards)?awards:[];
+  const automatic=automaticAwards.filter(item=>
+   penyaAwardNamesMatch(String(item.penya_name||""),penyaName)&&
+   !manual.some(existing=>
+    penyaAwardNamesMatch(String(existing.penya_name||""),String(item.penya_name||""))&&
+    Number(existing.year)===Number(item.year)&&
+    penyaAwardCompetitionKey(existing.competition)===penyaAwardCompetitionKey(item.competition)
+   )
+  );
+  return [...manual,...automatic];
+ },[awards,automaticAwards,penyaName]);
+ const sorted=useMemo(()=>[...combinedAwards].filter(a=>Number(a.year)>=2026).sort((a,b)=>Number(b.year)-Number(a.year)||penyaAwardCompetitionOrder(b.competition)-penyaAwardCompetitionOrder(a.competition)||Date.parse(b.created_at||"")-Date.parse(a.created_at||"")||a.position-b.position||a.competition.localeCompare(b.competition,"es")),[combinedAwards]);
  const visibleAwards=sorted.slice(0,3);
  const years=useMemo(()=>[...new Set(sorted.map(a=>Number(a.year)))].sort((a,b)=>b-a),[sorted]);
  return <section id="ficha-premios" className="penya-awards-panel relative isolate my-7 overflow-hidden rounded-[1.7rem] p-4 text-white sm:my-9 sm:rounded-[2rem] sm:p-7"><div className="penya-awards-orb penya-awards-orb-one"/><div className="penya-awards-orb penya-awards-orb-two"/><div className="relative z-10"><header className="mb-5 flex items-start justify-between gap-3 sm:mb-7"><div className="min-w-0"><p className="text-[10px] font-black uppercase tracking-[.28em] text-cyan-100/75">Historia · Méritos · Orgullo</p><h3 className="mt-1 text-2xl font-black tracking-tight text-white sm:text-3xl">Palmarés</h3><p className="mt-1 text-xs text-white/65 sm:text-sm">Reconocimientos oficiales de la peña {penyaName}</p></div><div className="flex shrink-0 flex-col items-end gap-1.5">{sorted.length>3&&<button type="button" onClick={()=>setShowAll(true)} className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-2 text-[10px] font-extrabold text-white shadow-sm transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:px-4 sm:text-xs">Ver toda la vitrina <span aria-hidden="true">↗</span></button>}<span className="text-[10px] font-extrabold tracking-wider text-white/80">{sorted.length} {sorted.length===1?"PREMIO":"PREMIOS"}</span></div></header>{sorted.length>0?<div className="penya-awards-grid">{visibleAwards.map((a,i)=><article key={a.id} className={"penya-award-item penya-award-current-item min-w-0 w-full text-center "+(visibleAwards.length===1?"is-single-award ":"")+(i===0?"is-current-award-center":i===1?"is-current-award-left":"is-current-award-right")} style={{animationDelay:(i%6)*75+"ms"}}><PenyaAwardMedal award={a}/><p className="mt-3 w-full max-w-full text-center text-sm font-black tracking-[.12em] text-white sm:text-base">{a.year}</p><p className="mx-auto mt-1 w-full max-w-full px-1 text-center text-xs font-semibold leading-snug text-white/70 sm:max-w-[15rem] sm:text-sm">{penyaAwardCompetitionLabel(a.competition)}</p></article>)}</div>:<div className="mx-auto flex max-w-xl flex-col items-center rounded-2xl border border-white/15 bg-white/[.06] px-5 py-8 text-center backdrop-blur-sm"><span className="mb-3 text-4xl" aria-hidden="true">🏆</span><p className="text-base font-extrabold text-white">Esta peña todavía no tiene premios de 2026.</p><p className="mt-2 text-xs text-white/60">Cuando consiga el primero, aparecerá aquí.</p></div>}</div>{showAll&&typeof document!=="undefined"&&createPortal(<div className="penya-awards-showcase festalfas-modal-backdrop fixed inset-0 z-[2147483200] flex items-center justify-center p-3 pt-[max(.75rem,env(safe-area-inset-top))] pb-[max(.75rem,env(safe-area-inset-bottom))] sm:p-6" role="dialog" aria-modal="true" aria-label={"Vitrina completa de premios de "+penyaName} onClick={()=>setShowAll(false)}><section className="penya-awards-panel relative isolate flex max-h-[88dvh] w-full max-w-5xl flex-col overflow-hidden rounded-[1.5rem] p-0 text-white shadow-[0_24px_80px_rgba(7,12,35,.48)] sm:max-h-[90dvh] sm:rounded-[2rem]" onClick={e=>e.stopPropagation()}><div className="penya-awards-orb penya-awards-orb-one"/><div className="penya-awards-orb penya-awards-orb-two"/><header className="relative z-10 flex shrink-0 items-start justify-between gap-3 border-b border-white/15 bg-white/[.035] px-4 py-4 sm:px-7 sm:py-5"><div className="min-w-0"><p className="text-[10px] font-black uppercase tracking-[.22em] text-cyan-100/75">Archivo de reconocimientos</p><h3 className="mt-1 text-xl font-black text-white sm:text-2xl">Vitrina completa</h3><p className="mt-1 text-xs text-white/70">{penyaName} · {sorted.length} {sorted.length===1?"premio":"premios"}</p><p className="mt-2 text-[10px] font-semibold text-white/60">Se contabilizan los premios conseguidos desde 2026</p></div><button type="button" onClick={()=>setShowAll(false)} aria-label="Cerrar vitrina" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/20 bg-white/10 text-lg font-bold text-white hover:bg-white/20">✕</button></header><div className="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-7 sm:py-6">{years.map(year=><section key={year} className="mb-6 last:mb-0"><div className="mb-3 flex items-center gap-3"><h4 className="text-sm font-black tracking-wider text-cyan-100">{year}</h4><div className="h-px flex-1 bg-white/20"/><span className="text-[10px] font-bold text-white/65">{sorted.filter(a=>Number(a.year)===year).length} premios</span></div><div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">{sorted.filter(a=>Number(a.year)===year).map(a=><article key={a.id} className="flex min-w-0 items-center gap-3 rounded-2xl border border-white/15 bg-white/[.07] p-3 sm:p-3.5"><PenyaAwardMedal award={a} compact/><div className="min-w-0 flex-1"><p className="text-[10px] font-black uppercase tracking-wider text-cyan-100">{a.position}º puesto</p><p className="mt-1 break-words text-sm font-extrabold leading-snug text-white">{penyaAwardCompetitionLabel(a.competition)}</p></div></article>)}</div></section>)}</div></section></div>,document.body)}</section>;
