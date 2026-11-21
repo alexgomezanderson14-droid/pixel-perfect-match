@@ -29,10 +29,10 @@ export async function uploadMediaFile(file: File, folder: string, fallbackToSupa
     headers.set("Authorization", "Bearer " + data.session.access_token);
   }
   const response = await fetch("/api/media/upload", { method: "POST", body: form, headers, credentials: "same-origin" });
-  const result = await response.json().catch(() => null) as { path?: string; url?: string; error?: string } | null;
+  const result = await response.json().catch(() => null) as { path?: string; url?: string; error?: string; unavailable?: boolean } | null;
   if (response.ok && result?.path && result.url) return { path: result.path, url: result.url };
 
-  const unavailable = response.status === 404 || /almacenamiento de archivos no está configurado/i.test(result?.error ?? "");
+  const unavailable = result?.unavailable === true || response.status === 404 || /almacenamiento de archivos no está configurado/i.test(result?.error ?? "");
   if (unavailable && fallbackToSupabase) {
     const extension = EXTENSIONS[file.type];
     if (!extension) throw new Error("Formato de archivo no admitido.");

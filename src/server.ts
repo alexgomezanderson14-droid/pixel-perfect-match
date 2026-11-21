@@ -85,7 +85,7 @@ function jsonResponse(value: unknown, status = 200): Response {
 async function handleB2Request(request: Request, env: CloudflareEnv & B2Env): Promise<Response | null> {
   const url = new URL(request.url);
   if (request.method === "POST" && url.pathname === "/api/media/upload") {
-    if (!env.B2_APPLICATION_KEY_ID || !env.B2_APPLICATION_KEY) return jsonResponse({ error: "El almacenamiento de archivos no está configurado en Cloudflare." }, 501);
+    if (!env.B2_APPLICATION_KEY_ID || !env.B2_APPLICATION_KEY) return jsonResponse({ unavailable: true, error: "El almacenamiento de archivos no está configurado en Cloudflare." }, 200);
     const origin = request.headers.get("origin");
     if (!origin || origin !== url.origin) return jsonResponse({ error: "Solicitud no permitida." }, 403);
     if (!(request.headers.get("content-type") ?? "").includes("multipart/form-data")) return jsonResponse({ error: "Formato de envío no válido." }, 415);
