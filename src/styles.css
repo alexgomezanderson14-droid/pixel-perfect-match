@@ -1076,3 +1076,74 @@ html, body, #root { min-width:0; max-width:100%; }
   .penya-awards-grid .penya-award-current-item.is-current-award-right>.penya-award-insignia{transform:scale(.82) translateY(7px)!important}
   .penya-awards-grid .penya-award-current-item.is-single-award>.penya-award-insignia{transform:none!important}
 }
+
+
+/* Insignias: el marco se adapta a la columna y la imagen siempre queda contenida. */
+.penya-awards-grid .penya-award-current-item>.penya-award-insignia{
+  position:relative!important;
+  left:auto!important;
+  width:100%!important;
+  height:auto!important;
+  aspect-ratio:1/1;
+  max-width:clamp(200px,24vw,340px)!important;
+  max-height:none!important;
+  margin-inline:auto!important;
+  align-self:center!important;
+  translate:none!important;
+  transform:none!important;
+  overflow:visible!important;
+}
+.penya-award-grid .penya-award-art,
+.penya-awards-grid .penya-award-art{
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  object-fit:contain!important;
+}
+.penya-awards-showcase .penya-award-insignia{
+  width:72px!important;
+  height:72px!important;
+  max-width:72px!important;
+  max-height:72px!important;
+}
+@media(max-width:639px){
+  .penya-awards-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    align-items:end!important;
+    justify-items:stretch!important;
+    column-gap:0!important;
+    overflow:visible!important;
+  }
+  .penya-awards-grid .penya-award-current-item{
+    min-width:0!important;
+    width:100%!important;
+    transform:none!important;
+    filter:none!important;
+    overflow:visible!important;
+  }
+  .penya-awards-grid .penya-award-current-item>.penya-award-insignia{
+    width:100%!important;
+    max-width:clamp(76px,29vw,112px)!important;
+    max-height:none!important;
+  }
+  .penya-awards-grid .penya-award-current-item.is-current-award-center>.penya-award-insignia{
+    z-index:5!important;
+    transform:scale(1.1) translateY(-5px)!important;
+  }
+  .penya-awards-grid .penya-award-current-item.is-current-award-left>.penya-award-insignia,
+  .penya-awards-grid .penya-award-current-item.is-current-award-right>.penya-award-insignia{
+    z-index:1!important;
+    transform:scale(.88) translateY(6px)!important;
+  }
+  .penya-awards-grid .penya-award-current-item.is-single-award>.penya-award-insignia{
+    transform:none!important;
+  }
+  .penya-awards-showcase .penya-award-insignia{
+    width:64px!important;
+    height:64px!important;
+    max-width:64px!important;
+    max-height:64px!important;
+  }
+}
