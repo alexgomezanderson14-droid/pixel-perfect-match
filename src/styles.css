@@ -945,3 +945,48 @@ html, body, #root { min-width:0; max-width:100%; }
     max-width:100%!important;
   }
 }
+
+/* Palmarés móvil: insignias grandes y solapadas, sin desplazar ni cubrir los textos. */
+@media(max-width:639px){
+  .penya-awards-panel .penya-award-insignia{
+    width:clamp(138px,44vw,176px)!important;
+    height:clamp(138px,44vw,176px)!important;
+    max-width:none!important;
+    max-height:none!important;
+  }
+  .penya-awards-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    column-gap:0!important;
+    overflow:visible!important;
+  }
+  .penya-award-current-item.is-current-award-center{
+    z-index:5!important;
+    transform:none!important;
+    filter:none!important;
+  }
+  .penya-award-current-item.is-current-award-left{
+    z-index:2!important;
+    transform:none!important;
+    filter:saturate(.82)!important;
+  }
+  .penya-award-current-item.is-current-award-right{
+    z-index:2!important;
+    transform:none!important;
+    filter:saturate(.82)!important;
+  }
+  .penya-award-current-item.is-current-award-center>.penya-award-insignia{
+    position:relative;
+    z-index:5;
+    transform:scale(1.12) translateY(-7px);
+  }
+  .penya-award-current-item.is-current-award-left>.penya-award-insignia{
+    position:relative;
+    z-index:1;
+    transform:translateX(17px) scale(.9) translateY(8px);
+  }
+  .penya-award-current-item.is-current-award-right>.penya-award-insignia{
+    position:relative;
+    z-index:1;
+    transform:translateX(-17px) scale(.9) translateY(8px);
+  }
+}
