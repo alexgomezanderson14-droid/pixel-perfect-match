@@ -544,11 +544,15 @@ function Home() {
   },[]);
   const handlePenyaCarouselScroll=(el:HTMLDivElement)=>{
     penyaCarouselScrollLeftRef.current=el.scrollLeft;
-    if(penyaScrollEndTimerRef.current!==null)window.clearTimeout(penyaScrollEndTimerRef.current);
-    penyaScrollEndTimerRef.current=window.setTimeout(()=>{
-      penyaScrollEndTimerRef.current=null;
-      handlePenyaCarouselScrollEnd();
-    },180);
+    // Usa el evento nativo cuando existe. El temporizador solo es fallback
+    // y espera a que termine realmente la inercia en navegadores antiguos.
+    if(penyaScrollEndTimerRef.current!==null){window.clearTimeout(penyaScrollEndTimerRef.current);penyaScrollEndTimerRef.current=null;}
+    if(!("onscrollend" in el)){
+      penyaScrollEndTimerRef.current=window.setTimeout(()=>{
+        penyaScrollEndTimerRef.current=null;
+        handlePenyaCarouselScrollEnd();
+      },500);
+    }
     if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);
     penyaScrollFrameRef.current=requestAnimationFrame(()=>{
       if(!penyaCardCentersRef.current.length||penyaCardCentersRef.current.length!==el.children.length)rebuildPenyaCardCenters();
@@ -586,8 +590,9 @@ function Home() {
     }
     if(!visiblePenyes.length||penyaEntryInitializedRef.current)return;
     setPenyaCarouselInitialized(false);
-    const mayoralesIndex=carouselPenyes.findIndex(p=>Boolean(mayoralesPenyaId)&&String(p.id)===String(mayoralesPenyaId));
-    const initialIndex=searchingPenyes?0:(carouselPenyes.length>1?carouselPenyes.length:0)+Math.max(0,mayoralesIndex);
+    // Inicia en la primera peña del listado central; no fuerza la selección
+    // automática de Mayorales ni de una ficha concreta.
+    const initialIndex=searchingPenyes?0:(carouselPenyes.length>1?carouselPenyes.length:0);
     setActivePenyaCard(initialIndex);
     let secondFrame=0;
     const firstFrame=requestAnimationFrame(()=>{
@@ -600,7 +605,7 @@ function Home() {
       });
     });
     return()=>{cancelAnimationFrame(firstFrame);if(secondFrame)cancelAnimationFrame(secondFrame);};
-  },[currentPage,visiblePenyes.length,searchingPenyes,carouselPenyes,mayoralesPenyaId,centerPenyaCard,rebuildPenyaCardCenters]);
+  },[currentPage,visiblePenyes.length,searchingPenyes,carouselPenyes,centerPenyaCard,rebuildPenyaCardCenters]);
   useEffect(()=>{
     const el=penyaCarouselRef.current;
     if(!el||!penyaCarouselInitialized)return;
