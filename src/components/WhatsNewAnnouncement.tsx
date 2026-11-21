@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { X, Newspaper, Trophy, Sparkles, CalendarDays, ArrowUpRight } from "lucide-react";
 
@@ -33,23 +33,7 @@ export default function WhatsNewAnnouncement({ userKey }: Props) {
     }
   }, [userKey]);
 
-  useEffect(() => {
-    if (!open) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      try { window.localStorage.setItem(storageKey(userKey), "1"); } catch { /* Cierre disponible sin almacenamiento. */ }
-      setOpen(false);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.body.style.overflow = previous;
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open, userKey]);
-
-  function close() {
+  const close = useCallback(() => {
     try { window.localStorage.setItem(storageKey(userKey), "1"); } catch { /* El aviso sigue pudiendo cerrarse sin almacenamiento. */ }
     if (window.location.search.includes("novedades=1")) {
       const url = new URL(window.location.href);
@@ -57,7 +41,19 @@ export default function WhatsNewAnnouncement({ userKey }: Props) {
       window.history.replaceState({}, "", url.pathname + url.search + url.hash);
     }
     setOpen(false);
-  }
+  }, [userKey]);
+
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") close(); };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, close]);
 
   if (!open) return null;
 
