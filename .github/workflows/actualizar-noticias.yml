@@ -7,7 +7,9 @@ on:
       - "scripts/**"
       - ".github/workflows/actualizar-noticias.yml"
   schedule:
-    - cron: "17 */6 * * *"
+    # Revisar después de las temporadas con concursos de peñas:
+    # Mig Any (abril/mayo), l’Albir (agosto) y Santísimo Cristo/Jubileo (noviembre).
+    - cron: "17 8 1 5,6,9,12 *"
 permissions:
   contents: write
 concurrency:
