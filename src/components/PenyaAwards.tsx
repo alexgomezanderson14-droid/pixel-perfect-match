@@ -5,7 +5,7 @@ import {loadPenyaInsignias, type PenyaInsigniaMap} from "@/lib/penya-insignias";
 export type PenyaAward={id:string;penya_id:string;penya_name?:string;year:number;competition:string;position:number;created_at?:string;automatico?:boolean;source_name?:string;source_url?:string;source_date?:string};
 const KEY="penyes_premios_json";
 const OMITTED_KEY="penyes_premios_omitidos_json";
-const seededAwardResults=[] as const;
+const seededAwardResults:readonly (readonly [string,string,number])[]=[];
 export const normalizePenyaAwardName=(value:string)=>String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es").replace(/^penya\s+/,"").replace(/[^a-z0-9]/g,"");
 const penyaAwardAliases:Record<string,string>={destronatspopa:"destronats",elsdestronats:"destronats",destronats:"destronats",mussolmatiner:"mussolmatiner",elmussolmatiner:"mussolmatiner"};
 const canonicalPenyaAwardName=(value:string)=>penyaAwardAliases[normalizePenyaAwardName(value)]||normalizePenyaAwardName(value);
