@@ -393,6 +393,7 @@ function Home() {
   const penyaScrollFrameRef = useRef<number | null>(null);
   const penyaCardCentersRef = useRef<number[]>([]);
   const penyaCarouselScrollLeftRef = useRef<number | null>(null);
+  const penyaScrollEndTimerRef = useRef<number | null>(null);
   const penyaEntryInitializedRef = useRef(false);
   const [eventsSearch, setEventsSearch] = useState("");
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
@@ -451,7 +452,22 @@ function Home() {
   const [eventFormPenya, setEventFormPenya] = useState<PenyaDb | null>(null);
   const [communityEventForm, setCommunityEventForm] = useState(false);
   const [mapFullscreen, setMapFullscreen] = useState(false);
+  const [mapShouldLoad, setMapShouldLoad] = useState(false);
+  const mapViewportRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => { window.scrollTo({ top: 0, behavior: "auto" }); }, [currentPage, noticiaSeleccionada?.id, mapFullscreen]);
+  useEffect(() => {
+    const target = mapViewportRef.current;
+    if (!target) return;
+    if (typeof IntersectionObserver === "undefined") { setMapShouldLoad(true); return; }
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        setMapShouldLoad(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: "500px 0px" });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
   const dias = useMemo(() => [...new Set(actos.filter((a) => eventoSigueActivo(a, now)).map((a) => a.dia))].sort(), [actos, now]);
   const [dia, setDia] = useState<string | undefined>();
   const eventosActivos = useMemo(() => eventos.filter((e) => eventoSigueActivo(e, now)), [eventos, now]);
@@ -527,6 +543,11 @@ function Home() {
   },[]);
   const handlePenyaCarouselScroll=(el:HTMLDivElement)=>{
     penyaCarouselScrollLeftRef.current=el.scrollLeft;
+    if(penyaScrollEndTimerRef.current!==null)window.clearTimeout(penyaScrollEndTimerRef.current);
+    penyaScrollEndTimerRef.current=window.setTimeout(()=>{
+      penyaScrollEndTimerRef.current=null;
+      handlePenyaCarouselScrollEnd();
+    },180);
     if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);
     penyaScrollFrameRef.current=requestAnimationFrame(()=>{
       if(!penyaCardCentersRef.current.length||penyaCardCentersRef.current.length!==el.children.length)rebuildPenyaCardCenters();
@@ -538,6 +559,7 @@ function Home() {
   // El bucle solo se recoloca cuando el gesto ha terminado. Hacerlo durante la
   // inercia del scroll interrumpe el movimiento nativo y provoca saltos a otra peña.
   const handlePenyaCarouselScrollEnd=useCallback(()=>{
+    if(penyaScrollEndTimerRef.current!==null){window.clearTimeout(penyaScrollEndTimerRef.current);penyaScrollEndTimerRef.current=null;}
     const el=penyaCarouselRef.current;
     const count=carouselPenyes.length;
     if(!el||searchingPenyes||count<2)return;
@@ -594,7 +616,7 @@ function Home() {
       el.removeEventListener("scrollend",handleScrollEnd);
     };
   },[penyaCarouselInitialized,centerPenyaCard,rebuildPenyaCardCenters,nearestPenyaCardIndex,handlePenyaCarouselScrollEnd]);
-  useEffect(()=>()=>{if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);},[]);
+  useEffect(()=>()=>{if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);if(penyaScrollEndTimerRef.current!==null)window.clearTimeout(penyaScrollEndTimerRef.current);},[]);
   const visibleNews = useMemo(()=>noticias.filter((n:any)=>n.publicado&&(!newsSearch.trim()||normalizarBusqueda([n.titulo,n.resumen,n.contenido,n.autor,n.fuente].join(" ")).includes(normalizarBusqueda(newsSearch)))).slice().sort((x:any,y:any)=>new Date(String(y.fecha||y.created_at||"").slice(0,10)+"T12:00:00").getTime()-new Date(String(x.fecha||x.created_at||"").slice(0,10)+"T12:00:00").getTime()),[noticias,newsSearch]);
   const featuredNews = visibleNews.filter((n:any)=>n.destacada);
   const regularNews = visibleNews.filter((n:any)=>!n.destacada);
@@ -1062,7 +1084,7 @@ function Home() {
       {fotoAmpliada!==null&&noticiaImagenes[fotoAmpliada]&&<div role="dialog" aria-modal="true" aria-label="Fotografía ampliada" className="fixed inset-0 z-[7000] flex items-center justify-center bg-black/95 p-3 backdrop-blur-sm animate-in fade-in duration-200" onClick={()=>setFotoAmpliada(null)}><button type="button" onClick={()=>setFotoAmpliada(null)} aria-label="Cerrar fotografía" className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-3xl text-white transition hover:rotate-90 hover:bg-white/25">×</button><button type="button" aria-label="Fotografía anterior" onClick={e=>{e.stopPropagation();setFotoAmpliada((fotoAmpliada-1+noticiaImagenes.length)%noticiaImagenes.length);}} className="absolute left-2 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-3xl text-white transition hover:scale-110 hover:bg-white/25 sm:left-5">‹</button><div className="flex max-h-full max-w-full flex-col items-center gap-3" onClick={e=>e.stopPropagation()}><img src={noticiaImagenes[fotoAmpliada]} alt={noticiaSeleccionada?.titulo+" · foto "+(fotoAmpliada+1)} style={{width:"min(96vw, 1800px)",height:"min(86svh, 1200px)"}} width={1800} height={1200} loading="eager" fetchPriority="high" decoding="async" draggable={false} className="max-h-[86svh] max-w-[96vw] rounded-lg object-contain shadow-2xl animate-in zoom-in-95 duration-300"/><div className="flex items-center gap-3 text-sm font-semibold text-white"><span>{fotoAmpliada+1} / {noticiaImagenes.length}</span><a href={noticiaImagenes[fotoAmpliada]} download target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} className="rounded-full border border-white/30 bg-white/15 px-4 py-2 transition hover:scale-105 hover:bg-white/25">↓ Descargar foto</a></div></div><button type="button" aria-label="Fotografía siguiente" onClick={e=>{e.stopPropagation();setFotoAmpliada((fotoAmpliada+1)%noticiaImagenes.length);}} className="absolute right-2 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-3xl text-white transition hover:scale-110 hover:bg-white/25 sm:right-5">›</button></div>}
       {currentPage==="home" && <>
       <section className="home-hero relative left-1/2 flex min-h-[100svh] w-screen max-w-none -translate-x-1/2 items-end overflow-hidden">
-        {heroImage ? <img src={heroImage} alt="Portada de las fiestas de l'Alfàs del Pi" width={1920} height={1280} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center" /> : <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37]" />}
+        {heroImage ? <img src={heroImage} alt="Portada de las fiestas de l'Alfàs del Pi" width={1920} height={1280} loading="eager" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center" /> : <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37]" />}
         <div className="absolute inset-0 bg-gradient-to-t from-brown/90 via-brown/20 to-transparent" />
         <div className="relative mx-auto w-full max-w-[min(96vw,1600px)] px-4 pb-9 sm:px-5 sm:pb-16">
           <div className="max-w-full">
@@ -1105,11 +1127,11 @@ function Home() {
               </div>
               {penyes.some((p)=>p.lat==null||p.lng==null)||actos.some((a)=>a.lat==null||a.lng==null)||eventos.some((e)=>e.lat==null||e.lng==null) ? <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">Algunas peñas o actividades no aparecen en el mapa porque todavía no tienen coordenadas exactas verificadas. No se han inventado ubicaciones.</p> : null}
             </div>}
-            {!mapFullscreen && <div className="relative h-[390px] overflow-hidden rounded-[1.25rem] sm:h-[500px] sm:rounded-[1.5rem] md:h-[600px]">
+            {!mapFullscreen && <div ref={mapViewportRef} className="relative h-[390px] overflow-hidden rounded-[1.25rem] sm:h-[500px] sm:rounded-[1.5rem] md:h-[600px]">
               <button type="button" onClick={() => setMapFullscreen(true)} aria-label="Ampliar mapa a pantalla completa" className="absolute left-3 top-3 z-[1200] rounded-full border border-white/70 bg-white/95 px-4 py-2 text-sm font-bold text-[#173f52] shadow-lg">⛶ Pantalla completa</button>
               <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
                 <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}>
-                  <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => { setPenyaDetailFullscreen(false); setMapPenyaPreview(true); setSelectedPenya(penyes.find((p) => p.id === id) ?? null); }} onItemClick={(id)=>{setCurrentPage("eventos");setFilterDay("all");setFilterCategory(id.startsWith("acto-")?"actuaciones":"penyes");window.scrollTo({top:0,behavior:"smooth"});}} />
+                  {mapShouldLoad ? <FestMap lugares={visibles} focusId={focus} onPenyaClick={(id) => { setPenyaDetailFullscreen(false); setMapPenyaPreview(true); setSelectedPenya(penyes.find((p) => p.id === id) ?? null); }} onItemClick={(id)=>{setCurrentPage("eventos");setFilterDay("all");setFilterCategory(id.startsWith("acto-")?"actuaciones":"penyes");window.scrollTo({top:0,behavior:"smooth"});}} /> : <div className="h-full animate-pulse bg-gradient-to-br from-[#e8efed] to-[#d5e1df]" aria-label="El mapa se cargará al acercarte" />}
                 </Suspense>
               </ClientOnly>
             </div>}
@@ -1310,8 +1332,8 @@ function Home() {
             <div className="glass rounded-3xl p-8 text-center"><p className="font-bold text-primary">No encontramos peñas con esos filtros</p><p className="mt-1 text-sm text-muted-foreground">Prueba con otra búsqueda o limpia los filtros.</p><button onClick={()=>{setPenyaSearch("");setPenyaMusicFilter("Todas");setPenyaOnlyMine(false);}} className="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">Mostrar todas las peñas</button></div>
           ) : (
             <div className="relative mx-auto w-full max-w-[1180px] lg:max-w-none">
-              {visiblePenyes.length>1&&!searchingPenyes&&<button type="button" aria-label="Peña anterior" onClick={()=>{const target=activePenyaCard-1;setActivePenyaCard(target);centerPenyaCard(target,"smooth");}} className="absolute left-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">‹</button>}
-              {visiblePenyes.length>1&&!searchingPenyes&&<button type="button" aria-label="Peña siguiente" onClick={()=>{const target=activePenyaCard+1;setActivePenyaCard(target);centerPenyaCard(target,"smooth");}} className="absolute right-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">›</button>}
+              {visiblePenyes.length>1&&!searchingPenyes&&<button type="button" aria-label="Peña anterior" onClick={()=>{const count=visiblePenyes.length;const current=((activePenyaCard-count)%count+count)%count;const target=count+(current-1+count)%count;setActivePenyaCard(target);centerPenyaCard(target,"smooth");}} className="absolute left-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">‹</button>}
+              {visiblePenyes.length>1&&!searchingPenyes&&<button type="button" aria-label="Peña siguiente" onClick={()=>{const count=visiblePenyes.length;const current=((activePenyaCard-count)%count+count)%count;const target=count+(current+1)%count;setActivePenyaCard(target);centerPenyaCard(target,"smooth");}} className="absolute right-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">›</button>}
               <div ref={penyaCarouselRef} onScroll={(event)=>handlePenyaCarouselScroll(event.currentTarget)} className={searchingPenyes?"relative flex flex-wrap justify-center gap-5 overflow-visible px-2 py-6":"penya-coverflow relative "+(penyaCarouselInitialized?"is-ready":"is-initializing")+" flex snap-x snap-mandatory items-center overflow-x-auto overscroll-x-contain px-[calc(50%-112px)] py-16 sm:px-[calc(50%-130px)] lg:px-[calc(50%-150px)]"}>
                 {loopedPenyes.map((p,index)=>{
                   const fallbackColors=["#5968D8","#E45D70","#13A6C3","#19A887","#D28B35","#8559C7","#287DAD","#C45D91"];
