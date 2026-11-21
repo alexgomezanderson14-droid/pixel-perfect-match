@@ -7,6 +7,7 @@ import AdminPenyaEditor from "@/components/AdminPenyaEditor";
 import PenyaPhotoManager from "@/components/PenyaPhotoManager";
 import {PenyaAwardsSection,type PenyaAward,mergeSeededPenyaAwards,penyaAwardBelongsTo} from "@/components/PenyaAwards";
 import CopyrightFooter from "@/components/CopyrightFooter";
+import WhatsNewAnnouncement from "@/components/WhatsNewAnnouncement";
 import { noticiaCuBaTa2027 } from "@/content/noticia-cubata-2027";
 import { noticiaCestaNavidad2027 } from "@/content/noticia-cesta-navidad-2027";
 import { noticiaDesfileHumor2026 } from "@/content/noticia-desfile-humor-2026";
@@ -20,15 +21,6 @@ function safeLocalStorageGet(key: string): string | null {
   try { return typeof window === "undefined" ? null : window.localStorage.getItem(key); }
   catch { return null; }
 }
-function safeSessionStorageGet(key: string): string | null {
-  try { return typeof window === "undefined" ? null : window.sessionStorage.getItem(key); }
-  catch { return null; }
-}
-function safeSessionStorageSet(key: string, value: string): void {
-  try { if (typeof window !== "undefined") window.sessionStorage.setItem(key, value); }
-  catch { /* El aviso puede mostrarse igualmente si el navegador bloquea el almacenamiento. */ }
-}
-
 
 const FestMap = lazy(() => import("@/components/FestMap"));
 const AddPenyaForm = lazy(() => import("@/components/AddPenyaForm"));
@@ -438,7 +430,6 @@ function Home() {
   const [noticias, setNoticias] = useState<any[]>([]);
   const [noticiaSeleccionada, setNoticiaSeleccionada] = useState<any | null>(null);
   const [fotoAmpliada, setFotoAmpliada] = useState<number | null>(null);
-  const [newsPopup, setNewsPopup] = useState<any[]>([]);
   const [siteContent, setSiteContent] = useState<Record<string,string>>({});
   const penyaCardSettings = useMemo(()=>{try{const parsed=JSON.parse(siteContent["penyas_cards_json"]||"{}");return parsed&&typeof parsed==="object"?parsed as Record<string,{color?:string;logo_url?:string;title?:string;description?:string;logo_scale?:number;logo_x?:number;logo_y?:number}>:{ };}catch{return {}; }},[siteContent]);
   const penyaProfileLogoSettings = useMemo(()=>{try{const parsed=JSON.parse(siteContent["penyes_logos_ficha_json"]||"{}");return parsed&&typeof parsed==="object"?parsed as Record<string,{zoom?:number;x?:number;y?:number}>:{ };}catch{return {}; }},[siteContent]);
@@ -905,18 +896,6 @@ function Home() {
     openFromHash();
     window.addEventListener("hashchange", openFromHash);
     return () => window.removeEventListener("hashchange", openFromHash);
-  }, [noticias]);
-  useEffect(() => {
-    if (!noticias.length || typeof window === "undefined" || safeSessionStorageGet("festalfas-news-popup-seen")) return;
-    const latest = noticias.filter((item:any) => item.publicado).slice().sort((a:any,b:any) => String(b.fecha||b.created_at||"").localeCompare(String(a.fecha||a.created_at||""))).slice(0,1);
-    if (!latest.length) return;
-    const showTimer = window.setTimeout(() => {
-      setNewsPopup(latest);
-      safeSessionStorageSet("festalfas-news-popup-seen", "1");
-      hideTimer = window.setTimeout(() => setNewsPopup([]), 7000);
-    }, 900);
-    let hideTimer: number | undefined;
-    return () => { window.clearTimeout(showTimer); if (hideTimer) window.clearTimeout(hideTimer); };
   }, [noticias]);
 
   useEffect(() => { setAccountPenyaId(String(accountUser?.user_metadata?.penya_id || "")); }, [accountUser?.id, accountUser?.user_metadata?.penya_id]);
@@ -1490,15 +1469,7 @@ function Home() {
         </>}
       </main>}
 
-      {newsPopup.length > 0 && currentPage === "home" && <div className="fixed inset-0 z-[6000] festalfas-modal-backdrop flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Últimas noticias">
-        <section className="w-full max-w-lg rounded-3xl border border-white/70 bg-background p-5 shadow-2xl sm:p-7">
-          <div className="mb-4 flex items-start justify-between gap-3"><div><p className="text-xs font-extrabold uppercase tracking-[.18em] text-primary">Actualidad festera</p><h2 className="mt-1 text-2xl font-extrabold text-primary">Últimas noticias</h2></div><button type="button" onClick={() => setNewsPopup([])} aria-label="Cerrar aviso de noticias" className="rounded-full border border-border px-3 py-1.5 text-sm font-bold">✕</button></div>
-          <div className="space-y-3">{newsPopup.map((item:any) => <button key={item.id} type="button" onClick={() => { setNewsPopup([]); setCurrentPage("noticias"); setNoticiaSeleccionada(item); window.scrollTo({top:0,behavior:"smooth"}); }} className="flex w-full items-center gap-3 rounded-2xl border border-border/70 bg-white/70 p-3 text-left transition hover:border-primary/40 hover:shadow-md">
-            <span className="min-w-0 flex-1"><span className="block text-[10px] font-bold uppercase tracking-wide text-primary">{esNoticiaMayorales(item)?"Mayorales 2027":item.tipo==="video"?"Vídeo":item.tipo==="oficial"?"Información oficial":item.tipo==="externa"?(item.fuente||"Medio externo"):"Noticias de las peñas"}</span><span className="mt-1 block font-bold leading-snug text-foreground">{item.titulo}</span><span className="mt-1 block text-xs font-semibold text-primary">Leer noticia →</span></span>
-          </button>)}</div>
-          <p className="mt-4 text-center text-xs text-muted-foreground">Este aviso se cerrará automáticamente en unos segundos.</p>
-        </section>
-      </div>}
+      {currentPage === "home" && <WhatsNewAnnouncement userKey={accountUser?.email} />}
       {mapFullscreen && typeof document !== "undefined" && createPortal(
         <div role="dialog" aria-modal="true" aria-label="Mapa a pantalla completa" className="fixed inset-0 z-[99999] h-[100dvh] w-screen overflow-hidden bg-[#f3eee6]">
           <div className="absolute inset-0">
