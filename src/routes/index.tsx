@@ -557,14 +557,19 @@ function Home() {
       const centers=penyaCardCentersRef.current;
       const cycleWidth=centers[count]!==undefined&&centers[0]!==undefined?centers[count]!-centers[0]!:0;
       if(cycleWidth>0){
-        const nearest=nearestPenyaCardIndex(el);
-        if(nearest<count*1.5){
+        let nearest=nearestPenyaCardIndex(el);
+        let cycleShift=0;
+        while(nearest<count*1.5){
           el.scrollLeft+=cycleWidth;
-          setActivePenyaCard(value=>value+count);
-        }else if(nearest>=count*3.5){
-          el.scrollLeft-=cycleWidth;
-          setActivePenyaCard(value=>value-count);
+          nearest+=count;
+          cycleShift+=count;
         }
+        while(nearest>=count*3.5){
+          el.scrollLeft-=cycleWidth;
+          nearest-=count;
+          cycleShift-=count;
+        }
+        if(cycleShift)setActivePenyaCard(value=>value+cycleShift);
       }
     }
     penyaCarouselScrollLeftRef.current=el.scrollLeft;
