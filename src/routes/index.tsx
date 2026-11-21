@@ -548,9 +548,25 @@ function Home() {
     el.scrollTo({left:card.offsetLeft-(el.clientWidth-card.offsetWidth)/2,behavior});
   },[]);
   const handlePenyaCarouselScroll=(el:HTMLDivElement)=>{
-    // Durante el gesto solo guardamos la posición y reiniciamos un fallback
-    // ligero. No actualizamos React en cada frame: eso repintaba toda la página
-    // y podía agotar la memoria/GPU en móviles.
+    const count=carouselPenyes.length;
+    if(!searchingPenyes&&count>1){
+      // Repite el ciclo de forma transparente MIENTRAS se desplaza. Al mover
+      // exactamente el ancho de una vuelta, la tarjeta y su posición visual
+      // permanecen idénticas; el usuario nunca ve un salto al otro extremo.
+      if(!penyaCardCentersRef.current.length||penyaCardCentersRef.current.length!==el.children.length)rebuildPenyaCardCenters();
+      const centers=penyaCardCentersRef.current;
+      const cycleWidth=centers[count]!==undefined&&centers[0]!==undefined?centers[count]!-centers[0]!:0;
+      if(cycleWidth>0){
+        const nearest=nearestPenyaCardIndex(el);
+        if(nearest<count*1.5){
+          el.scrollLeft+=cycleWidth;
+          setActivePenyaCard(value=>value+count);
+        }else if(nearest>=count*3.5){
+          el.scrollLeft-=cycleWidth;
+          setActivePenyaCard(value=>value-count);
+        }
+      }
+    }
     penyaCarouselScrollLeftRef.current=el.scrollLeft;
     if(penyaScrollEndTimerRef.current!==null)window.clearTimeout(penyaScrollEndTimerRef.current);
     penyaScrollEndTimerRef.current=window.setTimeout(()=>{
@@ -558,28 +574,16 @@ function Home() {
       handlePenyaCarouselScrollEnd();
     },220);
   };
-  // El bucle solo se recoloca cuando el gesto ha terminado. Hacerlo durante la
-  // inercia del scroll interrumpe el movimiento nativo y provoca saltos a otra peña.
+  // Al terminar el gesto solo actualizamos qué tarjeta queda centrada.
+  // No se recentra ni se anima nada por iniciativa del código.
   const handlePenyaCarouselScrollEnd=useCallback(()=>{
     if(penyaScrollEndTimerRef.current!==null){window.clearTimeout(penyaScrollEndTimerRef.current);penyaScrollEndTimerRef.current=null;}
     const el=penyaCarouselRef.current;
-    const count=carouselPenyes.length;
-    if(!el||searchingPenyes||count<2)return;
+    if(!el)return;
     if(!penyaCardCentersRef.current.length||penyaCardCentersRef.current.length!==el.children.length)rebuildPenyaCardCenters();
-    const nearest=nearestPenyaCardIndex(el);
-    setActivePenyaCard(nearest);
-    if(nearest<count*2||nearest>=count*3){
-      const normalized=((nearest%count)+count)%count;
-      const targetIndex=normalized+count*2;
-      const firstCenter=penyaCardCentersRef.current[normalized];
-      const equivalentCenter=penyaCardCentersRef.current[targetIndex];
-      if(firstCenter!==undefined&&equivalentCenter!==undefined){
-        el.scrollLeft+=equivalentCenter-firstCenter;
-        penyaCarouselScrollLeftRef.current=el.scrollLeft;
-        setActivePenyaCard(targetIndex);
-      }
-    }
-  },[carouselPenyes.length,searchingPenyes,rebuildPenyaCardCenters,nearestPenyaCardIndex]);
+    setActivePenyaCard(nearestPenyaCardIndex(el));
+    penyaCarouselScrollLeftRef.current=el.scrollLeft;
+  },[rebuildPenyaCardCenters,nearestPenyaCardIndex]);
   useEffect(()=>{
     const el=penyaCarouselRef.current;
     if(currentPage!=="penyes"||!visiblePenyes.length){
@@ -597,10 +601,12 @@ function Home() {
         rebuildPenyaCardCenters();
         const carousel=penyaCarouselRef.current;
         if(savedScrollLeft!==null&&carousel){
+          // Al volver de una ficha se conserva exactamente el desplazamiento
+          // anterior; no se centra otra tarjeta ni se inicia ningún movimiento.
           carousel.scrollLeft=Math.max(0,Math.min(savedScrollLeft,carousel.scrollWidth-carousel.clientWidth));
-          const restoredIndex=nearestPenyaCardIndex(carousel);
-          setActivePenyaCard(restoredIndex);
+          setActivePenyaCard(nearestPenyaCardIndex(carousel));
         }else{
+          // Entrada inicial: Mayorales queda centrada en la copia central.
           const initialIndex=searchingPenyes?0:(carouselPenyes.length>1?carouselPenyes.length*2:0);
           setActivePenyaCard(initialIndex);
           centerPenyaCard(initialIndex,"auto");
