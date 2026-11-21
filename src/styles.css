@@ -1162,3 +1162,49 @@ html, body, #root { min-width:0; max-width:100%; }
     backdrop-filter:none!important;
   }
 }
+
+
+/* Palmarés: el tamaño destacado afecta solo a la insignia, nunca a sus rótulos. */
+.penya-awards-grid .penya-award-current-item,
+.penya-awards-grid .penya-award-current-item.is-current-award-center,
+.penya-awards-grid .penya-award-current-item.is-current-award-left,
+.penya-awards-grid .penya-award-current-item.is-current-award-right{
+  transform:none!important;
+  filter:none!important;
+}
+.penya-awards-grid .penya-award-current-item>.penya-award-insignia{
+  transform:none!important;
+}
+.penya-awards-grid .penya-award-current-item.is-current-award-center>.penya-award-insignia{
+  transform:scale(1.13) translateY(-8px)!important;
+}
+.penya-awards-grid .penya-award-current-item.is-current-award-left>.penya-award-insignia,
+.penya-awards-grid .penya-award-current-item.is-current-award-right>.penya-award-insignia{
+  transform:scale(.78) translateY(12px)!important;
+}
+.penya-awards-grid .penya-award-current-item>p{
+  transform:none!important;
+  font-size:inherit;
+  line-height:1.35!important;
+  margin-top:.25rem!important;
+  text-align:center!important;
+}
+.penya-awards-grid .penya-award-current-item>p:first-of-type{
+  font-size:.875rem!important;
+  font-weight:900!important;
+  letter-spacing:.12em!important;
+}
+.penya-awards-grid .penya-award-current-item>p:nth-of-type(2){
+  font-size:.75rem!important;
+  font-weight:600!important;
+  line-height:1.35!important;
+}
+@media(min-width:640px){
+  .penya-awards-grid .penya-award-current-item>p:first-of-type{font-size:1rem!important}
+  .penya-awards-grid .penya-award-current-item>p:nth-of-type(2){font-size:.875rem!important}
+}
+@media(max-width:639px){
+  .penya-awards-grid .penya-award-current-item.is-current-award-center>.penya-award-insignia{transform:scale(1.1) translateY(-5px)!important}
+  .penya-awards-grid .penya-award-current-item.is-current-award-left>.penya-award-insignia,
+  .penya-awards-grid .penya-award-current-item.is-current-award-right>.penya-award-insignia{transform:scale(.88) translateY(6px)!important}
+}
