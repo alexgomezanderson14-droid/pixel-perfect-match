@@ -38,11 +38,11 @@ const AddCommunityEventForm = lazy(() => import("@/components/AddCommunityEventF
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "festalfàs" },
+      { title: "PENYERA" },
       { name: "description", content: "Descubre festalfàs: programa de fiestas de l'Alfàs del Pi, peñas, eventos, mapa, actualidad y noticias de las fiestas." },
       { name: "keywords", content: "festalfàs, festalfas, fiestas l'Alfàs del Pi, fiestas Alfaz del Pi, peñas Alfaz del Pi, programa fiestas Alfaz, eventos Alfaz del Pi" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
-      { property: "og:title", content: "festalfàs" },
+      { property: "og:title", content: "PENYERA" },
       { property: "og:description", content: "Programa de fiestas, peñas, eventos, mapa y noticias de l'Alfàs del Pi." },
       { property: "og:url", content: "https://festalfas.vercel.app/" },
       { property: "og:type", content: "website" },
@@ -379,6 +379,7 @@ const esVideoDirecto=(value:string)=>{try{const path=new URL(value).pathname.toL
 const esVideoVertical=(value:string)=>{try{const u=new URL(value);return /\/shorts\/|\/reel\/|\/p\//i.test(u.pathname);}catch{return false;}};
 
 function Home() {
+  const [brandInfoOpen, setBrandInfoOpen] = useState(false);
   const [q, setQ] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [newsSearch, setNewsSearch] = useState("");
@@ -1111,8 +1112,7 @@ function Home() {
         <div className="absolute inset-0 bg-gradient-to-t from-brown/90 via-brown/20 to-transparent" />
         <div className="relative mx-auto w-full max-w-[min(96vw,1600px)] px-4 pb-9 sm:px-5 sm:pb-16">
           <div className="max-w-full">
-            <h1 className="rise inline-block max-w-full font-sans text-6xl font-black lowercase leading-[0.88] tracking-[-0.085em] text-white drop-shadow-[0_4px_22px_rgba(0,0,0,0.28)] sm:text-8xl md:text-9xl">festalfàs</h1>
-            <div aria-hidden="true" className="rise mt-3 h-1.5 w-16 rounded-full bg-secondary shadow-sm sm:mt-4 sm:h-2 sm:w-24" />
+            <button type="button" onClick={() => setBrandInfoOpen(true)} aria-label="Qué significa PENYERA" className="rise block max-w-[min(88vw,760px)] rounded-lg text-left transition-transform duration-200 hover:scale-[1.015] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-white"><img src="/penyera-logo.svg" alt="PENYERA" width="985" height="205" fetchPriority="high" className="h-auto w-full max-w-[min(88vw,760px)] object-contain drop-shadow-[0_4px_22px_rgba(0,0,0,0.28)]" /></button>
           </div>
           <p className="rise mt-3 max-w-xl text-sm font-medium text-on-image/90 sm:mt-4 sm:text-lg">{siteContent["hero_subtitulo"] || edicion.subtitulo}</p>
           <div className="mt-6 mb-2">
@@ -1124,6 +1124,7 @@ function Home() {
       </section>
 
 
+      {brandInfoOpen && <div className="fixed inset-0 z-[100100] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm" role="presentation" onMouseDown={(event)=>{if(event.target===event.currentTarget)setBrandInfoOpen(false);}}><section role="dialog" aria-modal="true" aria-labelledby="penyera-brand-title" className="relative w-full max-w-lg rounded-[1.75rem] border border-white/15 bg-[#102f3b] p-6 text-white shadow-2xl sm:p-8"><button type="button" onClick={()=>setBrandInfoOpen(false)} aria-label="Cerrar" className="absolute right-4 top-4 rounded-full border border-white/20 px-3 py-1.5 text-lg leading-none text-white/80 transition hover:bg-white/10">×</button><img src="/penyera-isotipo.svg" alt="" aria-hidden="true" className="mb-5 h-16 w-16 object-contain" /><p className="text-[10px] font-extrabold uppercase tracking-[.24em] text-white/60">Nuestra identidad</p><h2 id="penyera-brand-title" className="mt-1 text-3xl font-black tracking-tight">PENYERA</h2><p className="mt-4 text-sm leading-relaxed text-white/85 sm:text-base">PENYERA es un nombre creado para poner en el centro aquello que hace únicas nuestras fiestas: las peñas y, sobre todo, las personas que las forman.</p><p className="mt-3 text-sm leading-relaxed text-white/85 sm:text-base">El isotipo reúne dos ideas en una sola figura: una persona que se mueve y se encuentra con las demás, y una chispa de fuegos artificiales que representa la energía y la celebración. Sus formas nacen de un mismo punto para simbolizar unión, diversidad y sentimiento de pertenencia.</p><p className="mt-3 text-sm leading-relaxed text-white/85 sm:text-base">Porque una peña no es solo un nombre o un local: es su gente, la amistad, los recuerdos y todo lo que compartimos.</p><button type="button" onClick={()=>setBrandInfoOpen(false)} className="mt-6 w-full rounded-full bg-white px-5 py-3 text-sm font-extrabold text-[#173f52] transition hover:bg-white/90">Entendido</button></section></div>}
       <main className="mx-auto w-full max-w-[min(96vw,1600px)] px-3 pb-28 pt-8 sm:px-5">
         {proximasActividades.length > 0 && <section aria-labelledby="proxima-actividad-title" className="mb-7 overflow-hidden rounded-[1.75rem] border border-primary/15 bg-card shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-primary/10 px-4 py-4 sm:px-6">
@@ -1506,7 +1507,7 @@ function Home() {
         </div>, document.body
       )}
       {<footer className="space-y-4 px-5 pb-32 text-center text-sm text-muted-foreground">
-        <p>festalfàs · {new Date().getFullYear()}</p>
+        <p>PENYERA · {new Date().getFullYear()}</p>
         <button onClick={() => void shareWebsite()} className="glass-btn rounded-full px-6 py-3 font-bold text-primary">↗ Compartir la web</button>
         <div className="flex flex-wrap justify-center gap-2">
           <button onClick={() => shareOn("whatsapp", window.location.href, "Fiestas de l'Alfàs del Pi", "Consulta las peñas y las últimas noticias de las fiestas.")} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">WhatsApp</button>
