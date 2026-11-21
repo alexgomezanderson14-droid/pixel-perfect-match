@@ -783,3 +783,17 @@ html, body, #root { min-width:0; max-width:100%; }
  will-change:auto;
 }
 .penya-award-insignia{overflow:visible;}
+
+
+/* Cabecera real del gestor de premios: neutraliza los estilos genéricos de header del panel. */
+.admin-workspace header.penya-awards-admin-heading{
+  display:block!important;
+  background:linear-gradient(135deg,#173f52 0%,#236579 55%,#102f3d 100%)!important;
+  color:#fff!important;
+  border:1px solid rgba(139,217,231,.42)!important;
+  box-shadow:0 16px 38px rgba(12,43,59,.25)!important;
+}
+.admin-workspace header.penya-awards-admin-heading h2,
+.admin-workspace header.penya-awards-admin-heading p,
+.admin-workspace header.penya-awards-admin-heading span{color:#fff!important}
+.admin-workspace header.penya-awards-admin-heading p:first-child{color:rgba(207,250,254,.9)!important}
