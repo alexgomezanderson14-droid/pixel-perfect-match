@@ -394,6 +394,7 @@ function Home() {
   const penyaCardCentersRef = useRef<number[]>([]);
   const penyaCarouselScrollLeftRef = useRef<number | null>(null);
   const penyaScrollEndTimerRef = useRef<number | null>(null);
+  const penyaCarouselSignatureRef = useRef("");
   const [eventsSearch, setEventsSearch] = useState("");
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
   const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes">("all");
@@ -580,25 +581,37 @@ function Home() {
     }
   },[carouselPenyes.length,searchingPenyes,rebuildPenyaCardCenters,nearestPenyaCardIndex]);
   useEffect(()=>{
+    const el=penyaCarouselRef.current;
     if(currentPage!=="penyes"||!visiblePenyes.length){
+      if(el)penyaCarouselScrollLeftRef.current=el.scrollLeft;
       setPenyaCarouselInitialized(false);
       return;
     }
-    // Recalcula el inicio al entrar y también al cambiar filtros/resultados.
+    const signature=carouselPenyes.map(p=>String(p.id)).join("|")+"::"+(searchingPenyes?"filtered":"all");
+    const sameDirectory=penyaCarouselSignatureRef.current===signature;
+    const savedScrollLeft=sameDirectory?penyaCarouselScrollLeftRef.current:null;
     setPenyaCarouselInitialized(false);
-    const initialIndex=searchingPenyes?0:(carouselPenyes.length>1?carouselPenyes.length:0);
-    setActivePenyaCard(initialIndex);
     let secondFrame=0;
     const firstFrame=requestAnimationFrame(()=>{
       secondFrame=requestAnimationFrame(()=>{
         rebuildPenyaCardCenters();
-        centerPenyaCard(initialIndex,"auto");
-        penyaCarouselScrollLeftRef.current=penyaCarouselRef.current?.scrollLeft??null;
+        const carousel=penyaCarouselRef.current;
+        if(savedScrollLeft!==null&&carousel){
+          carousel.scrollLeft=Math.max(0,Math.min(savedScrollLeft,carousel.scrollWidth-carousel.clientWidth));
+          const restoredIndex=nearestPenyaCardIndex(carousel);
+          setActivePenyaCard(restoredIndex);
+        }else{
+          const initialIndex=searchingPenyes?0:(carouselPenyes.length>1?carouselPenyes.length:0);
+          setActivePenyaCard(initialIndex);
+          centerPenyaCard(initialIndex,"auto");
+        }
+        if(carousel)penyaCarouselScrollLeftRef.current=carousel.scrollLeft;
+        penyaCarouselSignatureRef.current=signature;
         setPenyaCarouselInitialized(true);
       });
     });
     return()=>{cancelAnimationFrame(firstFrame);if(secondFrame)cancelAnimationFrame(secondFrame);};
-  },[currentPage,visiblePenyes.length,searchingPenyes,carouselPenyes,centerPenyaCard,rebuildPenyaCardCenters]);
+  },[currentPage,visiblePenyes.length,searchingPenyes,carouselPenyes,centerPenyaCard,rebuildPenyaCardCenters,nearestPenyaCardIndex]);
   useEffect(()=>{
     const el=penyaCarouselRef.current;
     if(!el||!penyaCarouselInitialized)return;
