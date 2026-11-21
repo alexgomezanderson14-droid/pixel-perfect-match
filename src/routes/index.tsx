@@ -456,6 +456,7 @@ function Home() {
   const mapViewportRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => { window.scrollTo({ top: 0, behavior: "auto" }); }, [currentPage, noticiaSeleccionada?.id, mapFullscreen]);
   useEffect(() => {
+    if (currentPage !== "home" || mapShouldLoad) return;
     const target = mapViewportRef.current;
     if (!target) return;
     if (typeof IntersectionObserver === "undefined") { setMapShouldLoad(true); return; }
@@ -467,7 +468,7 @@ function Home() {
     }, { rootMargin: "500px 0px" });
     observer.observe(target);
     return () => observer.disconnect();
-  }, []);
+  }, [currentPage, mapShouldLoad]);
   const dias = useMemo(() => [...new Set(actos.filter((a) => eventoSigueActivo(a, now)).map((a) => a.dia))].sort(), [actos, now]);
   const [dia, setDia] = useState<string | undefined>();
   const eventosActivos = useMemo(() => eventos.filter((e) => eventoSigueActivo(e, now)), [eventos, now]);
