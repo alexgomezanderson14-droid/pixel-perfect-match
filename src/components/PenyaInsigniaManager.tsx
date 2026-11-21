@@ -33,7 +33,7 @@ export default function PenyaInsigniaManager(){
   finally{setBusyId(null);}
  };
 
- return <section className="mt-6 space-y-4 rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
+ return <details className="admin-settings-card mt-6"><summary><span className="admin-settings-heading"><strong>Insignias de los concursos · 17</strong><small>Sustituye o añade insignias por puesto; se muestran solo al desplegar</small></span><span className="admin-settings-chevron">⌄</span></summary><div className="admin-settings-body"><section className="space-y-4 rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6">
   <header><p className="text-[10px] font-black uppercase tracking-[.22em] text-primary">Personalización de insignias</p><h3 className="mt-1 text-xl font-black">Insignias de los concursos</h3><p className="mt-1 text-sm text-muted-foreground">Pulsa directamente sobre cualquier insignia para sustituirla. Las posiciones vacías permiten añadir una nueva en ese mismo lugar.</p></header>
   {loading?<p className="text-sm text-muted-foreground">Cargando…</p>:groups.map(group=><div key={group.kind} className="space-y-2"><h4 className="text-sm font-extrabold">{group.title}</h4><div className="grid grid-cols-3 gap-2 sm:grid-cols-5">{Array.from({length:group.count},(_,i)=>i+1).map(position=>{
    const id=insigniaId(group.kind,position),item=items[id],busy=busyId===id,inputId="penya-insignia-"+group.kind+"-"+position;
@@ -50,5 +50,5 @@ export default function PenyaInsigniaManager(){
    </article>;
   })}</div></div>)}
   {message&&<p role="status" className="rounded-xl bg-muted px-3 py-2 text-xs">{message}</p>}
- </section>;
+ </section></div></details>;
 }
