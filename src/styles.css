@@ -781,3 +781,8 @@ html, body, #root { min-width:0; max-width:100%; }
  will-change:transform;
 }
 .penya-award-insignia{overflow:visible;}
+
+
+/* Administración: encabezado de Premios y palmarés con el mismo degradado azul verdoso de las tarjetas completas de peñas. */
+.admin-workspace .penya-awards-admin-header { background:linear-gradient(135deg,#173f52 0%,#236579 55%,#102f3d 100%) !important; color:#fff !important; border-color:rgba(255,255,255,.24) !important; }
+.admin-workspace .penya-awards-admin-header h2 { color:#fff !important; }
