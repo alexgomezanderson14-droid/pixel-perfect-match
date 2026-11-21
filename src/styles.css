@@ -931,14 +931,17 @@ html, body, #root { min-width:0; max-width:100%; }
 }
 
 
-/* Palmarés: ampliar únicamente la insignia, limitada al ancho de su propio puesto. */
+/* Palmarés: ampliar insignias con dimensiones compatibles y límite de ancho por puesto. */
 .penya-awards-panel .penya-award-insignia{
-  width:min(100%,clamp(92px,31vw,132px))!important;
-  height:min(100%,clamp(92px,31vw,132px))!important;
+  width:clamp(104px,32vw,144px)!important;
+  height:clamp(104px,32vw,144px)!important;
+  max-width:100%!important;
+  max-height:none!important;
 }
 @media(min-width:640px){
   .penya-awards-panel .penya-award-insignia{
-    width:min(100%,clamp(240px,24vw,340px))!important;
-    height:min(100%,clamp(240px,24vw,340px))!important;
+    width:clamp(240px,24vw,340px)!important;
+    height:clamp(240px,24vw,340px)!important;
+    max-width:100%!important;
   }
 }
