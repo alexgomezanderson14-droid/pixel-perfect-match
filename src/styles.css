@@ -797,3 +797,9 @@ html, body, #root { min-width:0; max-width:100%; }
 .admin-workspace header.penya-awards-admin-heading p,
 .admin-workspace header.penya-awards-admin-heading span{color:#fff!important}
 .admin-workspace header.penya-awards-admin-heading p:first-child{color:rgba(207,250,254,.9)!important}
+
+/* Halo de palmarés: el resplandor sigue la transparencia y la silueta real de cada insignia. */
+.penya-award-insignia{filter:none!important;}
+.penya-award-art{filter:drop-shadow(0 0 3px var(--award-glow)) drop-shadow(0 0 8px var(--award-glow)) drop-shadow(0 0 17px var(--award-glow)) drop-shadow(0 0 27px color-mix(in srgb,var(--award-glow) 72%,transparent))!important;}
+.penya-award-insignia:before{inset:5%!important;border-radius:inherit!important;background:var(--award-glow)!important;filter:blur(23px)!important;opacity:.32!important;z-index:-1;}
+@media(max-width:639px){.penya-award-art{filter:drop-shadow(0 0 3px var(--award-glow)) drop-shadow(0 0 7px var(--award-glow)) drop-shadow(0 0 15px var(--award-glow))!important;}.penya-award-insignia:before{filter:blur(18px)!important;opacity:.28!important;}}
