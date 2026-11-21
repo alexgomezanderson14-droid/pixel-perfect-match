@@ -1,5 +1,6 @@
 import {useEffect,useMemo,useState} from "react";
 import {supabase} from "@/integrations/supabase/client";
+import {loadPenyaInsignias, type PenyaInsigniaMap} from "@/lib/penya-insignias";
 export type PenyaAward={id:string;penya_id:string;penya_name?:string;year:number;competition:string;position:number;created_at?:string};
 const KEY="penyes_premios_json";
 const OMITTED_KEY="penyes_premios_omitidos_json";
@@ -35,6 +36,8 @@ export function getSeededPenyaAwards(penyes:any[]=[]):PenyaAward[]{
 }
 const field="w-full rounded-xl border border-[#cbd9d6] bg-white px-3 py-2.5 text-sm text-[#173f52]";
 export function PenyaAwardMedal({award,compact=false}:{award:PenyaAward;compact?:boolean}){
+ const [customInsignias,setCustomInsignias]=useState<PenyaInsigniaMap>({});
+ useEffect(()=>{let active=true;loadPenyaInsignias().then(value=>{if(active)setCustomInsignias(value)});return()=>{active=false}},[]);
  const competition=award.competition.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es");
  const category=competition.includes("paella")?"paellas":competition.includes("desfile")||competition.includes("humor")?"desfile":competition.includes("playback")?"playbacks":"general";
  const supported=category==="desfile"?(award.position>=1&&award.position<=9):category==="paellas"?(award.position>=1&&award.position<=3):category==="playbacks"?(award.position>=1&&award.position<=5):false;
@@ -49,7 +52,7 @@ export function PenyaAwardMedal({award,compact=false}:{award:PenyaAward;compact?
  } as React.CSSProperties;
  const size=compact?"h-[76px] w-[76px]":"h-[116px] w-[116px] sm:h-[142px] sm:w-[142px]";
  return <div className={`penya-award-insignia relative mx-auto grid shrink-0 place-items-center ${size}`} style={style} role="img" aria-label={supported?`${award.position}º puesto, ${award.competition}`:`Premio de ${award.competition}, puesto ${award.position}`} data-category={category} data-shape={category==="paellas"?"square":category==="playbacks"?"hexagon":"round"} data-position={award.position}>
-  {supported&&<span className="penya-award-art" aria-hidden="true" style={{backgroundImage:"url('/premios-insignias.avif')",backgroundSize:"450% 360%",backgroundPosition:`${((column*0.9+0.05)/3.5)*100}% ${((row*0.9+0.05)/2.6)*100}%`}}/>}
+  {supported&&(customInsignias[(category==="desfile"?"redonda":category==="paellas"?"cuadrada":"playback")+"_"+award.position]?.url?<img className="penya-award-art" src={customInsignias[(category==="desfile"?"redonda":category==="paellas"?"cuadrada":"playback")+"_"+award.position].url} alt="" aria-hidden="true" />:<span className="penya-award-art" aria-hidden="true" style={{backgroundImage:"url('/premios-insignias.avif')",backgroundSize:"450% 360%",backgroundPosition:(((column*0.9+0.05)/3.5)*100)+"% "+(((row*0.9+0.05)/2.6)*100)+"%"}}/>)}
   {!supported&&<span className="text-4xl drop-shadow-[0_0_12px_var(--award-glow)]" aria-hidden="true">🏆</span>}
  </div>;
 }
