@@ -42,7 +42,7 @@ export function PenyaAwardMedal({award,compact=false}:{award:PenyaAward;compact?
  </div>;
 }
 function penyaAwardCompetitionOrder(competition:string){
- const name=String(competition||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLocaleLowerCase("es");
+ const name=String(competition||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es");
  if(name.includes("desfile")||name.includes("humor"))return 5;
  if(name.includes("playback"))return 4;
  if(name.includes("paella")){
@@ -52,7 +52,8 @@ function penyaAwardCompetitionOrder(competition:string){
  }
  return 0;
 }
-function penyaAwardCompetitionLabel(value:string){return /paellas?\s+fiestas/i.test(value)&&/santisimo|jubileo/i.test(value)?"Paellas Fiestas":value;}\nexport function PenyaAwardsSection({awards,penyaName}:{awards:PenyaAward[];penyaName:string}){
+function penyaAwardCompetitionLabel(value:string){return /paellas?\s+fiestas/i.test(value)&&/santisimo|jubileo/i.test(value)?"Paellas Fiestas":value;}
+export function PenyaAwardsSection({awards,penyaName}:{awards:PenyaAward[];penyaName:string}){
  const [showAll,setShowAll]=useState(false);
  const sorted=useMemo(()=>[...awards].sort((a,b)=>Number(b.year)-Number(a.year)||penyaAwardCompetitionOrder(b.competition)-penyaAwardCompetitionOrder(a.competition)||Date.parse(b.created_at||"")-Date.parse(a.created_at||"")||a.position-b.position||a.competition.localeCompare(b.competition,"es")),[awards]);
  const visibleAwards=showAll?sorted:sorted.slice(0,3);
