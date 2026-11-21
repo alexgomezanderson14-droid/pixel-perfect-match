@@ -1,24 +1,37 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { X, Newspaper, Trophy, Sparkles, CalendarDays, ArrowUpRight } from "lucide-react";
+import { X } from "lucide-react";
 
-type Props = { userKey?: string | null };
+type Props = { userKey?: string | null; config?: Record<string, string> };
+type Card = { slug: string; tag: string; title: string; description: string; image: string; size: "small" | "medium" | "large"; position: string };
 
-const VERSION = "2026-11-v1";
-const cards = [
-  { slug: "noticias", number: "01", tag: "NUEVO", title: "Las noticias, más cerca", description: "Toda la actualidad festera reunida en un mismo lugar.", image: "/mayorales-2027.svg", imageAlt: "Emblema de Mayorales 2027", icon: Newspaper, className: "news" },
-  { slug: "premios", number: "02", tag: "NUEVO", title: "Los premios ya se muestran", description: "Descubre los reconocimientos de cada peña y su historia.", image: "/premios-insignias.avif", imageAlt: "Insignias de premios y reconocimientos", icon: Trophy, className: "awards" },
-  { slug: "penyes-movil", number: "03", tag: "MEJORA", title: "Peñas más ágiles en móvil", description: "Una navegación más ligera para descubrir todas las peñas.", image: "", imageAlt: "", icon: Sparkles, className: "mobile" },
+const defaults: Card[] = [
+  { slug: "noticias", tag: "NUEVO", title: "Las noticias, más cerca", description: "Toda la actualidad festera reunida en un mismo lugar.", image: "/mayorales-2027.svg", size: "medium", position: "left-top" },
+  { slug: "premios", tag: "NUEVO", title: "Los premios ya se muestran", description: "Descubre los reconocimientos de cada peña y su historia.", image: "/premios-insignias.avif", size: "large", position: "right-middle" },
+  { slug: "penyes-movil", tag: "MEJORA", title: "Peñas más ágiles en móvil", description: "Una navegación más ligera para descubrir todas las peñas.", image: "", size: "medium", position: "lower-left" },
 ];
-
+const VERSION = "2026-11-v2";
 function storageKey(userKey?: string | null) {
-  const user = (userKey || "invitado").trim().toLowerCase();
-  return `penyera-novedades-dismissed:${user}:${VERSION}`;
+  return `penyera-novedades-dismissed:${(userKey || "invitado").trim().toLowerCase()}:${VERSION}`;
 }
-
-export default function WhatsNewAnnouncement({ userKey }: Props) {
+function readConfig(config: Record<string, string> = {}) {
+  return {
+    title: config.novedades_titulo || "¡Mira todo lo nuevo!",
+    subtitle: config.novedades_subtitulo || "Descubre las últimas novedades y aprende a disfrutar de todas las posibilidades de nuestra web.",
+    background: [config.novedades_fondo_1 || "#f5dfe7", config.novedades_fondo_2 || "#e9dff0", config.novedades_fondo_3 || "#d9e9ed"],
+    cards: defaults.map((card, index) => ({
+      ...card,
+      tag: config[`novedades_tarjeta_${index + 1}_etiqueta`] || card.tag,
+      title: config[`novedades_tarjeta_${index + 1}_titulo`] || card.title,
+      description: config[`novedades_tarjeta_${index + 1}_texto`] || card.description,
+      image: config[`novedades_tarjeta_${index + 1}_imagen`] || card.image,
+      size: (config[`novedades_tarjeta_${index + 1}_tamano`] as Card["size"]) || card.size,\n      position: config[`novedades_tarjeta_${index + 1}_posicion`] || card.position,
+    })),
+  };
+}
+export default function WhatsNewAnnouncement({ userKey, config = {} }: Props) {
   const [open, setOpen] = useState(false);
-
+  const settings = useMemo(() => readConfig(config), [config]);
   useEffect(() => {
     let forced = false;
     try {
@@ -32,9 +45,8 @@ export default function WhatsNewAnnouncement({ userKey }: Props) {
       return () => window.clearTimeout(timer);
     }
   }, [userKey]);
-
   const close = useCallback(() => {
-    try { window.localStorage.setItem(storageKey(userKey), "1"); } catch { /* El aviso sigue pudiendo cerrarse sin almacenamiento. */ }
+    try { window.localStorage.setItem(storageKey(userKey), "1"); } catch { /* Cierre disponible sin almacenamiento. */ }
     if (window.location.search.includes("novedades=1")) {
       const url = new URL(window.location.href);
       url.searchParams.delete("novedades");
@@ -42,52 +54,35 @@ export default function WhatsNewAnnouncement({ userKey }: Props) {
     }
     setOpen(false);
   }, [userKey]);
-
   useEffect(() => {
     if (!open) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") close(); };
     window.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.body.style.overflow = previous;
-      window.removeEventListener("keydown", onKeyDown);
-    };
+    return () => { document.body.style.overflow = previous; window.removeEventListener("keydown", onKeyDown); };
   }, [open, close]);
-
   if (!open) return null;
-
   return (
-    <div className="whats-new-overlay" role="dialog" aria-modal="true" aria-labelledby="whats-new-title">
-      <button type="button" className="whats-new-scrim" aria-label="Cerrar novedades" onClick={close} />
-      <section className="whats-new-panel">
-        <button type="button" onClick={close} className="whats-new-close" aria-label="Cerrar aviso de novedades"><X size={20} /></button>
-        <div className="whats-new-heading">
+    <div className="whats-new-overlay" role="dialog" aria-modal="true" aria-labelledby="whats-new-title" style={{ background: `linear-gradient(135deg,${settings.background[0]},${settings.background[1]} 52%,${settings.background[2]})` }}>
+      <button type="button" className="whats-new-close" onClick={close} aria-label="Cerrar aviso de novedades"><X size={20} /></button>
+      <div className="whats-new-scene">
+        <header className="whats-new-heading">
           <span className="whats-new-eyebrow">PENYERA · ACTUALIZACIONES</span>
-          <h2 id="whats-new-title">¡Mira todo<br className="sm:hidden" /> lo nuevo!</h2>
-          <p>Descubre las últimas novedades y aprende a disfrutar de todas las posibilidades de nuestra web.</p>
+          <h2 id="whats-new-title">{settings.title}</h2>
+          <p>{settings.subtitle}</p>
+        </header>
+        <div className="whats-new-floating-cards">
+          {settings.cards.map((card) => (
+            <Link key={card.slug} to="/novedades/$slug" params={{ slug: card.slug }} className={`whats-new-float-card whats-new-pos-${card.position} whats-new-size-${card.size}`}>
+              <span className="whats-new-float-tag">{card.tag}</span>
+              {card.image && <img src={card.image} alt="" loading="lazy" />}
+              <div className="whats-new-float-copy"><h3>{card.title}</h3><p>{card.description}</p></div>
+              <span className="whats-new-float-open">Descubrir ↗</span>
+            </Link>
+          ))}
         </div>
-        <div className="whats-new-collage">
-          {cards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <Link key={card.slug} to="/novedades/$slug" params={{ slug: card.slug }} className={`whats-new-card whats-new-card-${card.className}`}>
-                <div className="whats-new-card-top"><span>{card.tag}</span><span className="whats-new-number">{card.number}</span></div>
-                <div className="whats-new-card-copy"><h3>{card.title}</h3><p>{card.description}</p></div>
-                {card.image ? <div className="whats-new-card-image"><img src={card.image} alt={card.imageAlt} loading="lazy" /></div> : <div className="whats-new-mobile-art" aria-hidden="true"><div className="whats-new-mini-card"><span>PEÑAS</span><strong>Una experiencia más fluida</strong><div className="whats-new-mini-lines" /></div><div className="whats-new-mini-orbit"><Icon size={28} /></div></div>}
-                <span className="whats-new-card-link">Descubrir <ArrowUpRight size={15} /></span>
-              </Link>
-            );
-          })}
-          <div className="whats-new-card whats-new-card-calendar" aria-label="Calendario festero, próximamente">
-            <div className="whats-new-card-top"><span>PRÓXIMAMENTE</span><span className="whats-new-number">04</span></div>
-            <div className="whats-new-calendar-art"><CalendarDays size={36} strokeWidth={1.5} /><span>2027</span></div>
-            <div className="whats-new-card-copy"><h3>Calendario festero</h3><p>Fechas, actos y momentos importantes de nuestras fiestas.</p></div>
-            <span className="whats-new-coming">Muy pronto</span>
-          </div>
-        </div>
-        <p className="whats-new-footnote">Tres novedades para descubrir. Y esto solo acaba de empezar.</p>
-      </section>
+      </div>
     </div>
   );
 }
