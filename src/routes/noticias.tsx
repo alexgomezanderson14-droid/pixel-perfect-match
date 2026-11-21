@@ -6,11 +6,11 @@ import { noticiaCestaNavidad2027 } from "@/content/noticia-cesta-navidad-2027";
 export const Route = createFileRoute("/noticias")({
   head: () => ({
     meta: [
-      { title: "Noticias de las fiestas de l’Alfàs del Pi | festalfàs" },
+      { title: "Noticias de las fiestas de l’Alfàs del Pi | PENYERA" },
       { name: "description", content: "Noticias y actualidad festera de l’Alfàs del Pi. Novedades de las peñas, Mayorales 2027 y actividades del pueblo." },
-      { name: "keywords", content: "noticias Alfaz del Pi, actualidad fiestas l'Alfàs, noticias peñas Alfaz, CuBaTa Mayorales 2027, festalfàs" },
+      { name: "keywords", content: "noticias Alfaz del Pi, actualidad fiestas l'Alfàs, noticias peñas Alfaz, CuBaTa Mayorales 2027, PENYERA" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
-      { property: "og:title", content: "Noticias de las fiestas de l’Alfàs del Pi | festalfàs" },
+      { property: "og:title", content: "Noticias de las fiestas de l’Alfàs del Pi | PENYERA" },
       { property: "og:description", content: "Actualidad festera, noticias de las peñas y novedades de Mayorales 2027." },
       { property: "og:url", content: "https://festalfas.vercel.app/noticias" },
       { property: "og:type", content: "website" },
@@ -27,7 +27,7 @@ function NoticiasPage() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/70 bg-card/80">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <Link to="/" className="text-lg font-extrabold tracking-tight text-primary">festalfàs</Link>
+          <Link to="/" className="text-lg font-extrabold tracking-tight text-primary">PENYERA</Link>
           <Link to="/" className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">Ir a la web</Link>
         </div>
       </header>
@@ -67,7 +67,7 @@ function NoticiasPage() {
         </nav>
       </main>
       <div className="border-t border-border/70 bg-card px-4 py-8 text-center">
-        <p className="mb-4 text-sm font-semibold text-muted-foreground">festalfàs · {new Date().getFullYear()}</p>
+        <p className="mb-4 text-sm font-semibold text-muted-foreground">PENYERA · {new Date().getFullYear()}</p>
         <Link to="/" className="text-sm font-bold text-primary underline underline-offset-4">Volver a la portada</Link>
       </div>
       <CopyrightFooter />
