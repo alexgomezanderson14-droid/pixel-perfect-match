@@ -394,7 +394,6 @@ function Home() {
   const penyaCardCentersRef = useRef<number[]>([]);
   const penyaCarouselScrollLeftRef = useRef<number | null>(null);
   const penyaScrollEndTimerRef = useRef<number | null>(null);
-  const penyaEntryInitializedRef = useRef(false);
   const [eventsSearch, setEventsSearch] = useState("");
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
   const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes">("all");
@@ -544,11 +543,15 @@ function Home() {
   },[]);
   const handlePenyaCarouselScroll=(el:HTMLDivElement)=>{
     penyaCarouselScrollLeftRef.current=el.scrollLeft;
-    if(penyaScrollEndTimerRef.current!==null)window.clearTimeout(penyaScrollEndTimerRef.current);
-    penyaScrollEndTimerRef.current=window.setTimeout(()=>{
-      penyaScrollEndTimerRef.current=null;
-      handlePenyaCarouselScrollEnd();
-    },180);
+    // Usa el evento nativo cuando existe. El temporizador solo es fallback
+    // y espera a que termine realmente la inercia en navegadores antiguos.
+    if(penyaScrollEndTimerRef.current!==null){window.clearTimeout(penyaScrollEndTimerRef.current);penyaScrollEndTimerRef.current=null;}
+    if(!("onscrollend" in el)){
+      penyaScrollEndTimerRef.current=window.setTimeout(()=>{
+        penyaScrollEndTimerRef.current=null;
+        handlePenyaCarouselScrollEnd();
+      },500);
+    }
     if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);
     penyaScrollFrameRef.current=requestAnimationFrame(()=>{
       if(!penyaCardCentersRef.current.length||penyaCardCentersRef.current.length!==el.children.length)rebuildPenyaCardCenters();
@@ -579,15 +582,13 @@ function Home() {
     }
   },[carouselPenyes.length,searchingPenyes,rebuildPenyaCardCenters,nearestPenyaCardIndex]);
   useEffect(()=>{
-    if(currentPage!=="penyes"){
-      penyaEntryInitializedRef.current=false;
+    if(currentPage!=="penyes"||!visiblePenyes.length){
       setPenyaCarouselInitialized(false);
       return;
     }
-    if(!visiblePenyes.length||penyaEntryInitializedRef.current)return;
+    // Recalcula el inicio al entrar y también al cambiar filtros/resultados.
     setPenyaCarouselInitialized(false);
-    const mayoralesIndex=carouselPenyes.findIndex(p=>Boolean(mayoralesPenyaId)&&String(p.id)===String(mayoralesPenyaId));
-    const initialIndex=searchingPenyes?0:(carouselPenyes.length>1?carouselPenyes.length:0)+Math.max(0,mayoralesIndex);
+    const initialIndex=searchingPenyes?0:(carouselPenyes.length>1?carouselPenyes.length:0);
     setActivePenyaCard(initialIndex);
     let secondFrame=0;
     const firstFrame=requestAnimationFrame(()=>{
@@ -595,12 +596,11 @@ function Home() {
         rebuildPenyaCardCenters();
         centerPenyaCard(initialIndex,"auto");
         penyaCarouselScrollLeftRef.current=penyaCarouselRef.current?.scrollLeft??null;
-        penyaEntryInitializedRef.current=true;
         setPenyaCarouselInitialized(true);
       });
     });
     return()=>{cancelAnimationFrame(firstFrame);if(secondFrame)cancelAnimationFrame(secondFrame);};
-  },[currentPage,visiblePenyes.length,searchingPenyes,carouselPenyes,mayoralesPenyaId,centerPenyaCard,rebuildPenyaCardCenters]);
+  },[currentPage,visiblePenyes.length,searchingPenyes,carouselPenyes,centerPenyaCard,rebuildPenyaCardCenters]);
   useEffect(()=>{
     const el=penyaCarouselRef.current;
     if(!el||!penyaCarouselInitialized)return;
