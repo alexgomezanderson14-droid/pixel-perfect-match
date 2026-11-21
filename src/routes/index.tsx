@@ -1111,10 +1111,11 @@ function Home() {
         {heroImage ? <img src={heroImage} alt="Portada de las fiestas de l'Alfàs del Pi" width={1920} height={1280} loading="eager" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-300" style={{transform:"scale("+(Number(siteContent["hero_image_scale"]||100)/100)+")"}} /> : <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37]" />}
         <div className="absolute inset-0 bg-gradient-to-t from-brown/90 via-brown/20 to-transparent" />
         <div className="relative mx-auto w-full max-w-[min(96vw,1600px)] px-4 pb-9 sm:px-5 sm:pb-16">
-          {siteContent["hero_logo_hidden"]!=="true"&&<div className="rise w-full max-w-[880px]">
+          {siteContent["hero_logo_hidden"]!=="true"&&<div className="rise mb-4 w-full max-w-[880px]">
             <button type="button" onClick={() => setBrandInfoOpen(true)} aria-label="Qué significa PENYERA" className="block w-[90vw] max-w-full rounded-lg text-left transition-transform duration-200 hover:scale-[1.01] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-white"><img src={siteContent["hero_logo_url"]||"/penyera-logo.svg"} alt="PENYERA" width="962" height="182" fetchPriority="high" className="h-auto w-full object-contain object-left drop-shadow-[0_4px_22px_rgba(0,0,0,0.28)]" /></button>
           </div>}
-          <p className="rise mt-3 max-w-xl text-sm font-medium text-on-image/90 sm:mt-4 sm:text-lg">{siteContent["hero_subtitulo"] || edicion.subtitulo}</p>
+          <div className="mb-3 h-px w-full max-w-xl bg-white/75 shadow-[0_1px_5px_rgba(0,0,0,0.2)]" aria-hidden="true" />
+          <p className="rise mt-0 max-w-xl text-sm font-medium text-on-image/90 sm:text-lg">{siteContent["hero_subtitulo"] || edicion.subtitulo}</p>
           <div className="mt-6 mb-2">
             <p className="rise text-xs font-extrabold uppercase tracking-[.22em] text-white sm:text-sm">Festes 2027</p>
             <p className="rise mt-1 text-[10px] font-medium tracking-wide text-white/75 sm:text-xs">Cuenta atrás para el comienzo de las fiestas</p>
