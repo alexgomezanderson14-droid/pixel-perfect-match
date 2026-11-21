@@ -514,8 +514,8 @@ function Home() {
     if(index<=0)return visiblePenyes;
     return [visiblePenyes[index]!,...visiblePenyes.slice(0,index),...visiblePenyes.slice(index+1)];
   },[visiblePenyes,searchingPenyes,mayoralesPenyaId]);
-  // Copias alrededor de la lista central para conservar el carrusel circular sin saltos visibles.
-  const loopedPenyes = !searchingPenyes && carouselPenyes.length > 1 ? [...carouselPenyes,...carouselPenyes,...carouselPenyes] : [...carouselPenyes];
+  // Cinco copias dan recorrido amplio a ambos lados; la copia central sirve como zona segura para el bucle.
+  const loopedPenyes = !searchingPenyes && carouselPenyes.length > 1 ? [...carouselPenyes,...carouselPenyes,...carouselPenyes,...carouselPenyes,...carouselPenyes] : [...carouselPenyes];
   // Cachea los centros de las tarjetas: durante el gesto de desplazamiento no
   // se fuerzan lecturas de layout de todas las tarjetas en cada frame.
   const rebuildPenyaCardCenters=useCallback(()=>{
@@ -568,9 +568,9 @@ function Home() {
     if(!penyaCardCentersRef.current.length||penyaCardCentersRef.current.length!==el.children.length)rebuildPenyaCardCenters();
     const nearest=nearestPenyaCardIndex(el);
     setActivePenyaCard(nearest);
-    if(nearest<count||nearest>=count*2){
+    if(nearest<count*2||nearest>=count*3){
       const normalized=((nearest%count)+count)%count;
-      const targetIndex=normalized+count;
+      const targetIndex=normalized+count*2;
       const firstCenter=penyaCardCentersRef.current[normalized];
       const equivalentCenter=penyaCardCentersRef.current[targetIndex];
       if(firstCenter!==undefined&&equivalentCenter!==undefined){
@@ -601,7 +601,7 @@ function Home() {
           const restoredIndex=nearestPenyaCardIndex(carousel);
           setActivePenyaCard(restoredIndex);
         }else{
-          const initialIndex=searchingPenyes?0:(carouselPenyes.length>1?carouselPenyes.length:0);
+          const initialIndex=searchingPenyes?0:(carouselPenyes.length>1?carouselPenyes.length*2:0);
           setActivePenyaCard(initialIndex);
           centerPenyaCard(initialIndex,"auto");
         }
@@ -1344,8 +1344,8 @@ function Home() {
             <div className="glass rounded-3xl p-8 text-center"><p className="font-bold text-primary">No encontramos peñas con esos filtros</p><p className="mt-1 text-sm text-muted-foreground">Prueba con otra búsqueda o limpia los filtros.</p><button onClick={()=>{setPenyaSearch("");setPenyaMusicFilter("Todas");setPenyaOnlyMine(false);}} className="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">Mostrar todas las peñas</button></div>
           ) : (
             <div className="relative mx-auto w-full max-w-[1180px] lg:max-w-none">
-              {visiblePenyes.length>1&&!searchingPenyes&&<button type="button" aria-label="Peña anterior" onClick={()=>{const count=visiblePenyes.length;const current=((activePenyaCard-count)%count+count)%count;const target=count+(current-1+count)%count;setActivePenyaCard(target);centerPenyaCard(target,"smooth");}} className="absolute left-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">‹</button>}
-              {visiblePenyes.length>1&&!searchingPenyes&&<button type="button" aria-label="Peña siguiente" onClick={()=>{const count=visiblePenyes.length;const current=((activePenyaCard-count)%count+count)%count;const target=count+(current+1)%count;setActivePenyaCard(target);centerPenyaCard(target,"smooth");}} className="absolute right-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">›</button>}
+              {visiblePenyes.length>1&&!searchingPenyes&&<button type="button" aria-label="Peña anterior" onClick={()=>{const count=visiblePenyes.length;const current=((activePenyaCard-count*2)%count+count)%count;const target=count*2+(current-1+count)%count;setActivePenyaCard(target);centerPenyaCard(target,"smooth");}} className="absolute left-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">‹</button>}
+              {visiblePenyes.length>1&&!searchingPenyes&&<button type="button" aria-label="Peña siguiente" onClick={()=>{const count=visiblePenyes.length;const current=((activePenyaCard-count*2)%count+count)%count;const target=count*2+(current+1)%count;setActivePenyaCard(target);centerPenyaCard(target,"smooth");}} className="absolute right-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">›</button>}
               <div ref={penyaCarouselRef} onScroll={(event)=>handlePenyaCarouselScroll(event.currentTarget)} className={searchingPenyes?"relative flex flex-wrap justify-center gap-5 overflow-visible px-2 py-6":"penya-coverflow relative "+(penyaCarouselInitialized?"is-ready":"is-initializing")+" flex snap-x snap-mandatory items-center overflow-x-auto overscroll-x-contain px-[calc(50%-112px)] py-16 sm:px-[calc(50%-130px)] lg:px-[calc(50%-150px)]"}>
                 {loopedPenyes.map((p,index)=>{
                   const fallbackColors=["#5968D8","#E45D70","#13A6C3","#19A887","#D28B35","#8559C7","#287DAD","#C45D91"];
