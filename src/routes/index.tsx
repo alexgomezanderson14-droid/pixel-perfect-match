@@ -1111,10 +1111,10 @@ function Home() {
         {heroImage ? <img src={heroImage} alt="Portada de las fiestas de l'Alfàs del Pi" width={1920} height={1280} loading="eager" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-300" style={{transform:"scale("+(Number(siteContent["hero_image_scale"]||100)/100)+")"}} /> : <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-br from-[#173f52] via-[#236579] to-[#d4af37]" />}
         <div className="absolute inset-0 bg-gradient-to-t from-brown/90 via-brown/20 to-transparent" />
         <div className="relative mx-auto w-full max-w-[min(96vw,1600px)] px-4 pb-9 sm:px-5 sm:pb-16">
-          <div className="rise relative mb-0 aspect-[988/232] w-full max-w-[min(100%,880px)] min-w-0">
+          <div className="rise relative mb-4 aspect-[988/232] w-full max-w-[min(100%,880px)] min-w-0">
             <button type="button" onClick={() => setBrandInfoOpen(true)} aria-label="Qué significa PENYERA" className="absolute bottom-0 left-0 block w-[60%] max-w-full min-w-0 rounded-lg text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"><img src="/penyera-logo-oficial.svg" alt="PENYERA" width="988" height="232" fetchPriority="high" decoding="async" className="block h-auto w-full max-w-full object-contain object-left drop-shadow-[0_4px_22px_rgba(0,0,0,0.28)]" /></button>
           </div>
-          <div className="mb-3 h-[4px] w-full max-w-xl rounded-full bg-[#2587a8] shadow-[0_1px_5px_rgba(0,0,0,0.25)]" aria-hidden="true" />
+          <div className="mb-3 h-[7px] w-full max-w-36 rounded-full bg-[#2587a8] shadow-[0_1px_5px_rgba(0,0,0,0.25)]" aria-hidden="true" />
           <p className="rise mt-0 max-w-xl text-sm font-medium text-on-image/90 sm:text-lg">{siteContent["hero_subtitulo"] || edicion.subtitulo}</p>
           <div className="mt-6 mb-2">
             <p className="rise text-xs font-extrabold uppercase tracking-[.22em] text-white sm:text-sm">Festes 2027</p>
