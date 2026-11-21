@@ -23,14 +23,16 @@ jobs:
           ref: main
       - name: Recopilar noticias públicas
         run: node scripts/actualizar-noticias.mjs
+      - name: Detectar premios oficiales de peñas
+        run: node scripts/actualizar-premios.mjs
       - name: Publicar cambios
         run: |
-          if git diff --quiet -- public/noticias-automaticas.json; then
-            echo "No hay noticias nuevas ni cambios."
+          if git diff --quiet -- public/noticias-automaticas.json public/premios-automaticos.json; then
+            echo "No hay noticias ni premios nuevos."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/noticias-automaticas.json
-          git commit -m "Actualizar noticias festivas automáticamente"
+          git add public/noticias-automaticas.json public/premios-automaticos.json
+          git commit -m "Actualizar noticias y premios de peñas automáticamente"
           git push
