@@ -1052,3 +1052,27 @@ html, body, #root { min-width:0; max-width:100%; }
     text-align:center!important;
   }
 }
+
+
+/* Rendimiento móvil: reducir filtros, animaciones infinitas y repintados costosos. */
+@media(max-width:639px){
+  .penya-coverflow{scroll-behavior:smooth;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;touch-action:pan-x;contain:layout paint; -webkit-overflow-scrolling:touch}
+  .penya-coverflow-card{transition-duration:280ms!important;backface-visibility:hidden}
+  .penya-coverflow-card:not(.is-active){will-change:auto}
+  .penya-coverflow-card.is-active{will-change:transform,opacity}
+  .penya-award-insignia,.penya-award-insignia:before{animation:none!important}
+  .penya-award-art{filter:drop-shadow(0 0 3px var(--award-glow))!important}
+  .penya-award-insignia:before{filter:blur(9px)!important;opacity:.12!important}
+}
+/* Centrado por columna, sin translate horizontal heredado de reglas anteriores. */
+.penya-awards-grid .penya-award-current-item{display:flex!important;flex-direction:column!important;align-items:center!important;text-align:center!important}
+.penya-awards-grid .penya-award-current-item>.penya-award-insignia{position:relative!important;left:auto!important;margin-inline:auto!important;align-self:center!important;translate:none!important}
+.penya-awards-grid .penya-award-current-item>p{width:100%!important;align-self:stretch!important;text-align:center!important}
+.penya-awards-grid .penya-award-current-item.is-single-award{grid-column:1/-1!important;justify-self:center!important;transform:none!important}
+@media(max-width:639px){
+  .penya-awards-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;justify-items:stretch!important}
+  .penya-awards-grid .penya-award-current-item.is-current-award-center>.penya-award-insignia{transform:scale(1.08) translateY(-4px)!important}
+  .penya-awards-grid .penya-award-current-item.is-current-award-left>.penya-award-insignia,
+  .penya-awards-grid .penya-award-current-item.is-current-award-right>.penya-award-insignia{transform:scale(.82) translateY(7px)!important}
+  .penya-awards-grid .penya-award-current-item.is-single-award>.penya-award-insignia{transform:none!important}
+}
