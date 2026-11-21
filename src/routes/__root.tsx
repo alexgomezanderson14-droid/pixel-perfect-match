@@ -155,7 +155,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" },
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml", sizes: "any" },
       { rel: "shortcut icon", href: "/favicon.svg", type: "image/svg+xml" },
-      { rel: "apple-touch-icon", href: "/favicon.svg" },
       { rel: "manifest", href: "/site.webmanifest" },
     ],
   }),
