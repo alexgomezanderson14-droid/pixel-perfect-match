@@ -101,7 +101,7 @@ function makeAward(article, result, competition) {
   const yearMatch = [article.titulo, article.fecha, article.contenido].join(" ").match(/\b(20\d{2})\b/);
   const year = Number(yearMatch?.[1] || String(article.fecha || "").slice(0, 4));
   if (!Number.isInteger(year) || year < 2026 || year > 2100) return null;
-  const id = "auto-award-" + [normalize(result.name), year, normalize(competition), result.position].join("-").replace(/\\s+/g, "-");
+  const id = "auto-award-" + [normalize(result.name), year, normalize(competition), result.position].join("-").replaceAll(" ", "-");
   return {
     id,
     penya_id: "",
