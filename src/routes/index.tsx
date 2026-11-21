@@ -1593,7 +1593,7 @@ function Home() {
                   </section>
                 </>;
               })()}
-              <PenyaAwardsSection awards={selectedPenyaAwards} penyaName={selectedPenya.nombre}/>
+              <PenyaAwardsSection awards={selectedPenyaAwards} penyaName={selectedPenya.nombre} siteContent={siteContent}/>
               <div className="mt-4 grid grid-cols-1 items-start gap-3 sm:gap-4 lg:grid-cols-2">
               
               {selectedPenyaCustomBlocks.length>0 && <div id="ficha-personalizada" className="mt-3 space-y-3 scroll-mt-24">
