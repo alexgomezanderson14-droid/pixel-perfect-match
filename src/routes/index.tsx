@@ -394,7 +394,6 @@ function Home() {
   const penyaCardCentersRef = useRef<number[]>([]);
   const penyaCarouselScrollLeftRef = useRef<number | null>(null);
   const penyaScrollEndTimerRef = useRef<number | null>(null);
-  const penyaEntryInitializedRef = useRef(false);
   const [eventsSearch, setEventsSearch] = useState("");
   const [filterDay, setFilterDay] = useState<"upcoming"|"today"|"tomorrow"|"all">("upcoming");
   const [filterCategory, setFilterCategory] = useState<"all"|"programa"|"actuaciones"|"penyes">("all");
@@ -583,15 +582,12 @@ function Home() {
     }
   },[carouselPenyes.length,searchingPenyes,rebuildPenyaCardCenters,nearestPenyaCardIndex]);
   useEffect(()=>{
-    if(currentPage!=="penyes"){
-      penyaEntryInitializedRef.current=false;
+    if(currentPage!=="penyes"||!visiblePenyes.length){
       setPenyaCarouselInitialized(false);
       return;
     }
-    if(!visiblePenyes.length||penyaEntryInitializedRef.current)return;
+    // Recalcula el inicio al entrar y también al cambiar filtros/resultados.
     setPenyaCarouselInitialized(false);
-    // Inicia en la primera peña del listado central; no fuerza la selección
-    // automática de Mayorales ni de una ficha concreta.
     const initialIndex=searchingPenyes?0:(carouselPenyes.length>1?carouselPenyes.length:0);
     setActivePenyaCard(initialIndex);
     let secondFrame=0;
@@ -600,7 +596,6 @@ function Home() {
         rebuildPenyaCardCenters();
         centerPenyaCard(initialIndex,"auto");
         penyaCarouselScrollLeftRef.current=penyaCarouselRef.current?.scrollLeft??null;
-        penyaEntryInitializedRef.current=true;
         setPenyaCarouselInitialized(true);
       });
     });
