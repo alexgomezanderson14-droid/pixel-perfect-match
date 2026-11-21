@@ -505,9 +505,14 @@ function Home() {
   const mayoralesPrimaryColor = `color-mix(in srgb, ${mayoralesColor} 28%, #173f52)`;
   const visiblePenyes = useMemo(()=>[...penyes].filter(p=>(!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica,p.informacion].join(" ")).includes(normalizarBusqueda(penyaSearch)))&&(penyaMusicFilter==="Todas"||String(p.tipo_musica||"").trim()===penyaMusicFilter)&&(!penyaOnlyMine||misPenyes.includes(p.id))).sort((a,b)=>nombrePenyaParaOrden(a.nombre).localeCompare(nombrePenyaParaOrden(b.nombre),"es",{sensitivity:"base",numeric:true})||String(a.nombre??"").localeCompare(String(b.nombre??""),"es",{sensitivity:"base"})),[penyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,misPenyes]);
   const searchingPenyes = Boolean(penyaSearch.trim()) || penyaMusicFilter !== "Todas" || penyaOnlyMine;
-  // En la entrada al directorio, Mayorales ocupa la primera posición del carrusel; las demás siguen alfabéticamente.
-  // El carrusel mantiene el orden alfabético en todo momento, también al incorporar nuevas peñas.
-  const carouselPenyes = visiblePenyes;
+  // Mayorales debe abrir el carrusel como primera peña cuando se muestra el directorio sin filtros.
+  // Los filtros y búsquedas conservan su orden de resultados para no ocultar la coincidencia solicitada.
+  const carouselPenyes = useMemo(()=>{
+    if(searchingPenyes||!mayoralesPenyaId)return visiblePenyes;
+    const index=visiblePenyes.findIndex(p=>String(p.id)===mayoralesPenyaId);
+    if(index<=0)return visiblePenyes;
+    return [visiblePenyes[index]!,...visiblePenyes.slice(0,index),...visiblePenyes.slice(index+1)];
+  },[visiblePenyes,searchingPenyes,mayoralesPenyaId]);
   // Copias alrededor de la lista central para conservar el carrusel circular sin saltos visibles.
   const loopedPenyes = !searchingPenyes && carouselPenyes.length > 1 ? [...carouselPenyes,...carouselPenyes,...carouselPenyes] : [...carouselPenyes];
   // Cachea los centros de las tarjetas: durante el gesto de desplazamiento no
