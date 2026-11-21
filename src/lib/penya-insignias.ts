@@ -6,11 +6,11 @@ export const PENYA_INSIGNIA_KEY = "penyes_insignias_json";
 let cached: Promise<PenyaInsigniaMap> | null = null;
 export function insigniaId(kind: PenyaInsigniaKind, position: number) { return kind + "_" + position; }
 export function loadPenyaInsignias(): Promise<PenyaInsigniaMap> {
- if (!cached) cached = supabase.from("site_content").select("valor").eq("clave", PENYA_INSIGNIA_KEY).maybeSingle().then(({data,error}) => {
+ if (!cached) cached = Promise.resolve(supabase.from("site_content").select("valor").eq("clave", PENYA_INSIGNIA_KEY).maybeSingle().then(({data,error}) => {
   if (error) throw error;
   try { const parsed=JSON.parse(data?.valor||"{}"); return parsed&&typeof parsed==="object"&&!Array.isArray(parsed)?parsed as PenyaInsigniaMap:{}; } catch { return {}; }
- }).catch(()=>({}));
- return cached;
+ })).catch((): PenyaInsigniaMap => ({}));
+ return cached!;
 }
 export async function savePenyaInsignias(value: PenyaInsigniaMap) {
  const {error}=await supabase.from("site_content").upsert({clave:PENYA_INSIGNIA_KEY,valor:JSON.stringify(value)});
