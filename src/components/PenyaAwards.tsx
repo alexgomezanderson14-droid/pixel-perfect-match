@@ -4,23 +4,7 @@ import {loadPenyaInsignias, type PenyaInsigniaMap} from "@/lib/penya-insignias";
 export type PenyaAward={id:string;penya_id:string;penya_name?:string;year:number;competition:string;position:number;created_at?:string};
 const KEY="penyes_premios_json";
 const OMITTED_KEY="penyes_premios_omitidos_json";
-const seededAwardResults=[
- ["Els 4 Gats","Paellas Mig Any",1],
- ["Destronats-Popa","Paellas Mig Any",2],
- ["La Clau","Paellas Mig Any",3],
- ["Reflotats","Paellas l'Albir",1],
- ["Enredats","Paellas l'Albir",2],
- ["Descontrol","Paellas l'Albir",3],
- ["Guirigall","Desfile del Humor",1],
- ["La Clau","Desfile del Humor",2],
- ["Enredats","Desfile del Humor",3],
- ["Castanyeta-Mal de Cap","Desfile del Humor",4],
- ["Això ho pague jo","Desfile del Humor",5],
- ["Inducció","Desfile del Humor",6],
- ["Mussol Matiner","Desfile del Humor",7],
- ["Pensat i Fet","Desfile del Humor",8],
- ["Reflotats","Desfile del Humor",9],
-] as const;
+const seededAwardResults=[] as const;
 export const normalizePenyaAwardName=(value:string)=>String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es").replace(/^penya\s+/,"").replace(/[^a-z0-9]/g,"");
 const penyaAwardAliases:Record<string,string>={destronatspopa:"destronats",elsdestronats:"destronats",destronats:"destronats",mussolmatiner:"mussolmatiner",elmussolmatiner:"mussolmatiner"};
 const canonicalPenyaAwardName=(value:string)=>penyaAwardAliases[normalizePenyaAwardName(value)]||normalizePenyaAwardName(value);
