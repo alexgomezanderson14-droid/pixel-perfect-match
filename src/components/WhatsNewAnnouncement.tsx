@@ -37,7 +37,11 @@ export default function WhatsNewAnnouncement({ userKey }: Props) {
     if (!open) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") close(); };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      try { window.localStorage.setItem(storageKey(userKey), "1"); } catch { /* Cierre disponible sin almacenamiento. */ }
+      setOpen(false);
+    };
     window.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.style.overflow = previous;
