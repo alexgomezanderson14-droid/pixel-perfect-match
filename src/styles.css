@@ -916,3 +916,16 @@ html, body, #root { min-width:0; max-width:100%; }
     transform:translateX(-13px) scale(.76) translateY(10px)!important;
   }
 }
+
+
+/* Insignias de palmarés: mayor tamaño en escritorio, manteniendo intacta la escala móvil. */
+@media (min-width:640px){
+  .penya-awards-panel .penya-award-insignia{
+    width:clamp(200px,20vw,280px)!important;
+    height:clamp(200px,20vw,280px)!important;
+  }
+  .penya-awards-grid{
+    column-gap:0!important;
+    row-gap:2.4rem;
+  }
+}
