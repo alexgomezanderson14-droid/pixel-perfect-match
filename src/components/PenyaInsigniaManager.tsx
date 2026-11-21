@@ -31,7 +31,7 @@ export default function PenyaInsigniaManager(){
  };
  const remove=async(kind:PenyaInsigniaKind,position:number)=>{
   const id=insigniaId(kind,position),item=items[id];if(!item)return;if(!window.confirm("¿Quitar esta insignia de la web?"))return;
-  setBusy(true);try{const next={...items};delete next[id];await savePenyaInsignias(next);if(item.path)await supabase.storage.from("penyes").remove([item.path]);setItems(next);setMessage("Insignia retirada.");}
+  setBusy(true);try{const next={...items};delete next[id];await savePenyaInsignias(next);setItems(next);setMessage("Insignia retirada.");}
   catch(e){setMessage("No se pudo retirar: "+(e instanceof Error?e.message:String(e)));}finally{setBusy(false);}
  };
  return <section className="mt-6 space-y-4 rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
