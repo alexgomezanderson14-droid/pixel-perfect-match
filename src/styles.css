@@ -946,47 +946,79 @@ html, body, #root { min-width:0; max-width:100%; }
   }
 }
 
-/* Palmarés móvil: insignias grandes y solapadas, sin desplazar ni cubrir los textos. */
+/* Palmarés: eje común entre insignia y texto; una sola ficha siempre centrada. */
+.penya-awards-grid .penya-award-current-item{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-end;
+  min-width:0;
+  text-align:center;
+}
+.penya-awards-grid .penya-award-current-item>.penya-award-insignia{
+  margin-left:auto!important;
+  margin-right:auto!important;
+  flex:none;
+}
+.penya-awards-grid .penya-award-current-item>p{
+  width:100%;
+  align-self:stretch;
+  text-align:center!important;
+}
+.penya-awards-grid .penya-award-current-item.is-single-award{
+  grid-column:1 / -1!important;
+  justify-self:center;
+  width:100%;
+  transform:none!important;
+  filter:none!important;
+  z-index:3!important;
+}
+.penya-awards-grid .penya-award-current-item.is-single-award>.penya-award-insignia{
+  transform:none!important;
+}
 @media(max-width:639px){
   .penya-awards-panel .penya-award-insignia{
-    width:clamp(138px,44vw,176px)!important;
-    height:clamp(138px,44vw,176px)!important;
+    width:clamp(132px,42vw,164px)!important;
+    height:clamp(132px,42vw,164px)!important;
     max-width:none!important;
     max-height:none!important;
   }
   .penya-awards-grid{
-    grid-template-columns:repeat(3,minmax(0,1fr));
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
     column-gap:0!important;
+    row-gap:1.5rem;
     overflow:visible!important;
+    justify-items:stretch!important;
+  }
+  .penya-award-current-item{
+    position:relative;
+    min-width:0;
+    width:100%;
+    overflow:visible!important;
+    transform:none!important;
   }
   .penya-award-current-item.is-current-award-center{
     z-index:5!important;
-    transform:none!important;
     filter:none!important;
   }
-  .penya-award-current-item.is-current-award-left{
-    z-index:2!important;
-    transform:none!important;
-    filter:saturate(.82)!important;
-  }
+  .penya-award-current-item.is-current-award-left,
   .penya-award-current-item.is-current-award-right{
     z-index:2!important;
-    transform:none!important;
     filter:saturate(.82)!important;
   }
+  /* Solo se escalan las medallas: nunca se desplazan respecto a sus rótulos. */
   .penya-award-current-item.is-current-award-center>.penya-award-insignia{
     position:relative;
     z-index:5;
-    transform:scale(1.12) translateY(-7px);
+    transform:scale(1.12) translateY(-5px)!important;
   }
-  .penya-award-current-item.is-current-award-left>.penya-award-insignia{
-    position:relative;
-    z-index:1;
-    transform:translateX(17px) scale(.9) translateY(8px);
-  }
+  .penya-award-current-item.is-current-award-left>.penya-award-insignia,
   .penya-award-current-item.is-current-award-right>.penya-award-insignia{
     position:relative;
     z-index:1;
-    transform:translateX(-17px) scale(.9) translateY(8px);
+    transform:scale(.9) translateY(7px)!important;
+  }
+  .penya-award-current-item.is-single-award>.penya-award-insignia{
+    transform:none!important;
   }
 }
