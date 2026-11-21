@@ -40,7 +40,7 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "PENYERA | Peñas, fiestas y programa de l’Alfàs del Pi" },
       { name: "description", content: "Toda la actualidad de las peñas y las fiestas de l’Alfàs del Pi (Alfaz del Pi): programa festero, Mayorales, eventos, actividades, noticias y comunidad." },
-      { name: "keywords", content: "PENYERA, peñas, fiestas l’Alfàs del Pi, programa fiestas, eventos, noticias, comunidad festera" },
+      { name: "keywords", content: "PENYERA, peñas Alfaz del Pi, peñas l’Alfàs del Pi, penyes, fiestas Alfaz, fiestas l’Alfàs, programa de fiestas, Mayorales, eventos, actividades y noticias festeras" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "PENYERA: peñas y fiestas de l’Alfàs del Pi" },
       { property: "og:description", content: "El espacio de las peñas y las personas que dan vida a las fiestas de l’Alfàs del Pi." },
