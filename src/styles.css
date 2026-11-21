@@ -739,7 +739,7 @@ html, body, #root { min-width:0; max-width:100%; }
  position:absolute;
  inset:0;
  background-repeat:no-repeat;
- background-size:500% 400%;
+ background-size:450% 360%;
 }
 .penya-award-insignia:before{
  content:"";
@@ -766,7 +766,7 @@ html, body, #root { min-width:0; max-width:100%; }
 .penya-award-art{
  position:absolute;
  inset:6%;
- background-size:500% 400%;
+ background-size:450% 360%;
  background-repeat:no-repeat;
  background-position:0 0;
  background-origin:content-box;
