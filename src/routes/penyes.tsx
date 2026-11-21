@@ -4,16 +4,20 @@ import SeoLandingPage from "@/components/SeoLandingPage";
 export const Route = createFileRoute("/penyes")({
   head: () => ({
     meta: [
-      { title: "Peñas de l’Alfàs del Pi: conoce las peñas festeras | PENYERA" },
-      { name: "description", content: "Conoce las peñas de las fiestas de l’Alfàs del Pi, sus mayorales, su historia, actividades y perfiles. CuBaTa será la mayoralía de 2027." },
+      { title: "Peñas de Alfaz del Pi y l’Alfàs del Pi | PENYERA" },
+      { name: "description", content: "Descubre las peñas de Alfaz del Pi (l’Alfàs del Pi): perfiles, Mayorales, historia, fotos, actividades y noticias de la comunidad festera." },
       { name: "keywords", content: "peñas Alfaz del Pi, peñas l'Alfàs del Pi, penyes Alfàs, mayorales 2027, CuBaTa, fiestas Alfaz, PENYERA" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
-      { property: "og:title", content: "Peñas de l’Alfàs del Pi | PENYERA" },
+      { property: "og:title", content: "Peñas de Alfaz del Pi y l’Alfàs del Pi" },
       { property: "og:description", content: "La comunidad festera de l’Alfàs del Pi: peñas, mayorales, actividades y actualidad." },
-      { property: "og:url", content: "https://festalfas.vercel.app/penyes" },
+      { property: "og:url", content: "https://pixel-perfect-match-ten-tau.vercel.app/penyes" },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "PENYERA" },
+      { property: "og:locale", content: "es_ES" },
+      { name: "twitter:title", content: "Peñas de Alfaz del Pi y l’Alfàs del Pi | PENYERA" },
+      { name: "twitter:description", content: "Descubre las peñas de Alfaz del Pi (l’Alfàs del Pi): perfiles, Mayorales, historia, fotos, actividades y noticias de la comunidad festera." },
     ],
-    links: [{ rel: "canonical", href: "https://festalfas.vercel.app/penyes" }],
+    links: [{ rel: "canonical", href: "https://pixel-perfect-match-ten-tau.vercel.app/penyes" }],
   }),
   component: PenyesPage,
 });
