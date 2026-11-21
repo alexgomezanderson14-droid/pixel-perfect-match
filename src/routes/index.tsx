@@ -38,18 +38,22 @@ const AddCommunityEventForm = lazy(() => import("@/components/AddCommunityEventF
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PENYERA" },
-      { name: "description", content: "PENYERA: el espacio de las peñas y las personas que dan vida a las fiestas de l’Alfàs del Pi. Programa, eventos, noticias y comunidad." },
-      { name: "keywords", content: "PENYERA, peñas, fiestas l’Alfàs del Pi, programa fiestas, eventos, noticias, comunidad festera" },
+      { title: "PENYERA | Peñas, fiestas y programa de l’Alfàs del Pi" },
+      { name: "description", content: "Toda la actualidad de las peñas y las fiestas de l’Alfàs del Pi (Alfaz del Pi): programa festero, Mayorales, eventos, actividades, noticias y comunidad." },
+      { name: "keywords", content: "PENYERA, peñas Alfaz del Pi, peñas l’Alfàs del Pi, penyes, fiestas Alfaz, fiestas l’Alfàs, programa de fiestas, Mayorales, eventos, actividades y noticias festeras" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
-      { property: "og:title", content: "PENYERA" },
+      { property: "og:title", content: "PENYERA: peñas y fiestas de l’Alfàs del Pi" },
       { property: "og:description", content: "El espacio de las peñas y las personas que dan vida a las fiestas de l’Alfàs del Pi." },
-      { property: "og:url", content: "https://festalfas.vercel.app/" },
+      { property: "og:url", content: "https://pixel-perfect-match-ten-tau.vercel.app/" },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "PENYERA" },
+      { property: "og:locale", content: "es_ES" },
+      { name: "twitter:title", content: "PENYERA | Peñas, fiestas y programa de l’Alfàs del Pi" },
+      { name: "twitter:description", content: "Toda la actualidad de las peñas y las fiestas de l’Alfàs del Pi (Alfaz del Pi): programa festero, Mayorales, eventos, actividades, noticias y comunidad." },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
-      { rel: "canonical", href: "https://festalfas.vercel.app/" },
+      { rel: "canonical", href: "https://pixel-perfect-match-ten-tau.vercel.app/" },
     ],
   }),
   component: Home,

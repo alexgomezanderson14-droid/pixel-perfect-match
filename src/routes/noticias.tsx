@@ -6,16 +6,20 @@ import { noticiaCestaNavidad2027 } from "@/content/noticia-cesta-navidad-2027";
 export const Route = createFileRoute("/noticias")({
   head: () => ({
     meta: [
-      { title: "Noticias de las fiestas de l’Alfàs del Pi | PENYERA" },
-      { name: "description", content: "Noticias y actualidad festera de l’Alfàs del Pi. Novedades de las peñas, Mayorales 2027 y actividades del pueblo." },
+      { title: "Noticias de peñas y fiestas de Alfaz del Pi | PENYERA" },
+      { name: "description", content: "Últimas noticias de las peñas y las fiestas de l’Alfàs del Pi: Mayorales, actos, actividades, anuncios y actualidad festera." },
       { name: "keywords", content: "noticias Alfaz del Pi, actualidad fiestas l'Alfàs, noticias peñas Alfaz, CuBaTa Mayorales 2027, PENYERA" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
-      { property: "og:title", content: "Noticias de las fiestas de l’Alfàs del Pi | PENYERA" },
+      { property: "og:title", content: "Noticias de peñas y fiestas de l’Alfàs del Pi" },
       { property: "og:description", content: "Actualidad festera, noticias de las peñas y novedades de Mayorales 2027." },
-      { property: "og:url", content: "https://festalfas.vercel.app/noticias" },
+      { property: "og:url", content: "https://pixel-perfect-match-ten-tau.vercel.app/noticias" },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "PENYERA" },
+      { property: "og:locale", content: "es_ES" },
+      { name: "twitter:title", content: "Noticias de peñas y fiestas de Alfaz del Pi | PENYERA" },
+      { name: "twitter:description", content: "Últimas noticias de las peñas y las fiestas de l’Alfàs del Pi: Mayorales, actos, actividades, anuncios y actualidad festera." },
     ],
-    links: [{ rel: "canonical", href: "https://festalfas.vercel.app/noticias" }],
+    links: [{ rel: "canonical", href: "https://pixel-perfect-match-ten-tau.vercel.app/noticias" }],
   }),
   component: NoticiasPage,
 });

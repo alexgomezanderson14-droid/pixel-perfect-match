@@ -1,4 +1,18 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "tanstack-start"
+  "framework": "tanstack-start",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "key": "host",
+          "value": "festalfas.vercel.app"
+        }
+      ],
+      "destination": "https://pixel-perfect-match-ten-tau.vercel.app/:path*",
+      "permanent": true
+    }
+  ]
 }

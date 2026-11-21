@@ -1,0 +1,16 @@
+{
+  "name": "PENYERA · Peñas y fiestas de l’Alfàs del Pi",
+  "short_name": "PENYERA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2587a8",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
