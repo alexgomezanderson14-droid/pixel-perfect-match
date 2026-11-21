@@ -1112,7 +1112,7 @@ function Home() {
         <div className="absolute inset-0 bg-gradient-to-t from-brown/90 via-brown/20 to-transparent" />
         <div className="relative mx-auto w-full max-w-[min(96vw,1600px)] px-4 pb-9 sm:px-5 sm:pb-16">
           <div className="max-w-full">
-            <button type="button" onClick={() => setBrandInfoOpen(true)} aria-label="Qué significa PENYERA" className="rise block max-w-[min(88vw,760px)] rounded-lg text-left transition-transform duration-200 hover:scale-[1.015] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-white"><img src="/penyera-logo.svg" alt="PENYERA" width="985" height="205" fetchPriority="high" className="h-auto w-full max-w-[min(88vw,760px)] object-contain drop-shadow-[0_4px_22px_rgba(0,0,0,0.28)]" /></button>
+            <button type="button" onClick={() => setBrandInfoOpen(true)} aria-label="Qué significa PENYERA" className="rise block w-[94vw] max-w-[1100px] rounded-lg text-left transition-transform duration-200 hover:scale-[1.01] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-white"><img src="/penyera-logo.svg" alt="PENYERA" width="962" height="182" fetchPriority="high" className="h-auto w-full object-contain drop-shadow-[0_4px_22px_rgba(0,0,0,0.28)]" /></button>
           </div>
           <p className="rise mt-3 max-w-xl text-sm font-medium text-on-image/90 sm:mt-4 sm:text-lg">{siteContent["hero_subtitulo"] || edicion.subtitulo}</p>
           <div className="mt-6 mb-2">
