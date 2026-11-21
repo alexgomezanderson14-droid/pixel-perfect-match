@@ -4,11 +4,11 @@ import SeoLandingPage from "@/components/SeoLandingPage";
 export const Route = createFileRoute("/programa-fiestas")({
   head: () => ({
     meta: [
-      { title: "Programa de fiestas de l’Alfàs del Pi 2027: actos y horarios | festalfàs" },
+      { title: "Programa de fiestas de l’Alfàs del Pi 2027: actos y horarios | PENYERA" },
       { name: "description", content: "Información del programa de fiestas de l’Alfàs del Pi 2027. Consulta aquí actos, horarios, actuaciones y ubicaciones cuando la programación oficial esté confirmada." },
-      { name: "keywords", content: "programa fiestas Alfaz del Pi 2027, programa festes l'Alfàs, horarios fiestas Alfaz, actos fiestas Alfaz, festalfàs" },
+      { name: "keywords", content: "programa fiestas Alfaz del Pi 2027, programa festes l'Alfàs, horarios fiestas Alfaz, actos fiestas Alfaz, PENYERA" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
-      { property: "og:title", content: "Programa de fiestas de l’Alfàs del Pi 2027 | festalfàs" },
+      { property: "og:title", content: "Programa de fiestas de l’Alfàs del Pi 2027 | PENYERA" },
       { property: "og:description", content: "Actos, horarios, actuaciones y ubicaciones de las fiestas de l’Alfàs del Pi." },
       { property: "og:url", content: "https://festalfas.vercel.app/programa-fiestas" },
       { property: "og:type", content: "website" },
@@ -25,7 +25,7 @@ function ProgramaPage() {
     description="Esta página reunirá la programación de las próximas fiestas de l’Alfàs del Pi: actos, horarios, actuaciones, actividades de las peñas y lugares de celebración, con la información organizada para consultarla fácilmente desde el móvil."
     intro="Toda la programación festiva en un mismo sitio"
     sections={[
-      { title: "Fechas y edición 2027", text: "festalfàs prepara este espacio para la edición de 2027. Las fechas concretas y el calendario de actos se incorporarán cuando estén confirmados por las fuentes oficiales; no publicamos horarios provisionales como si fueran definitivos." },
+      { title: "Fechas y edición 2027", text: "PENYERA prepara este espacio para la edición de 2027. Las fechas concretas y el calendario de actos se incorporarán cuando estén confirmados por las fuentes oficiales; no publicamos horarios provisionales como si fueran definitivos." },
       { title: "Actos, horarios y ubicaciones", text: "Cuando se publique el programa, cada actividad podrá consultarse con su día, hora, descripción y lugar de celebración. Así será más sencillo localizar los actos y organizar cada jornada." },
       { title: "Actuaciones y actividades de las peñas", text: "La programación también dará visibilidad a las actuaciones musicales y a las actividades organizadas por las peñas, diferenciando la información confirmada de los anuncios pendientes." },
       { title: "Avisos y cambios", text: "Si se producen cambios de horario, ubicación o celebración, esta sección servirá para consultar la información actualizada. Antes de acudir a un acto, revisa siempre el aviso más reciente." },
