@@ -1,16 +1,5 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+Disallow: /admin
 
-Sitemap: https://festalfas.vercel.app/sitemap.xml
+Sitemap: https://pixel-perfect-match-ten-tau.vercel.app/sitemap.xml
