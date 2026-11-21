@@ -920,7 +920,7 @@ html, body, #root { min-width:0; max-width:100%; }
 
 /* Insignias de palmarés: mayor tamaño en escritorio, manteniendo intacta la escala móvil. */
 @media (min-width:640px){
-  .penya-award-insignia:not([data-compact="true"]){
+  .penya-awards-panel .penya-award-insignia{
     width:clamp(200px,20vw,280px)!important;
     height:clamp(200px,20vw,280px)!important;
   }
