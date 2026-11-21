@@ -1,1 +1,38 @@
-[]
+[
+  {
+    "id": "auto-award-enredats-2026-pena-mas-solidaria-donacion-de-sangre-1",
+    "penya_id": "",
+    "penya_name": "Enredats",
+    "year": 2026,
+    "competition": "Peña más solidaria · Donación de sangre",
+    "position": 1,
+    "automatico": true,
+    "source_name": "Ayuntamiento de l’Alfàs del Pi",
+    "source_url": "https://www.lalfas.es/concejalias/sanidad/lalfas-reune-a-84-personas-en-su-campana-de-donacion-de-sangre-previa-a-las-fiestas-del-cristo/",
+    "source_date": "2026-10-30"
+  },
+  {
+    "id": "auto-award-enfonsats-2026-pena-mas-solidaria-donacion-de-sangre-1",
+    "penya_id": "",
+    "penya_name": "Enfonsats",
+    "year": 2026,
+    "competition": "Peña más solidaria · Donación de sangre",
+    "position": 1,
+    "automatico": true,
+    "source_name": "Ayuntamiento de l’Alfàs del Pi",
+    "source_url": "https://www.lalfas.es/concejalias/sanidad/lalfas-reune-a-84-personas-en-su-campana-de-donacion-de-sangre-previa-a-las-fiestas-del-cristo/",
+    "source_date": "2026-10-30"
+  },
+  {
+    "id": "auto-award-va-de-bo-2026-pena-mas-solidaria-donacion-de-sangre-1",
+    "penya_id": "",
+    "penya_name": "Va de Bo",
+    "year": 2026,
+    "competition": "Peña más solidaria · Donación de sangre",
+    "position": 1,
+    "automatico": true,
+    "source_name": "Ayuntamiento de l’Alfàs del Pi",
+    "source_url": "https://www.lalfas.es/concejalias/sanidad/lalfas-reune-a-84-personas-en-su-campana-de-donacion-de-sangre-previa-a-las-fiestas-del-cristo/",
+    "source_date": "2026-10-30"
+  }
+]
