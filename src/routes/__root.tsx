@@ -153,7 +153,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" },
-      { rel: "icon", href: "/penyera-isotipo.svg", type: "image/svg+xml" },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml", sizes: "any" },
+      { rel: "shortcut icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "apple-touch-icon", href: "/favicon.svg" },
+      { rel: "manifest", href: "/site.webmanifest" },
     ],
   }),
   shellComponent: RootShell,
@@ -167,6 +170,8 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="es">
       <head>
         <HeadContent />
+          <meta name="theme-color" content="#2587a8" />
+          <script type="application/ld+json" dangerouslySetInnerHTML={{__html: JSON.stringify({ "@context":"https://schema.org", "@graph":[ { "@type":"WebSite", "@id": "https://pixel-perfect-match-ten-tau.vercel.app/#website", "url":"https://pixel-perfect-match-ten-tau.vercel.app/", "name":"PENYERA", "alternateName":"PENYERA · Peñas y fiestas de l’Alfàs del Pi", "inLanguage":"es-ES" }, { "@type":"Organization", "@id":"https://pixel-perfect-match-ten-tau.vercel.app/#organization", "name":"PENYERA", "url":"https://pixel-perfect-match-ten-tau.vercel.app/", "logo": { "@type":"ImageObject", "url":"https://pixel-perfect-match-ten-tau.vercel.app/favicon.svg", "width":512, "height":512 } } ] })}} />
       </head>
       <body>
         {children}
