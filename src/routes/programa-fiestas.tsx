@@ -4,16 +4,20 @@ import SeoLandingPage from "@/components/SeoLandingPage";
 export const Route = createFileRoute("/programa-fiestas")({
   head: () => ({
     meta: [
-      { title: "Programa de fiestas de l’Alfàs del Pi 2027: actos y horarios | PENYERA" },
-      { name: "description", content: "Información del programa de fiestas de l’Alfàs del Pi 2027. Consulta aquí actos, horarios, actuaciones y ubicaciones cuando la programación oficial esté confirmada." },
+      { title: "Programa de fiestas de Alfaz del Pi 2027 | PENYERA" },
+      { name: "description", content: "Consulta el programa de fiestas de l’Alfàs del Pi (Alfaz del Pi) 2027: actos, horarios, actuaciones, actividades de peñas y ubicaciones cuando se confirmen." },
       { name: "keywords", content: "programa fiestas Alfaz del Pi 2027, programa festes l'Alfàs, horarios fiestas Alfaz, actos fiestas Alfaz, PENYERA" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
-      { property: "og:title", content: "Programa de fiestas de l’Alfàs del Pi 2027 | PENYERA" },
+      { property: "og:title", content: "Programa de fiestas de l’Alfàs del Pi 2027" },
       { property: "og:description", content: "Actos, horarios, actuaciones y ubicaciones de las fiestas de l’Alfàs del Pi." },
-      { property: "og:url", content: "https://festalfas.vercel.app/programa-fiestas" },
+      { property: "og:url", content: "https://pixel-perfect-match-ten-tau.vercel.app/programa-fiestas" },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "PENYERA" },
+      { property: "og:locale", content: "es_ES" },
+      { name: "twitter:title", content: "Programa de fiestas de Alfaz del Pi 2027 | PENYERA" },
+      { name: "twitter:description", content: "Consulta el programa de fiestas de l’Alfàs del Pi (Alfaz del Pi) 2027: actos, horarios, actuaciones, actividades de peñas y ubicaciones cuando se confirmen." },
     ],
-    links: [{ rel: "canonical", href: "https://festalfas.vercel.app/programa-fiestas" }],
+    links: [{ rel: "canonical", href: "https://pixel-perfect-match-ten-tau.vercel.app/programa-fiestas" }],
   }),
   component: ProgramaPage,
 });
