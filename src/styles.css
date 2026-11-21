@@ -1054,6 +1054,17 @@ html, body, #root { min-width:0; max-width:100%; }
 }
 
 
+/* Móvil: las tarjetas fuera de pantalla conservan su geometría, pero el navegador puede omitir su renderizado costoso. */
+@media(max-width:639px){
+  .penya-coverflow-card{
+    content-visibility:auto;
+    contain-intrinsic-size:320px 224px;
+    contain:layout paint style;
+  }
+  .penya-coverflow-card img{
+    content-visibility:auto;
+  }
+}
 /* Rendimiento móvil: reducir filtros, animaciones infinitas y repintados costosos. */
 @media(max-width:639px){
   .penya-coverflow{scroll-behavior:smooth;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;touch-action:pan-x;contain:layout paint; -webkit-overflow-scrolling:touch}
