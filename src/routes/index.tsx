@@ -515,8 +515,8 @@ function Home() {
     if(index<=0)return visiblePenyes;
     return [visiblePenyes[index]!,...visiblePenyes.slice(0,index),...visiblePenyes.slice(index+1)];
   },[visiblePenyes,searchingPenyes,mayoralesPenyaId]);
-  // Cinco copias dan recorrido amplio a ambos lados; la copia central sirve como zona segura para el bucle.
-  const loopedPenyes = !searchingPenyes && carouselPenyes.length > 1 ? [...carouselPenyes,...carouselPenyes,...carouselPenyes,...carouselPenyes,...carouselPenyes] : [...carouselPenyes];
+  // Tres copias mantienen un ciclo continuo con una vuelta de margen a cada lado y reducen el DOM y la memoria, especialmente en móviles.
+  const loopedPenyes = !searchingPenyes && carouselPenyes.length > 1 ? [...carouselPenyes,...carouselPenyes,...carouselPenyes] : [...carouselPenyes];
   // Cachea los centros de las tarjetas: durante el gesto de desplazamiento no
   // se fuerzan lecturas de layout de todas las tarjetas en cada frame.
   const rebuildPenyaCardCenters=useCallback(()=>{
@@ -560,12 +560,12 @@ function Home() {
       if(cycleWidth>0){
         let nearest=nearestPenyaCardIndex(el);
         let cycleShift=0;
-        while(nearest<count*1.5){
+        while(nearest<count*0.5){
           el.scrollLeft+=cycleWidth;
           nearest+=count;
           cycleShift+=count;
         }
-        while(nearest>=count*3.5){
+        while(nearest>=count*2.5){
           el.scrollLeft-=cycleWidth;
           nearest-=count;
           cycleShift-=count;
@@ -613,7 +613,7 @@ function Home() {
           setActivePenyaCard(nearestPenyaCardIndex(carousel));
         }else{
           // Entrada inicial: Mayorales queda centrada en la copia central.
-          const initialIndex=searchingPenyes?0:(carouselPenyes.length>1?carouselPenyes.length*2:0);
+          const initialIndex=searchingPenyes?0:(carouselPenyes.length>1?carouselPenyes.length:0);
           setActivePenyaCard(initialIndex);
           centerPenyaCard(initialIndex,"auto");
         }
