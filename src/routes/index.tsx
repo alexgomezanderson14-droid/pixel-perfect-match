@@ -1469,7 +1469,7 @@ function Home() {
         </>}
       </main>}
 
-      {currentPage === "home" && <WhatsNewAnnouncement userKey={accountUser?.email} />}
+      {currentPage === "home" && <WhatsNewAnnouncement userKey={accountUser?.email} config={content} />}
       {mapFullscreen && typeof document !== "undefined" && createPortal(
         <div role="dialog" aria-modal="true" aria-label="Mapa a pantalla completa" className="fixed inset-0 z-[99999] h-[100dvh] w-screen overflow-hidden bg-[#f3eee6]">
           <div className="absolute inset-0">
