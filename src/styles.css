@@ -803,3 +803,44 @@ html, body, #root { min-width:0; max-width:100%; }
 .penya-award-art{filter:drop-shadow(0 0 2px var(--award-glow)) drop-shadow(0 0 5px var(--award-glow)) drop-shadow(0 0 10px color-mix(in srgb,var(--award-glow) 78%,transparent))!important;}
 .penya-award-insignia:before{inset:5%!important;border-radius:inherit!important;background:var(--award-glow)!important;filter:blur(19px)!important;opacity:.22!important;z-index:-1;}
 @media(max-width:639px){.penya-award-art{filter:drop-shadow(0 0 2px var(--award-glow)) drop-shadow(0 0 5px var(--award-glow)) drop-shadow(0 0 9px color-mix(in srgb,var(--award-glow) 78%,transparent))!important;}.penya-award-insignia:before{filter:blur(16px)!important;opacity:.19!important;}}
+
+
+/* Palmarés anual: todas las insignias del año, con la última registrada en el centro y en primer plano. */
+.penya-awards-grid{
+ display:grid!important;
+ grid-template-columns:repeat(3,minmax(0,1fr));
+ grid-auto-flow:row;
+ align-items:end;
+ justify-items:center;
+ column-gap:.5rem;
+ row-gap:2rem;
+ width:100%;
+}
+.penya-award-current-item{min-width:0;width:100%;max-width:100%;text-align:center;z-index:1}
+.penya-award-current-item.is-current-award-center{
+ grid-column:2;
+ grid-row:1;
+ z-index:10;
+ transform:scale(1.12) translateY(-5px);
+}
+.penya-award-current-item.is-current-award-left{
+ grid-column:1;
+ grid-row:1;
+ transform:scale(.88) translateY(9px);
+ filter:saturate(.82);
+}
+.penya-award-current-item.is-current-award-right{
+ grid-column:3;
+ grid-row:1;
+ transform:scale(.88) translateY(9px);
+ filter:saturate(.82);
+}
+@media(max-width:639px){
+ .penya-awards-grid{column-gap:.25rem;row-gap:1.75rem}
+ .penya-award-current-item.is-current-award-center{transform:scale(1.08) translateY(-4px)}
+ .penya-award-current-item.is-current-award-left,
+ .penya-award-current-item.is-current-award-right{transform:scale(.9) translateY(8px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .penya-award-current-item{transition:none}
+}
