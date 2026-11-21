@@ -24,6 +24,12 @@ export default function PenyaInsigniaManager(){
   finally{setBusyId(null);}
  };
 
+ const updateHalo=async(kind:PenyaInsigniaKind,position:number,halo:string)=>{
+  const id=insigniaId(kind,position);setBusyId(id);setMessage("");
+  try{const next={...items,[id]:{...(items[id]||{}),halo}};await savePenyaInsignias(next);setItems(next);setMessage("Halo del "+position+"º puesto actualizado.");}
+  catch(e){setMessage("No se pudo guardar el halo: "+(e instanceof Error?e.message:String(e)));}
+  finally{setBusyId(null);}
+ };
  const remove=async(kind:PenyaInsigniaKind,position:number)=>{
   const id=insigniaId(kind,position),item=items[id];if(!item)return;
   if(!window.confirm("¿Quitar esta insignia de la web?"))return;
@@ -39,13 +45,14 @@ export default function PenyaInsigniaManager(){
    const id=insigniaId(group.kind,position),item=items[id],busy=busyId===id,inputId="penya-insignia-"+group.kind+"-"+position;
    return <article key={position} className="flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-border bg-background/70 p-2">
     <label htmlFor={inputId} aria-label={(item?"Sustituir":"Añadir")+" insignia "+position+" de "+group.title} className={"group relative grid h-24 w-full cursor-pointer place-items-center rounded-xl transition-colors hover:bg-muted/60 "+(busy?"pointer-events-none opacity-60":"")}>
-     <span className="grid h-20 w-20 place-items-center overflow-hidden rounded-full bg-muted/30">
+     <span className="grid h-20 w-20 place-items-center overflow-hidden rounded-full bg-muted/30" style={{boxShadow:"0 0 22px "+(item?.halo||"#38bdf8")+"88"}}>
       {item?<img src={item.url} alt={"Insignia "+position} className="h-full w-full object-contain"/>:<span className="px-1 text-center text-xs text-muted-foreground">＋ Añadir</span>}
      </span>
      <span className="absolute inset-x-1 bottom-0 rounded-lg bg-background/90 px-1 py-1 text-center text-[10px] font-bold text-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">{busy?"Guardando…":item?"Pulsar para sustituir":"Pulsar para añadir"}</span>
     </label>
     <input id={inputId} className="sr-only" type="file" accept="image/png,image/jpeg,image/webp" disabled={busyId!==null} onChange={e=>{void replace(group.kind,position,e.currentTarget.files?.[0]??null);e.currentTarget.value="";}}/>
     <p className="text-xs font-bold">{position}º puesto</p>
+    <label className="flex w-full items-center justify-center gap-2 text-[10px] font-semibold text-muted-foreground">Halo <input aria-label={"Color del halo de la insignia "+position} type="color" value={item?.halo||"#38bdf8"} disabled={busyId!==null} onChange={e=>void updateHalo(group.kind,position,e.target.value)} className="h-7 w-9 cursor-pointer rounded border border-border bg-transparent p-0.5"/></label>
     {item?<button type="button" disabled={busyId!==null} onClick={()=>void remove(group.kind,position)} className="text-[11px] font-bold text-destructive">Eliminar</button>:<span className="text-[11px] text-muted-foreground">Sin insignia</span>}
    </article>;
   })}</div></div>)}

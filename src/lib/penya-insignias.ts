@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 export type PenyaInsigniaKind = "redonda" | "cuadrada" | "playback";
-export type PenyaInsignia = { url: string; path?: string; name?: string };
+export type PenyaInsignia = { url?: string; path?: string; name?: string; halo?: string };
 export type PenyaInsigniaMap = Record<string, PenyaInsignia>;
 export const PENYA_INSIGNIA_KEY = "penyes_insignias_json";
 let cached: Promise<PenyaInsigniaMap> | null = null;
