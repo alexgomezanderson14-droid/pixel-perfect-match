@@ -4,11 +4,11 @@ import SeoLandingPage from "@/components/SeoLandingPage";
 export const Route = createFileRoute("/eventos")({
   head: () => ({
     meta: [
-      { title: "Eventos y actividades de las fiestas de l’Alfàs del Pi | festalfàs" },
+      { title: "Eventos y actividades de las fiestas de l’Alfàs del Pi | PENYERA" },
       { name: "description", content: "Agenda de eventos y actividades de las fiestas de l’Alfàs del Pi: propuestas de las peñas, encuentros, actuaciones, fechas, horarios y ubicaciones." },
-      { name: "keywords", content: "eventos Alfaz del Pi, actividades fiestas Alfàs, agenda festera l'Alfàs, eventos peñas Alfaz, festalfàs" },
+      { name: "keywords", content: "eventos Alfaz del Pi, actividades fiestas Alfàs, agenda festera l'Alfàs, eventos peñas Alfaz, PENYERA" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
-      { property: "og:title", content: "Eventos y actividades en l’Alfàs del Pi | festalfàs" },
+      { property: "og:title", content: "Eventos y actividades en l’Alfàs del Pi | PENYERA" },
       { property: "og:description", content: "Descubre la agenda festera, las actividades de las peñas y los eventos de l’Alfàs del Pi." },
       { property: "og:url", content: "https://festalfas.vercel.app/eventos" },
       { property: "og:type", content: "website" },
@@ -22,7 +22,7 @@ function EventosPage() {
   return <SeoLandingPage
     eyebrow="Agenda festera · l’Alfàs del Pi"
     title="Eventos y actividades de las fiestas"
-    description="Consulta en festalfàs la agenda de actividades relacionadas con las fiestas de l’Alfàs del Pi. Este espacio está pensado para reunir propuestas de las peñas, encuentros, actuaciones y otros planes festivos."
+    description="Consulta en PENYERA la agenda de actividades relacionadas con las fiestas de l’Alfàs del Pi. Este espacio está pensado para reunir propuestas de las peñas, encuentros, actuaciones y otros planes festivos."
     intro="Cómo consultar la agenda"
     sections={[
       { title: "Actividades de las peñas", text: "Las peñas pueden compartir encuentros, comidas, celebraciones y otras actividades para dar a conocer sus planes. Cada publicación debe incluir la información disponible para que el público pueda organizarse." },
