@@ -99,7 +99,7 @@ function extractResult(article, competition) {
 }
 
 function makeAward(article, result, competition) {
-  const yearMatch = [article.titulo, article.contenido, article.fecha].join(" ").match(/\b(20\d{2})\b/);
+  const yearMatch = [article.titulo, article.fecha, article.contenido].join(" ").match(/\b(20\d{2})\b/);
   const year = Number(yearMatch?.[1] || String(article.fecha || "").slice(0, 4));
   if (!Number.isInteger(year) || year < 2026 || year > 2100) return null;
   const key = [article.fuente_url, result.name, year, competition, result.position].join("|");
