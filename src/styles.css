@@ -870,3 +870,49 @@ html, body, #root { min-width:0; max-width:100%; }
  .penya-award-current-item.is-current-award-left,
  .penya-award-current-item.is-current-award-right{transform:scale(.96) translateY(5px)}
 }
+
+
+/* Palmarés: composición de tres puestos con el premio más reciente claramente destacado. */
+.penya-awards-grid{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  align-items:end;
+  justify-items:center;
+  column-gap:0!important;
+  row-gap:1.8rem;
+  overflow:visible;
+}
+.penya-award-current-item{
+  position:relative;
+  min-width:0;
+  width:100%;
+  overflow:visible;
+}
+.penya-award-current-item.is-current-award-center{
+  z-index:5!important;
+  transform:scale(1.13) translateY(-8px)!important;
+  filter:none!important;
+}
+.penya-award-current-item.is-current-award-left{
+  z-index:2!important;
+  transform:translateX(12px) scale(.78) translateY(12px)!important;
+  filter:saturate(.8)!important;
+}
+.penya-award-current-item.is-current-award-right{
+  z-index:2!important;
+  transform:translateX(-12px) scale(.78) translateY(12px)!important;
+  filter:saturate(.8)!important;
+}
+.penya-award-current-item>.penya-award-insignia{flex:none}
+@media(max-width:639px){
+  .penya-awards-grid{column-gap:0!important;row-gap:1.5rem}
+  .penya-award-current-item.is-current-award-center{
+    transform:scale(1.13) translateY(-7px)!important;
+  }
+  .penya-award-current-item.is-current-award-left{
+    transform:translateX(13px) scale(.76) translateY(10px)!important;
+  }
+  .penya-award-current-item.is-current-award-right{
+    transform:translateX(-13px) scale(.76) translateY(10px)!important;
+  }
+}
