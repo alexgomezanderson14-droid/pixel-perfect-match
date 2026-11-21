@@ -39,11 +39,11 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "PENYERA" },
-      { name: "description", content: "Descubre festalfàs: programa de fiestas de l'Alfàs del Pi, peñas, eventos, mapa, actualidad y noticias de las fiestas." },
-      { name: "keywords", content: "festalfàs, festalfas, fiestas l'Alfàs del Pi, fiestas Alfaz del Pi, peñas Alfaz del Pi, programa fiestas Alfaz, eventos Alfaz del Pi" },
+      { name: "description", content: "PENYERA: el espacio de las peñas y las personas que dan vida a las fiestas de l’Alfàs del Pi. Programa, eventos, noticias y comunidad." },
+      { name: "keywords", content: "PENYERA, peñas, fiestas l’Alfàs del Pi, programa fiestas, eventos, noticias, comunidad festera" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "PENYERA" },
-      { property: "og:description", content: "Programa de fiestas, peñas, eventos, mapa y noticias de l'Alfàs del Pi." },
+      { property: "og:description", content: "El espacio de las peñas y las personas que dan vida a las fiestas de l’Alfàs del Pi." },
       { property: "og:url", content: "https://festalfas.vercel.app/" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
