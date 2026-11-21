@@ -45,8 +45,8 @@ export default function PenyaInsigniaManager(){
    const id=insigniaId(group.kind,position),item=items[id],busy=busyId===id,inputId="penya-insignia-"+group.kind+"-"+position;
    return <article key={position} className="flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-border bg-background/70 p-2">
     <label htmlFor={inputId} aria-label={(item?"Sustituir":"Añadir")+" insignia "+position+" de "+group.title} className={"group relative grid h-24 w-full cursor-pointer place-items-center rounded-xl transition-colors hover:bg-muted/60 "+(busy?"pointer-events-none opacity-60":"")}>
-     <span className="grid h-20 w-20 place-items-center overflow-hidden rounded-full bg-muted/30" style={{boxShadow:"0 0 22px "+(item?.halo||"#38bdf8")+"88"}}>
-      {item?<img src={item.url} alt={"Insignia "+position} className="h-full w-full object-contain"/>:<span className="px-1 text-center text-xs text-muted-foreground">＋ Añadir</span>}
+     <span className="grid h-20 w-20 place-items-center bg-muted/20" style={{borderRadius:group.kind==="redonda"?"50%":group.kind==="cuadrada"?"18%":"0",clipPath:group.kind==="playback"?"polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0 50%)":undefined,filter:"drop-shadow(0 0 4px "+(item?.halo||"#38bdf8")+") drop-shadow(0 0 10px "+(item?.halo||"#38bdf8")+") drop-shadow(0 0 18px "+(item?.halo||"#38bdf8")+"99)"}}>
+      {item?<img src={item.url} alt={"Insignia "+position} className="h-full w-full object-contain" style={{filter:"drop-shadow(0 0 3px "+(item?.halo||"#38bdf8")+")"}}/>:<span className="px-1 text-center text-xs text-muted-foreground">＋ Añadir</span>}
      </span>
      <span className="absolute inset-x-1 bottom-0 rounded-lg bg-background/90 px-1 py-1 text-center text-[10px] font-bold text-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">{busy?"Guardando…":item?"Pulsar para sustituir":"Pulsar para añadir"}</span>
     </label>
