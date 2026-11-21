@@ -783,3 +783,29 @@ html, body, #root { min-width:0; max-width:100%; }
  will-change:auto;
 }
 .penya-award-insignia{overflow:visible;}
+
+
+/* Palmarés en administración: el estilo global de header no debe convertir esta cabecera en una caja blanca. */
+.admin-workspace .penya-awards-admin-heading{
+ background:linear-gradient(135deg,#173f52 0%,#236579 55%,#102f3d 100%)!important;
+ color:#fff!important;
+ border-color:rgba(139,217,231,.35)!important;
+ box-shadow:0 16px 38px rgba(12,43,59,.22)!important;
+}
+.admin-workspace .penya-awards-admin-heading p,
+.admin-workspace .penya-awards-admin-heading h2,
+.admin-workspace .penya-awards-admin-heading span{color:#fff!important;}
+.admin-workspace .penya-awards-admin-heading p:first-child{color:rgba(207,250,254,.82)!important;}
+/* La insignia ocupa más superficie y deja de quedar perdida dentro de su marco. */
+.penya-award-art{
+ width:128%!important;
+ height:128%!important;
+ max-width:none!important;
+ max-height:none!important;
+ left:50%!important;
+ top:50%!important;
+ right:auto!important;
+ bottom:auto!important;
+ transform:translate(-50%,-50%)!important;
+ object-fit:contain!important;
+}
