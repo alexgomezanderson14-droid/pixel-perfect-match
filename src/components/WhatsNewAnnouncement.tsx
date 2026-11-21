@@ -6,9 +6,9 @@ type Props = { userKey?: string | null; config?: Record<string, string> };
 type Card = { slug: string; tag: string; title: string; description: string; image: string; size: "small" | "medium" | "large"; position: string };
 
 const defaults: Card[] = [
-  { slug: "noticias", tag: "NUEVO", title: "Las noticias, más cerca", description: "Toda la actualidad festera reunida en un mismo lugar.", image: "/mayorales-2027.svg", size: "medium", position: "first" },
-  { slug: "premios", tag: "NUEVO", title: "Los premios ya se muestran", description: "Descubre los reconocimientos de cada peña y su historia.", image: "/premios-insignias.avif", size: "large", position: "second" },
-  { slug: "penyes-movil", tag: "MEJORA", title: "Peñas más ágiles en móvil", description: "Una navegación más ligera para descubrir todas las peñas.", image: "", size: "medium", position: "third" },
+  { slug: "noticias", tag: "NUEVO", title: "Las noticias, más cerca", description: "Toda la actualidad festera reunida en un mismo lugar.", image: "/mayorales-2027.svg", size: "medium", position: "left-top" },
+  { slug: "premios", tag: "NUEVO", title: "Los premios ya se muestran", description: "Descubre los reconocimientos de cada peña y su historia.", image: "/premios-insignias.avif", size: "large", position: "right-middle" },
+  { slug: "penyes-movil", tag: "MEJORA", title: "Peñas más ágiles en móvil", description: "Una navegación más ligera para descubrir todas las peñas.", image: "", size: "medium", position: "lower-left" },
 ];
 const VERSION = "2026-11-v2";
 function storageKey(userKey?: string | null) {
@@ -25,7 +25,7 @@ function readConfig(config: Record<string, string> = {}) {
       title: config[`novedades_tarjeta_${index + 1}_titulo`] || card.title,
       description: config[`novedades_tarjeta_${index + 1}_texto`] || card.description,
       image: config[`novedades_tarjeta_${index + 1}_imagen`] || card.image,
-      size: (config[`novedades_tarjeta_${index + 1}_tamano`] as Card["size"]) || card.size,
+      size: (config[`novedades_tarjeta_${index + 1}_tamano`] as Card["size"]) || card.size,\n      position: config[`novedades_tarjeta_${index + 1}_posicion`] || card.position,
     })),
   };
 }
@@ -74,7 +74,7 @@ export default function WhatsNewAnnouncement({ userKey, config = {} }: Props) {
         </header>
         <div className="whats-new-floating-cards">
           {settings.cards.map((card) => (
-            <Link key={card.slug} to="/novedades/$slug" params={{ slug: card.slug }} className={`whats-new-float-card whats-new-float-${card.position} whats-new-size-${card.size}`}>
+            <Link key={card.slug} to="/novedades/$slug" params={{ slug: card.slug }} className={`whats-new-float-card whats-new-pos-${card.position} whats-new-size-${card.size}`}>
               <span className="whats-new-float-tag">{card.tag}</span>
               {card.image && <img src={card.image} alt="" loading="lazy" />}
               <div className="whats-new-float-copy"><h3>{card.title}</h3><p>{card.description}</p></div>
