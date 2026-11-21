@@ -1,5 +1,4 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { createHash } from "node:crypto";
 
 const INPUT = "public/noticias-automaticas.json";
 const OUTPUT = "public/premios-automaticos.json";
@@ -30,8 +29,8 @@ function isTrustedArticle(article) {
 
 function competitionFrom(text) {
   const value = normalize(text);
-  if (/pena mas solidaria/.test(value) && /donacion de sangre|sangre/.test(value)) {
-    return "Peña más solidaria · Donación de sangre";
+  if (/pena mas solidaria/.test(value)) {
+    return /donacion de sangre|sangre/.test(value) ? "Peña más solidaria · Donación de sangre" : "Peña más solidaria";
   }
   if (/desfile del humor|concurso de humor/.test(value)) return "Desfile del Humor";
   if (/playbacks?/.test(value)) return "Playbacks";
@@ -102,8 +101,7 @@ function makeAward(article, result, competition) {
   const yearMatch = [article.titulo, article.fecha, article.contenido].join(" ").match(/\b(20\d{2})\b/);
   const year = Number(yearMatch?.[1] || String(article.fecha || "").slice(0, 4));
   if (!Number.isInteger(year) || year < 2026 || year > 2100) return null;
-  const key = [article.fuente_url, result.name, year, competition, result.position].join("|");
-  const id = "auto-award-" + createHash("sha256").update(key).digest("hex").slice(0, 20);
+  const id = "auto-award-" + [normalize(result.name), year, normalize(competition), result.position].join("-").replace(/\\s+/g, "-");
   return {
     id,
     penya_id: "",
