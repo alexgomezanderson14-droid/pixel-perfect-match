@@ -35,6 +35,7 @@ export default function WhatsNewAnnouncement({ userKey, config = {} }: Props) {
   const [open, setOpen] = useState(false);
   const touchStartY = useRef<number | null>(null);
   const settings = useMemo(() => readConfig(config), [config]);
+
   useEffect(() => {
     let forced = false;
     try {
@@ -49,26 +50,7 @@ export default function WhatsNewAnnouncement({ userKey, config = {} }: Props) {
     }
     return undefined;
   }, [userKey]);
-  const reopen = useCallback(() => {
-    try { window.localStorage.removeItem(storageKey(userKey)); } catch { /* La reapertura funciona también sin almacenamiento. */ }
-    setOpen(true);
-  }, [userKey]);
-  useEffect(() => {
-    window.addEventListener("penyera:open-whats-new", reopen);
-    return () => window.removeEventListener("penyera:open-whats-new", reopen);
-  }, [reopen]);
-  const handleTouchStart = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
-    touchStartY.current = event.touches[0]?.clientY ?? null;
-  }, []);
-  const handleTouchEnd = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
-    const start = touchStartY.current;
-    const end = event.changedTouches[0]?.clientY;
-    touchStartY.current = null;
-    if (start !== null && end !== undefined && start - end > 85) {
-      event.preventDefault();
-      close();
-    }
-  }, [close]);
+
   const close = useCallback(() => {
     try { window.localStorage.setItem(storageKey(userKey), "1"); } catch { /* Cierre disponible sin almacenamiento. */ }
     if (window.location.search.includes("novedades=1")) {
@@ -78,6 +60,31 @@ export default function WhatsNewAnnouncement({ userKey, config = {} }: Props) {
     }
     setOpen(false);
   }, [userKey]);
+
+  const reopen = useCallback(() => {
+    try { window.localStorage.removeItem(storageKey(userKey)); } catch { /* La reapertura funciona también sin almacenamiento. */ }
+    setOpen(true);
+  }, [userKey]);
+
+  useEffect(() => {
+    window.addEventListener("penyera:open-whats-new", reopen);
+    return () => window.removeEventListener("penyera:open-whats-new", reopen);
+  }, [reopen]);
+
+  const handleTouchStart = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
+    touchStartY.current = event.touches[0]?.clientY ?? null;
+  }, []);
+
+  const handleTouchEnd = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
+    const start = touchStartY.current;
+    const end = event.changedTouches[0]?.clientY;
+    touchStartY.current = null;
+    if (start !== null && end !== undefined && start - end > 85) {
+      event.preventDefault();
+      close();
+    }
+  }, [close]);
+
   useEffect(() => {
     if (!open) return;
     const previous = document.body.style.overflow;
@@ -86,9 +93,11 @@ export default function WhatsNewAnnouncement({ userKey, config = {} }: Props) {
     window.addEventListener("keydown", onKeyDown);
     return () => { document.body.style.overflow = previous; window.removeEventListener("keydown", onKeyDown); };
   }, [open, close]);
+
   if (!open) return null;
-  return (
-    <div className="whats-new-overlay" role="dialog" aria-modal="true" aria-labelledby="whats-new-title" style={{ background: `linear-gradient(135deg,${settings.background[0]},${settings.background[1]} 52%,${settings.background[2]})` }}>
+
+  return createPortal(
+    <div className="whats-new-overlay" role="dialog" aria-modal="true" aria-labelledby="whats-new-title" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} style={{ background: `linear-gradient(135deg,${settings.background[0]},${settings.background[1]} 52%,${settings.background[2]})` }}>
       <button type="button" className="whats-new-close" onClick={close} aria-label="Cerrar aviso de novedades"><X size={20} /></button>
       <div className="whats-new-scene">
         <header className="whats-new-heading">
@@ -107,6 +116,8 @@ export default function WhatsNewAnnouncement({ userKey, config = {} }: Props) {
           ))}
         </div>
       </div>
-    </div>
+      <div className="whats-new-swipe-hint" aria-hidden="true"><span />Desliza hacia arriba para entrar</div>
+    </div>,
+    document.body
   );
 }
