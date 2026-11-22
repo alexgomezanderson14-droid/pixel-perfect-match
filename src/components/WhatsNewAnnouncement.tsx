@@ -5,13 +5,13 @@ import { ArrowUpRight, Newspaper, X } from "lucide-react";
 
 type PenyaPreview = { id: string; nombre: string; foto?: string; color?: string; title?: string };
 type Props = { userKey?: string | null; config?: Record<string, string>; penyes?: PenyaPreview[]; preview?: boolean };
-type Card = { slug: string; tag: string; title: string; description: string; image: string; size: "small" | "medium" | "large"; position: string; fit: "contain" | "cover" };
+type Card = { slug: string; tag: string; title: string; description: string; image: string; size: "small" | "medium" | "large"; position: string; fit: "contain" | "cover"; imageScale: number; imageHeight: number };
 const defaults: Card[] = [
   { slug: "penyes", tag: "NUEVO", title: "Conoce todas las peñas", description: "Mira sus fotos, actividades, eventos y toda la información de cada peña.", image: "", size: "large", position: "left-top", fit: "contain" },
   { slug: "premios", tag: "NUEVO", title: "Descubre sus premios", description: "Consulta los premios y reconocimientos que ha conseguido cada peña.", image: "/premios-insignias.avif", size: "large", position: "right-middle", fit: "contain" },
   { slug: "noticias", tag: "MEJORA", title: "No te pierdas nada", description: "Lee noticias, avisos y lo que ocurre en las fiestas y en las peñas.", image: "", size: "medium", position: "lower-left", fit: "cover" },
 ];
-const VERSION = "2026-11-v3";
+const VERSION = "2026-11-v4";
 function storageKey(userKey?: string | null) {
   return `penyera-novedades-dismissed:${(userKey || "invitado").trim().toLowerCase()}:${VERSION}`;
 }
@@ -28,6 +28,8 @@ function readConfig(config: Record<string, string> = {}) {
       size: (config[`novedades_tarjeta_${index + 1}_tamano`] as Card["size"]) || card.size,
       position: config[`novedades_tarjeta_${index + 1}_posicion`] || card.position,
       fit: config[`novedades_tarjeta_${index + 1}_ajuste`] === "cover" ? "cover" : config[`novedades_tarjeta_${index + 1}_ajuste`] === "contain" ? "contain" : card.fit,
+      imageScale: Math.min(160, Math.max(60, Number(config[`novedades_tarjeta_${index + 1}_imagen_escala`] || 100))),
+      imageHeight: Math.min(420, Math.max(80, Number(config[`novedades_tarjeta_${index + 1}_imagen_altura`] || 230))),
     })),
   };
 }
@@ -49,6 +51,7 @@ function PenyaCollage({ penyes }: { penyes: PenyaPreview[] }) {
 }
 export default function WhatsNewAnnouncement({ userKey, config = {}, penyes = [], preview = false }: Props) {
   const [open, setOpen] = useState(preview);
+  const [previewDetail, setPreviewDetail] = useState<Card | null>(null);
   const touchStartY = useRef<number | null>(null);
   const settings = useMemo(() => readConfig(config), [config]);
   useEffect(() => {
@@ -117,17 +120,19 @@ export default function WhatsNewAnnouncement({ userKey, config = {}, penyes = []
         </header>
         <div className="whats-new-floating-cards">
           {settings.cards.map((card) => (
-            <Link key={card.slug} to="/novedades/$slug" params={{ slug: card.slug }} className={`whats-new-float-card whats-new-pos-${card.position} whats-new-size-${card.size} whats-new-card-${card.slug}`} onClick={(event) => { if (preview) event.preventDefault(); }}>
+            <Link key={card.slug} to="/novedades/$slug" params={{ slug: card.slug }} className={`whats-new-float-card whats-new-pos-${card.position} whats-new-size-${card.size} whats-new-card-${card.slug}`} onClick={(event) => { if (preview) { event.preventDefault(); setPreviewDetail(card); } }}>
               <span className="whats-new-float-tag">{card.tag}</span>
-              {card.slug === "noticias" && !card.image ? <div className="whats-new-news-mark"><Newspaper aria-hidden="true"/><span>PEÑAS · FIESTAS · ACTUALIDAD</span></div> : <div className={`whats-new-card-media is-${card.slug}`}>{card.image ? <img className="whats-new-custom-image" style={{ objectFit: card.fit }} src={card.image} alt="" loading="lazy" decoding="async"/> : card.slug === "penyes" ? <PenyaCollage penyes={penyes}/> : null}</div>}
+              {card.slug === "noticias" && !card.image ? <div className="whats-new-news-mark"><Newspaper aria-hidden="true"/><span>PEÑAS · FIESTAS · ACTUALIDAD</span></div> : <div className={`whats-new-card-media is-${card.slug}`}>{card.image ? <img className="whats-new-custom-image" style={{ objectFit: card.fit, width: `${card.imageScale}%`, height: `${card.imageHeight}px` }} src={card.image} alt="" loading="lazy" decoding="async"/> : card.slug === "penyes" ? <PenyaCollage penyes={penyes}/> : null}</div>}
               <div className="whats-new-float-copy"><h3>{card.title}</h3>{card.description && <p>{card.description}</p>}</div>
               <span className="whats-new-float-open">Descubrir <span aria-hidden="true"><ArrowUpRight size={15}/></span></span>
             </Link>
           ))}
         </div>
       </div>
+      {previewDetail && preview && <div className="whats-new-preview-detail" role="dialog" aria-modal="true"><div className="whats-new-preview-detail-card"><button type="button" onClick={() => setPreviewDetail(null)} aria-label="Cerrar vista previa">×</button><span>{previewDetail.tag}</span><h3>{config[`novedades_detalle_${previewDetail.slug}_titulo`] || previewDetail.title}</h3><p>{config[`novedades_detalle_${previewDetail.slug}_intro`] || previewDetail.description}</p><h4>¿Qué encontrarás?</h4><p>{config[`novedades_detalle_${previewDetail.slug}_contenido`] || "Aquí se explica esta novedad y cómo puedes aprovecharla."}</p><h4>Cómo utilizarlo</h4><p>{config[`novedades_detalle_${previewDetail.slug}_pasos`] || "Sigue los pasos indicados para descubrir todas sus posibilidades."}</p><strong>{config[`novedades_detalle_${previewDetail.slug}_boton`] || "Descubrir"}</strong></div></div>}
       {!preview && <div className="whats-new-swipe-hint" aria-hidden="true"><span />Desliza hacia arriba para entrar</div>}
     </div>
   );
   return preview ? presentation : createPortal(presentation, document.body);
 }
+
