@@ -1562,3 +1562,62 @@ html, body, #root { min-width:0; max-width:100%; }
 @media(prefers-reduced-motion:reduce){.welcome-gate-bubble{animation:none!important}.welcome-gate.is-leaving .welcome-gate-bubble{animation:none!important;opacity:0;transition:opacity .2s}}
 .welcome-gate-preview-close{position:absolute;z-index:5;top:max(14px,env(safe-area-inset-top));right:18px;display:grid;width:40px;height:40px;place-items:center;border:1px solid #e7ebed;border-radius:50%;background:rgba(255,255,255,.92);color:#34464d;font-size:27px;line-height:1;box-shadow:0 4px 14px rgba(20,34,42,.08)}
 .welcome-gate-preview-close:hover{background:#f1f5f6}
+
+/* Acabado esférico sin contorno: el volumen lo crea la luz sobre la propia fotografía. */
+.welcome-gate-bubble{
+  border:0!important;
+  outline:0;
+  background:transparent!important;
+  box-shadow:
+    inset 10px 12px 20px rgba(255,255,255,.56),
+    inset -15px -18px 25px rgba(13,35,48,.3),
+    inset 0 0 30px rgba(255,255,255,.12),
+    0 12px 24px rgba(30,55,68,.17),
+    0 3px 8px rgba(30,55,68,.1)!important;
+}
+.welcome-gate-bubble:before{
+  inset:0!important;
+  border-radius:50%;
+  background:
+    radial-gradient(ellipse at 25% 12%,rgba(255,255,255,.9) 0%,rgba(255,255,255,.58) 4%,rgba(255,255,255,.2) 12%,transparent 27%),
+    radial-gradient(ellipse at 78% 84%,rgba(7,28,43,.4) 0%,rgba(10,35,49,.18) 19%,transparent 47%),
+    radial-gradient(ellipse at 50% 50%,transparent 48%,rgba(255,255,255,.08) 68%,rgba(14,39,54,.2) 100%)!important;
+  box-shadow:inset 8px 10px 17px rgba(255,255,255,.42),inset -10px -13px 22px rgba(13,35,48,.25)!important;
+}
+.welcome-gate-bubble:after{
+  top:8%!important;left:16%!important;width:39%!important;height:13%!important;
+  background:rgba(255,255,255,.78)!important;filter:blur(7px)!important;
+}
+.welcome-gate-bubble img{
+  border:0!important;border-radius:50%;object-fit:cover;transform:scale(1.015);
+}
+@media(max-width:640px){
+  .welcome-gate-art{
+    width:calc(100% + 30px)!important;
+    height:clamp(330px,44svh,420px)!important;
+    margin-left:-15px!important;
+    margin-top:0!important;
+    transform:none!important;
+  }
+  .welcome-gate-bubble{
+    width:36vw!important;
+    max-width:158px;
+    min-width:0;
+  }
+  /* Tres filas compactas: las esferas se solapan como en el collage de referencia. */
+  .welcome-gate-bubble-0{left:-5%!important;top:13%!important}
+  .welcome-gate-bubble-1{left:13%!important;top:3%!important}
+  .welcome-gate-bubble-2{left:31%!important;top:12%!important}
+  .welcome-gate-bubble-3{left:49%!important;top:2%!important}
+  .welcome-gate-bubble-4{left:67%!important;top:13%!important}
+  .welcome-gate-bubble-5{left:82%!important;top:29%!important}
+  .welcome-gate-bubble-6{left:1%!important;top:35%!important}
+  .welcome-gate-bubble-7{left:19%!important;top:29%!important}
+  .welcome-gate-bubble-8{left:37%!important;top:38%!important}
+  .welcome-gate-bubble-9{left:55%!important;top:29%!important}
+  .welcome-gate-bubble-10{left:73%!important;top:39%!important}
+  .welcome-gate-bubble-11{left:-5%!important;top:64%!important}
+  .welcome-gate-bubble-12{left:17%!important;top:66%!important}
+  .welcome-gate-bubble-13{left:43%!important;top:64%!important}
+  .welcome-gate-bubble-14{left:69%!important;top:65%!important}
+}
