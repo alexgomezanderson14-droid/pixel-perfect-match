@@ -5,11 +5,11 @@ import { ArrowUpRight, Newspaper, X } from "lucide-react";
 
 type PenyaPreview = { id: string; nombre: string; foto?: string; color?: string; title?: string };
 type Props = { userKey?: string | null; config?: Record<string, string>; penyes?: PenyaPreview[]; preview?: boolean };
-type Card = { slug: string; tag: string; title: string; description: string; image: string; size: "small" | "medium" | "large"; position: string };
+type Card = { slug: string; tag: string; title: string; description: string; image: string; size: "small" | "medium" | "large"; position: string; fit: "contain" | "cover" };
 const defaults: Card[] = [
-  { slug: "penyes", tag: "NUEVO", title: "SECCIÓN PEÑAS RENOVADA", description: "Descubre todas las peñas y sus fichas.", image: "", size: "large", position: "left-top" },
-  { slug: "premios", tag: "NUEVO", title: "¡PREMIOS!", description: "Los reconocimientos de cada peña.", image: "/premios-insignias.avif", size: "large", position: "right-middle" },
-  { slug: "noticias", tag: "MEJORA", title: "NUEVA SECCIÓN Noticias", description: "Toda la actualidad festera en un solo lugar.", image: "", size: "medium", position: "lower-left" },
+  { slug: "penyes", tag: "NUEVO", title: "Conoce todas las peñas", description: "Mira sus fotos, actividades, eventos y toda la información de cada peña.", image: "", size: "large", position: "left-top", fit: "contain" },
+  { slug: "premios", tag: "NUEVO", title: "Descubre sus premios", description: "Consulta los premios y reconocimientos que ha conseguido cada peña.", image: "/premios-insignias.avif", size: "large", position: "right-middle", fit: "contain" },
+  { slug: "noticias", tag: "MEJORA", title: "No te pierdas nada", description: "Lee noticias, avisos y lo que ocurre en las fiestas y en las peñas.", image: "", size: "medium", position: "lower-left", fit: "cover" },
 ];
 const VERSION = "2026-11-v3";
 function storageKey(userKey?: string | null) {
@@ -27,6 +27,7 @@ function readConfig(config: Record<string, string> = {}) {
       image: Object.prototype.hasOwnProperty.call(config, `novedades_tarjeta_${index + 1}_imagen`) ? config[`novedades_tarjeta_${index + 1}_imagen`] : card.image,
       size: (config[`novedades_tarjeta_${index + 1}_tamano`] as Card["size"]) || card.size,
       position: config[`novedades_tarjeta_${index + 1}_posicion`] || card.position,
+      fit: config[`novedades_tarjeta_${index + 1}_ajuste`] === "cover" ? "cover" : config[`novedades_tarjeta_${index + 1}_ajuste`] === "contain" ? "contain" : card.fit,
     })),
   };
 }
@@ -118,7 +119,7 @@ export default function WhatsNewAnnouncement({ userKey, config = {}, penyes = []
           {settings.cards.map((card) => (
             <Link key={card.slug} to="/novedades/$slug" params={{ slug: card.slug }} className={`whats-new-float-card whats-new-pos-${card.position} whats-new-size-${card.size} whats-new-card-${card.slug}`} onClick={(event) => { if (preview) event.preventDefault(); }}>
               <span className="whats-new-float-tag">{card.tag}</span>
-              {card.slug === "noticias" ? <div className="whats-new-news-mark"><Newspaper aria-hidden="true"/><span>PEÑAS · FIESTAS · ACTUALIDAD</span></div> : <div className={`whats-new-card-media${card.slug === "penyes" ? " is-penyes" : " is-premios"}`}>{card.image ? <img className="whats-new-custom-image" src={card.image} alt="" loading="lazy" decoding="async"/> : card.slug === "penyes" ? <PenyaCollage penyes={penyes}/> : null}</div>}
+              {card.slug === "noticias" && !card.image ? <div className="whats-new-news-mark"><Newspaper aria-hidden="true"/><span>PEÑAS · FIESTAS · ACTUALIDAD</span></div> : <div className={`whats-new-card-media is-${card.slug}`}>{card.image ? <img className="whats-new-custom-image" style={{ objectFit: card.fit }} src={card.image} alt="" loading="lazy" decoding="async"/> : card.slug === "penyes" ? <PenyaCollage penyes={penyes}/> : null}</div>}
               <div className="whats-new-float-copy"><h3>{card.title}</h3>{card.description && <p>{card.description}</p>}</div>
               <span className="whats-new-float-open">Descubrir <span aria-hidden="true"><ArrowUpRight size={15}/></span></span>
             </Link>
