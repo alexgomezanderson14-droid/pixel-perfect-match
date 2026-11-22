@@ -569,11 +569,14 @@ function Home() {
       }
     }
     penyaCarouselScrollLeftRef.current=el.scrollLeft;
-    if(penyaScrollEndTimerRef.current!==null)window.clearTimeout(penyaScrollEndTimerRef.current);
-    penyaScrollEndTimerRef.current=window.setTimeout(()=>{
-      penyaScrollEndTimerRef.current=null;
-      handlePenyaCarouselScrollEnd();
-    },220);
+    // Los navegadores actuales emiten scrollend; solo usamos el temporizador como respaldo en los antiguos.
+    if(!("onscrollend" in el)){
+      if(penyaScrollEndTimerRef.current!==null)window.clearTimeout(penyaScrollEndTimerRef.current);
+      penyaScrollEndTimerRef.current=window.setTimeout(()=>{
+        penyaScrollEndTimerRef.current=null;
+        handlePenyaCarouselScrollEnd();
+      },220);
+    }
   };
   // Al terminar el gesto solo actualizamos qué tarjeta queda centrada.
   // No se recentra ni se anima nada por iniciativa del código.
