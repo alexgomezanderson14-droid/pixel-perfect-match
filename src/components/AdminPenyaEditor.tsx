@@ -15,6 +15,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     informacion: "",
     estado: penya.estado ?? "aprobada",
     tiene_evento: Boolean(penya.tiene_evento),
+    miembros_actuales: penya.miembros_actuales == null ? "" : String(penya.miembros_actuales),
   });
   const [mapPick, setMapPick] = useState<{ lat: number; lng: number } | null>(penya.lat != null && penya.lng != null ? { lat: Number(penya.lat), lng: Number(penya.lng) } : null);
   const [foto, setFoto] = useState<File | null>(null);
@@ -194,6 +195,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
         informacion: form.informacion.trim(),
         estado: form.estado,
         tiene_evento: form.tiene_evento,
+        miembros_actuales: form.miembros_actuales.trim() === "" ? null : Math.max(0, Math.min(999999, Math.floor(Number(form.miembros_actuales)))),
         foto_url,
       }).eq("id", penya.id);
       if (updateError) throw updateError;
@@ -218,6 +220,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     <div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-extrabold uppercase tracking-[.16em] text-muted-foreground">Ficha de peña</p><h3 className="text-lg font-bold">Editar {penya.nombre}</h3></div><button type="button" onClick={onCancel} className="glass-btn rounded-full px-4 py-2 text-xs font-bold">Cancelar</button></div>
     <label className="block space-y-1 text-sm font-semibold">Nombre de la peña<input className={field} maxLength={80} value={form.nombre} onChange={e=>change("nombre",e.target.value)} required /></label>
     <label className="block space-y-1 text-sm font-semibold">Dirección / ubicación<input className={field} maxLength={200} value={form.direccion} onChange={e=>change("direccion",e.target.value)} /></label>
+    <label className="block space-y-1 text-sm font-semibold">Número de miembros (opcional)<input className={field} type="number" inputMode="numeric" min="0" max="999999" step="1" placeholder="Dejar vacío para no mostrarlo" value={form.miembros_actuales} onChange={e=>change("miembros_actuales",e.target.value)} /><span className="block text-xs font-normal text-muted-foreground">Si lo rellenas, aparecerá como etiqueta en la ficha pública de la peña.</span></label>
     <section className="space-y-2 rounded-2xl border border-border/70 bg-background p-3"><div className="flex items-center justify-between gap-2"><div><p className="text-sm font-bold">Ubicación en el mapa</p><p className="text-xs text-muted-foreground">Pulsa sobre el mapa para colocar el marcador o arrástralo para ajustar el punto.</p></div><button type="button" onClick={()=>setMapPick(null)} disabled={!mapPick} className="shrink-0 rounded-full border px-3 py-2 text-xs font-bold disabled:opacity-40">Quitar ubicación</button></div><div className="h-64 overflow-hidden rounded-xl border border-border sm:h-80"><FestMap lugares={[]} pick={mapPick} onPick={(lat,lng)=>setMapPick({lat,lng})}/></div><p className="text-xs text-muted-foreground">{mapPick ? `Ubicación seleccionada: ${mapPick.lat.toFixed(6)}, ${mapPick.lng.toFixed(6)}` : "Esta peña no tiene ubicación. Selecciona un punto en el mapa si quieres que aparezca en él."}</p></section>
     <details className="rounded-2xl border border-border/70 bg-white/45 px-4 py-3">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-bold"><span>Más información y visibilidad</span><span className="text-xs text-muted-foreground">Opcional ⌄</span></summary>
