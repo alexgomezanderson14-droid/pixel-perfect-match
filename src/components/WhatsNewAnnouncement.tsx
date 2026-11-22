@@ -7,9 +7,9 @@ type PenyaPreview = { id: string; nombre: string; foto?: string; color?: string;
 type Props = { userKey?: string | null; config?: Record<string, string>; penyes?: PenyaPreview[]; preview?: boolean };
 type Card = { slug: string; tag: string; title: string; description: string; image: string; size: "small" | "medium" | "large"; position: string; fit: "contain" | "cover"; imageScale: number; imageHeight: number };
 const defaults: Card[] = [
-  { slug: "penyes", tag: "NUEVO", title: "Conoce todas las peñas", description: "Mira sus fotos, actividades, eventos y toda la información de cada peña.", image: "", size: "large", position: "left-top", fit: "contain" },
-  { slug: "premios", tag: "NUEVO", title: "Descubre sus premios", description: "Consulta los premios y reconocimientos que ha conseguido cada peña.", image: "/premios-insignias.avif", size: "large", position: "right-middle", fit: "contain" },
-  { slug: "noticias", tag: "MEJORA", title: "No te pierdas nada", description: "Lee noticias, avisos y lo que ocurre en las fiestas y en las peñas.", image: "", size: "medium", position: "lower-left", fit: "cover" },
+  { slug: "penyes", tag: "NUEVO", title: "Conoce todas las peñas", description: "Mira sus fotos, actividades, eventos y toda la información de cada peña.", image: "", size: "large", position: "left-top", fit: "contain", imageScale: 100, imageHeight: 230 },
+  { slug: "premios", tag: "NUEVO", title: "Descubre sus premios", description: "Consulta los premios y reconocimientos que ha conseguido cada peña.", image: "/premios-insignias.avif", size: "large", position: "right-middle", fit: "contain", imageScale: 100, imageHeight: 230 },
+  { slug: "noticias", tag: "MEJORA", title: "No te pierdas nada", description: "Lee noticias, avisos y lo que ocurre en las fiestas y en las peñas.", image: "", size: "medium", position: "lower-left", fit: "cover", imageScale: 100, imageHeight: 230 },
 ];
 const VERSION = "2026-11-v4";
 function storageKey(userKey?: string | null) {
