@@ -16,6 +16,7 @@ export const Route = createFileRoute("/noticias")({
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "PENYERA" },
       { property: "og:locale", content: "es_ES" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Noticias de peñas y fiestas de Alfaz del Pi | PENYERA" },
       { name: "twitter:description", content: "Últimas noticias de las peñas y las fiestas de l’Alfàs del Pi: Mayorales, actos, actividades, anuncios y actualidad festera." },
     ],

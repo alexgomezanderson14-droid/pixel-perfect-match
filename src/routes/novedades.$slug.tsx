@@ -5,7 +5,7 @@ import CopyrightFooter from "@/components/CopyrightFooter";
 export const Route = createFileRoute("/novedades/$slug")({
   head: ({ params }) => {
     const titles: Record<string,string> = { noticias: "Nueva sección de noticias", premios: "Premios y reconocimientos", "penyes-movil": "Peñas más ágiles en móvil" };
-    return { meta: [{ title: (titles[params.slug] || "Novedades") + " | PENYERA" }, { name: "description", content: "Aprende a utilizar las últimas novedades de PENYERA." }, { name: "robots", content: "noindex, follow" }] };
+    return { meta: [{ title: (titles[params.slug] || "Novedades") + " | PENYERA" }, { name: "description", content: "Aprende a utilizar las últimas novedades de PENYERA." }, { property: "og:title", content: (titles[params.slug] || "Novedades") + " | PENYERA" }, { property: "og:description", content: "Aprende a utilizar las últimas novedades de PENYERA." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex, follow" }] };
   },
   component: NovedadPage,
 });

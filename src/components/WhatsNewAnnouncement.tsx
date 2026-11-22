@@ -16,16 +16,17 @@ function storageKey(userKey?: string | null) {
 }
 function readConfig(config: Record<string, string> = {}) {
   return {
-    title: config.novedades_titulo || "¡Mira todo lo nuevo!",
-    subtitle: config.novedades_subtitulo || "Descubre las últimas novedades y aprende a disfrutar de todas las posibilidades de nuestra web.",
-    background: [config.novedades_fondo_1 || "#f5dfe7", config.novedades_fondo_2 || "#e9dff0", config.novedades_fondo_3 || "#d9e9ed"],
+    title: config["novedades_titulo"] || "¡Mira todo lo nuevo!",
+    subtitle: config["novedades_subtitulo"] || "Descubre las últimas novedades y aprende a disfrutar de todas las posibilidades de nuestra web.",
+    background: [config["novedades_fondo_1"] || "#f5dfe7", config["novedades_fondo_2"] || "#e9dff0", config["novedades_fondo_3"] || "#d9e9ed"],
     cards: defaults.map((card, index) => ({
       ...card,
       tag: config[`novedades_tarjeta_${index + 1}_etiqueta`] || card.tag,
       title: config[`novedades_tarjeta_${index + 1}_titulo`] || card.title,
       description: config[`novedades_tarjeta_${index + 1}_texto`] || card.description,
       image: config[`novedades_tarjeta_${index + 1}_imagen`] || card.image,
-      size: (config[`novedades_tarjeta_${index + 1}_tamano`] as Card["size"]) || card.size,\n      position: config[`novedades_tarjeta_${index + 1}_posicion`] || card.position,
+      size: (config[`novedades_tarjeta_${index + 1}_tamano`] as Card["size"]) || card.size,
+      position: config[`novedades_tarjeta_${index + 1}_posicion`] || card.position,
     })),
   };
 }
@@ -44,6 +45,7 @@ export default function WhatsNewAnnouncement({ userKey, config = {} }: Props) {
       const timer = window.setTimeout(() => setOpen(true), 650);
       return () => window.clearTimeout(timer);
     }
+    return undefined;
   }, [userKey]);
   const close = useCallback(() => {
     try { window.localStorage.setItem(storageKey(userKey), "1"); } catch { /* Cierre disponible sin almacenamiento. */ }

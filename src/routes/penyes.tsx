@@ -14,6 +14,7 @@ export const Route = createFileRoute("/penyes")({
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "PENYERA" },
       { property: "og:locale", content: "es_ES" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Peñas de Alfaz del Pi y l’Alfàs del Pi | PENYERA" },
       { name: "twitter:description", content: "Descubre las peñas de Alfaz del Pi (l’Alfàs del Pi): perfiles, Mayorales, historia, fotos, actividades y noticias de la comunidad festera." },
     ],

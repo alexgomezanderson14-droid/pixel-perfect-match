@@ -14,6 +14,7 @@ export const Route = createFileRoute("/eventos")({
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "PENYERA" },
       { property: "og:locale", content: "es_ES" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Fiestas de Alfaz del Pi: eventos y actividades | PENYERA" },
       { name: "twitter:description", content: "Agenda festera de l’Alfàs del Pi: eventos, actividades de las peñas, encuentros, actuaciones, fechas, horarios y lugares de celebración." },
     ],

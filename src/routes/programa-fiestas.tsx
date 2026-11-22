@@ -14,6 +14,7 @@ export const Route = createFileRoute("/programa-fiestas")({
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "PENYERA" },
       { property: "og:locale", content: "es_ES" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Programa de fiestas de Alfaz del Pi 2027 | PENYERA" },
       { name: "twitter:description", content: "Consulta el programa de fiestas de l’Alfàs del Pi (Alfaz del Pi) 2027: actos, horarios, actuaciones, actividades de peñas y ubicaciones cuando se confirmen." },
     ],

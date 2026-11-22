@@ -1072,7 +1072,7 @@ function Home() {
         {(["home","penyes","eventos","noticias"] as const).map((page,index)=>{
           const labels={home:"Inicio",eventos:"Eventos",penyes:"Peñas",noticias:"Noticias"};
           const active=currentPage===page;
-          return <button key={page} type="button" aria-current={active?"page":undefined} onClick={()=>{setMapFullscreen(false);setSelectedPenya(null);setPenyaDetailFullscreen(false);setEventFormPenya(null);setForm(false);setNewsPopup([]);setShareReminder(false);setNoticiaSeleccionada(null);setCurrentPage(page);window.scrollTo({top:0,behavior:"smooth"});}} className={"relative z-10 flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-0 overflow-hidden rounded-full px-0 py-0 text-center leading-none transition-colors duration-200 "+(active?"text-white":"text-primary/75 hover:text-primary")}>
+          return <button key={page} type="button" aria-current={active?"page":undefined} onClick={()=>{setMapFullscreen(false);setSelectedPenya(null);setPenyaDetailFullscreen(false);setEventFormPenya(null);setForm(false);setShareReminder(false);setNoticiaSeleccionada(null);setCurrentPage(page);window.scrollTo({top:0,behavior:"smooth"});}} className={"relative z-10 flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-0 overflow-hidden rounded-full px-0 py-0 text-center leading-none transition-colors duration-200 "+(active?"text-white":"text-primary/75 hover:text-primary")}>
             <span className="grid h-[30px] w-[30px] shrink-0 place-items-center leading-none">
               <svg viewBox="0 0 24 24" aria-hidden="true" className="block h-[25px] w-[25px] shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 {page==="home"?<><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></>:page==="eventos"?<><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M8 2.8v4M16 2.8v4M3 9h18M8 13h3M8 16.5h6"/></>:page==="penyes"?<><circle cx="9" cy="8" r="3.2"/><path d="M2.8 20c.4-3.5 2.5-5.4 6.2-5.4s5.8 1.9 6.2 5.4M16 5.2a3 3 0 0 1 0 5.7M17 14.8c2.4.5 3.7 2.2 4.1 5.2"/></>:page==="noticias"?<><path d="M5 4h14a2 2 0 0 1 2 2v14H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M7 8h4v4H7zM14 8h4M14 12h4M7 16h11"/></>:<><path d="M10.2 2.8h3.6l.55 2.05a7.6 7.6 0 0 1 1.55.9l2.02-.62 1.8 3.12-1.48 1.52c.12.58.12 1.18 0 1.76l1.48 1.52-1.8 3.12-2.02-.62a7.6 7.6 0 0 1-1.55.9l-.55 2.05h-3.6l-.55-2.05a7.6 7.6 0 0 1-1.55-.9l-2.02.62-1.8-3.12 1.48-1.52a4.4 4.4 0 0 1 0-1.76L4.28 8.23l1.8-3.12 2.02.62a7.6 7.6 0 0 1 1.55-.9z"/><circle cx="12" cy="10.65" r="2.65"/></>}
@@ -1469,7 +1469,7 @@ function Home() {
         </>}
       </main>}
 
-      {currentPage === "home" && <WhatsNewAnnouncement userKey={accountUser?.email} config={content} />}
+      {currentPage === "home" && <WhatsNewAnnouncement userKey={accountUser?.email} config={siteContent} />}
       {mapFullscreen && typeof document !== "undefined" && createPortal(
         <div role="dialog" aria-modal="true" aria-label="Mapa a pantalla completa" className="fixed inset-0 z-[99999] h-[100dvh] w-screen overflow-hidden bg-[#f3eee6]">
           <div className="absolute inset-0">
