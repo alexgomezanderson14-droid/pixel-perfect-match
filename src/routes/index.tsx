@@ -294,7 +294,7 @@ async function sharePenyaCard(p: PenyaDb) {
     window.alert("Plantilla de Instagram descargada. Ya puedes subirla a tus historias.");
   }
 }
-type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number | null; lng: number | null; foto: string; tipo_musica: string; tiene_evento?: boolean; instagram?: string | null; informacion?: string | null; asociada?: boolean; color?: string };
+type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number | null; lng: number | null; foto: string; tipo_musica: string; tiene_evento?: boolean; instagram?: string | null; informacion?: string | null; asociada?: boolean; color?: string; miembros_actuales?: number | null };
 const penyaStickerTypes = ["confetti","firework","bomb","flame","trumpet"] as const;
 function getPenyaStickerSeed(id:string){
   return Array.from(id).reduce((sum,char)=>((sum*31)+char.charCodeAt(0))>>>0,17);
@@ -425,6 +425,9 @@ function Home() {
   const [penyes, setPenyes] = useState<PenyaDb[]>([]);
   const [penyaPhotos, setPenyaPhotos] = useState<any[]>([]);
   const [misPenyes, setMisPenyes] = useState<string[]>([]);
+  const [penyaMembership, setPenyaMembership] = useState<any | null>(null);
+  const [penyaMembershipLoading, setPenyaMembershipLoading] = useState(false);
+  const [penyaMemberRoster, setPenyaMemberRoster] = useState<any[]>([]);
   const [actos, setActos] = useState<any[]>([]);
   const [eventos, setEventos] = useState<any[]>([]);
   const [noticias, setNoticias] = useState<any[]>([]);
@@ -663,12 +666,51 @@ function Home() {
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem("festalfas-mis-penyes") || "[]");
-      if (Array.isArray(saved)) setMisPenyes(saved.filter((id): id is string => typeof id === "string"));
+      if (Array.isArray(saved)) setMisPenyes(saved.filter((id): id is string => typeof id === "string").slice(0,1));
     } catch { setMisPenyes([]); }
   }, []);
-  const toggleMiPenya = (id: string) => {
-    setMisPenyes((current) => {
-      const next = current.includes(id) ? current.filter((item) => item !== id) : [...current, id];
+  useEffect(() => {
+    let active = true;
+    if (!accountUser?.id) { setPenyaMembership(null); return; }
+    setPenyaMembershipLoading(true);
+    supabase.from("penya_miembros").select("id,penya_id,user_id,display_name,avatar_url,joined_at").eq("user_id",accountUser.id).maybeSingle()
+      .then(({data,error}) => {
+        if (!active) return;
+        if (error) { setPenyaMembership(null); }
+        else { setPenyaMembership(data||null); setMisPenyes(data?.penya_id?[String(data.penya_id)]:[]); }
+        setPenyaMembershipLoading(false);
+      });
+    return () => { active = false; };
+  }, [accountUser?.id]);
+  useEffect(() => {
+    let active = true;
+    const managedIds = penyes.filter(p => puedeAdministrarPenya(String(p.id))).map(p => String(p.id));
+    if (!accountUser?.id || !managedIds.length) { setPenyaMemberRoster([]); return; }
+    supabase.from("penya_miembros").select("id,penya_id,user_id,display_name,avatar_url,joined_at").in("penya_id",managedIds).order("joined_at",{ascending:true})
+      .then(({data,error}) => { if(active) setPenyaMemberRoster(error?[]:(data||[])); });
+    return () => { active = false; };
+  }, [accountUser?.id,penyes]);
+  const toggleMiPenya = async (id: string) => {
+    if (accountUser?.id) {
+      setPenyaMembershipLoading(true);
+      try {
+        if (penyaMembership?.penya_id === id) {
+          const {error}=await supabase.from("penya_miembros").delete().eq("user_id",accountUser.id);
+          if(error) throw error;
+          setPenyaMembership(null); setMisPenyes([]);
+        } else if (penyaMembership?.penya_id && penyaMembership.penya_id !== id) {
+          window.alert("Ya perteneces a otra peña. Primero debes salir de ella desde su ficha para poder unirte a otra.");
+        } else {
+          const {data,error}=await supabase.from("penya_miembros").insert({penya_id:id,user_id:accountUser.id}).select("id,penya_id,user_id,display_name,avatar_url,joined_at").single();
+          if(error) throw error;
+          setPenyaMembership(data); setMisPenyes([id]);
+        }
+      } catch(error:any) { window.alert(error?.message||"No se ha podido actualizar tu peña."); }
+      finally { setPenyaMembershipLoading(false); }
+      return;
+    }
+    setMisPenyes(current => {
+      const next = current.includes(id) ? [] : [id];
       try { localStorage.setItem("festalfas-mis-penyes", JSON.stringify(next)); } catch { /* La selección sigue activa durante esta visita. */ }
       return next;
     });
