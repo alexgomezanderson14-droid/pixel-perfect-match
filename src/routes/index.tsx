@@ -294,7 +294,7 @@ async function sharePenyaCard(p: PenyaDb) {
     window.alert("Plantilla de Instagram descargada. Ya puedes subirla a tus historias.");
   }
 }
-type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number | null; lng: number | null; foto: string; tipo_musica: string; tiene_evento?: boolean; instagram?: string | null; informacion?: string | null; asociada?: boolean; color?: string };
+type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number | null; lng: number | null; foto: string; foto_url?: string | null; tipo_musica: string; tiene_evento?: boolean; instagram?: string | null; informacion?: string | null; asociada?: boolean; color?: string; miembros_actuales?: number | null };
 const penyaStickerTypes = ["confetti","firework","bomb","flame","trumpet"] as const;
 function getPenyaStickerSeed(id:string){
   return Array.from(id).reduce((sum,char)=>((sum*31)+char.charCodeAt(0))>>>0,17);
@@ -425,6 +425,9 @@ function Home() {
   const [penyes, setPenyes] = useState<PenyaDb[]>([]);
   const [penyaPhotos, setPenyaPhotos] = useState<any[]>([]);
   const [misPenyes, setMisPenyes] = useState<string[]>([]);
+  const [penyaMembership, setPenyaMembership] = useState<any | null>(null);
+  const [penyaMembershipLoading, setPenyaMembershipLoading] = useState(false);
+  const [penyaMemberRoster, setPenyaMemberRoster] = useState<any[]>([]);
   const [actos, setActos] = useState<any[]>([]);
   const [eventos, setEventos] = useState<any[]>([]);
   const [noticias, setNoticias] = useState<any[]>([]);
@@ -663,12 +666,51 @@ function Home() {
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem("festalfas-mis-penyes") || "[]");
-      if (Array.isArray(saved)) setMisPenyes(saved.filter((id): id is string => typeof id === "string"));
+      if (Array.isArray(saved)) setMisPenyes(saved.filter((id): id is string => typeof id === "string").slice(0,1));
     } catch { setMisPenyes([]); }
   }, []);
-  const toggleMiPenya = (id: string) => {
-    setMisPenyes((current) => {
-      const next = current.includes(id) ? current.filter((item) => item !== id) : [...current, id];
+  useEffect(() => {
+    let active = true;
+    if (!accountUser?.id) { setPenyaMembership(null); return; }
+    setPenyaMembershipLoading(true);
+    supabase.from("penya_miembros").select("id,penya_id,user_id,display_name,avatar_url,joined_at").eq("user_id",accountUser.id).maybeSingle()
+      .then(({data,error}) => {
+        if (!active) return;
+        if (error) { setPenyaMembership(null); }
+        else { setPenyaMembership(data||null); setMisPenyes(data?.penya_id?[String(data.penya_id)]:[]); }
+        setPenyaMembershipLoading(false);
+      });
+    return () => { active = false; };
+  }, [accountUser?.id]);
+  useEffect(() => {
+    let active = true;
+    const managedIds = penyes.filter(p => puedeAdministrarPenya(String(p.id))).map(p => String(p.id));
+    if (!accountUser?.id || !managedIds.length) { setPenyaMemberRoster([]); return; }
+    supabase.from("penya_miembros").select("id,penya_id,user_id,display_name,avatar_url,joined_at").in("penya_id",managedIds).order("joined_at",{ascending:true})
+      .then(({data,error}) => { if(active) setPenyaMemberRoster(error?[]:(data||[])); });
+    return () => { active = false; };
+  }, [accountUser?.id,penyes]);
+  const toggleMiPenya = async (id: string) => {
+    if (accountUser?.id) {
+      setPenyaMembershipLoading(true);
+      try {
+        if (penyaMembership?.penya_id === id) {
+          const {error}=await supabase.from("penya_miembros").delete().eq("user_id",accountUser.id);
+          if(error) throw error;
+          setPenyaMembership(null); setMisPenyes([]);
+        } else if (penyaMembership?.penya_id && penyaMembership.penya_id !== id) {
+          window.alert("Ya perteneces a otra peña. Primero debes salir de ella desde su ficha para poder unirte a otra.");
+        } else {
+          const {data,error}=await supabase.from("penya_miembros").insert({penya_id:id,user_id:accountUser.id}).select("id,penya_id,user_id,display_name,avatar_url,joined_at").single();
+          if(error) throw error;
+          setPenyaMembership(data); setMisPenyes([id]);
+        }
+      } catch(error:any) { window.alert(error?.message||"No se ha podido actualizar tu peña."); }
+      finally { setPenyaMembershipLoading(false); }
+      return;
+    }
+    setMisPenyes(current => {
+      const next = current.includes(id) ? [] : [id];
       try { localStorage.setItem("festalfas-mis-penyes", JSON.stringify(next)); } catch { /* La selección sigue activa durante esta visita. */ }
       return next;
     });
@@ -1415,7 +1457,7 @@ function Home() {
             </section>
             <section id="preferences-settings" className="glass scroll-mt-24 space-y-4 rounded-3xl border border-primary/15 p-5 shadow-sm sm:p-6"><div className="flex items-start gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary" aria-hidden="true"><svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></span><div><p className="text-[10px] font-extrabold uppercase tracking-wider text-primary">Personalización</p><h2 className="mt-1 text-xl font-extrabold text-primary">Preferencias de la web</h2><p className="mt-1 text-xs text-muted-foreground">Se guardan en este dispositivo y, al iniciar sesión, también en tu cuenta.</p></div></div><label className="flex items-start gap-3 rounded-2xl border border-border/70 p-3"><input type="checkbox" className="mt-1 h-4 w-4 accent-primary" checked={personalPrefs.showImportantNotices} onChange={e=>setPersonalPrefs(p=>({...p,showImportantNotices:e.target.checked}))}/><span><span className="block text-sm font-bold">Mostrar avisos importantes</span><span className="block text-xs text-muted-foreground">Controla si aparecen los comunicados destacados mientras navegas.</span></span></label><label className="flex items-start gap-3 rounded-2xl border border-border/70 p-3"><input type="checkbox" className="mt-1 h-4 w-4 accent-primary" checked={personalPrefs.reduceMotion} onChange={e=>setPersonalPrefs(p=>({...p,reduceMotion:e.target.checked}))}/><span><span className="block text-sm font-bold">Reducir animaciones</span><span className="block text-xs text-muted-foreground">Reduce transiciones y movimientos de la interfaz.</span></span></label><label className="flex items-start gap-3 rounded-2xl border border-border/70 p-3"><input type="checkbox" className="mt-1 h-4 w-4 accent-primary" checked={personalPrefs.largeText} onChange={e=>setPersonalPrefs(p=>({...p,largeText:e.target.checked}))}/><span><span className="block text-sm font-bold">Texto más grande</span><span className="block text-xs text-muted-foreground">Aumenta el tamaño de los textos para facilitar la lectura.</span></span></label><label className="flex items-start gap-3 rounded-2xl border border-border/70 p-3"><input type="checkbox" className="mt-1 h-4 w-4 accent-primary" checked={personalPrefs.highContrast} onChange={e=>setPersonalPrefs(p=>({...p,highContrast:e.target.checked}))}/><span><span className="block text-sm font-bold">Mayor contraste</span><span className="block text-xs text-muted-foreground">Refuerza el contraste de textos secundarios y bordes.</span></span></label><button type="button" disabled={accountBusy} onClick={()=>void savePersonalPreferences()} className="rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground">Guardar mis ajustes</button></section>
           </div>
-          {accountUser && penyes.some(p=>puedeAdministrarPenya(p.id)) && <section className="mt-6 space-y-3 rounded-3xl border border-primary/15 bg-primary/[.035] p-5 shadow-sm"><div><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-primary">Panel de gestión</p><h2 className="mt-1 text-xl font-extrabold text-primary">Peñas que administras</h2><p className="mt-1 text-xs text-muted-foreground">Desde aquí puedes editar la ficha completa o gestionar sus fotografías.</p></div><div className="space-y-2">{penyes.filter(p=>puedeAdministrarPenya(p.id)).map(p=><div key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-background p-3"><span className="text-sm font-extrabold text-primary">{p.nombre}</span><div className="flex flex-wrap gap-2"><button type="button" onClick={()=>setManagingPenyaPhotos(p)} className="rounded-full border border-primary/25 bg-background px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5">Gestionar imágenes</button><button type="button" onClick={()=>setEditingPenyaProfile(p)} className="rounded-full bg-primary px-3 py-2 text-xs font-extrabold text-primary-foreground transition hover:opacity-90">Editar ficha</button></div></div>)}</div></section>}
+          {accountUser && penyes.some(p=>puedeAdministrarPenya(p.id)) && <section className="mt-6 space-y-3 rounded-3xl border border-primary/15 bg-primary/[.035] p-5 shadow-sm"><div><p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-primary">Panel de gestión</p><h2 className="mt-1 text-xl font-extrabold text-primary">Peñas que administras</h2><p className="mt-1 text-xs text-muted-foreground">Desde aquí puedes editar la ficha completa o gestionar sus fotografías.</p></div><div className="space-y-3">{penyes.filter(p=>puedeAdministrarPenya(p.id)).map(p=>{const members=penyaMemberRoster.filter(member=>String(member.penya_id)===String(p.id));const avatar=p.foto_url||p.foto||"";const avatarUrl=avatar?(avatar.startsWith("http")?avatar:supabase.storage.from("penyes").getPublicUrl(avatar).data.publicUrl):"";return <div key={p.id} className="rounded-2xl border border-border bg-background p-3"><div className="flex flex-wrap items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-3"><div className="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-border bg-muted">{avatarUrl?<img src={avatarUrl} alt={"Perfil de "+p.nombre} className="h-full w-full object-cover" loading="lazy"/>:<span className="grid h-full w-full place-items-center font-black text-primary">{p.nombre.slice(0,1).toUpperCase()}</span>}</div><div className="min-w-0"><p className="truncate text-sm font-extrabold text-primary">{p.nombre}</p><p className="text-xs text-muted-foreground">{members.length} {members.length===1?"usuario":"usuarios"} vinculados</p></div></div><div className="flex flex-wrap gap-2"><button type="button" onClick={()=>setManagingPenyaPhotos(p)} className="rounded-full border border-primary/25 bg-background px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/5">Gestionar imágenes</button><button type="button" onClick={()=>setEditingPenyaProfile(p)} className="rounded-full bg-primary px-3 py-2 text-xs font-extrabold text-primary-foreground transition hover:opacity-90">Editar ficha</button></div></div><div className="mt-3 flex flex-wrap gap-2 border-t border-border/70 pt-3">{members.length?members.map(member=><span key={member.user_id} className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 py-1 pl-1 pr-3 text-xs font-semibold text-foreground">{member.avatar_url?<img src={member.avatar_url} alt="" className="h-7 w-7 rounded-full object-cover"/>:<span className="grid h-7 w-7 place-items-center rounded-full bg-primary/10 font-bold text-primary">{String(member.display_name||"U").slice(0,1).toUpperCase()}</span>}{member.display_name||"Usuario"}</span>):<span className="text-xs text-muted-foreground">Todavía no hay usuarios vinculados a esta peña.</span>}</div></div>})}</div></section>}
         </section>
         <section aria-labelledby="feedback-settings-title" className="scroll-mt-24 space-y-4 rounded-3xl border border-border/70 bg-card/60 p-5 sm:p-6">
           <div><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-primary">Ayúdanos a mejorar</p><h2 id="feedback-settings-title" className="mt-1 text-xl font-extrabold text-primary sm:text-2xl">Sugerir cambios o informar de errores</h2><p className="mt-1 text-sm text-muted-foreground">Cuéntanos qué mejorarías o qué ha dejado de funcionar. El equipo lo revisará desde administración. El correo es opcional y solo se guardará si lo escribes.</p></div>
@@ -1541,21 +1583,21 @@ function Home() {
       </div> : (
         <div className={`fixed inset-0 z-[2147483002] flex justify-center ${penyaDetailFullscreen ? "bg-[#102f3d] items-stretch p-0" : "festalfas-modal-backdrop items-end p-0 pt-[max(1rem,env(safe-area-inset-top))] sm:items-center sm:p-5"}`} onClick={() => closePenyaDetail()}>
           <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className={`penya-profile-sheet w-full overflow-auto overscroll-contain border border-border bg-background pb-[calc(105px+env(safe-area-inset-bottom))] shadow-[0_30px_100px_rgba(4,25,34,.42)] ${penyaDetailFullscreen ? "h-[100dvh] max-h-[100dvh] max-w-none rounded-none" : "max-h-[94dvh] max-w-[min(96vw,1500px)] rounded-t-[1.75rem] sm:rounded-[2rem]"}`}>
-            <div className="relative isolate h-[250px] overflow-hidden bg-[#c9e9f1] sm:h-[330px] lg:h-[370px]" style={{height:`clamp(250px,25vw,${selectedPenyaBannerBlock?.height??370}px)`,background:selectedPenyaBannerBlock?.bannerMode==="image"&&selectedPenyaBannerBlock?.url?`linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.04)),url("${selectedPenyaBannerBlock.url}") center / cover no-repeat`:selectedPenyaBannerBlock?selectedPenyaBannerGradient:"linear-gradient(90deg,#173f52,#286477 55%,#c6a24b)",backgroundPosition:selectedPenyaBannerBlock?.bannerMode==="image"?`${selectedPenyaBannerBlock?.positionX??50}% ${selectedPenyaBannerBlock?.positionY??50}%`:"center",backgroundSize:selectedPenyaBannerBlock?.bannerMode==="image"?`${(selectedPenyaBannerBlock?.zoom??100)}%`:"cover"}}>
+            <div className="penya-profile-banner relative isolate h-[250px] overflow-hidden bg-[#c9e9f1] sm:h-[330px] lg:h-[370px]" style={{height:`clamp(250px,25vw,${selectedPenyaBannerBlock?.height??370}px)`,background:selectedPenyaBannerBlock?.bannerMode==="image"&&selectedPenyaBannerBlock?.url?`linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.04)),url("${selectedPenyaBannerBlock.url}") center / cover no-repeat`:selectedPenyaBannerBlock?selectedPenyaBannerGradient:"linear-gradient(90deg,#173f52,#286477 55%,#c6a24b)",backgroundPosition:selectedPenyaBannerBlock?.bannerMode==="image"?`${selectedPenyaBannerBlock?.positionX??50}% ${selectedPenyaBannerBlock?.positionY??50}%`:"center",backgroundSize:selectedPenyaBannerBlock?.bannerMode==="image"?`${(selectedPenyaBannerBlock?.zoom??100)}%`:"cover"}}>
               <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
                 {/* Zona reservada para las pegatinas personalizadas de cada peña. */}
               </div>
               <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-20" style={{background:"linear-gradient(180deg, transparent 0%, transparent 34%, color-mix(in srgb, var(--background) 5%, transparent) 48%, color-mix(in srgb, var(--background) 18%, transparent) 62%, color-mix(in srgb, var(--background) 42%, transparent) 76%, color-mix(in srgb, var(--background) 72%, transparent) 88%, var(--background) 100%)"}}/>
               <button onClick={() => closePenyaDetail()} aria-label="Cerrar ficha" className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-30 grid h-10 w-10 place-items-center rounded-full border border-white/65 bg-white/65 text-lg font-bold text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105">✕</button>
             </div>
-            <div className="relative z-30 mx-auto -mt-[112px] w-full max-w-[1500px] px-4 pb-5 sm:-mt-[142px] sm:px-7 lg:px-12 xl:px-16 2xl:px-20">
+            <div className="relative z-30 mx-auto -mt-[160px] w-full max-w-[1500px] px-4 pb-5 sm:-mt-[142px] sm:px-7 lg:px-12 xl:px-16 2xl:px-20">
               <div className="relative flex flex-col items-center text-center">
                 <div className="relative z-30 grid h-44 w-44 shrink-0 place-items-center overflow-hidden rounded-full border-4 border-white bg-white text-5xl font-black text-[#173f52] shadow-[0_10px_34px_rgba(4,25,34,.22)] sm:h-56 sm:w-56  lg:h-72 lg:w-72 xl:h-80 xl:w-80" >{selectedPenyaLogo?<img src={selectedPenyaLogo} alt={"Foto de perfil de "+selectedPenya.nombre} style={getPenyaPhotoImageStyle(penyaProfileLogoSettings[selectedPenya.id])} className="h-full w-full bg-white object-cover"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
                 {(mayoralesPenyaId&&String(selectedPenya.id)===String(mayoralesPenyaId))&&<div className="mt-2"><span className="inline-flex items-center gap-1 rounded-full border border-[#e6ce91] bg-[#fff7df] px-3 py-1 text-[10px] font-extrabold tracking-wide text-[#765c25] sm:text-xs">♛ MAYORALES {mayoralesAnio}</span></div>}
                 <h2 className="mt-2 max-w-4xl break-words text-[26px] font-black leading-tight tracking-tight text-[#173f52] sm:mt-3 sm:text-4xl lg:text-[2.65rem]">{selectedPenya.nombre}</h2>
 
                 
-                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">{selectedPenya.lat!=null&&selectedPenya.lng!=null&&<button type="button" onClick={()=>{const id=selectedPenya.id;setSelectedPenya(null);setPenyaDetailFullscreen(false);goMap(id);}} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#d8e5e2] bg-white/90 px-4 py-2 text-xs font-extrabold text-[#24576a] shadow-sm transition hover:-translate-y-0.5">📍 Ver en el mapa</button>}{!selectedPenya.direccion&&<span className="inline-flex min-h-9 items-center rounded-full border border-[#e5eceb] bg-[#f5f8f7] px-3 py-2 text-[11px] font-bold text-[#52666b]">Sin ubicación registrada</span>}{selectedPenyaAcceptsVisits&&<span className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] font-extrabold text-emerald-800"><span aria-hidden="true">✓</span> Esta peña acepta visitas</span>}</div>
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">{puedeAdministrarPenya(selectedPenya.id)&&<button type="button" onClick={()=>setEditingPenyaProfile(selectedPenya)} className="inline-flex min-h-9 items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-extrabold text-primary-foreground shadow-sm transition hover:-translate-y-0.5">⚙ Editar mi peña</button>}{selectedPenya.lat!=null&&selectedPenya.lng!=null&&<button type="button" onClick={()=>{const id=selectedPenya.id;setSelectedPenya(null);setPenyaDetailFullscreen(false);goMap(id);}} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#d8e5e2] bg-white/90 px-4 py-2 text-xs font-extrabold text-[#24576a] shadow-sm transition hover:-translate-y-0.5">📍 Ver en el mapa</button>}{!selectedPenya.direccion&&<span className="inline-flex min-h-9 items-center rounded-full border border-[#e5eceb] bg-[#f5f8f7] px-3 py-2 text-[11px] font-bold text-[#52666b]">Sin ubicación registrada</span>}{selectedPenyaAcceptsVisits&&<span className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] font-extrabold text-emerald-800"><span aria-hidden="true">✓</span> Esta peña acepta visitas</span>}</div>
               </div>
               {(() => {
                 const profileTags = selectedPenyaCustomBlocks.filter((block:any)=>block.type==="tag" && String(block.title||"").trim() && !/^(acepta visitas|esta peña acepta visitas|puertas abiertas)$/i.test(String(block.title).trim())).map((block:any)=>String(block.title).trim());
@@ -1629,7 +1671,7 @@ function Home() {
 
               <div className="mt-5 flex w-full flex-nowrap items-stretch justify-center gap-2 rounded-2xl border border-[#dce7e4] bg-white/90 p-2 shadow-sm sm:mx-auto sm:max-w-4xl sm:gap-3 sm:p-3">
                 <button onClick={() => puedeGestionarPenya(selectedPenya.id) ? setEventFormPenya(selectedPenya) : avisarAccesoPenya()} className="flex min-w-0 flex-1 items-center justify-center rounded-xl bg-primary px-1.5 py-3 text-center text-[10px] font-bold leading-tight text-primary-foreground sm:px-3 sm:text-sm">＋ <span>Proponer un plan</span></button>
-                <button onClick={() => toggleMiPenya(selectedPenya.id)} aria-pressed={misPenyes.includes(selectedPenya.id)} className="flex min-w-0 flex-1 items-center justify-center rounded-xl border border-primary/20 bg-white px-1.5 py-3 text-center text-[10px] font-bold leading-tight text-primary sm:px-3 sm:text-sm">{misPenyes.includes(selectedPenya.id) ? "★ " : "☆ "}<span>Mi peña</span></button>
+                <button disabled={penyaMembershipLoading} onClick={() => void toggleMiPenya(selectedPenya.id)} aria-pressed={misPenyes.includes(selectedPenya.id)} className="flex min-w-0 flex-1 items-center justify-center rounded-xl border border-primary/20 bg-white px-1.5 py-3 text-center text-[10px] font-bold leading-tight text-primary sm:px-3 sm:text-sm">{misPenyes.includes(selectedPenya.id) ? "★ " : "☆ "}<span>Mi peña</span></button>
                 {instagramUrl(selectedPenya.instagram) && <a className="flex min-w-0 flex-1 items-center justify-center rounded-xl bg-[#173f52] px-1.5 py-3 text-center text-[10px] font-bold leading-tight text-white sm:px-3 sm:text-sm" href={instagramUrl(selectedPenya.instagram)!} target="_blank" rel="noreferrer"><span>Instagram ↗</span></a>}
                 <button onClick={() => puedeGestionarPenya(selectedPenya.id) ? setEventFormPenya(selectedPenya) : avisarAccesoPenya()} className="flex min-w-0 flex-1 items-center justify-center rounded-xl border border-primary/20 bg-white px-1.5 py-3 text-center text-[10px] font-bold leading-tight text-primary sm:px-3 sm:text-sm"><span>{selectedPenya.tiene_evento ? "Añadir evento" : "+ Añadir evento"}</span></button>
               </div>

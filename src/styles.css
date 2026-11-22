@@ -1399,3 +1399,14 @@ html, body, #root { min-width:0; max-width:100%; }
  .whats-new-scene{min-height:100dvh}
  .whats-new-overlay{touch-action:pan-y}
 }
+
+
+/* El banner se prolonga un poco más en móvil para que el degradado se funda con la ficha sin una línea de corte. */
+@media(max-width:639px){.penya-profile-banner{height:298px!important;}}
+
+/* Marco interior del palmarès: deja respirar el fondo alrededor de la línea. */
+.penya-awards-panel:after{content:"";position:absolute;inset:10px;border:1px solid rgba(255,255,255,.28);border-radius:calc(1.7rem - 5px);pointer-events:none;z-index:2;}
+.penya-awards-panel .penya-awards-orb{z-index:0;}
+.penya-award-no-insignia-icon{width:clamp(54px,7vw,68px);height:clamp(54px,7vw,68px);border:1px solid rgba(154,106,18,.22);}
+.penya-awards-showcase .penya-award-no-insignia-icon{width:52px;height:52px;}
+@media(max-width:639px){.penya-awards-panel:after{inset:8px;border-radius:1.25rem;}}
