@@ -123,7 +123,7 @@ export default function WhatsNewAnnouncement({ userKey, config = {}, penyes = []
                   card.slug === "penyes" ? <PenyaCollage penyes={penyes}/> :
                   card.slug === "noticias" ? <div className="whats-new-news-visual"><Newspaper aria-hidden="true"/><span>PEÑAS · FIESTAS · ACTUALIDAD</span></div> : null}
               </div>
-              <div className="whats-new-float-copy"><h3>{card.title}</h3></div>
+              <div className="whats-new-float-copy"><h3>{card.title}</h3>{card.description && <p>{card.description}</p>}</div>
               <span className="whats-new-float-open">Descubrir <span aria-hidden="true"><ArrowUpRight size={15}/></span></span>
             </Link>
           ))}
