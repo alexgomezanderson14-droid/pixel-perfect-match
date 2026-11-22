@@ -30,12 +30,12 @@ const AddCommunityEventForm = lazy(() => import("@/components/AddCommunityEventF
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PENYERA | Peñas, fiestas y programa de l’Alfàs del Pi" },
-      { name: "description", content: "Toda la actualidad de las peñas y las fiestas de l’Alfàs del Pi (Alfaz del Pi): programa festero, Mayorales, eventos, actividades, noticias y comunidad." },
+      { title: "PENYERA | Guía de peñas, fiestas y eventos de l’Alfàs del Pi" },
+      { name: "description", content: "Descubre las peñas, Mayorales, programa de fiestas, eventos, actividades y noticias de l’Alfàs del Pi (Alfaz del Pi), Alicante. Toda la comunidad festera en un mismo lugar." },
       { name: "keywords", content: "PENYERA, peñas Alfaz del Pi, peñas l’Alfàs del Pi, penyes, fiestas Alfaz, fiestas l’Alfàs, programa de fiestas, Mayorales, eventos, actividades y noticias festeras" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
-      { property: "og:title", content: "PENYERA: peñas y fiestas de l’Alfàs del Pi" },
-      { property: "og:description", content: "El espacio de las peñas y las personas que dan vida a las fiestas de l’Alfàs del Pi." },
+      { property: "og:title", content: "PENYERA: guía de peñas y fiestas de l’Alfàs del Pi" },
+      { property: "og:description", content: "Descubre las peñas, sigue las fiestas, consulta actividades y mantente al día de la actualidad festera de l’Alfàs del Pi." },
       { property: "og:url", content: "https://pixel-perfect-match-ten-tau.vercel.app/" },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "PENYERA" },

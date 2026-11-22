@@ -4,8 +4,8 @@ import SeoLandingPage from "@/components/SeoLandingPage";
 export const Route = createFileRoute("/eventos")({
   head: () => ({
     meta: [
-      { title: "Fiestas de Alfaz del Pi: eventos y actividades | PENYERA" },
-      { name: "description", content: "Agenda festera de l’Alfàs del Pi: eventos, actividades de las peñas, encuentros, actuaciones, fechas, horarios y lugares de celebración." },
+      { title: "Agenda de fiestas de l’Alfàs del Pi: eventos y actividades | PENYERA" },
+      { name: "description", content: "Encuentra eventos, actividades de las peñas, comidas, encuentros y actuaciones de las fiestas de l’Alfàs del Pi. Consulta fechas, horarios y ubicaciones confirmadas." },
       { name: "keywords", content: "eventos Alfaz del Pi, actividades fiestas Alfàs, agenda festera l'Alfàs, eventos peñas Alfaz, PENYERA" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "Eventos y actividades de las fiestas de l’Alfàs del Pi" },
@@ -24,7 +24,7 @@ export const Route = createFileRoute("/eventos")({
 });
 
 function EventosPage() {
-  return <SeoLandingPage
+  return <SeoLandingPage path="/eventos"
     eyebrow="Agenda festera · l’Alfàs del Pi"
     title="Eventos y actividades de las fiestas"
     description="Consulta en PENYERA la agenda de actividades relacionadas con las fiestas de l’Alfàs del Pi. Este espacio está pensado para reunir propuestas de las peñas, encuentros, actuaciones y otros planes festivos."
