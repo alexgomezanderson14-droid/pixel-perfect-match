@@ -4,8 +4,8 @@ import SeoLandingPage from "@/components/SeoLandingPage";
 export const Route = createFileRoute("/programa-fiestas")({
   head: () => ({
     meta: [
-      { title: "Programa de fiestas de Alfaz del Pi 2027 | PENYERA" },
-      { name: "description", content: "Consulta el programa de fiestas de l’Alfàs del Pi (Alfaz del Pi) 2027: actos, horarios, actuaciones, actividades de peñas y ubicaciones cuando se confirmen." },
+      { title: "Programa de fiestas de l’Alfàs del Pi 2027: actos y horarios | PENYERA" },
+      { name: "description", content: "Consulta el programa de fiestas de l’Alfàs del Pi 2027: calendario de actos, horarios, actuaciones, actividades de las peñas y avisos. Publicaremos los datos cuando estén confirmados." },
       { name: "keywords", content: "programa fiestas Alfaz del Pi 2027, programa festes l'Alfàs, horarios fiestas Alfaz, actos fiestas Alfaz, PENYERA" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "Programa de fiestas de l’Alfàs del Pi 2027" },
