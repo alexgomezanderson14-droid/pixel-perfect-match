@@ -3,8 +3,6 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type
 import { createPortal } from "react-dom";
 import { edicion, lugares as lugaresFijos, ui, type Categoria, type Lugar } from "@/content/fiestas";
 import { supabase } from "@/integrations/supabase/client";
-import AdminPenyaEditor from "@/components/AdminPenyaEditor";
-import PenyaPhotoManager from "@/components/PenyaPhotoManager";
 import {PenyaAwardsSection,type PenyaAward,mergeSeededPenyaAwards,penyaAwardBelongsTo} from "@/components/PenyaAwards";
 import CopyrightFooter from "@/components/CopyrightFooter";
 import WhatsNewAnnouncement from "@/components/WhatsNewAnnouncement";
@@ -23,6 +21,8 @@ function safeLocalStorageGet(key: string): string | null {
 }
 
 const FestMap = lazy(() => import("@/components/FestMap"));
+const AdminPenyaEditor = lazy(() => import("@/components/AdminPenyaEditor"));
+const PenyaPhotoManager = lazy(() => import("@/components/PenyaPhotoManager"));
 const AddPenyaForm = lazy(() => import("@/components/AddPenyaForm"));
 const AddPenyaEventForm = lazy(() => import("@/components/AddPenyaEventForm"));
 const AddCommunityEventForm = lazy(() => import("@/components/AddCommunityEventForm"));
@@ -389,6 +389,7 @@ function Home() {
   const penyaCarouselRef = useRef<HTMLDivElement | null>(null);
   const penyaScrollFrameRef = useRef<number | null>(null);
   const penyaCardCentersRef = useRef<number[]>([]);
+  const penyaVisualActiveCardRef = useRef<HTMLElement | null>(null);
   const penyaCarouselScrollLeftRef = useRef<number | null>(null);
   const penyaScrollEndTimerRef = useRef<number | null>(null);
   const penyaCarouselSignatureRef = useRef("");
@@ -572,14 +573,25 @@ function Home() {
       }
     }
     penyaCarouselScrollLeftRef.current=el.scrollLeft;
-    // Los navegadores actuales emiten scrollend; solo usamos el temporizador como respaldo en los antiguos.
-    if(!("onscrollend" in el)){
-      if(penyaScrollEndTimerRef.current!==null)window.clearTimeout(penyaScrollEndTimerRef.current);
-      penyaScrollEndTimerRef.current=window.setTimeout(()=>{
-        penyaScrollEndTimerRef.current=null;
-        handlePenyaCarouselScrollEnd();
-      },220);
+    // Actualiza solo la capa visual en el siguiente frame, sin volver a renderizar las 3 copias de peñas.
+    if(!searchingPenyes&&penyaScrollFrameRef.current===null){
+      penyaScrollFrameRef.current=window.requestAnimationFrame(()=>{
+        penyaScrollFrameRef.current=null;
+        const activeIndex=nearestPenyaCardIndex(el);
+        const nextCard=el.children[activeIndex] as HTMLElement|undefined;
+        if(nextCard!==penyaVisualActiveCardRef.current){
+          penyaVisualActiveCardRef.current?.classList.remove("is-scroll-active");
+          nextCard?.classList.add("is-scroll-active");
+          penyaVisualActiveCardRef.current=nextCard??null;
+        }
+      });
     }
+    // Respaldo uniforme para Safari y navegadores sin un evento scrollend fiable.
+    if(penyaScrollEndTimerRef.current!==null)window.clearTimeout(penyaScrollEndTimerRef.current);
+    penyaScrollEndTimerRef.current=window.setTimeout(()=>{
+      penyaScrollEndTimerRef.current=null;
+      handlePenyaCarouselScrollEnd();
+    },180);
   };
   // Al terminar el gesto solo actualizamos qué tarjeta queda centrada.
   // No se recentra ni se anima nada por iniciativa del código.
@@ -588,6 +600,8 @@ function Home() {
     const el=penyaCarouselRef.current;
     if(!el)return;
     if(!penyaCardCentersRef.current.length||penyaCardCentersRef.current.length!==el.children.length)rebuildPenyaCardCenters();
+    penyaVisualActiveCardRef.current?.classList.remove("is-scroll-active");
+    penyaVisualActiveCardRef.current=null;
     setActivePenyaCard(nearestPenyaCardIndex(el));
     penyaCarouselScrollLeftRef.current=el.scrollLeft;
   },[rebuildPenyaCardCenters,nearestPenyaCardIndex]);
@@ -1068,8 +1082,8 @@ function Home() {
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [fotoAmpliada, noticiaSeleccionada, noticiaImagenes.length]);
-  const featuredPhotoEditorModal = managingPenyaPhotos ? <div className="fixed inset-0 z-[2147483100] festalfas-modal-backdrop flex items-start justify-center overflow-y-auto p-3 pt-[max(1rem,env(safe-area-inset-top))] sm:p-6"><section className="my-auto w-full max-w-4xl rounded-3xl bg-background p-4 shadow-2xl sm:p-6"><PenyaPhotoManager penya={managingPenyaPhotos} onCancel={()=>setManagingPenyaPhotos(null)} onSaved={()=>{void (async()=>{const {data}=await supabase.from("site_content").select("clave,valor");setSiteContent(Object.fromEntries((data||[]).map((x:any)=>[x.clave,x.valor])));await cargar();})();}}/></section></div> : null;
-  const penyaProfileEditorModal = editingPenyaProfile ? <div className="fixed inset-0 z-[2147483101] festalfas-modal-backdrop flex items-start justify-center overflow-y-auto p-3 pt-[max(1rem,env(safe-area-inset-top))] sm:p-6"><section className="my-auto w-full max-w-4xl rounded-3xl bg-background p-4 shadow-2xl sm:p-6"><AdminPenyaEditor penya={editingPenyaProfile} onCancel={()=>setEditingPenyaProfile(null)} onSaved={()=>{setEditingPenyaProfile(null);void (async()=>{const {data}=await supabase.from("site_content").select("clave,valor");setSiteContent(Object.fromEntries((data||[]).map((x:any)=>[x.clave,x.valor])));await cargar();})();}}/></section></div> : null;
+  const featuredPhotoEditorModal = managingPenyaPhotos ? <div className="fixed inset-0 z-[2147483100] festalfas-modal-backdrop flex items-start justify-center overflow-y-auto p-3 pt-[max(1rem,env(safe-area-inset-top))] sm:p-6"><section className="my-auto w-full max-w-4xl rounded-3xl bg-background p-4 shadow-2xl sm:p-6"><Suspense fallback={<div className="min-h-48 animate-pulse rounded-2xl bg-muted" />}><PenyaPhotoManager penya={managingPenyaPhotos} onCancel={()=>setManagingPenyaPhotos(null)} onSaved={()=>{void (async()=>{const {data}=await supabase.from("site_content").select("clave,valor");setSiteContent(Object.fromEntries((data||[]).map((x:any)=>[x.clave,x.valor])));await cargar();})();}}/></Suspense></section></div> : null;
+  const penyaProfileEditorModal = editingPenyaProfile ? <div className="fixed inset-0 z-[2147483101] festalfas-modal-backdrop flex items-start justify-center overflow-y-auto p-3 pt-[max(1rem,env(safe-area-inset-top))] sm:p-6"><section className="my-auto w-full max-w-4xl rounded-3xl bg-background p-4 shadow-2xl sm:p-6"><Suspense fallback={<div className="min-h-48 animate-pulse rounded-2xl bg-muted" />}><AdminPenyaEditor penya={editingPenyaProfile} onCancel={()=>setEditingPenyaProfile(null)} onSaved={()=>{setEditingPenyaProfile(null);void (async()=>{const {data}=await supabase.from("site_content").select("clave,valor");setSiteContent(Object.fromEntries((data||[]).map((x:any)=>[x.clave,x.valor])));await cargar();})();}}/></Suspense></section></div> : null;
   const renderNewsCard = (n:any) => <button type="button" key={n.id} onClick={()=>{setNoticiaSeleccionada(n);window.scrollTo({top:0,behavior:"smooth"});}} className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
     {n.tipo!=="video"&&n.imagen_url&&<div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden"><img src={n.imagen_url} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center transition duration-300 group-hover:scale-[1.02]"/></div>}
     <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">
@@ -1346,9 +1360,9 @@ function Home() {
         </section>
       </main>}      {currentPage==="penyes" && <main className="relative z-0 mx-auto min-h-[75vh] w-full min-w-0 max-w-[1600px] px-4 pb-32 pt-0 sm:px-5 sm:pt-0">
         <section id="penyes" className="scroll-mt-24">
-          <div className="relative left-1/2 mb-6 min-h-[360px] w-screen -translate-x-1/2 overflow-hidden rounded-b-[1.75rem] bg-gradient-to-br from-[#173f52] via-[#236579] to-[#2c7180] px-5 py-10 text-white shadow-[0_12px_32px_rgba(23,63,82,.16)] sm:mb-8 sm:min-h-[420px] sm:px-8 sm:py-12">
-            {siteContent["penyes_banner_image_url"] ? <img src={siteContent["penyes_banner_image_url"]} alt="" aria-hidden="true" fetchPriority="low" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center"/> : null}
-            {siteContent["penyes_banner_image_url"] ? <div className="absolute inset-0 bg-[#102f40]/45"/> : null}
+          <div className="relative left-1/2 -mt-3 mb-6 min-h-[360px] w-screen -translate-x-1/2 overflow-hidden rounded-b-[1.75rem] bg-gradient-to-br from-[#173f52] via-[#236579] to-[#2c7180] px-5 py-10 text-white shadow-[0_12px_32px_rgba(23,63,82,.16)] sm:mb-8 sm:mt-0 sm:min-h-[420px] sm:px-8 sm:py-12">
+            {siteContent["penyes_banner_image_url"] ? <img src={siteContent["penyes_banner_image_url"]} alt="" aria-hidden="true" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center"/> : null}
+            {siteContent["penyes_banner_image_url"] ? <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-[#102f40]/20 via-[#173f52]/35 to-[#102f40]/75"/> : null}
             <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-12 h-64 w-64 rounded-full border-[28px] border-white/10"/>
             <div className="relative z-10 mx-auto flex min-h-[280px] w-full max-w-[1500px] flex-col justify-center sm:min-h-[330px]">
               <p className="text-[10px] font-extrabold uppercase tracking-[.24em] text-white/70 sm:text-xs">La vida festera de l'Alfàs del Pi</p>
@@ -1583,7 +1597,7 @@ function Home() {
       </div> : (
         <div className={`fixed inset-0 z-[2147483002] flex justify-center ${penyaDetailFullscreen ? "bg-[#102f3d] items-stretch p-0" : "festalfas-modal-backdrop items-end p-0 pt-[max(1rem,env(safe-area-inset-top))] sm:items-center sm:p-5"}`} onClick={() => closePenyaDetail()}>
           <section role="dialog" aria-modal="true" aria-label={selectedPenya.nombre} onClick={(e) => e.stopPropagation()} className={`penya-profile-sheet w-full overflow-auto overscroll-contain border border-border bg-background pb-[calc(105px+env(safe-area-inset-bottom))] shadow-[0_30px_100px_rgba(4,25,34,.42)] ${penyaDetailFullscreen ? "h-[100dvh] max-h-[100dvh] max-w-none rounded-none" : "max-h-[94dvh] max-w-[min(96vw,1500px)] rounded-t-[1.75rem] sm:rounded-[2rem]"}`}>
-            <div className="penya-profile-banner relative isolate h-[250px] overflow-hidden bg-[#c9e9f1] sm:h-[330px] lg:h-[370px]" style={{height:`clamp(250px,25vw,${selectedPenyaBannerBlock?.height??370}px)`,background:selectedPenyaBannerBlock?.bannerMode==="image"&&selectedPenyaBannerBlock?.url?`linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.04)),url("${selectedPenyaBannerBlock.url}") center / cover no-repeat`:selectedPenyaBannerBlock?selectedPenyaBannerGradient:"linear-gradient(90deg,#173f52,#286477 55%,#c6a24b)",backgroundPosition:selectedPenyaBannerBlock?.bannerMode==="image"?`${selectedPenyaBannerBlock?.positionX??50}% ${selectedPenyaBannerBlock?.positionY??50}%`:"center",backgroundSize:selectedPenyaBannerBlock?.bannerMode==="image"?`${(selectedPenyaBannerBlock?.zoom??100)}%`:"cover"}}>
+            <div className="penya-profile-banner relative isolate h-[250px] overflow-hidden bg-[#c9e9f1] sm:h-[330px] lg:h-[370px]" style={{height:`clamp(250px,25vw,${selectedPenyaBannerBlock?.height??370}px)`,background:selectedPenyaBannerBlock?.bannerMode==="image"&&selectedPenyaBannerBlock?.url?`linear-gradient(180deg,rgba(23,63,82,.12) 0%,rgba(23,63,82,.03) 34%,rgba(23,63,82,.12) 62%,rgba(23,63,82,.34) 100%),url("${selectedPenyaBannerBlock.url}") center / cover no-repeat`:selectedPenyaBannerBlock?selectedPenyaBannerGradient:"linear-gradient(90deg,#173f52,#286477 55%,#c6a24b)",backgroundPosition:selectedPenyaBannerBlock?.bannerMode==="image"?`${selectedPenyaBannerBlock?.positionX??50}% ${selectedPenyaBannerBlock?.positionY??50}%`:"center",backgroundSize:selectedPenyaBannerBlock?.bannerMode==="image"?`${(selectedPenyaBannerBlock?.zoom??100)}%`:"cover"}}>
               <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
                 {/* Zona reservada para las pegatinas personalizadas de cada peña. */}
               </div>
