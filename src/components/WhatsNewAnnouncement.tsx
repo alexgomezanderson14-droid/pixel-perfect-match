@@ -93,14 +93,14 @@ export default function WhatsNewAnnouncement({ userKey, config = {}, penyes = []
     const start = touchStartY.current;
     const end = event.changedTouches[0]?.clientY;
     touchStartY.current = null;
-    if (start !== null && end !== undefined && start - end > 85) {
+    if (!preview && start !== null && end !== undefined && start - end > 85) {
       event.preventDefault();
       window.dispatchEvent(new Event("penyera:go-home"));
       close();
     }
   }, [close]);
   useEffect(() => {
-    if (!open) return;
+    if (!open || preview) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") close(); };
