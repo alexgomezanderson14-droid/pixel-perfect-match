@@ -24,7 +24,7 @@ export const Route = createFileRoute("/programa-fiestas")({
 });
 
 function ProgramaPage() {
-  return <SeoLandingPage
+  return <SeoLandingPage path="/programa-fiestas"
     eyebrow="Fiestas 2027 · l’Alfàs del Pi"
     title="Programa de fiestas de l’Alfàs del Pi"
     description="Esta página reunirá la programación de las próximas fiestas de l’Alfàs del Pi: actos, horarios, actuaciones, actividades de las peñas y lugares de celebración, con la información organizada para consultarla fácilmente desde el móvil."
