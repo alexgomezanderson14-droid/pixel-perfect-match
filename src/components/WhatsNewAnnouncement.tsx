@@ -119,7 +119,7 @@ export default function WhatsNewAnnouncement({ userKey, config = {}, penyes = []
         </header>
         <div className="whats-new-floating-cards">
           {settings.cards.map((card) => (
-            <Link key={card.slug} to="/novedades/$slug" params={{ slug: card.slug }} className={`whats-new-float-card whats-new-pos-${card.position} whats-new-size-${card.size} whats-new-card-${card.slug}`}>
+            <Link key={card.slug} to="/novedades/$slug" params={{ slug: card.slug }} className={`whats-new-float-card whats-new-pos-${card.position} whats-new-size-${card.size} whats-new-card-${card.slug}`} onClick={(event) => { if (preview) event.preventDefault(); }}>
               <span className="whats-new-float-tag">{card.tag}</span>
               {card.slug === "noticias" ? <div className="whats-new-news-mark"><Newspaper aria-hidden="true"/><span>PEÑAS · FIESTAS · ACTUALIDAD</span></div> : <div className={`whats-new-card-media${card.slug === "penyes" ? " is-penyes" : " is-premios"}`}>{card.image ? <img className="whats-new-custom-image" src={card.image} alt="" loading="lazy" decoding="async"/> : card.slug === "penyes" ? <PenyaCollage penyes={penyes}/> : null}</div>}
               <div className="whats-new-float-copy"><h3>{card.title}</h3>{card.description && <p>{card.description}</p>}</div>
