@@ -25,8 +25,7 @@ function readConfig(config: Record<string, string> = {}) {
       title: config[`novedades_tarjeta_${index + 1}_titulo`] || card.title,
       description: config[`novedades_tarjeta_${index + 1}_texto`] || card.description,
       image: config[`novedades_tarjeta_${index + 1}_imagen`] || card.image,
-      size: (config[`novedades_tarjeta_${index + 1}_tamano`] as Card["size"]) || card.size,
-      position: config[`novedades_tarjeta_${index + 1}_posicion`] || card.position,
+      size: (config[`novedades_tarjeta_${index + 1}_tamano`] as Card["size"]) || card.size,\n      position: config[`novedades_tarjeta_${index + 1}_posicion`] || card.position,
     })),
   };
 }

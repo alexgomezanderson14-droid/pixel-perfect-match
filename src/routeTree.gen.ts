@@ -13,10 +13,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as EventosRouteImport } from './routes/eventos'
 import { Route as NoticiasRouteImport } from './routes/noticias'
+import { Route as NovedadesSlugRouteImport } from './routes/novedades.$slug'
 import { Route as PenyesRouteImport } from './routes/penyes'
 import { Route as ProgramaFiestasRouteImport } from './routes/programa-fiestas'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as NovedadesSlugRouteImport } from './routes/novedades.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -38,6 +38,11 @@ const NoticiasRoute = NoticiasRouteImport.update({
   path: '/noticias',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NovedadesSlugRoute = NovedadesSlugRouteImport.update({
+  id: '/novedades/$slug',
+  path: '/novedades/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PenyesRoute = PenyesRouteImport.update({
   id: '/penyes',
   path: '/penyes',
@@ -53,31 +58,26 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
-const NovedadesSlugRoute = NovedadesSlugRouteImport.update({
-  id: '/novedades/$slug',
-  path: '/novedades/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/eventos': typeof EventosRoute
   '/noticias': typeof NoticiasRoute
+  '/novedades/$slug': typeof NovedadesSlugRoute
   '/penyes': typeof PenyesRoute
   '/programa-fiestas': typeof ProgramaFiestasRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/novedades/$slug': typeof NovedadesSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/eventos': typeof EventosRoute
   '/noticias': typeof NoticiasRoute
+  '/novedades/$slug': typeof NovedadesSlugRoute
   '/penyes': typeof PenyesRoute
   '/programa-fiestas': typeof ProgramaFiestasRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/novedades/$slug': typeof NovedadesSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -85,10 +85,10 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/eventos': typeof EventosRoute
   '/noticias': typeof NoticiasRoute
+  '/novedades/$slug': typeof NovedadesSlugRoute
   '/penyes': typeof PenyesRoute
   '/programa-fiestas': typeof ProgramaFiestasRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/novedades/$slug': typeof NovedadesSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,30 +97,30 @@ export interface FileRouteTypes {
     | '/admin'
     | '/eventos'
     | '/noticias'
+    | '/novedades/$slug'
     | '/penyes'
     | '/programa-fiestas'
     | '/sitemap.xml'
-    | '/novedades/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
     | '/eventos'
     | '/noticias'
+    | '/novedades/$slug'
     | '/penyes'
     | '/programa-fiestas'
     | '/sitemap.xml'
-    | '/novedades/$slug'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/eventos'
     | '/noticias'
+    | '/novedades/$slug'
     | '/penyes'
     | '/programa-fiestas'
     | '/sitemap.xml'
-    | '/novedades/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -128,10 +128,10 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   EventosRoute: typeof EventosRoute
   NoticiasRoute: typeof NoticiasRoute
+  NovedadesSlugRoute: typeof NovedadesSlugRoute
   PenyesRoute: typeof PenyesRoute
   ProgramaFiestasRoute: typeof ProgramaFiestasRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  NovedadesSlugRoute: typeof NovedadesSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -164,6 +164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NoticiasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/novedades/$slug': {
+      id: '/novedades/$slug'
+      path: '/novedades/$slug'
+      fullPath: '/novedades/$slug'
+      preLoaderRoute: typeof NovedadesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/penyes': {
       id: '/penyes'
       path: '/penyes'
@@ -185,13 +192,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/novedades/$slug': {
-      id: '/novedades/$slug'
-      path: '/novedades/$slug'
-      fullPath: '/novedades/$slug'
-      preLoaderRoute: typeof NovedadesSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -200,10 +200,10 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   EventosRoute: EventosRoute,
   NoticiasRoute: NoticiasRoute,
+  NovedadesSlugRoute: NovedadesSlugRoute,
   PenyesRoute: PenyesRoute,
   ProgramaFiestasRoute: ProgramaFiestasRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  NovedadesSlugRoute: NovedadesSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
