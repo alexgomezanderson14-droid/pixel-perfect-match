@@ -1455,3 +1455,21 @@ html, body, #root { min-width:0; max-width:100%; }
   }
 }
 .page-bg { background-attachment: scroll !important; }
+
+
+/* Vista previa editable del contenido que verá el usuario al abrir cada novedad. */
+.whats-new-preview-detail{position:absolute;z-index:100;inset:0;display:grid;place-items:center;padding:22px;background:rgba(12,35,47,.48);backdrop-filter:blur(8px)}
+.whats-new-preview-detail-card{position:relative;width:min(92%,620px);max-height:88%;overflow:auto;border:1px solid rgba(255,255,255,.8);border-radius:26px;padding:clamp(22px,4vw,38px);background:rgba(255,255,255,.97);color:#263c46;box-shadow:0 28px 80px rgba(8,28,38,.28)}
+.whats-new-preview-detail-card>button{position:absolute;right:16px;top:14px;width:36px;height:36px;border-radius:50%;background:#e7eff2;color:#173f52;font-size:25px;line-height:1}
+.whats-new-preview-detail-card>span{display:inline-block;border-radius:30px;padding:6px 11px;background:#e0edf1;color:#2587a8;font-size:10px;font-weight:900;letter-spacing:.14em}
+.whats-new-preview-detail-card h3{margin-top:18px;padding-right:26px;color:#173f52;font-size:clamp(25px,4vw,38px);font-weight:950;line-height:1.05}
+.whats-new-preview-detail-card p{margin-top:9px;color:#64777d;font-size:14px;line-height:1.55;white-space:pre-line}
+.whats-new-preview-detail-card h4{margin-top:20px;color:#173f52;font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+.whats-new-preview-detail-card>strong{display:inline-flex;margin-top:22px;border-radius:30px;padding:11px 18px;background:#173f52;color:#fff;font-size:13px}
+.whats-new-custom-image{max-width:100%}
+
+/* El degradado inferior del banner continúa fuera de su caja y se funde con el fondo real de la ficha. */
+.penya-profile-banner{overflow:visible!important;z-index:1}
+.penya-profile-banner::after{content:"";position:absolute;z-index:21;pointer-events:none;left:0;right:0;bottom:-116px;height:118px;background:linear-gradient(180deg,var(--background) 0%,var(--background) 100%)}
+.penya-profile-banner>div[aria-hidden="true"].absolute.inset-0.z-20{height:calc(100% + 118px)!important;background:linear-gradient(180deg,transparent 0%,transparent 28%,color-mix(in srgb,var(--background) 7%,transparent) 42%,color-mix(in srgb,var(--background) 26%,transparent) 57%,color-mix(in srgb,var(--background) 62%,transparent) 76%,var(--background) 100%)!important}
+@media(max-width:639px){.penya-profile-banner::after{bottom:-132px;height:134px}.penya-profile-banner>div[aria-hidden="true"].absolute.inset-0.z-20{height:calc(100% + 134px)!important}}
