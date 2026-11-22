@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, ArrowRight, Newspaper, Trophy, Smartphone, Search, CalendarDays, Medal, Gauge, Images, Users } from "lucide-react";
 import CopyrightFooter from "@/components/CopyrightFooter";
 
@@ -59,7 +61,25 @@ const content = {
 
 function NovedadPage() {
   const { slug } = Route.useParams();
-  const item = content[slug as keyof typeof content] || (slug === "penyes-movil" ? content.penyes : undefined);
+  const [custom, setCustom] = useState<Record<string,string>>({});
+  useEffect(() => {
+    let active = true;
+    supabase.from("site_content").select("clave,valor").like("clave", "novedades_detalle_%").then(({data,error}) => {
+      if (!active || error || !data) return;
+      setCustom(Object.fromEntries(data.map((row:any) => [String(row.clave),String(row.valor ?? "")])));
+    });
+    return () => { active = false; };
+  }, []);
+  const baseItem = content[slug as keyof typeof content] || (slug === "penyes-movil" ? content.penyes : undefined);
+  const detailKey = (part:string) => `novedades_detalle_${slug}_${part}`;
+  const item = baseItem ? {
+    ...baseItem,
+    title: custom[detailKey("titulo")] || baseItem.title,
+    intro: custom[detailKey("intro")] || baseItem.intro,
+    what: custom[detailKey("contenido")] ? custom[detailKey("contenido")].split("\\n").filter(Boolean) : baseItem.what,
+    steps: custom[detailKey("pasos")] ? custom[detailKey("pasos")].split("\\n").filter(Boolean) : baseItem.steps,
+    cta: custom[detailKey("boton")] || baseItem.cta,
+  } : undefined;
   if (!item) return <main className="mx-auto max-w-3xl px-5 py-20 text-center"><h1 className="text-3xl font-extrabold text-primary">Novedad no encontrada</h1><Link to="/" className="mt-6 inline-flex rounded-full bg-primary px-5 py-3 font-bold text-primary-foreground">Volver al inicio</Link></main>;
   const Icon = item.icon;
   return (
