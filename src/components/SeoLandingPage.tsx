@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import CopyrightFooter from "@/components/CopyrightFooter";
 
 type SeoLandingPageProps = {
-  eyebrow: string;
+  path: "/penyes" | "/programa-fiestas" | "/eventos";\n  eyebrow: string;
   title: string;
   description: string;
   intro: string;
@@ -10,7 +10,7 @@ type SeoLandingPageProps = {
   links: { label: string; to: "/penyes" | "/programa-fiestas" | "/eventos" | "/noticias" }[];
 };
 
-export default function SeoLandingPage({ eyebrow, title, description, intro, sections, links }: SeoLandingPageProps) {
+export default function SeoLandingPage({ path, eyebrow, title, description, intro, sections, links }: SeoLandingPageProps) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/70 bg-card/80">
