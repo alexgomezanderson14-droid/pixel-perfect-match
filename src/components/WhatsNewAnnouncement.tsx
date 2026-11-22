@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, Newspaper, X } from "lucide-react";
 
 type PenyaPreview = { id: string; nombre: string; foto?: string };
-type Props = { userKey?: string | null; config?: Record<string, string>; penyes?: PenyaPreview[] };
+type Props = { userKey?: string | null; config?: Record<string, string>; penyes?: PenyaPreview[]; preview?: boolean };
 type Card = { slug: string; tag: string; title: string; description: string; image: string; size: "small" | "medium" | "large"; position: string };
 const defaults: Card[] = [
   { slug: "penyes", tag: "NUEVO", title: "SECCIÓN PEÑAS RENOVADA", description: "Descubre todas las peñas y sus fichas.", image: "", size: "large", position: "left-top" },
@@ -18,7 +18,7 @@ function storageKey(userKey?: string | null) {
 function readConfig(config: Record<string, string> = {}) {
   return {
     title: config["novedades_titulo"] || "¡Mira todo lo nuevo!",
-    background: [config["novedades_fondo_1"] && config["novedades_fondo_1"] !== "#f5dfe7" ? config["novedades_fondo_1"] : "#e8f1f4", config["novedades_fondo_2"] && config["novedades_fondo_2"] !== "#e9dff0" ? config["novedades_fondo_2"] : "#dcebf0", config["novedades_fondo_3"] && config["novedades_fondo_3"] !== "#d9e9ed" ? config["novedades_fondo_3"] : "#eef3f2"],
+    background: [config["novedades_fondo_1"] || "#c8dfe7", config["novedades_fondo_2"] || "#91b8c7", config["novedades_fondo_3"] || "#d9d0df"],
     cards: defaults.map((card, index) => ({
       ...card,
       tag: config[`novedades_tarjeta_${index + 1}_etiqueta`] || card.tag,
@@ -49,11 +49,12 @@ function PenyaCollage({ penyes }: { penyes: PenyaPreview[] }) {
     </div>)}
   </div>;
 }
-export default function WhatsNewAnnouncement({ userKey, config = {}, penyes = [] }: Props) {
-  const [open, setOpen] = useState(false);
+export default function WhatsNewAnnouncement({ userKey, config = {}, penyes = [], preview = false }: Props) {
+  const [open, setOpen] = useState(preview);
   const touchStartY = useRef<number | null>(null);
   const settings = useMemo(() => readConfig(config), [config]);
   useEffect(() => {
+    if (preview) return;
     let forced = false;
     try {
       forced = new URLSearchParams(window.location.search).get("novedades") === "1";
@@ -66,8 +67,9 @@ export default function WhatsNewAnnouncement({ userKey, config = {}, penyes = []
       return () => window.clearTimeout(timer);
     }
     return undefined;
-  }, [userKey]);
+  }, [userKey, preview]);
   const close = useCallback(() => {
+    if (preview) return;
     try { window.localStorage.setItem(storageKey(userKey), "1"); } catch { /* Cierre disponible sin almacenamiento. */ }
     if (window.location.search.includes("novedades=1")) {
       const url = new URL(window.location.href);
@@ -75,7 +77,7 @@ export default function WhatsNewAnnouncement({ userKey, config = {}, penyes = []
       window.history.replaceState({}, "", url.pathname + url.search + url.hash);
     }
     setOpen(false);
-  }, [userKey]);
+  }, [userKey, preview]);
   const reopen = useCallback(() => {
     try { window.localStorage.removeItem(storageKey(userKey)); } catch { /* La reapertura funciona también sin almacenamiento. */ }
     setOpen(true);
@@ -106,11 +108,12 @@ export default function WhatsNewAnnouncement({ userKey, config = {}, penyes = []
     return () => { document.body.style.overflow = previous; window.removeEventListener("keydown", onKeyDown); };
   }, [open, close]);
   if (!open) return null;
-  return createPortal(
-    <div className="whats-new-overlay" role="dialog" aria-modal="true" aria-labelledby="whats-new-title" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} style={{ background: `linear-gradient(135deg,${settings.background[0]},${settings.background[1]} 52%,${settings.background[2]})` }}>
+  const presentation = (
+    <div className={`whats-new-overlay${preview ? " is-preview" : ""}`} role="dialog" aria-modal="true" aria-labelledby="whats-new-title" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} style={{ background: `linear-gradient(135deg,${settings.background[0]},${settings.background[1]} 52%,${settings.background[2]})` }}>
       <button type="button" className="whats-new-close" onClick={close} aria-label="Cerrar aviso de novedades"><X size={20} /></button>
       <div className="whats-new-scene">
         <header className="whats-new-heading">
+          <img className="whats-new-brand-mark" src="/penyera-isotipo.svg" alt="PENYERA" />
           <span className="whats-new-eyebrow">PENYERA · ACTUALIZACIONES</span>
           <h2 id="whats-new-title">{settings.title}</h2>
         </header>
@@ -118,19 +121,15 @@ export default function WhatsNewAnnouncement({ userKey, config = {}, penyes = []
           {settings.cards.map((card) => (
             <Link key={card.slug} to="/novedades/$slug" params={{ slug: card.slug }} className={`whats-new-float-card whats-new-pos-${card.position} whats-new-size-${card.size} whats-new-card-${card.slug}`}>
               <span className="whats-new-float-tag">{card.tag}</span>
-              <div className="whats-new-card-media">
-                {card.image ? <img className="whats-new-custom-image" src={card.image} alt="" loading="lazy" decoding="async"/> :
-                  card.slug === "penyes" ? <PenyaCollage penyes={penyes}/> :
-                  card.slug === "noticias" ? <div className="whats-new-news-visual"><Newspaper aria-hidden="true"/><span>PEÑAS · FIESTAS · ACTUALIDAD</span></div> : null}
-              </div>
+              {card.slug === "noticias" ? <div className="whats-new-news-mark"><Newspaper aria-hidden="true"/><span>PEÑAS · FIESTAS · ACTUALIDAD</span></div> : <div className={`whats-new-card-media${card.slug === "penyes" ? " is-penyes" : " is-premios"}`}>{card.image ? <img className="whats-new-custom-image" src={card.image} alt="" loading="lazy" decoding="async"/> : <PenyaCollage penyes={penyes}/>}</div>}
               <div className="whats-new-float-copy"><h3>{card.title}</h3>{card.description && <p>{card.description}</p>}</div>
               <span className="whats-new-float-open">Descubrir <span aria-hidden="true"><ArrowUpRight size={15}/></span></span>
             </Link>
           ))}
         </div>
       </div>
-      <div className="whats-new-swipe-hint" aria-hidden="true"><span />Desliza hacia arriba para entrar</div>
-    </div>,
-    document.body
+      {!preview && <div className="whats-new-swipe-hint" aria-hidden="true"><span />Desliza hacia arriba para entrar</div>}
+    </div>
   );
+  return preview ? presentation : createPortal(presentation, document.body);
 }
