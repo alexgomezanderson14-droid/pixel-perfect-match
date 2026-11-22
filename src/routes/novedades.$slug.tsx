@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, ArrowRight, Newspaper, Trophy, Smartphone, Search, CalendarDays, Medal, Gauge, Images } from "lucide-react";
+import { ArrowLeft, ArrowRight, Newspaper, Trophy, Smartphone, Search, CalendarDays, Medal, Gauge, Images, Users } from "lucide-react";
 import CopyrightFooter from "@/components/CopyrightFooter";
 
 export const Route = createFileRoute("/novedades/$slug")({
   head: ({ params }) => {
-    const titles: Record<string,string> = { noticias: "Nueva sección de noticias", premios: "Premios y reconocimientos", "penyes-movil": "Peñas más ágiles en móvil" };
+    const titles: Record<string,string> = { noticias: "Nueva sección de noticias", premios: "Premios y reconocimientos", penyes: "Nueva sección de peñas", "penyes-movil": "Peñas más ágiles en móvil" };
     return { meta: [{ title: (titles[params.slug] || "Novedades") + " | PENYERA" }, { name: "description", content: "Aprende a utilizar las últimas novedades de PENYERA." }, { property: "og:title", content: (titles[params.slug] || "Novedades") + " | PENYERA" }, { property: "og:description", content: "Aprende a utilizar las últimas novedades de PENYERA." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex, follow" }] };
   },
   component: NovedadPage,
@@ -33,6 +33,17 @@ const content = {
     icon: Trophy,
     visual: "awards",
   },
+  penyes: {
+    eyebrow: "NUEVO · COMUNIDAD FESTERA",
+    title: "Descubre la sección de Peñas renovada",
+    intro: "Un espacio visual para recorrer las peñas, entrar en sus fichas y conocer su identidad, fotografías, actividades y reconocimientos.",
+    what: ["El carrusel reúne las peñas en tarjetas visuales con sus imágenes y colores propios. La peña central destaca y las demás quedan alrededor para que puedas descubrirlas deslizando.", "Al abrir una peña accedes a su ficha, donde puedes consultar su presentación, galería de fotos, información, actividades y palmarés cuando esté disponible.", "La navegación se ha adaptado a móvil y ordenador para que puedas recorrer el directorio con gestos o controles de navegación."],
+    steps: ["Entra en Peñas desde la navegación principal.", "Desliza horizontalmente en móvil o utiliza las flechas en ordenador para recorrer el carrusel.", "Pulsa la tarjeta de una peña para abrir su ficha.", "Explora sus fotos, información, actividades y reconocimientos."],
+    link: "/",
+    cta: "Explorar las peñas",
+    icon: Users,
+    visual: "penyes",
+  },
   "penyes-movil": {
     eyebrow: "MEJORA · EXPERIENCIA MÓVIL",
     title: "Descubrir las peñas ahora es más ligero",
@@ -48,7 +59,7 @@ const content = {
 
 function NovedadPage() {
   const { slug } = Route.useParams();
-  const item = content[slug as keyof typeof content];
+  const item = content[slug as keyof typeof content] || (slug === "penyes-movil" ? content.penyes : undefined);
   if (!item) return <main className="mx-auto max-w-3xl px-5 py-20 text-center"><h1 className="text-3xl font-extrabold text-primary">Novedad no encontrada</h1><Link to="/" className="mt-6 inline-flex rounded-full bg-primary px-5 py-3 font-bold text-primary-foreground">Volver al inicio</Link></main>;
   const Icon = item.icon;
   return (
@@ -66,7 +77,7 @@ function NovedadPage() {
           <div className="mt-5 grid gap-8 md:grid-cols-[1.1fr_.9fr] md:items-center">
             <div><h1 className="max-w-2xl text-4xl font-black leading-[1.04] tracking-tight sm:text-6xl">{item.title}</h1><p className="mt-5 max-w-xl text-base leading-relaxed text-[#40575e] sm:text-lg">{item.intro}</p><Link to={item.link} className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#173f52] px-6 py-3.5 text-sm font-extrabold text-white shadow-lg transition hover:-translate-y-0.5">{item.cta}<ArrowRight size={16}/></Link></div>
             <div className={`novedad-visual novedad-visual-${item.visual}`} aria-hidden="true">
-              {item.visual === "news" ? <><div className="novedad-visual-label">ACTUALIDAD FESTERA</div><div className="novedad-paper"><Newspaper size={34}/><strong>Noticias</strong><span>Peñas · Fiestas · Actualidad</span><div className="novedad-paper-lines"/></div><div className="novedad-float"><Images size={24}/><span>Publicaciones</span></div></> : item.visual === "awards" ? <><div className="novedad-award-orbit"><Medal size={48}/></div><div className="novedad-award-card"><img src="/premios-insignias.avif" alt="" /><strong>Palmarés</strong><span>Premios y reconocimientos</span></div><div className="novedad-award-small"><Trophy size={25}/></div></> : <><div className="novedad-phone"><div className="novedad-phone-top"/><div className="novedad-phone-card"><span>PEÑAS</span><strong>Desliza y descubre</strong><div className="novedad-paper-lines"/></div><div className="novedad-phone-card short"><span>FICHA DE PEÑA</span><strong>Fotos · Palmarés · Eventos</strong></div></div><div className="novedad-speed"><Gauge size={26}/><span>Más ligero</span></div></>}
+              {item.visual === "penyes" ? <><div className="novedad-visual-label">COMUNIDAD FESTERA</div><div className="novedad-paper"><Users size={34}/><strong>Peñas</strong><span>Carrusel · Fichas · Fotografías</span><div className="novedad-paper-lines"/></div><div className="novedad-float"><Images size={24}/><span>Galerías y palmarés</span></div></> : item.visual === "news" ? <><div className="novedad-visual-label">ACTUALIDAD FESTERA</div><div className="novedad-paper"><Newspaper size={34}/><strong>Noticias</strong><span>Peñas · Fiestas · Actualidad</span><div className="novedad-paper-lines"/></div><div className="novedad-float"><Images size={24}/><span>Publicaciones</span></div></> : item.visual === "awards" ? <><div className="novedad-award-orbit"><Medal size={48}/></div><div className="novedad-award-card"><img src="/premios-insignias.avif" alt="" /><strong>Palmarés</strong><span>Premios y reconocimientos</span></div><div className="novedad-award-small"><Trophy size={25}/></div></> : <><div className="novedad-phone"><div className="novedad-phone-top"/><div className="novedad-phone-card"><span>PEÑAS</span><strong>Desliza y descubre</strong><div className="novedad-paper-lines"/></div><div className="novedad-phone-card short"><span>FICHA DE PEÑA</span><strong>Fotos · Palmarés · Eventos</strong></div></div><div className="novedad-speed"><Gauge size={26}/><span>Más ligero</span></div></>}
             </div>
           </div>
         </section>
