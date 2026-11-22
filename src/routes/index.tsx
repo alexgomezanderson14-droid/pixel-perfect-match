@@ -294,7 +294,7 @@ async function sharePenyaCard(p: PenyaDb) {
     window.alert("Plantilla de Instagram descargada. Ya puedes subirla a tus historias.");
   }
 }
-type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number | null; lng: number | null; foto: string; tipo_musica: string; tiene_evento?: boolean; instagram?: string | null; informacion?: string | null; asociada?: boolean; color?: string; miembros_actuales?: number | null };
+type PenyaDb = { id: string; nombre: string; direccion: string | null; lat: number | null; lng: number | null; foto: string; foto_url?: string | null; tipo_musica: string; tiene_evento?: boolean; instagram?: string | null; informacion?: string | null; asociada?: boolean; color?: string; miembros_actuales?: number | null };
 const penyaStickerTypes = ["confetti","firework","bomb","flame","trumpet"] as const;
 function getPenyaStickerSeed(id:string){
   return Array.from(id).reduce((sum,char)=>((sum*31)+char.charCodeAt(0))>>>0,17);
@@ -1671,7 +1671,7 @@ function Home() {
 
               <div className="mt-5 flex w-full flex-nowrap items-stretch justify-center gap-2 rounded-2xl border border-[#dce7e4] bg-white/90 p-2 shadow-sm sm:mx-auto sm:max-w-4xl sm:gap-3 sm:p-3">
                 <button onClick={() => puedeGestionarPenya(selectedPenya.id) ? setEventFormPenya(selectedPenya) : avisarAccesoPenya()} className="flex min-w-0 flex-1 items-center justify-center rounded-xl bg-primary px-1.5 py-3 text-center text-[10px] font-bold leading-tight text-primary-foreground sm:px-3 sm:text-sm">＋ <span>Proponer un plan</span></button>
-                <button onClick={() => toggleMiPenya(selectedPenya.id)} aria-pressed={misPenyes.includes(selectedPenya.id)} className="flex min-w-0 flex-1 items-center justify-center rounded-xl border border-primary/20 bg-white px-1.5 py-3 text-center text-[10px] font-bold leading-tight text-primary sm:px-3 sm:text-sm">{misPenyes.includes(selectedPenya.id) ? "★ " : "☆ "}<span>Mi peña</span></button>
+                <button disabled={penyaMembershipLoading} onClick={() => void toggleMiPenya(selectedPenya.id)} aria-pressed={misPenyes.includes(selectedPenya.id)} className="flex min-w-0 flex-1 items-center justify-center rounded-xl border border-primary/20 bg-white px-1.5 py-3 text-center text-[10px] font-bold leading-tight text-primary sm:px-3 sm:text-sm">{misPenyes.includes(selectedPenya.id) ? "★ " : "☆ "}<span>Mi peña</span></button>
                 {instagramUrl(selectedPenya.instagram) && <a className="flex min-w-0 flex-1 items-center justify-center rounded-xl bg-[#173f52] px-1.5 py-3 text-center text-[10px] font-bold leading-tight text-white sm:px-3 sm:text-sm" href={instagramUrl(selectedPenya.instagram)!} target="_blank" rel="noreferrer"><span>Instagram ↗</span></a>}
                 <button onClick={() => puedeGestionarPenya(selectedPenya.id) ? setEventFormPenya(selectedPenya) : avisarAccesoPenya()} className="flex min-w-0 flex-1 items-center justify-center rounded-xl border border-primary/20 bg-white px-1.5 py-3 text-center text-[10px] font-bold leading-tight text-primary sm:px-3 sm:text-sm"><span>{selectedPenya.tiene_evento ? "Añadir evento" : "+ Añadir evento"}</span></button>
               </div>
