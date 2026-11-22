@@ -18,7 +18,7 @@ function storageKey(userKey?: string | null) {
 function readConfig(config: Record<string, string> = {}) {
   return {
     title: config["novedades_titulo"] || "¡Mira todo lo nuevo!",
-    background: [config["novedades_fondo_1"] || "#e8f1f4", config["novedades_fondo_2"] || "#dcebf0", config["novedades_fondo_3"] || "#eef3f2"],
+    background: [config["novedades_fondo_1"] && config["novedades_fondo_1"] !== "#f5dfe7" ? config["novedades_fondo_1"] : "#e8f1f4", config["novedades_fondo_2"] && config["novedades_fondo_2"] !== "#e9dff0" ? config["novedades_fondo_2"] : "#dcebf0", config["novedades_fondo_3"] && config["novedades_fondo_3"] !== "#d9e9ed" ? config["novedades_fondo_3"] : "#eef3f2"],
     cards: defaults.map((card, index) => ({
       ...card,
       tag: config[`novedades_tarjeta_${index + 1}_etiqueta`] || card.tag,
