@@ -6,8 +6,8 @@ import { noticiaCestaNavidad2027 } from "@/content/noticia-cesta-navidad-2027";
 export const Route = createFileRoute("/noticias")({
   head: () => ({
     meta: [
-      { title: "Noticias de peñas y fiestas de Alfaz del Pi | PENYERA" },
-      { name: "description", content: "Últimas noticias de las peñas y las fiestas de l’Alfàs del Pi: Mayorales, actos, actividades, anuncios y actualidad festera." },
+      { title: "Noticias de las peñas y fiestas de l’Alfàs del Pi | PENYERA" },
+      { name: "description", content: "Lee noticias de las peñas de l’Alfàs del Pi, Mayorales, fiestas, actividades, anuncios y actualidad festera de Alfaz del Pi, Alicante." },
       { name: "keywords", content: "noticias Alfaz del Pi, actualidad fiestas l'Alfàs, noticias peñas Alfaz, CuBaTa Mayorales 2027, PENYERA" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "Noticias de peñas y fiestas de l’Alfàs del Pi" },
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/noticias")({
       { property: "og:site_name", content: "PENYERA" },
       { property: "og:locale", content: "es_ES" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Noticias de peñas y fiestas de Alfaz del Pi | PENYERA" },
+      { name: "twitter:title", content: "Noticias de las peñas y fiestas de l’Alfàs del Pi | PENYERA" },
       { name: "twitter:description", content: "Últimas noticias de las peñas y las fiestas de l’Alfàs del Pi: Mayorales, actos, actividades, anuncios y actualidad festera." },
     ],
     links: [{ rel: "canonical", href: "https://pixel-perfect-match-ten-tau.vercel.app/noticias" }],
@@ -28,8 +28,10 @@ export const Route = createFileRoute("/noticias")({
 const noticias = [noticiaCestaNavidad2027, noticiaCuBaTa2027];
 
 function NoticiasPage() {
+  const newsStructuredData = { "@context": "https://schema.org", "@type": "CollectionPage", "name": "Noticias de las peñas y fiestas de l’Alfàs del Pi", "url": "https://pixel-perfect-match-ten-tau.vercel.app/noticias", "inLanguage": "es-ES", "mainEntity": { "@type": "ItemList", "itemListElement": noticias.map((noticia, index) => ({ "@type": "ListItem", "position": index + 1, "item": { "@type": "NewsArticle", "headline": noticia.titulo, "description": noticia.resumen, "datePublished": noticia.fecha, "author": { "@type": "Organization", "name": noticia.autor }, "publisher": { "@type": "Organization", "name": "PENYERA", "url": "https://pixel-perfect-match-ten-tau.vercel.app/" }, ...((noticia as { imagen_url?: string }).imagen_url ? { "image": (noticia as { imagen_url?: string }).imagen_url } : {}) } })) } };
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(newsStructuredData) }} />
       <header className="border-b border-border/70 bg-card/80">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <Link to="/" className="text-lg font-extrabold tracking-tight text-primary">PENYERA</Link>
