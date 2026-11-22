@@ -18,13 +18,13 @@ function storageKey(userKey?: string | null) {
 function readConfig(config: Record<string, string> = {}) {
   return {
     title: config["novedades_titulo"] || "¡Mira todo lo nuevo!",
-    background: [config["novedades_fondo_1"] || "#c8dfe7", config["novedades_fondo_2"] || "#91b8c7", config["novedades_fondo_3"] || "#d9d0df"],
+    background: [config["novedades_fondo_1"] && config["novedades_fondo_1"] !== "#e8f1f4" ? config["novedades_fondo_1"] : "#c8dfe7", config["novedades_fondo_2"] && config["novedades_fondo_2"] !== "#dcebf0" ? config["novedades_fondo_2"] : "#91b8c7", config["novedades_fondo_3"] && config["novedades_fondo_3"] !== "#eef3f2" ? config["novedades_fondo_3"] : "#d9d0df"],
     cards: defaults.map((card, index) => ({
       ...card,
       tag: config[`novedades_tarjeta_${index + 1}_etiqueta`] || card.tag,
       title: config[`novedades_tarjeta_${index + 1}_titulo`] || card.title,
       description: config[`novedades_tarjeta_${index + 1}_texto`] || card.description,
-      image: config[`novedades_tarjeta_${index + 1}_imagen`] || card.image,
+      image: Object.prototype.hasOwnProperty.call(config, `novedades_tarjeta_${index + 1}_imagen`) ? config[`novedades_tarjeta_${index + 1}_imagen`] : card.image,
       size: (config[`novedades_tarjeta_${index + 1}_tamano`] as Card["size"]) || card.size,
       position: config[`novedades_tarjeta_${index + 1}_posicion`] || card.position,
     })),
@@ -121,7 +121,7 @@ export default function WhatsNewAnnouncement({ userKey, config = {}, penyes = []
           {settings.cards.map((card) => (
             <Link key={card.slug} to="/novedades/$slug" params={{ slug: card.slug }} className={`whats-new-float-card whats-new-pos-${card.position} whats-new-size-${card.size} whats-new-card-${card.slug}`}>
               <span className="whats-new-float-tag">{card.tag}</span>
-              {card.slug === "noticias" ? <div className="whats-new-news-mark"><Newspaper aria-hidden="true"/><span>PEÑAS · FIESTAS · ACTUALIDAD</span></div> : <div className={`whats-new-card-media${card.slug === "penyes" ? " is-penyes" : " is-premios"}`}>{card.image ? <img className="whats-new-custom-image" src={card.image} alt="" loading="lazy" decoding="async"/> : <PenyaCollage penyes={penyes}/>}</div>}
+              {card.slug === "noticias" ? <div className="whats-new-news-mark"><Newspaper aria-hidden="true"/><span>PEÑAS · FIESTAS · ACTUALIDAD</span></div> : <div className={`whats-new-card-media${card.slug === "penyes" ? " is-penyes" : " is-premios"}`}>{card.image ? <img className="whats-new-custom-image" src={card.image} alt="" loading="lazy" decoding="async"/> : card.slug === "penyes" ? <PenyaCollage penyes={penyes}/> : null}</div>}
               <div className="whats-new-float-copy"><h3>{card.title}</h3>{card.description && <p>{card.description}</p>}</div>
               <span className="whats-new-float-open">Descubrir <span aria-hidden="true"><ArrowUpRight size={15}/></span></span>
             </Link>
