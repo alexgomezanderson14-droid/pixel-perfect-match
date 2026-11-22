@@ -399,11 +399,11 @@ nav[aria-label="Navegación principal"] {
   transform-origin:center center;
   transform-style:preserve-3d;
   backface-visibility:hidden;
-  transition:transform 480ms cubic-bezier(.2,.75,.25,1), opacity 480ms ease, filter 480ms ease, box-shadow 480ms ease;
+  transition:transform 260ms cubic-bezier(.2,.75,.25,1), opacity 260ms ease;
 }
 .penya-coverflow-card.is-loop-start { margin-left:0; }
-.penya-coverflow-card.is-active { z-index:30; box-shadow:0 24px 54px rgba(19,63,82,.24); }
-.penya-coverflow-card.is-side { z-index:20; }
+.penya-coverflow-card.is-active { z-index:100; isolation:isolate; box-shadow:0 24px 54px rgba(19,63,82,.24); }
+.penya-coverflow-card.is-side { z-index:10; }
 .penya-coverflow-card.is-active,.penya-coverflow-card.is-side { will-change:transform,opacity; }
 @media (max-width:639px) {
   .penya-coverflow {
@@ -429,7 +429,7 @@ nav[aria-label="Navegación principal"] {
     margin-left:-82px;
     scroll-snap-align:center;
     scroll-snap-stop:normal;
-    transition:transform 240ms cubic-bezier(.2,.75,.25,1), opacity 240ms ease, filter 240ms ease, box-shadow 240ms ease;
+    transition:transform 200ms cubic-bezier(.2,.75,.25,1), opacity 200ms ease;
   }
   .penya-coverflow-card.is-loop-start { margin-left:0; }
 }
@@ -450,6 +450,9 @@ nav[aria-label="Navegación principal"] {
     opacity:1 !important;
     z-index:30 !important;
   }
+  .penya-coverflow-card { perspective:none !important; transform-style:flat !important; }
+  .penya-coverflow-card.is-active { z-index:1000 !important; isolation:isolate; }
+  .penya-coverflow-card.is-side-left,.penya-coverflow-card.is-side-right { z-index:10 !important; }
 }
  
 @media (prefers-reduced-motion:reduce) {
@@ -1053,6 +1056,9 @@ html, body, #root { min-width:0; max-width:100%; }
   }
 }
 
+
+/* Movimiento del palmarés: mantener el brillo y la profundidad, sin animaciones infinitas que consumen CPU continuamente. */
+.penya-award-insignia,.penya-award-insignia:before,.penya-award-medal,.penya-glass-medal{animation:none!important;}
 
 /* Móvil: las tarjetas fuera de pantalla conservan su geometría, pero el navegador puede omitir su renderizado costoso. */
 @media(max-width:639px){

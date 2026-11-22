@@ -461,7 +461,7 @@ function Home() {
         setMapShouldLoad(true);
         observer.disconnect();
       }
-    }, { rootMargin: "500px 0px" });
+    }, { rootMargin: "120px 0px" });
     observer.observe(target);
     return () => observer.disconnect();
   }, [currentPage, mapShouldLoad]);
@@ -569,11 +569,14 @@ function Home() {
       }
     }
     penyaCarouselScrollLeftRef.current=el.scrollLeft;
-    if(penyaScrollEndTimerRef.current!==null)window.clearTimeout(penyaScrollEndTimerRef.current);
-    penyaScrollEndTimerRef.current=window.setTimeout(()=>{
-      penyaScrollEndTimerRef.current=null;
-      handlePenyaCarouselScrollEnd();
-    },220);
+    // Los navegadores actuales emiten scrollend; solo usamos el temporizador como respaldo en los antiguos.
+    if(!("onscrollend" in el)){
+      if(penyaScrollEndTimerRef.current!==null)window.clearTimeout(penyaScrollEndTimerRef.current);
+      penyaScrollEndTimerRef.current=window.setTimeout(()=>{
+        penyaScrollEndTimerRef.current=null;
+        handlePenyaCarouselScrollEnd();
+      },220);
+    }
   };
   // Al terminar el gesto solo actualizamos qué tarjeta queda centrada.
   // No se recentra ni se anima nada por iniciativa del código.
@@ -1368,7 +1371,7 @@ function Home() {
                   const offset=index-activePenyaCard;
                   const visualOffset=searchingPenyes?offset:((offset+visiblePenyes.length/2)%visiblePenyes.length+visiblePenyes.length)%visiblePenyes.length-visiblePenyes.length/2;
                   const centered=visualOffset===0;
-                  return <article id={"penya-"+p.id+"-"+index} key={p.id+"-"+index} tabIndex={0} aria-label={`Abrir ficha de ${cardTitle}`} onClick={()=>{penyaCarouselScrollLeftRef.current=penyaCarouselRef.current?.scrollLeft??null;setPenyaDetailFullscreen(true);setSelectedPenya(p);}} onKeyDown={(e)=>{if(e.target===e.currentTarget&&(e.key==="Enter"||e.key===" ")){e.preventDefault();penyaCarouselScrollLeftRef.current=penyaCarouselRef.current?.scrollLeft??null;setPenyaDetailFullscreen(true);setSelectedPenya(p);}}} style={{backgroundColor:color,zIndex:searchingPenyes?1:30-Math.abs(visualOffset),transform:searchingPenyes?"none":`perspective(1100px) translateY(${centered?-8:Math.min(22,Math.abs((((offset+visiblePenyes.length/2)%visiblePenyes.length)+visiblePenyes.length)%visiblePenyes.length-visiblePenyes.length/2)*10)}px) scale(${centered?1.08:Math.max(.68,.88-Math.max(0,Math.abs(visualOffset)-1)*.08)}) rotateY(${visualOffset===0?0:visualOffset<0?13:-13}deg)`,opacity:searchingPenyes?1:Math.abs(visualOffset)>3?.18:Math.max(.35,1-Math.abs(visualOffset)*.18)}} className={`penya-coverflow-card group relative ${searchingPenyes?"is-search-result":centered?"is-active":Math.abs(visualOffset)===1?(visualOffset<0?"is-side is-side-left":"is-side is-side-right"):""} ${!searchingPenyes&&index%Math.max(visiblePenyes.length,1)===0?"is-loop-start":""} h-[320px] w-[224px] shrink-0 snap-center cursor-pointer overflow-visible rounded-[2rem] border border-white/25 shadow-[0_18px_42px_rgba(19,38,53,.18)] outline-none transition-[transform,opacity,filter,box-shadow] duration-350 ease-out focus-visible:ring-4 focus-visible:ring-primary/40 ${searchingPenyes?"!transition-none":""} sm:h-[360px] sm:w-[260px] lg:h-[400px] lg:w-[290px]`}>
+                  return <article id={"penya-"+p.id+"-"+index} key={p.id+"-"+index} tabIndex={0} aria-label={`Abrir ficha de ${cardTitle}`} onClick={()=>{penyaCarouselScrollLeftRef.current=penyaCarouselRef.current?.scrollLeft??null;setPenyaDetailFullscreen(true);setSelectedPenya(p);}} onKeyDown={(e)=>{if(e.target===e.currentTarget&&(e.key==="Enter"||e.key===" ")){e.preventDefault();penyaCarouselScrollLeftRef.current=penyaCarouselRef.current?.scrollLeft??null;setPenyaDetailFullscreen(true);setSelectedPenya(p);}}} style={{backgroundColor:color,zIndex:searchingPenyes?1:centered?100:Math.abs(visualOffset)===1?20:1,transform:searchingPenyes?"none":`perspective(1100px) translateY(${centered?-8:Math.min(22,Math.abs(visualOffset)*10)}px) scale(${centered?1.08:Math.max(.68,.88-Math.max(0,Math.abs(visualOffset)-1)*.08)}) rotateY(${visualOffset===0?0:visualOffset<0?13:-13}deg)`,opacity:searchingPenyes?1:Math.abs(visualOffset)>3?.18:Math.max(.35,1-Math.abs(visualOffset)*.18)}} className={`penya-coverflow-card group relative ${searchingPenyes?"is-search-result":centered?"is-active":Math.abs(visualOffset)===1?(visualOffset<0?"is-side is-side-left":"is-side is-side-right"):""} ${!searchingPenyes&&index%Math.max(visiblePenyes.length,1)===0?"is-loop-start":""} h-[320px] w-[224px] shrink-0 snap-center cursor-pointer overflow-visible rounded-[2rem] border border-white/25 shadow-[0_18px_42px_rgba(19,38,53,.18)] outline-none transition-[transform,opacity,filter,box-shadow] duration-350 ease-out focus-visible:ring-4 focus-visible:ring-primary/40 ${searchingPenyes?"!transition-none":""} sm:h-[360px] sm:w-[260px] lg:h-[400px] lg:w-[290px]`}>
                     <div className="absolute inset-0 overflow-hidden rounded-[2rem]">
                       <div className="absolute inset-x-0 top-0 z-10 p-5 sm:p-6">
                         <div className="flex items-start justify-between gap-2">
