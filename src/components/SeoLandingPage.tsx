@@ -30,8 +30,6 @@ export default function SeoLandingPage({ path, eyebrow, title, description, intr
   return (
     <div className="min-h-screen bg-background text-foreground">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-
-    <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/70 bg-card/80">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <Link to="/" className="text-lg font-extrabold tracking-tight text-primary">PENYERA</Link>
