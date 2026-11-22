@@ -24,7 +24,7 @@ export const Route = createFileRoute("/penyes")({
 });
 
 function PenyesPage() {
-  return <SeoLandingPage
+  return <SeoLandingPage path="/penyes"
     eyebrow="Comunidad festera · l’Alfàs del Pi"
     title="Peñas de l’Alfàs del Pi"
     description="Las peñas forman una parte esencial de las fiestas de l’Alfàs del Pi. Son grupos que mantienen vivo el ambiente festero durante todo el año y participan en la preparación y celebración de los actos."
