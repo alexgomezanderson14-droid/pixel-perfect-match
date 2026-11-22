@@ -76,8 +76,8 @@ function NovedadPage() {
     ...baseItem,
     title: custom[detailKey("titulo")] || baseItem.title,
     intro: custom[detailKey("intro")] || baseItem.intro,
-    what: custom[detailKey("contenido")] ? custom[detailKey("contenido")].split("\\n").filter(Boolean) : baseItem.what,
-    steps: custom[detailKey("pasos")] ? custom[detailKey("pasos")].split("\\n").filter(Boolean) : baseItem.steps,
+    what: custom[detailKey("contenido")] ? custom[detailKey("contenido")].split(/\r?\n/).filter(Boolean) : baseItem.what,
+    steps: custom[detailKey("pasos")] ? custom[detailKey("pasos")].split(/\r?\n/).filter(Boolean) : baseItem.steps,
     cta: custom[detailKey("boton")] || baseItem.cta,
   } : undefined;
   if (!item) return <main className="mx-auto max-w-3xl px-5 py-20 text-center"><h1 className="text-3xl font-extrabold text-primary">Novedad no encontrada</h1><Link to="/" className="mt-6 inline-flex rounded-full bg-primary px-5 py-3 font-bold text-primary-foreground">Volver al inicio</Link></main>;
