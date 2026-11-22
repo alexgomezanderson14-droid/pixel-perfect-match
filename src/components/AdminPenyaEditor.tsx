@@ -63,7 +63,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
   useEffect(() => {
     let active = true;
     supabase.from("site_content").select("valor").eq("clave", "penyes_logos_ficha_json").maybeSingle().then(({data,error})=>{if(!active)return;if(!error){try{const settings=JSON.parse(data?.valor||"{}");const current=settings?.[penya.id]||{};setLogoZoom(Math.max(100,Math.min(200,current.zoom??100)));setLogoX(current.x??50);setLogoY(current.y??50);}catch{setLogoZoom(100);setLogoX(50);setLogoY(50);}}});
-    supabase.from("site_content").select("valor").eq("clave", "penyes_miembros_actuales_json").maybeSingle().then(({data,error})=>{if(!active||error)return;try{const settings=JSON.parse(data?.valor||"{}");if(settings&&Object.prototype.hasOwnProperty.call(settings,penya.id)){const value=settings[penya.id];setForm(old=>({...old,miembros_actuales:value==null?"":String(value)}));}}catch{}});
+    supabase.from("site_content").select("valor").eq("clave", "penyes_miembros_actuales_json").maybeSingle().then(({data,error})=>{if(!active||error)return;try{const settings=JSON.parse(data?.valor||"{}");if(settings&&Object.prototype.hasOwnProperty.call(settings,penya.id)){const value=settings[penya.id];setForm(old=>({...old,miembros_actuales:value==null?"":String(value)}));}}catch{/* Se mantiene el valor inicial si no hay ajustes guardados. */}});
     supabase.from("site_content").select("valor").eq("clave", "penyes_visitas_json").maybeSingle().then(({ data, error }) => {
       if (!active) return;
       if (!error) { try { const settings = JSON.parse(data?.valor || "{}"); setAceptaVisitas(settings?.[penya.id] === true); } catch { setAceptaVisitas(false); } }
