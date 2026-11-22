@@ -1475,7 +1475,7 @@ function Home() {
         </>}
       </main>}
 
-      <WhatsNewAnnouncement userKey={accountUser?.email} config={siteContent} />
+      <WhatsNewAnnouncement userKey={accountUser?.email} config={siteContent} penyes={penyes.map((penya)=>({id:penya.id,nombre:penya.nombre,foto:penya.foto}))} />
       {mapFullscreen && typeof document !== "undefined" && createPortal(
         <div role="dialog" aria-modal="true" aria-label="Mapa a pantalla completa" className="fixed inset-0 z-[99999] h-[100dvh] w-screen overflow-hidden bg-[#f3eee6]">
           <div className="absolute inset-0">
