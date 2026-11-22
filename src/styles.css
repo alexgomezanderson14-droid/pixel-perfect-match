@@ -1410,51 +1410,41 @@ html, body, #root { min-width:0; max-width:100%; }
 @media(max-width:639px){.penya-awards-panel:after{inset:8px;border-radius:1.25rem;}}
 
 
-/* Ajustes de capas del coverflow: la tarjeta centrada siempre queda por encima de sus vecinas. */
-.penya-coverflow-card.is-active {
-  position: relative !important;
-  z-index: 1500 !important;
-}
-.penya-coverflow-card.is-scroll-active {
-  position: relative !important;
-  z-index: 2500 !important;
-}
-@media (max-width: 639px) {
+/* El carrusel conserva la inercia nativa: no anima tarjetas mientras se está desplazando. */
+.penya-coverflow-card.is-active { position:relative !important; z-index:1500 !important; }
+@media (max-width:639px) {
   .penya-coverflow {
-    perspective: none !important;
-    isolation: isolate;
-    overflow-x: auto;
-    overflow-y: hidden;
+    perspective:none !important;
+    isolation:isolate;
+    overflow-x:auto;
+    overflow-y:hidden;
+    scroll-snap-type:x proximity !important;
   }
+  .penya-coverflow.is-scrolling .penya-coverflow-card { transition:none !important; }
   .penya-coverflow-card {
-    transform-style: flat !important;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    will-change: auto !important;
+    transform-style:flat !important;
+    -webkit-backface-visibility:hidden;
+    backface-visibility:hidden;
+    will-change:auto !important;
   }
   .penya-coverflow-card.is-active {
-    z-index: 1500 !important;
-    transform: translateY(-8px) scale(1.04) !important;
-    opacity: 1 !important;
-  }
-  .penya-coverflow-card.is-scroll-active {
-    z-index: 2500 !important;
-    transform: translateY(-8px) scale(1.04) !important;
-    opacity: 1 !important;
+    z-index:1500 !important;
+    transform:translateY(-8px) scale(1.04) !important;
+    opacity:1 !important;
   }
   .penya-coverflow-card.is-side-left,
   .penya-coverflow-card.is-side-right {
-    z-index: 5 !important;
-    transform: translateY(7px) scale(.86) !important;
-    opacity: .68 !important;
+    z-index:5 !important;
+    transform:translateY(7px) scale(.86) !important;
+    opacity:.68 !important;
   }
-  .penya-coverflow-card:not(.is-active):not(.is-side):not(.is-search-result):not(.is-scroll-active) {
-    transform: translateY(10px) scale(.78) !important;
-    opacity: .18 !important;
-    pointer-events: none;
+  .penya-coverflow-card:not(.is-active):not(.is-side):not(.is-search-result) {
+    transform:translateY(10px) scale(.78) !important;
+    opacity:.18 !important;
+    pointer-events:none;
   }
 }
-.page-bg { background-attachment: scroll !important; }
+.page-bg { background-attachment:scroll !important; }
 
 
 /* Vista previa editable del contenido que verá el usuario al abrir cada novedad. */
