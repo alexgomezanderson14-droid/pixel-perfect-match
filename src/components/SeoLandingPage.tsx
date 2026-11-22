@@ -2,7 +2,8 @@ import { Link } from "@tanstack/react-router";
 import CopyrightFooter from "@/components/CopyrightFooter";
 
 type SeoLandingPageProps = {
-  path: "/penyes" | "/programa-fiestas" | "/eventos";\n  eyebrow: string;
+  path: "/penyes" | "/programa-fiestas" | "/eventos";
+  eyebrow: string;
   title: string;
   description: string;
   intro: string;
@@ -11,7 +12,25 @@ type SeoLandingPageProps = {
 };
 
 export default function SeoLandingPage({ path, eyebrow, title, description, intro, sections, links }: SeoLandingPageProps) {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": `https://pixel-perfect-match-ten-tau.vercel.app${path}#webpage`,
+    url: `https://pixel-perfect-match-ten-tau.vercel.app${path}`,
+    name: title,
+    description,
+    inLanguage: "es-ES",
+    isPartOf: { "@id": "https://pixel-perfect-match-ten-tau.vercel.app/#website" },
+    about: { "@id": "https://pixel-perfect-match-ten-tau.vercel.app/#alfas-del-pi" },
+    breadcrumb: { "@type": "BreadcrumbList", itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Inicio", item: "https://pixel-perfect-match-ten-tau.vercel.app/" },
+      { "@type": "ListItem", position: 2, name: title, item: `https://pixel-perfect-match-ten-tau.vercel.app${path}` },
+    ] },
+  };
   return (
+    <div className="min-h-screen bg-background text-foreground">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/70 bg-card/80">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
