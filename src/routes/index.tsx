@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {PenyaAwardsSection,type PenyaAward,mergeSeededPenyaAwards,penyaAwardBelongsTo} from "@/components/PenyaAwards";
 import CopyrightFooter from "@/components/CopyrightFooter";
 import WhatsNewAnnouncement from "@/components/WhatsNewAnnouncement";
+import WelcomeGate from "@/components/WelcomeGate";
 import { noticiaCuBaTa2027 } from "@/content/noticia-cubata-2027";
 import { noticiaCestaNavidad2027 } from "@/content/noticia-cesta-navidad-2027";
 import { noticiaDesfileHumor2026 } from "@/content/noticia-desfile-humor-2026";
@@ -397,6 +398,8 @@ function Home() {
   const [currentPage, setCurrentPage] = useState<"home"|"noticias"|"buscar"|"eventos"|"mapa"|"penyes"|"info">("home");
   const [settingsClosing, setSettingsClosing] = useState(false);
   const [accountUser, setAccountUser] = useState<any>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [guestMode, setGuestMode] = useState(false);
   const [penyaAccessNotice, setPenyaAccessNotice] = useState(false);
   const esAdminWeb = accountUser?.email?.toLowerCase() === "gomezandersonalex@gmail.com";
   const puedeAdministrarPenya = (penyaId: string) => esAdminWeb || [accountUser?.app_metadata?.penya_admin_ids].some((ids:any) => Array.isArray(ids) && ids.includes(penyaId)) || accountUser?.app_metadata?.penya_admin_id === penyaId || accountUser?.app_metadata?.penya_roles?.[penyaId] === "admin";
@@ -880,16 +883,33 @@ function Home() {
       if (!active) return;
       const user = data.session?.user ?? null;
       setAccountUser(user);
+      if (user) {
+        try { localStorage.removeItem("penyera-access-mode"); } catch { /* La sesión autenticada sigue disponible. */ }
+        setGuestMode(false);
+      } else {
+        try { setGuestMode(localStorage.getItem("penyera-access-mode") === "guest"); } catch { setGuestMode(false); }
+      }
+      setAuthReady(true);
       const saved = user?.user_metadata?.["festalfas_preferences"];
       try {
         const local = JSON.parse(localStorage.getItem("festalfas-personal-preferences") || "{}");
         setPersonalPrefs({ showImportantNotices: saved?.showImportantNotices ?? local.showImportantNotices ?? true, reduceMotion: saved?.reduceMotion ?? local.reduceMotion ?? false, largeText: saved?.largeText ?? local.largeText ?? false, highContrast: saved?.highContrast ?? local.highContrast ?? false });
       } catch { setPersonalPrefs({ showImportantNotices: saved?.showImportantNotices ?? true, reduceMotion: saved?.reduceMotion ?? false, largeText: saved?.largeText ?? false, highContrast: saved?.highContrast ?? false }); }
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    }).catch(() => { if (active) setAuthReady(true); });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
       const user = session?.user ?? null;
-      setAccountUser(user);
+      if (user) {
+        setAccountUser(user);
+        setGuestMode(false);
+        try { localStorage.removeItem("penyera-access-mode"); } catch { /* La sesión autenticada sigue disponible. */ }
+        setAuthReady(true);
+      } else if (event === "SIGNED_OUT") {
+        setAccountUser(null);
+        setGuestMode(false);
+        try { localStorage.removeItem("penyera-access-mode"); } catch { /* El acceso vuelve a mostrarse al cerrar sesión. */ }
+        setAuthReady(true);
+      }
       const saved = user?.user_metadata?.["festalfas_preferences"];
       if (saved) setPersonalPrefs({ showImportantNotices: saved.showImportantNotices !== false, reduceMotion: saved.reduceMotion === true, largeText: saved.largeText === true, highContrast: saved.highContrast === true });
     });
@@ -1106,6 +1126,8 @@ function Home() {
 
   return (
     <div className="page-bg relative min-h-screen" style={{ "--pink": mayoralesPrimaryColor, "--primary": mayoralesPrimaryColor, "--secondary": mayoralesPrimaryColor, "--accent": mayoralesPrimaryColor, "--ring": mayoralesPrimaryColor, "--cat-penya": mayoralesPrimaryColor, "--mayorales-accent": mayoralesColor, "--background": siteContent["theme_background"] || "oklch(0.975 0.012 90)", "--gradient-page": `linear-gradient(180deg, ${siteContent["theme_background"] || "oklch(0.985 0.008 90)"}, ${siteContent["theme_background"] || "oklch(0.965 0.014 90)"})` } as React.CSSProperties}>
+      {!authReady && <div className="fixed inset-0 z-[2147483600] bg-white" aria-label="Cargando PENYERA" />}
+      {authReady && !accountUser && !guestMode && <WelcomeGate penyes={penyes.map((penya)=>({id:String(penya.id),nombre:penya.nombre,foto:penyaCardSettings[penya.id]?.logo_url||penya.foto||penya.logo_url||"",color:penyaCardSettings[penya.id]?.color||penya.color||""}))} onContinueAsGuest={()=>{try{localStorage.setItem("penyera-access-mode","guest");}catch{/* La elección se mantiene durante esta visita. */}setGuestMode(true);}} />}
       {featuredPhotoEditorModal}
       {penyaProfileEditorModal}
       <nav aria-label="Navegación principal" className="flex items-center justify-between gap-0 overflow-hidden rounded-full border px-1 shadow-[0_5px_18px_rgba(20,39,52,.16),0_1px_4px_rgba(255,255,255,.95)_inset] backdrop-blur-2xl [backdrop-filter:blur(24px)_saturate(155%)]" style={{position:"fixed",left:"50vw",right:"auto",top:"auto",bottom:"calc(env(safe-area-inset-bottom) + 10px)",width:"min(460px, calc(100vw - 24px))",maxWidth:"calc(100vw - 24px)",height:"62px",minHeight:"62px",boxSizing:"border-box",transform:"translate3d(-50%, 0, 0)",translate:"none",margin:0,zIndex:2147483000,backgroundColor:`color-mix(in srgb, ${mayoralesColor} 9%, rgba(245,248,250,.94))`,borderColor:`color-mix(in srgb, ${mayoralesColor} 22%, white)`}}>
@@ -1436,6 +1458,7 @@ function Home() {
       
 {currentPage==="info" && <main className={"mx-auto min-h-[75vh] w-full max-w-6xl space-y-8 px-3 pb-32 pt-5 sm:px-5 sm:pt-8 "+(settingsClosing?"animate-out fade-out slide-out-to-top-2 duration-200":"animate-in fade-in slide-in-from-top-2 duration-300")}>
         <section aria-labelledby="settings-title" className="space-y-6">
+          <WhatsNewAnnouncement userKey={accountUser?.email} config={siteContent} penyes={penyes.map((penya)=>({id:String(penya.id),nombre:penya.nombre,foto:penyaCardSettings[penya.id]?.logo_url||penya.foto||penya.logo_url||"",color:penyaCardSettings[penya.id]?.color||penya.color||"",title:penyaCardSettings[penya.id]?.title||penya.nombre}))} />
           <div className="rounded-[1.75rem] border border-primary/15 bg-gradient-to-br from-card via-card to-primary/[.06] p-5 shadow-sm sm:p-7"><div className="flex items-center gap-3"><span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary" aria-hidden="true"><svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1a1.8 1.8 0 0 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3 .9v.2a1.8 1.8 0 0 1-3.6 0v-.2a1.8 1.8 0 0 0-3-.9l-.1.1a1.8 1.8 0 0 1-2.5-2.5l.1-.1a1.8 1.8 0 0 0-.9-3h-.2a1.8 1.8 0 0 1 0-3.6h.2a1.8 1.8 0 0 0 .9-3l-.1-.1a1.8 1.8 0 0 1 2.5-2.5l.1.1a1.8 1.8 0 0 0 3-.9v-.2a1.8 1.8 0 0 1 3.6 0v.2a1.8 1.8 0 0 0 3 .9l.1-.1a1.8 1.8 0 0 1 2.5 2.5l-.1.1a1.8 1.8 0 0 0 .9 3h.2a1.8 1.8 0 0 1 0 3.6h-.2a1.8 1.8 0 0 0-.9 3Z"/></svg></span><div><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-primary">Tu espacio personal</p><h1 id="settings-title" className="mt-0.5 text-3xl font-black text-primary sm:text-4xl">Ajustes</h1></div></div><p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Gestiona tu cuenta, la peña a la que perteneces y cómo quieres utilizar PENYERA.</p><nav aria-label="Secciones de ajustes" className="mt-5 flex flex-wrap gap-2"><a href="#account-settings" className="rounded-full border border-border bg-background/80 px-3.5 py-2 text-xs font-bold text-primary transition hover:border-primary/40"><span className="inline-flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/></svg>Mi cuenta</span></a><a href="#preferences-settings" className="rounded-full border border-border bg-background/80 px-3.5 py-2 text-xs font-bold text-primary transition hover:border-primary/40"><span className="inline-flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>Preferencias</span></a><a href="#notifications-settings-title" className="rounded-full border border-border bg-background/80 px-3.5 py-2 text-xs font-bold text-primary transition hover:border-primary/40"><span className="inline-flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>Notificaciones</span></a><a href="#feedback-settings-title" className="rounded-full border border-border bg-background/80 px-3.5 py-2 text-xs font-bold text-primary transition hover:border-primary/40"><span className="inline-flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-6.5A7.5 7.5 0 1 1 20 11.5Z"/><path d="M8 11.5h8M8 8.5h5"/></svg>Ayuda</span></a></nav></div>
           <div className="grid items-start gap-4 xl:grid-cols-2">
             <section id="account-settings" className="glass scroll-mt-24 rounded-3xl border border-primary/15 p-5 shadow-sm sm:p-6">
@@ -1510,7 +1533,7 @@ function Home() {
         </>}
       </main>}
 
-      <WhatsNewAnnouncement userKey={accountUser?.email} config={siteContent} penyes={penyes.map((penya)=>({id:String(penya.id),nombre:penya.nombre,foto:penyaCardSettings[penya.id]?.logo_url||penya.foto||penya.logo_url||"",color:penyaCardSettings[penya.id]?.color||penya.color||"",title:penyaCardSettings[penya.id]?.title||penya.nombre}))} />
+
       {mapFullscreen && typeof document !== "undefined" && createPortal(
         <div role="dialog" aria-modal="true" aria-label="Mapa a pantalla completa" className="fixed inset-0 z-[99999] h-[100dvh] w-screen overflow-hidden bg-[#f3eee6]">
           <div className="absolute inset-0">
