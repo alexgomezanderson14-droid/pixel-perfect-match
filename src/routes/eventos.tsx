@@ -24,7 +24,7 @@ export const Route = createFileRoute("/eventos")({
 });
 
 function EventosPage() {
-  return <SeoLandingPage
+  return <SeoLandingPage path="/eventos"
     eyebrow="Agenda festera · l’Alfàs del Pi"
     title="Eventos y actividades de las fiestas"
     description="Consulta en PENYERA la agenda de actividades relacionadas con las fiestas de l’Alfàs del Pi. Este espacio está pensado para reunir propuestas de las peñas, encuentros, actuaciones y otros planes festivos."
