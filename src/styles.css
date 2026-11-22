@@ -1411,10 +1411,13 @@ html, body, #root { min-width:0; max-width:100%; }
 
 
 /* Ajustes de capas del coverflow: la tarjeta centrada siempre queda por encima de sus vecinas. */
-.penya-coverflow-card.is-active,
-.penya-coverflow-card.is-scroll-active {
+.penya-coverflow-card.is-active {
   position: relative !important;
   z-index: 1500 !important;
+}
+.penya-coverflow-card.is-scroll-active {
+  position: relative !important;
+  z-index: 2500 !important;
 }
 @media (max-width: 639px) {
   .penya-coverflow {
@@ -1429,9 +1432,13 @@ html, body, #root { min-width:0; max-width:100%; }
     backface-visibility: hidden;
     will-change: auto !important;
   }
-  .penya-coverflow-card.is-active,
-  .penya-coverflow-card.is-scroll-active {
+  .penya-coverflow-card.is-active {
     z-index: 1500 !important;
+    transform: translateY(-8px) scale(1.04) !important;
+    opacity: 1 !important;
+  }
+  .penya-coverflow-card.is-scroll-active {
+    z-index: 2500 !important;
     transform: translateY(-8px) scale(1.04) !important;
     opacity: 1 !important;
   }
