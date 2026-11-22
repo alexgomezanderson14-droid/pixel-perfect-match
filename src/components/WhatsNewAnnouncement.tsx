@@ -106,7 +106,7 @@ export default function WhatsNewAnnouncement({ userKey, config = {}, penyes = []
     const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") close(); };
     window.addEventListener("keydown", onKeyDown);
     return () => { document.body.style.overflow = previous; window.removeEventListener("keydown", onKeyDown); };
-  }, [open, close]);
+  }, [open, close, preview]);
   if (!open) return null;
   const presentation = (
     <div className={`whats-new-overlay${preview ? " is-preview" : ""}`} role="dialog" aria-modal="true" aria-labelledby="whats-new-title" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} style={{ background: `linear-gradient(135deg,${settings.background[0]},${settings.background[1]} 52%,${settings.background[2]})` }}>
