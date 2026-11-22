@@ -1522,7 +1522,7 @@ html, body, #root { min-width:0; max-width:100%; }
 .welcome-gate-form>button:disabled{opacity:.6}
 .welcome-gate-back{display:block;margin:10px auto 0;font-size:11px;font-weight:700;color:#73838a;text-decoration:underline;text-underline-offset:3px}
 .welcome-gate-message{border-radius:12px;padding:10px 12px;background:#f2f6f7;color:#40575f;font-size:12px;line-height:1.45;text-align:center}
-.welcome-gate.is-leaving .welcome-gate-bubble{animation:welcome-bubble-exit .68s cubic-bezier(.55,0,.9,.35) both!important;animation-delay:calc(var(--bubble-index,0)*18ms)!important}
+.welcome-gate.is-leaving .welcome-gate-bubble{animation:welcome-bubble-exit .68s cubic-bezier(.55,0,.9,.35) both!important;animation-delay:0ms!important}
 .welcome-gate.is-leaving .welcome-gate-art{animation:welcome-art-fade .68s ease-in both}
 .welcome-gate.is-leaving .welcome-gate-intro,.welcome-gate.is-leaving .welcome-gate-actions,.welcome-gate.is-leaving .welcome-gate-brand{animation:welcome-content-fade .38s ease-in both}
 @keyframes welcome-bubble-exit{0%{scale:1;opacity:1;filter:blur(0)}55%{scale:1.12;opacity:.9}100%{scale:.18;opacity:0;filter:blur(7px)}}
