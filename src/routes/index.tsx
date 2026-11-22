@@ -3,8 +3,6 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type
 import { createPortal } from "react-dom";
 import { edicion, lugares as lugaresFijos, ui, type Categoria, type Lugar } from "@/content/fiestas";
 import { supabase } from "@/integrations/supabase/client";
-import AdminPenyaEditor from "@/components/AdminPenyaEditor";
-import PenyaPhotoManager from "@/components/PenyaPhotoManager";
 import {PenyaAwardsSection,type PenyaAward,mergeSeededPenyaAwards,penyaAwardBelongsTo} from "@/components/PenyaAwards";
 import CopyrightFooter from "@/components/CopyrightFooter";
 import WhatsNewAnnouncement from "@/components/WhatsNewAnnouncement";
@@ -23,6 +21,8 @@ function safeLocalStorageGet(key: string): string | null {
 }
 
 const FestMap = lazy(() => import("@/components/FestMap"));
+const AdminPenyaEditor = lazy(() => import("@/components/AdminPenyaEditor"));
+const PenyaPhotoManager = lazy(() => import("@/components/PenyaPhotoManager"));
 const AddPenyaForm = lazy(() => import("@/components/AddPenyaForm"));
 const AddPenyaEventForm = lazy(() => import("@/components/AddPenyaEventForm"));
 const AddCommunityEventForm = lazy(() => import("@/components/AddCommunityEventForm"));
@@ -1082,8 +1082,8 @@ function Home() {
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [fotoAmpliada, noticiaSeleccionada, noticiaImagenes.length]);
-  const featuredPhotoEditorModal = managingPenyaPhotos ? <div className="fixed inset-0 z-[2147483100] festalfas-modal-backdrop flex items-start justify-center overflow-y-auto p-3 pt-[max(1rem,env(safe-area-inset-top))] sm:p-6"><section className="my-auto w-full max-w-4xl rounded-3xl bg-background p-4 shadow-2xl sm:p-6"><PenyaPhotoManager penya={managingPenyaPhotos} onCancel={()=>setManagingPenyaPhotos(null)} onSaved={()=>{void (async()=>{const {data}=await supabase.from("site_content").select("clave,valor");setSiteContent(Object.fromEntries((data||[]).map((x:any)=>[x.clave,x.valor])));await cargar();})();}}/></section></div> : null;
-  const penyaProfileEditorModal = editingPenyaProfile ? <div className="fixed inset-0 z-[2147483101] festalfas-modal-backdrop flex items-start justify-center overflow-y-auto p-3 pt-[max(1rem,env(safe-area-inset-top))] sm:p-6"><section className="my-auto w-full max-w-4xl rounded-3xl bg-background p-4 shadow-2xl sm:p-6"><AdminPenyaEditor penya={editingPenyaProfile} onCancel={()=>setEditingPenyaProfile(null)} onSaved={()=>{setEditingPenyaProfile(null);void (async()=>{const {data}=await supabase.from("site_content").select("clave,valor");setSiteContent(Object.fromEntries((data||[]).map((x:any)=>[x.clave,x.valor])));await cargar();})();}}/></section></div> : null;
+  const featuredPhotoEditorModal = managingPenyaPhotos ? <div className="fixed inset-0 z-[2147483100] festalfas-modal-backdrop flex items-start justify-center overflow-y-auto p-3 pt-[max(1rem,env(safe-area-inset-top))] sm:p-6"><section className="my-auto w-full max-w-4xl rounded-3xl bg-background p-4 shadow-2xl sm:p-6"><Suspense fallback={<div className="min-h-48 animate-pulse rounded-2xl bg-muted" />}><PenyaPhotoManager penya={managingPenyaPhotos} onCancel={()=>setManagingPenyaPhotos(null)} onSaved={()=>{void (async()=>{const {data}=await supabase.from("site_content").select("clave,valor");setSiteContent(Object.fromEntries((data||[]).map((x:any)=>[x.clave,x.valor])));await cargar();})();}}/></Suspense></section></div> : null;
+  const penyaProfileEditorModal = editingPenyaProfile ? <div className="fixed inset-0 z-[2147483101] festalfas-modal-backdrop flex items-start justify-center overflow-y-auto p-3 pt-[max(1rem,env(safe-area-inset-top))] sm:p-6"><section className="my-auto w-full max-w-4xl rounded-3xl bg-background p-4 shadow-2xl sm:p-6"><Suspense fallback={<div className="min-h-48 animate-pulse rounded-2xl bg-muted" />}><AdminPenyaEditor penya={editingPenyaProfile} onCancel={()=>setEditingPenyaProfile(null)} onSaved={()=>{setEditingPenyaProfile(null);void (async()=>{const {data}=await supabase.from("site_content").select("clave,valor");setSiteContent(Object.fromEntries((data||[]).map((x:any)=>[x.clave,x.valor])));await cargar();})();}}/></Suspense></section></div> : null;
   const renderNewsCard = (n:any) => <button type="button" key={n.id} onClick={()=>{setNoticiaSeleccionada(n);window.scrollTo({top:0,behavior:"smooth"});}} className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
     {n.tipo!=="video"&&n.imagen_url&&<div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden"><img src={n.imagen_url} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center transition duration-300 group-hover:scale-[1.02]"/></div>}
     <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">
