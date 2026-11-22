@@ -1243,10 +1243,10 @@ html, body, #root { min-width:0; max-width:100%; }
 .whats-new-custom-image{display:block;width:100%;height:220px;object-fit:contain}
 .whats-new-card-premios .whats-new-card-media{min-height:230px;background:transparent}
 .whats-new-card-premios .whats-new-custom-image{height:235px;object-fit:contain}
-.whats-new-float-copy h3{font-size:clamp(25px,2.3vw,36px);font-weight:950;line-height:1.03;letter-spacing:-.045em;color:#263c46}
+.whats-new-float-copy h3{font-size:clamp(25px,2.3vw,36px);font-weight:950;line-height:1.03;letter-spacing:-.045em;color:#263c46}\n.whats-new-float-copy p{margin-top:8px;font-size:13px;line-height:1.35;color:#64777d}
 .whats-new-float-open{display:inline-flex;align-items:center;gap:10px;margin-top:auto;padding-top:20px;font-size:14px;font-weight:850;letter-spacing:.02em;color:#2587a8}
 .whats-new-float-open>span{display:grid;width:28px;height:28px;place-items:center;border-radius:50%;background:#2587a8;color:white}
-.whats-new-size-small{min-height:260px}.whats-new-size-medium{min-height:320px}.whats-new-size-large{min-height:410px}
+.whats-new-size-small{min-height:340px}.whats-new-size-medium{min-height:380px}.whats-new-size-large{min-height:430px}
 .whats-new-penya-collage{position:relative;display:flex;width:100%;height:205px;align-items:center;justify-content:center}
 .whats-new-penya-logo{position:absolute;display:flex;width:116px;height:146px;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:5px solid rgba(255,255,255,.95);border-radius:22px;padding:9px;background:#fff;box-shadow:0 14px 32px rgba(23,63,82,.16);transform:rotate(-9deg)}
 .whats-new-penya-logo img{width:100%;height:100px;object-fit:contain}
@@ -1278,7 +1278,7 @@ html, body, #root { min-width:0; max-width:100%; }
  .whats-new-custom-image{height:88px}
  .whats-new-card-premios .whats-new-card-media{min-height:105px}
  .whats-new-card-premios .whats-new-custom-image{height:108px}
- .whats-new-float-copy h3{font-size:clamp(13px,3.6vw,16px);line-height:1.08}
+ .whats-new-float-copy h3{font-size:clamp(13px,3.6vw,16px);line-height:1.08}\n .whats-new-float-copy p{margin-top:4px;font-size:9px;line-height:1.2}
  .whats-new-float-open{gap:6px;padding-top:8px;font-size:9px}
  .whats-new-float-open>span{width:20px;height:20px}
  .whats-new-float-open svg{width:12px;height:12px}
