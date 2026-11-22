@@ -2,9 +2,9 @@ import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 type PenyaLogo = { id: string; nombre: string; foto?: string; color?: string };
-type Props = { penyes: PenyaLogo[]; onContinueAsGuest: () => void };
+type Props = { penyes: PenyaLogo[]; onContinueAsGuest: () => void; onClose?: () => void; preview?: boolean };
 
-export default function WelcomeGate({ penyes, onContinueAsGuest }: Props) {
+export default function WelcomeGate({ penyes, onContinueAsGuest, onClose, preview = false }: Props) {
   const [bubbles, setBubbles] = useState<PenyaLogo[]>([]);
   const [mode, setMode] = useState<"welcome" | "email">("welcome");
   const [accountMode, setAccountMode] = useState<"login" | "register">("register");
@@ -69,6 +69,7 @@ export default function WelcomeGate({ penyes, onContinueAsGuest }: Props) {
 
   return (
     <div className="welcome-gate fixed inset-0 z-[2147483600] flex min-h-[100svh] flex-col items-center overflow-y-auto bg-white px-5 pb-5 pt-[max(24px,env(safe-area-inset-top))] text-[#111]">
+      {preview && <button type="button" onClick={onClose || onContinueAsGuest} className="welcome-gate-preview-close" aria-label="Cerrar vista previa">×</button>}
       <div className="welcome-gate-brand">
         <img src="/penyera-isotipo.svg" alt="PENYERA" />
       </div>
@@ -120,7 +121,7 @@ export default function WelcomeGate({ penyes, onContinueAsGuest }: Props) {
           </div>
         )}
         {message && <p role="status" className="welcome-gate-message">{message}</p>}
-        <button type="button" onClick={onContinueAsGuest} className="welcome-gate-guest">Seguir sin identificarme</button>
+        <button type="button" onClick={onContinueAsGuest} className="welcome-gate-guest">{preview ? "Cerrar vista previa" : "Seguir sin identificarme"}</button>
         <p className="welcome-gate-privacy">Podrás iniciar sesión más adelante desde Ajustes.</p>
       </div>
     </div>

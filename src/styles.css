@@ -1539,3 +1539,6 @@ html, body, #root { min-width:0; max-width:100%; }
  .welcome-gate-provider{min-height:54px}
 }
 @media(prefers-reduced-motion:reduce){.welcome-gate-bubble{animation:none!important}}
+
+.welcome-gate-preview-close{position:absolute;z-index:5;top:max(14px,env(safe-area-inset-top));right:18px;display:grid;width:40px;height:40px;place-items:center;border:1px solid #e7ebed;border-radius:50%;background:rgba(255,255,255,.92);color:#34464d;font-size:27px;line-height:1;box-shadow:0 4px 14px rgba(20,34,42,.08)}
+.welcome-gate-preview-close:hover{background:#f1f5f6}
