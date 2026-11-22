@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { X } from "lucide-react";
+import { X, Newspaper } from "lucide-react";
 
-type Props = { userKey?: string | null; config?: Record<string, string> };
+type PenyaPreview = { id: string; nombre: string; foto?: string; color?: string };
+type Props = { userKey?: string | null; config?: Record<string, string>; penyes?: PenyaPreview[]; penyaCardSettings?: Record<string, { logo_url?: string }> };
 type Card = { slug: string; tag: string; title: string; description: string; image: string; size: "small" | "medium" | "large"; position: string };
 
 const defaults: Card[] = [
-  { slug: "noticias", tag: "NUEVO", title: "Las noticias, más cerca", description: "Toda la actualidad festera reunida en un mismo lugar.", image: "/mayorales-2027.svg", size: "medium", position: "left-top" },
-  { slug: "premios", tag: "NUEVO", title: "Los premios ya se muestran", description: "Descubre los reconocimientos de cada peña y su historia.", image: "/premios-insignias.avif", size: "large", position: "right-middle" },
-  { slug: "penyes-movil", tag: "MEJORA", title: "Peñas más ágiles en móvil", description: "Una navegación más ligera para descubrir todas las peñas.", image: "", size: "medium", position: "lower-left" },
+  { slug: "penyes", tag: "NUEVO", title: "Sección Peñas renovada", description: "", image: "", size: "large", position: "left-top" },
+  { slug: "premios", tag: "NUEVO", title: "¡Premios!", description: "", image: "/premios-insignias.avif", size: "large", position: "right-middle" },
+  { slug: "noticias", tag: "NUEVO", title: "Nueva sección Noticias", description: "", image: "", size: "large", position: "lower-left" },
 ];
 const VERSION = "2026-11-v2";
 function storageKey(userKey?: string | null) {
@@ -19,22 +20,23 @@ function readConfig(config: Record<string, string> = {}) {
   return {
     title: config["novedades_titulo"] || "¡Mira todo lo nuevo!",
     subtitle: config["novedades_subtitulo"] || "Descubre las últimas novedades y aprende a disfrutar de todas las posibilidades de nuestra web.",
-    background: [config["novedades_fondo_1"] || "#f5dfe7", config["novedades_fondo_2"] || "#e9dff0", config["novedades_fondo_3"] || "#d9e9ed"],
+    background: [config["novedades_fondo_1"] || "#173f52", config["novedades_fondo_2"] || "#28677a", config["novedades_fondo_3"] || "#dcebf0"],
     cards: defaults.map((card, index) => ({
       ...card,
       tag: config[`novedades_tarjeta_${index + 1}_etiqueta`] || card.tag,
       title: config[`novedades_tarjeta_${index + 1}_titulo`] || card.title,
       description: config[`novedades_tarjeta_${index + 1}_texto`] || card.description,
-      image: config[`novedades_tarjeta_${index + 1}_imagen`] || card.image,
+      image: config[`novedades_tarjeta_${index + 1}_imagen`] ?? card.image,
       size: (config[`novedades_tarjeta_${index + 1}_tamano`] as Card["size"]) || card.size,
       position: config[`novedades_tarjeta_${index + 1}_posicion`] || card.position,
     })),
   };
 }
-export default function WhatsNewAnnouncement({ userKey, config = {} }: Props) {
+export default function WhatsNewAnnouncement({ userKey, config = {}, penyes = [], penyaCardSettings = {} }: Props) {
   const [open, setOpen] = useState(false);
   const touchStartY = useRef<number | null>(null);
   const settings = useMemo(() => readConfig(config), [config]);
+  const previewPenyes = useMemo(() => { const normalize = (value: string) => value.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase(); const sorted = [...penyes].filter((p) => p.foto || penyaCardSettings[p.id]?.logo_url).sort((a, b) => a.nombre.localeCompare(b.nombre, "es")); const center = sorted.find((p) => normalize(p.nombre).includes("enredats")); const sides = sorted.filter((p) => p.id !== center?.id).sort(() => Math.random() - 0.5).slice(0, 2); return [sides[0], center, sides[1]].filter(Boolean).map((p) => ({ ...p, image: penyaCardSettings[p.id]?.logo_url || p.foto || "" })); }, [penyes, penyaCardSettings]);
 
   useEffect(() => {
     let forced = false;
@@ -107,12 +109,17 @@ export default function WhatsNewAnnouncement({ userKey, config = {} }: Props) {
           <p>{settings.subtitle}</p>
         </header>
         <div className="whats-new-floating-cards">
-          {settings.cards.map((card) => (
-            <Link key={card.slug} to="/novedades/$slug" params={{ slug: card.slug }} className={`whats-new-float-card whats-new-pos-${card.position} whats-new-size-${card.size}`}>
+          {settings.cards.map((card, index) => (
+            <Link key={card.slug} to="/novedades/$slug" params={{ slug: card.slug }} className={"whats-new-float-card whats-new-pos-" + card.position + " whats-new-size-" + card.size + " whats-new-card-" + (index + 1)}>
               <span className="whats-new-float-tag">{card.tag}</span>
-              {card.image && <img src={card.image} alt="" loading="lazy" />}
-              <div className="whats-new-float-copy"><h3>{card.title}</h3><p>{card.description}</p></div>
-              <span className="whats-new-float-open">Descubrir ↗</span>
+              {card.image ? <img className="whats-new-card-image" src={card.image} alt="" loading="lazy" /> : index === 0 ? (
+                <div className="whats-new-penya-collage" aria-label="Logotipos de varias peñas, con Enredats en el centro">
+                  {previewPenyes.map((penya, i) => <div key={penya.id} className={"whats-new-penya-tile tile-" + (i + 1)}><img src={penya.image} alt={penya.nombre} loading="lazy" /><span>{penya.nombre}</span></div>)}
+                  {previewPenyes.length === 0 && <div className="whats-new-penya-fallback"><span>PEÑAS</span><strong>ENREDATS</strong><small>Tradición · Fiesta · Comunidad</small></div>}
+                </div>
+              ) : index === 2 ? <div className="whats-new-news-visual"><Newspaper size={76} strokeWidth={1.35} /><span>PEÑAS · FIESTAS · ACTUALIDAD</span></div> : null}
+              <div className="whats-new-float-copy"><h3>{card.title}</h3>{card.description && <p>{card.description}</p>}</div>
+              <span className="whats-new-float-open">Descubrir <span aria-hidden="true">↗</span></span>
             </Link>
           ))}
         </div>
