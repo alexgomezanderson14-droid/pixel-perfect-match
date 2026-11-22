@@ -6,6 +6,7 @@ type Props = { penyes: PenyaLogo[]; onContinueAsGuest: () => void; onClose?: () 
 
 export default function WelcomeGate({ penyes, onContinueAsGuest, onClose, preview = false }: Props) {
   const [bubbles, setBubbles] = useState<PenyaLogo[]>([]);
+  const [isLeaving, setIsLeaving] = useState(false);
   const [mode, setMode] = useState<"welcome" | "email">("welcome");
   const [accountMode, setAccountMode] = useState<"login" | "register">("register");
   const [name, setName] = useState("");
@@ -15,60 +16,75 @@ export default function WelcomeGate({ penyes, onContinueAsGuest, onClose, previe
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    // Elegir las peñas una sola vez cuando ya ha terminado la carga inicial.
+    // No se vuelve a sortear al cambiar el estado del formulario o de la pantalla.
+    if (bubbles.length > 0 || penyes.length === 0) return;
     const available = penyes.filter((penya) => penya.foto);
     const shuffled = [...available];
     for (let index = shuffled.length - 1; index > 0; index -= 1) {
       const target = Math.floor(Math.random() * (index + 1));
       [shuffled[index], shuffled[target]] = [shuffled[target]!, shuffled[index]!];
     }
-    setBubbles(shuffled.slice(0, 9));
-  }, [penyes]);
+    setBubbles(shuffled.slice(0, 15));
+  }, [penyes, bubbles.length]);
+
+  const leaveThen = (action: () => void) => {
+    if (isLeaving) return;
+    setIsLeaving(true);
+    window.setTimeout(action, 680);
+  };
 
   const signInWithProvider = async (provider: "google" | "apple") => {
     setBusy(true);
     setMessage("");
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
+    leaveThen(() => {
+      void supabase.auth.signInWithOAuth({
         provider,
         options: { redirectTo: window.location.origin },
+      }).then(({ error }) => {
+        if (error) throw error;
+      }).catch((error: unknown) => {
+        setMessage(error instanceof Error ? error.message : "No se ha podido iniciar sesión.");
+        setBusy(false);
+        setIsLeaving(false);
       });
-      if (error) throw error;
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "No se ha podido iniciar sesión.");
-      setBusy(false);
-    }
+    });
   };
 
-  const submitEmail = async (event: FormEvent<HTMLFormElement>) => {
+  const submitEmail = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (accountMode === "register" && password.length < 8) {
+      setMessage("La contraseña debe tener al menos 8 caracteres.");
+      return;
+    }
     setBusy(true);
     setMessage("");
-    try {
-      if (accountMode === "register") {
-        if (password.length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres.");
-        const { data, error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: { data: { full_name: name.trim() } },
-        });
+    leaveThen(() => {
+      const request = accountMode === "register"
+        ? supabase.auth.signUp({
+            email: email.trim(),
+            password,
+            options: { data: { full_name: name.trim() } },
+          })
+        : supabase.auth.signInWithPassword({ email: email.trim(), password });
+      void request.then(({ data, error }) => {
         if (error) throw error;
-        setMessage(data.session
-          ? "¡Cuenta creada! Ya puedes entrar en PENYERA."
-          : "Registro iniciado. Revisa tu correo para confirmar la cuenta.");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-        if (error) throw error;
-      }
-      setPassword("");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "No se ha podido completar el acceso.");
-    } finally {
-      setBusy(false);
-    }
+        setPassword("");
+        if (accountMode === "register" && !data.session) {
+          setMessage("Registro iniciado. Revisa tu correo para confirmar la cuenta.");
+          setBusy(false);
+          setIsLeaving(false);
+        }
+      }).catch((error: unknown) => {
+        setMessage(error instanceof Error ? error.message : "No se ha podido completar el acceso.");
+        setBusy(false);
+        setIsLeaving(false);
+      });
+    });
   };
 
   return (
-    <div className="welcome-gate fixed inset-0 z-[2147483600] flex min-h-[100svh] flex-col items-center overflow-y-auto bg-white px-5 pb-5 pt-[max(24px,env(safe-area-inset-top))] text-[#111]">
+    <div className={`welcome-gate fixed inset-0 z-[2147483600] flex min-h-[100svh] flex-col items-center overflow-y-auto px-5 pb-5 pt-[max(24px,env(safe-area-inset-top))] text-[#111]${isLeaving ? " is-leaving" : ""}`}>
       {preview && <button type="button" onClick={onClose || onContinueAsGuest} className="welcome-gate-preview-close" aria-label="Cerrar vista previa">×</button>}
       <div className="welcome-gate-brand">
         <img src="/penyera-isotipo.svg" alt="PENYERA" />
@@ -81,7 +97,7 @@ export default function WelcomeGate({ penyes, onContinueAsGuest, onClose, previe
             <img src={penya.foto} alt={penya.nombre} loading="eager" decoding="async" />
           </div>
         ))}
-        {bubbles.length === 0 && ["P", "F", "A", "M", "C", "E"].map((letter, index) => (
+        {bubbles.length === 0 && penyes.length === 0 && ["P", "F", "A", "M", "C", "E"].map((letter, index) => (
           <div key={letter} className={`welcome-gate-bubble welcome-gate-bubble-${index}`} aria-hidden="true"><span>{letter}</span></div>
         ))}
       </div>
@@ -121,7 +137,7 @@ export default function WelcomeGate({ penyes, onContinueAsGuest, onClose, previe
           </div>
         )}
         {message && <p role="status" className="welcome-gate-message">{message}</p>}
-        <button type="button" onClick={onContinueAsGuest} className="welcome-gate-guest">{preview ? "Cerrar vista previa" : "Seguir sin identificarme"}</button>
+        <button type="button" onClick={() => leaveThen(onContinueAsGuest)} className="welcome-gate-guest">{preview ? "Cerrar vista previa" : "Seguir sin identificarme"}</button>
         <p className="welcome-gate-privacy">Podrás iniciar sesión más adelante desde Ajustes.</p>
       </div>
     </div>
