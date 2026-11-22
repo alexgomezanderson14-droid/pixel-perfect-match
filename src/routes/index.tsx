@@ -861,6 +861,11 @@ function Home() {
     return () => { active = false; subscription.unsubscribe(); };
   }, []);
   useEffect(() => {
+    const goHome = () => setCurrentPage("home");
+    window.addEventListener("penyera:go-home", goHome);
+    return () => window.removeEventListener("penyera:go-home", goHome);
+  }, []);
+  useEffect(() => {
     document.documentElement.classList.toggle("festalfas-reduce-motion", personalPrefs.reduceMotion);
     document.documentElement.classList.toggle("festalfas-large-text", personalPrefs.largeText);
     document.documentElement.classList.toggle("festalfas-high-contrast", personalPrefs.highContrast);
@@ -1434,6 +1439,7 @@ function Home() {
         </section>
         <section aria-labelledby="notifications-settings-title" className="scroll-mt-24 space-y-4 rounded-3xl border border-border/70 bg-card/60 p-5 sm:p-6">
           <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-primary">Tu actividad</p><h2 id="notifications-settings-title" className="mt-1 text-xl font-extrabold text-primary sm:text-2xl">Notificaciones</h2><p className="mt-1 text-sm text-muted-foreground">{unreadNotifications.length?unreadNotifications.length+" pendientes de leer":"Estás al día con tus avisos."}</p></div><button type="button" onClick={markAllNotificationsRead} disabled={!unreadNotifications.length} className="rounded-full border border-border bg-background px-4 py-2 text-xs font-bold text-primary disabled:opacity-40">Marcar todas como leídas</button></div>
+          <div className="rounded-2xl border border-primary/15 bg-primary/[.045] p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><h3 className="text-sm font-extrabold text-primary">Novedades de la web</h3><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Vuelve a abrir la presentación y descubre las novedades y mejoras de PENYERA cuando quieras.</p></div><button type="button" onClick={()=>window.dispatchEvent(new Event("penyera:open-whats-new"))} className="shrink-0 rounded-full bg-primary px-4 py-2.5 text-xs font-extrabold text-primary-foreground">Ver novedades</button></div></div>
           <div className="grid gap-3 md:grid-cols-2">
             {avisosNotificaciones.length?avisosNotificaciones.map((aviso:any)=><article key={aviso.id} className={"rounded-2xl border p-4 transition-colors "+(readNotificationIds.includes(String(aviso.id))?"border-border/70 bg-card/70":"border-primary/20 bg-white shadow-sm")}><div className="flex items-start gap-3"><span className={"mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full "+(readNotificationIds.includes(String(aviso.id))?"bg-transparent":"bg-red-500")}/><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="text-sm font-extrabold text-primary">{aviso.titulo}</h3>{aviso.importante&&<span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-extrabold text-amber-900">Importante</span>}</div><p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{aviso.descripcion}</p>{aviso.publicar_en&&<p className="mt-2 text-[10px] text-muted-foreground">{new Date(aviso.publicar_en).toLocaleString("es-ES",{dateStyle:"medium",timeStyle:"short"})}</p>}{!readNotificationIds.includes(String(aviso.id))&&<button type="button" onClick={()=>markNotificationRead(String(aviso.id))} className="mt-2 text-xs font-extrabold text-primary underline underline-offset-2">Marcar como leída</button>}</div></div></article>):<div className="rounded-2xl border border-dashed border-border bg-card/50 px-5 py-10 text-center md:col-span-2"><span className="text-3xl">♧</span><p className="mt-2 text-sm font-extrabold text-primary">No tienes notificaciones</p><p className="mt-1 text-xs text-muted-foreground">Aquí aparecerán los avisos generales y los dirigidos a tu cuenta.</p></div>}
           </div>
@@ -1469,7 +1475,7 @@ function Home() {
         </>}
       </main>}
 
-      {currentPage === "home" && <WhatsNewAnnouncement userKey={accountUser?.email} config={siteContent} />}
+      <WhatsNewAnnouncement userKey={accountUser?.email} config={siteContent} />
       {mapFullscreen && typeof document !== "undefined" && createPortal(
         <div role="dialog" aria-modal="true" aria-label="Mapa a pantalla completa" className="fixed inset-0 z-[99999] h-[100dvh] w-screen overflow-hidden bg-[#f3eee6]">
           <div className="absolute inset-0">
