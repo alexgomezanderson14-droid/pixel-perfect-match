@@ -861,6 +861,11 @@ function Home() {
     return () => { active = false; subscription.unsubscribe(); };
   }, []);
   useEffect(() => {
+    const goHome = () => setCurrentPage("home");
+    window.addEventListener("penyera:go-home", goHome);
+    return () => window.removeEventListener("penyera:go-home", goHome);
+  }, []);
+  useEffect(() => {
     document.documentElement.classList.toggle("festalfas-reduce-motion", personalPrefs.reduceMotion);
     document.documentElement.classList.toggle("festalfas-large-text", personalPrefs.largeText);
     document.documentElement.classList.toggle("festalfas-high-contrast", personalPrefs.highContrast);
