@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import { X } from "lucide-react";
 
@@ -32,6 +33,7 @@ function readConfig(config: Record<string, string> = {}) {
 }
 export default function WhatsNewAnnouncement({ userKey, config = {} }: Props) {
   const [open, setOpen] = useState(false);
+  const touchStartY = useRef<number | null>(null);
   const settings = useMemo(() => readConfig(config), [config]);
   useEffect(() => {
     let forced = false;
@@ -47,6 +49,26 @@ export default function WhatsNewAnnouncement({ userKey, config = {} }: Props) {
     }
     return undefined;
   }, [userKey]);
+  const reopen = useCallback(() => {
+    try { window.localStorage.removeItem(storageKey(userKey)); } catch { /* La reapertura funciona también sin almacenamiento. */ }
+    setOpen(true);
+  }, [userKey]);
+  useEffect(() => {
+    window.addEventListener("penyera:open-whats-new", reopen);
+    return () => window.removeEventListener("penyera:open-whats-new", reopen);
+  }, [reopen]);
+  const handleTouchStart = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
+    touchStartY.current = event.touches[0]?.clientY ?? null;
+  }, []);
+  const handleTouchEnd = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
+    const start = touchStartY.current;
+    const end = event.changedTouches[0]?.clientY;
+    touchStartY.current = null;
+    if (start !== null && end !== undefined && start - end > 85) {
+      event.preventDefault();
+      close();
+    }
+  }, [close]);
   const close = useCallback(() => {
     try { window.localStorage.setItem(storageKey(userKey), "1"); } catch { /* Cierre disponible sin almacenamiento. */ }
     if (window.location.search.includes("novedades=1")) {
