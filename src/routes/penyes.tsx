@@ -4,8 +4,8 @@ import SeoLandingPage from "@/components/SeoLandingPage";
 export const Route = createFileRoute("/penyes")({
   head: () => ({
     meta: [
-      { title: "Peñas de Alfaz del Pi y l’Alfàs del Pi | PENYERA" },
-      { name: "description", content: "Descubre las peñas de Alfaz del Pi (l’Alfàs del Pi): perfiles, Mayorales, historia, fotos, actividades y noticias de la comunidad festera." },
+      { title: "Peñas y penyes de l’Alfàs del Pi (Alfaz del Pi) | PENYERA" },
+      { name: "description", content: "Conoce las peñas y penyes de l’Alfàs del Pi: Mayorales, perfiles, fotografías, actividades, historia, premios y noticias de la comunidad festera de Alicante." },
       { name: "keywords", content: "peñas Alfaz del Pi, peñas l'Alfàs del Pi, penyes Alfàs, mayorales 2027, CuBaTa, fiestas Alfaz, PENYERA" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "Peñas de Alfaz del Pi y l’Alfàs del Pi" },
