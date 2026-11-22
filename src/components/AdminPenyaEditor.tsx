@@ -12,7 +12,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     direccion: penya.direccion ?? "",
     tipo_musica: penya.tipo_musica ?? "Variada",
     instagram: penya.instagram ?? "",
-    informacion: "",
+    informacion: penya.informacion ?? "",
     estado: penya.estado ?? "aprobada",
     tiene_evento: Boolean(penya.tiene_evento),
     miembros_actuales: penya.miembros_actuales == null ? "" : String(penya.miembros_actuales),
@@ -63,6 +63,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
   useEffect(() => {
     let active = true;
     supabase.from("site_content").select("valor").eq("clave", "penyes_logos_ficha_json").maybeSingle().then(({data,error})=>{if(!active)return;if(!error){try{const settings=JSON.parse(data?.valor||"{}");const current=settings?.[penya.id]||{};setLogoZoom(Math.max(100,Math.min(200,current.zoom??100)));setLogoX(current.x??50);setLogoY(current.y??50);}catch{setLogoZoom(100);setLogoX(50);setLogoY(50);}}});
+    supabase.from("site_content").select("valor").eq("clave", "penyes_miembros_actuales_json").maybeSingle().then(({data,error})=>{if(!active||error)return;try{const settings=JSON.parse(data?.valor||"{}");if(settings&&Object.prototype.hasOwnProperty.call(settings,penya.id)){const value=settings[penya.id];setForm(old=>({...old,miembros_actuales:value==null?"":String(value)}));}}catch{/* Se mantiene el valor inicial si no hay ajustes guardados. */}});
     supabase.from("site_content").select("valor").eq("clave", "penyes_visitas_json").maybeSingle().then(({ data, error }) => {
       if (!active) return;
       if (!error) { try { const settings = JSON.parse(data?.valor || "{}"); setAceptaVisitas(settings?.[penya.id] === true); } catch { setAceptaVisitas(false); } }
@@ -163,6 +164,11 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
     if (foto && (!["image/jpeg", "image/png", "image/webp"].includes(foto.type) || foto.size > 5 * 1024 * 1024)) {
       return setError("La foto debe ser JPG, PNG o WEBP y no superar 5 MB.");
     }
+    const memberCountText = form.miembros_actuales.trim();
+    const memberCount = memberCountText === "" ? null : Number(memberCountText);
+    if (memberCount !== null && (!Number.isInteger(memberCount) || memberCount < 0 || memberCount > 999999)) {
+      return setError("El número de miembros debe ser un número entero entre 0 y 999999.");
+    }
     // La ubicación se selecciona directamente en el mapa; si no hay marcador, queda sin ubicación.
     const lat = mapPick?.lat ?? null;
     const lng = mapPick?.lng ?? null;
@@ -186,7 +192,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
         const uploaded = await uploadMediaFile(foto, "penyes");
         foto_url = uploaded.url;
       }
-      const { error: updateError } = await supabase.from("penyes").update({
+      const penyaUpdate = {
         nombre: form.nombre.trim(),
         direccion: form.direccion.trim() || null,
         lat, lng,
@@ -195,10 +201,23 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
         informacion: form.informacion.trim(),
         estado: form.estado,
         tiene_evento: form.tiene_evento,
-        miembros_actuales: form.miembros_actuales.trim() === "" ? null : Math.max(0, Math.min(999999, Math.floor(Number(form.miembros_actuales)))),
         foto_url,
-      }).eq("id", penya.id);
+      };
+      let { error: updateError } = await supabase.from("penyes").update({ ...penyaUpdate, miembros_actuales: memberCount }).eq("id", penya.id);
+      if (updateError && /miembros_actuales|generated column|schema cache/i.test(updateError.message)) {
+        // Algunas instalaciones tienen esta cifra calculada o aún no la exponen
+        // en el esquema REST. No bloqueamos por ello el resto de la ficha.
+        const retry = await supabase.from("penyes").update(penyaUpdate).eq("id", penya.id);
+        updateError = retry.error;
+      }
       if (updateError) throw updateError;
+      const { data: memberData, error: memberReadError } = await supabase.from("site_content").select("valor").eq("clave", "penyes_miembros_actuales_json").maybeSingle();
+      if (memberReadError) throw memberReadError;
+      let memberSettings: Record<string, number | null> = {};
+      try { const parsed = JSON.parse(memberData?.valor || "{}"); if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) memberSettings = parsed; } catch { memberSettings = {}; }
+      memberSettings[penya.id] = memberCount;
+      const { error: memberWriteError } = await supabase.from("site_content").upsert({ clave: "penyes_miembros_actuales_json", valor: JSON.stringify(memberSettings) });
+      if (memberWriteError) throw memberWriteError;
       const savedBlocks = await saveBlocks();
       if (!savedBlocks) throw new Error("La ficha se ha actualizado, pero no se han podido guardar los apartados adicionales. Vuelve a intentarlo.");
       onSaved();

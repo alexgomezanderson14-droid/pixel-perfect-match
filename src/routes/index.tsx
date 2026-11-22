@@ -387,9 +387,7 @@ function Home() {
   const [managingPenyaPhotos, setManagingPenyaPhotos] = useState<PenyaDb | null>(null);
   const [editingPenyaProfile, setEditingPenyaProfile] = useState<PenyaDb | null>(null);
   const penyaCarouselRef = useRef<HTMLDivElement | null>(null);
-  const penyaScrollFrameRef = useRef<number | null>(null);
   const penyaCardCentersRef = useRef<number[]>([]);
-  const penyaVisualActiveCardRef = useRef<HTMLElement | null>(null);
   const penyaCarouselScrollLeftRef = useRef<number | null>(null);
   const penyaScrollEndTimerRef = useRef<number | null>(null);
   const penyaCarouselSignatureRef = useRef("");
@@ -548,50 +546,15 @@ function Home() {
     el.scrollTo({left:card.offsetLeft-(el.clientWidth-card.offsetWidth)/2,behavior});
   },[]);
   const handlePenyaCarouselScroll=(el:HTMLDivElement)=>{
-    const count=carouselPenyes.length;
-    if(!searchingPenyes&&count>1){
-      // Repite el ciclo de forma transparente MIENTRAS se desplaza. Al mover
-      // exactamente el ancho de una vuelta, la tarjeta y su posición visual
-      // permanecen idénticas; el usuario nunca ve un salto al otro extremo.
-      if(!penyaCardCentersRef.current.length||penyaCardCentersRef.current.length!==el.children.length)rebuildPenyaCardCenters();
-      const centers=penyaCardCentersRef.current;
-      const cycleWidth=centers[count]!==undefined&&centers[0]!==undefined?centers[count]!-centers[0]!:0;
-      if(cycleWidth>0){
-        let nearest=nearestPenyaCardIndex(el);
-        let cycleShift=0;
-        while(nearest<count*0.5){
-          el.scrollLeft+=cycleWidth;
-          nearest+=count;
-          cycleShift+=count;
-        }
-        while(nearest>=count*2.5){
-          el.scrollLeft-=cycleWidth;
-          nearest-=count;
-          cycleShift-=count;
-        }
-        if(cycleShift)setActivePenyaCard(value=>value+cycleShift);
-      }
-    }
+    // No modificar scrollLeft ni el estado de React durante el movimiento:
+    // así el navegador conserva la inercia nativa del gesto en móvil.
+    if(!el.classList.contains("is-scrolling"))el.classList.add("is-scrolling");
     penyaCarouselScrollLeftRef.current=el.scrollLeft;
-    // Actualiza solo la capa visual en el siguiente frame, sin volver a renderizar las 3 copias de peñas.
-    if(!searchingPenyes&&penyaScrollFrameRef.current===null){
-      penyaScrollFrameRef.current=window.requestAnimationFrame(()=>{
-        penyaScrollFrameRef.current=null;
-        const activeIndex=nearestPenyaCardIndex(el);
-        const nextCard=el.children[activeIndex] as HTMLElement|undefined;
-        if(nextCard!==penyaVisualActiveCardRef.current){
-          penyaVisualActiveCardRef.current?.classList.remove("is-scroll-active");
-          nextCard?.classList.add("is-scroll-active");
-          penyaVisualActiveCardRef.current=nextCard??null;
-        }
-      });
-    }
-    // Respaldo uniforme para Safari y navegadores sin un evento scrollend fiable.
     if(penyaScrollEndTimerRef.current!==null)window.clearTimeout(penyaScrollEndTimerRef.current);
     penyaScrollEndTimerRef.current=window.setTimeout(()=>{
       penyaScrollEndTimerRef.current=null;
       handlePenyaCarouselScrollEnd();
-    },180);
+    },280);
   };
   // Al terminar el gesto solo actualizamos qué tarjeta queda centrada.
   // No se recentra ni se anima nada por iniciativa del código.
@@ -600,11 +563,22 @@ function Home() {
     const el=penyaCarouselRef.current;
     if(!el)return;
     if(!penyaCardCentersRef.current.length||penyaCardCentersRef.current.length!==el.children.length)rebuildPenyaCardCenters();
-    penyaVisualActiveCardRef.current?.classList.remove("is-scroll-active");
-    penyaVisualActiveCardRef.current=null;
-    setActivePenyaCard(nearestPenyaCardIndex(el));
+    let nearest=nearestPenyaCardIndex(el);
+    const count=carouselPenyes.length;
+    if(!searchingPenyes&&count>1){
+      const centers=penyaCardCentersRef.current;
+      const cycleWidth=centers[count]!==undefined&&centers[0]!==undefined?centers[count]!-centers[0]!:0;
+      if(cycleWidth>0){
+        // El salto invisible entre copias se hace al terminar la inercia,
+        // nunca durante el gesto, para no frenar el desplazamiento nativo.
+        while(nearest<count*0.5){el.scrollLeft+=cycleWidth;nearest+=count;}
+        while(nearest>=count*2.5){el.scrollLeft-=cycleWidth;nearest-=count;}
+      }
+    }
+    el.classList.remove("is-scrolling");
+    setActivePenyaCard(nearest);
     penyaCarouselScrollLeftRef.current=el.scrollLeft;
-  },[rebuildPenyaCardCenters,nearestPenyaCardIndex]);
+  },[rebuildPenyaCardCenters,nearestPenyaCardIndex,carouselPenyes.length,searchingPenyes]);
   useEffect(()=>{
     const el=penyaCarouselRef.current;
     if(currentPage!=="penyes"||!visiblePenyes.length){
@@ -655,7 +629,7 @@ function Home() {
       el.removeEventListener("scrollend",handleScrollEnd);
     };
   },[penyaCarouselInitialized,centerPenyaCard,rebuildPenyaCardCenters,nearestPenyaCardIndex,handlePenyaCarouselScrollEnd]);
-  useEffect(()=>()=>{if(penyaScrollFrameRef.current!==null)cancelAnimationFrame(penyaScrollFrameRef.current);if(penyaScrollEndTimerRef.current!==null)window.clearTimeout(penyaScrollEndTimerRef.current);},[]);
+  useEffect(()=>()=>{if(penyaScrollEndTimerRef.current!==null)window.clearTimeout(penyaScrollEndTimerRef.current);},[]);
   const visibleNews = useMemo(()=>noticias.filter((n:any)=>n.publicado&&(!newsSearch.trim()||normalizarBusqueda([n.titulo,n.resumen,n.contenido,n.autor,n.fuente].join(" ")).includes(normalizarBusqueda(newsSearch)))).slice().sort((x:any,y:any)=>new Date(String(y.fecha||y.created_at||"").slice(0,10)+"T12:00:00").getTime()-new Date(String(x.fecha||x.created_at||"").slice(0,10)+"T12:00:00").getTime()),[noticias,newsSearch]);
   const featuredNews = visibleNews.filter((n:any)=>n.destacada);
   const regularNews = visibleNews.filter((n:any)=>!n.destacada);
@@ -799,7 +773,7 @@ function Home() {
 
   const cargar = useCallback(async () => {
     const [penyaResult, { data: actosData }, { data: eventosData }, { data: contentData }, { data: penyaPhotosData }] = await Promise.all([
-      supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,tiene_evento,instagram,informacion,estado").eq("estado","aprobada").order("nombre"),
+      supabase.from("penyes").select("id,nombre,direccion,lat,lng,foto_url,tipo_musica,tiene_evento,instagram,informacion,estado,miembros_actuales").eq("estado","aprobada").order("nombre"),
       supabase.from("actos").select("*").eq("publicado",true).order("dia").order("hora"),
       supabase.from("eventos").select("*").eq("publicado",true).order("dia").order("hora"),
       supabase.from("site_content").select("clave,valor"),
@@ -817,6 +791,8 @@ function Home() {
     setEventos(eventosData ?? []);
     const content = Object.fromEntries((contentData ?? []).map((x:any)=>[x.clave,x.valor]));
     setSiteContent(content);
+    let memberCountSettings:Record<string,number|null>={};
+    try { const parsed=JSON.parse(content["penyes_miembros_actuales_json"]||"{}"); if(parsed&&typeof parsed==="object"&&!Array.isArray(parsed))memberCountSettings=parsed; } catch { memberCountSettings={}; }
     let catalogoPenyesOcultas:string[]=[];
     try { const ids=JSON.parse(content["penyas_catalogo_oculto_json"]||"[]"); if(Array.isArray(ids)) catalogoPenyesOcultas=ids.map((id:any)=>String(id)); } catch { catalogoPenyesOcultas=[]; }
     try { const parsed=JSON.parse(content["avisos_json"]||"[]"); setAvisos(Array.isArray(parsed)?parsed:[]); } catch { setAvisos([]); }
@@ -860,7 +836,7 @@ function Home() {
       .map((p:any) => {
         const fotoUrl = typeof p.foto_url === "string" ? p.foto_url.trim() : "";
         const foto = fotoUrl ? (fotoUrl.startsWith("http") ? fotoUrl : supabase.storage.from("penyes").getPublicUrl(fotoUrl).data.publicUrl) : "";
-        const catalogoOriginal=catalogoPenyesHistorico.find((item)=>claveCatalogoPenya(item.nombre)===claveCatalogoPenya(p.nombre));return { ...p, id: String(p.id), nombre: String(p.nombre).trim(), foto, direccion: p.direccion ?? "", tipo_musica: p.tipo_musica ?? "Variada", instagram: p.instagram ?? "", informacion: p.informacion ?? "", asociada: catalogoOriginal?.asociada ?? true, color: catalogoOriginal?.color };
+        const catalogoOriginal=catalogoPenyesHistorico.find((item)=>claveCatalogoPenya(item.nombre)===claveCatalogoPenya(p.nombre));const memberCount=Object.prototype.hasOwnProperty.call(memberCountSettings,String(p.id))?memberCountSettings[String(p.id)]:p.miembros_actuales??null;return { ...p, id: String(p.id), nombre: String(p.nombre).trim(), foto, direccion: p.direccion ?? "", tipo_musica: p.tipo_musica ?? "Variada", instagram: p.instagram ?? "", informacion: p.informacion ?? "", miembros_actuales: memberCount, asociada: catalogoOriginal?.asociada ?? true, color: catalogoOriginal?.color };
       });
     const nombresExistentes = new Set(penyesExistentes.map((p:any) => claveCatalogoPenya(p.nombre)));
     const penyesCatalogo = catalogoPenyesHistorico
