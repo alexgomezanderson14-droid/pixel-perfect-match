@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, Newspaper, X } from "lucide-react";
 
-type PenyaPreview = { id: string; nombre: string; foto?: string };
+type PenyaPreview = { id: string; nombre: string; foto?: string; color?: string; title?: string };
 type Props = { userKey?: string | null; config?: Record<string, string>; penyes?: PenyaPreview[]; preview?: boolean };
 type Card = { slug: string; tag: string; title: string; description: string; image: string; size: "small" | "medium" | "large"; position: string };
 const defaults: Card[] = [
@@ -43,10 +43,7 @@ function PenyaCollage({ penyes }: { penyes: PenyaPreview[] }) {
     return [shuffled[0], center, shuffled[1]].filter(Boolean) as PenyaPreview[];
   }, [penyes]);
   return <div className="whats-new-penya-collage" aria-label="Carrusel de peñas con Enredats en el centro">
-    {selected.map((penya, index) => <div key={penya.id} className={`whats-new-penya-logo whats-new-penya-logo-${index}`}>
-      {penya.foto ? <img src={penya.foto} alt={penya.nombre} loading="lazy" decoding="async"/> : <span>{penya.nombre.slice(0,1).toLocaleUpperCase("es")}</span>}
-      <small>{penya.nombre}</small>
-    </div>)}
+    {selected.map((penya, index) => <div key={penya.id} className={`whats-new-penya-logo whats-new-penya-logo-${index}`} style={{ backgroundColor: penya.color || ["#5968D8", "#2587a8", "#19a887"][index] }}>\n      <small>{penya.title || penya.nombre}</small>\n      {penya.foto ? <img src={penya.foto} alt={penya.nombre} loading="lazy" decoding="async"/> : <span>{penya.nombre.slice(0,1).toLocaleUpperCase("es")}</span>}\n    </div>)}
   </div>;
 }
 export default function WhatsNewAnnouncement({ userKey, config = {}, penyes = [], preview = false }: Props) {
