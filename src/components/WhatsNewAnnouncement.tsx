@@ -81,6 +81,7 @@ export default function WhatsNewAnnouncement({ userKey, config = {} }: Props) {
     touchStartY.current = null;
     if (start !== null && end !== undefined && start - end > 85) {
       event.preventDefault();
+      window.dispatchEvent(new Event("penyera:go-home"));
       close();
     }
   }, [close]);
