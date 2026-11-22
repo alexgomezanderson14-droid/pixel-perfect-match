@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap");
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
@@ -532,7 +531,7 @@ nav[aria-label="Navegación principal"] {
 /* Recupera el carrusel coverflow original; solo se optimiza la legibilidad de sus textos. */
 .penya-coverflow { perspective:1100px !important; }
 .penya-coverflow-card { transform-style:preserve-3d !important; backface-visibility:hidden !important; -webkit-backface-visibility:hidden !important; filter:none !important; }
-.penya-card-title { font-family:"Space Grotesk",system-ui,sans-serif; font-weight:700; letter-spacing:-.035em; line-height:1.05; text-wrap:balance; text-rendering:optimizeLegibility; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-shadow:none !important; }
+.penya-card-title { font-family:var(--font-display),system-ui,sans-serif; font-weight:700; letter-spacing:-.035em; line-height:1.05; text-wrap:balance; text-rendering:optimizeLegibility; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-shadow:none !important; }
 .penya-coverflow-card p { text-shadow:none !important; -webkit-font-smoothing:antialiased; }
 
 /* La ficha hereda el fondo cálido elegido para toda la web y aclara sus superficies. */
