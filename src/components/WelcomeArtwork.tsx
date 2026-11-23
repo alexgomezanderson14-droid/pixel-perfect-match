@@ -22,7 +22,7 @@ type Props={settings?:string;className?:string};
 export default function WelcomeArtwork({settings="",className=""}:Props){
   const config=parseWelcomeArtworkSettings(settings);
   const style={"--welcome-art-height":config.height+"px","--welcome-art-offset":config.offsetY+"px",transform:"translateY(var(--welcome-art-offset))",marginBottom:Math.abs(config.offsetY)+"px"} as CSSProperties;
-  return <div className={"welcome-artwork-stage "+className} style={style} aria-label="Imágenes decorativas de bienvenida">
+  return <div className={"welcome-artwork-stage "+(config.items.length?"":"is-empty")+" "+className} style={style} aria-label="Imágenes decorativas de bienvenida">
     {config.items.map(item=><img key={item.id} src={item.url} alt="" draggable={false} className="welcome-artwork-image" style={{left:item.x+"%",top:item.y+"%",width:item.width+"%",height:item.height?item.height+"%":"auto",opacity:item.opacity/100,zIndex:item.zIndex,objectFit:item.fit,transform:"translate(-50%,-50%) rotate("+item.rotation+"deg)"}} loading="eager"/>)}
   </div>;
 }
