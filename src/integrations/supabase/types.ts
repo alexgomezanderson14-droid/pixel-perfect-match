@@ -150,7 +150,6 @@ export type Database = {
           instagram: string | null
           lat: number | null
           lng: number | null
-          miembros_actuales: number | null
           nombre: string
           tiene_evento: boolean
           tipo_musica: string
@@ -165,7 +164,6 @@ export type Database = {
           instagram?: string | null
           lat?: number | null
           lng?: number | null
-          miembros_actuales?: number | null
           nombre: string
           tiene_evento?: boolean
           tipo_musica?: string
@@ -180,47 +178,11 @@ export type Database = {
           instagram?: string | null
           lat?: number | null
           lng?: number | null
-          miembros_actuales?: number | null
           nombre?: string
           tiene_evento?: boolean
           tipo_musica?: string
         }
         Relationships: []
-      }
-      penya_miembros: {
-        Row: {
-          id: string
-          penya_id: string
-          user_id: string
-          display_name: string
-          avatar_url: string | null
-          joined_at: string
-        }
-        Insert: {
-          id?: string
-          penya_id: string
-          user_id: string
-          display_name?: string
-          avatar_url?: string | null
-          joined_at?: string
-        }
-        Update: {
-          id?: string
-          penya_id?: string
-          user_id?: string
-          display_name?: string
-          avatar_url?: string | null
-          joined_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "penya_miembros_penya_id_fkey"
-            columns: ["penya_id"]
-            isOneToOne: false
-            referencedRelation: "penyes"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       site_content: {
         Row: {
