@@ -70,3 +70,5 @@ revoke all on function public.revisar_solicitud_penya(uuid,boolean) from public,
 revoke all on function public.crear_invitacion_penya(uuid) from public, anon;
 grant execute on function public.revisar_solicitud_penya(uuid,boolean) to authenticated;
 grant execute on function public.crear_invitacion_penya(uuid) to authenticated;
+
+revoke all on function public.penya_member_profile_snapshot() from public, anon, authenticated;
