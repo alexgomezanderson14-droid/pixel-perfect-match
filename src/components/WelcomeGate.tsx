@@ -44,7 +44,15 @@ export default function WelcomeGate({ penyes, onContinueAsGuest, onClose, previe
       }).then(({ error }) => {
         if (error) throw error;
       }).catch((error: unknown) => {
-        setMessage(error instanceof Error ? error.message : "No se ha podido iniciar sesión.");
+        const detail = error instanceof Error ? error.message : "";
+        const normalized = detail.toLowerCase();
+        const providerName = provider === "google" ? "Google" : "Apple";
+        const friendlyMessage = normalized.includes("provider is not enabled") || normalized.includes("unsupported provider")
+          ? `El acceso con ${providerName} todavía no está activado. Hay que habilitarlo en Supabase Authentication.`
+          : normalized.includes("redirect") || normalized.includes("url") && normalized.includes("allow")
+            ? "La dirección de retorno no está autorizada en Supabase. Añade el dominio de PENYERA en Authentication → URL Configuration."
+            : detail || "No se ha podido iniciar sesión. Inténtalo de nuevo.";
+        setMessage(friendlyMessage);
         setBusy(false);
         setIsLeaving(false);
       });
@@ -116,7 +124,7 @@ export default function WelcomeGate({ penyes, onContinueAsGuest, onClose, previe
               <span>Continuar con Google</span>
             </button>
             <button type="button" disabled={busy} onClick={() => void signInWithProvider("apple")} className="welcome-gate-provider welcome-gate-apple">
-              <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M16.37 1.43c0 1.14-.42 2.2-1.22 3.07-.9.98-2.36 1.73-3.66 1.63-.16-1.1.4-2.26 1.12-3.05.8-.88 2.2-1.53 3.76-1.65ZM20.8 17.6c-.56 1.26-.83 1.82-1.55 2.94-1 1.52-2.4 3.42-4.15 3.44-1.55.02-1.95-1-4.05-.99-2.1.02-2.54 1.02-4.09 1-1.75-.02-3.08-1.73-4.08-3.25C.1 15.1-.2 8.45 2.36 5.7c1.82-1.96 4.7-2.1 6.6-.36.88.8 1.5 1.2 2.1 1.2.6-.01 1.2-.42 2.08-1.23 1.88-1.72 4.75-1.62 6.58.32.62.66 1.05 1.46 1.3 2.37-3.83 2.1-3.2 7.6-.22 9.6Z"/></svg>
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.9 15.96 3.55 9.4 8.9 9.16c1.3.06 2.2.72 2.97.78 1.15-.23 2.25-.91 3.48-.82 1.48.12 2.6.7 3.32 1.75-3.05 1.83-2.33 5.85.47 6.98-.56 1.24-1.28 2.47-2.1 3.42ZM11.85 9.1c-.14-2.02 1.5-3.7 3.38-3.86.26 2.3-2.08 4.05-3.38 3.86Z"/></svg>
               <span>Continuar con Apple</span>
             </button>
             <button type="button" onClick={() => { setMode("email"); setMessage(""); }} className="welcome-gate-email">Crear cuenta o iniciar sesión con correo</button>
