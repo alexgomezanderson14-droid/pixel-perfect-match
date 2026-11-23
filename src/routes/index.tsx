@@ -681,7 +681,18 @@ function Home() {
           .maybeSingle();
         if (error) throw error;
         if (!active) return;
-        const membership = data || null;
+        let membership = data || null;
+        const metadataPenyaId = String(accountUser.user_metadata?.penya_id || "");
+        if (!membership && metadataPenyaId && penyes.some((item) => String(item.id) === metadataPenyaId)) {
+          const { data: request, error: requestError } = await (supabase as any).rpc("solicitar_pertenecer_penya", { p_penya_id: metadataPenyaId, p_token: null });
+          if (requestError) throw requestError;
+          membership = request?.id ? request : { ...request, user_id: accountUser.id };
+          setAccountMessage(request?.message || "Solicitud enviada para su aprobación.");
+          setPenyaMembership(membership);
+          setMisPenyes([]);
+          setPenyaPromptDismissedFor(accountUser.id);
+          return;
+        }
         setPenyaMembership(membership);
         setMisPenyes(membership?.estado === "aprobado" && membership?.penya_id ? [String(membership.penya_id)] : []);
         const params = new URLSearchParams(window.location.search);
@@ -691,15 +702,23 @@ function Home() {
           if (linkedPenyaId && penyes.some((item) => String(item.id) === linkedPenyaId)) setAccountPenyaId(linkedPenyaId);
           setShowPenyaJoinDialog(true);
         }
-      } catch {
-        if (active) { setPenyaMembership(null); setMisPenyes([]); }
+      } catch (error) {
+        if (active) {
+          setPenyaMembership(null);
+          setMisPenyes([]);
+          if (String(accountUser.user_metadata?.penya_id || "")) {
+            setAccountPenyaId(String(accountUser.user_metadata.penya_id));
+            setShowPenyaJoinDialog(true);
+            setAccountMessage(error instanceof Error ? error.message : "No se ha podido enviar la solicitud de asociación.");
+          }
+        }
       } finally {
         if (active) setPenyaMembershipLoading(false);
       }
     };
     void syncMembership();
     return () => { active = false; };
-  }, [accountUser?.id, penyes, penyaPromptDismissedFor]);
+  }, [accountUser?.id, accountUser?.user_metadata?.penya_id, penyes, penyaPromptDismissedFor]);
   useEffect(() => {
     let active = true;
     const managedIds = esAdminWeb
@@ -721,11 +740,17 @@ function Home() {
     try {
       const { data, error } = await (supabase as any).rpc("solicitar_pertenecer_penya", { p_penya_id: id, p_token: token });
       if (error) throw error;
-      const { data: membership, error: membershipError } = await (supabase as any)
-        .from("penya_miembros")
-        .select("id,penya_id,user_id,display_name,avatar_url,joined_at,estado,solicitado_en,revisado_en")
-        .eq("user_id", accountUser.id).maybeSingle();
-      if (membershipError) throw membershipError;
+      const membership = data?.id ? data : {
+        id: data?.id,
+        penya_id: data?.penya_id || id,
+        user_id: accountUser.id,
+        estado: data?.estado || "pendiente",
+        display_name: accountUser.user_metadata?.full_name || accountUser.user_metadata?.name || accountUser.email || "Usuario",
+        avatar_url: accountUser.user_metadata?.avatar_url || accountUser.user_metadata?.picture || null,
+        joined_at: data?.joined_at || new Date().toISOString(),
+        solicitado_en: data?.solicitado_en || new Date().toISOString(),
+        revisado_en: data?.revisado_en || null,
+      };
       setPenyaMembership(membership || null);
       setMisPenyes(membership?.estado === "aprobado" ? [String(membership.penya_id)] : []);
       setShowPenyaJoinDialog(false);
@@ -1237,6 +1262,7 @@ function Home() {
           <div><p className="text-xs font-extrabold uppercase tracking-wider text-primary">Comunidad PENYERA</p><h2 id="penya-join-title" className="mt-1 text-2xl font-extrabold text-primary">{inviteToken?"Te han invitado a una peña":"¿Perteneces a alguna peña?"}</h2><p className="mt-2 text-sm text-muted-foreground">{inviteToken?"Completa la solicitud para que los miembros de la peña puedan aprobar tu incorporación.":"Selecciona la peña a la que perteneces. Tu solicitud será revisada por el administrador o por un miembro aprobado."}</p></div>
           <label className="block space-y-1 text-sm font-bold">Selecciona tu peña<select value={accountPenyaId} disabled={Boolean(inviteToken)} onChange={e=>setAccountPenyaId(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 font-normal"><option value="">Elige una peña</option>{penyes.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}</select></label>
           <button type="button" disabled={accountBusy || penyaMembershipLoading || !accountPenyaId} onClick={()=>void solicitarPenya(accountPenyaId,inviteToken)} className="w-full rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground">{accountBusy?"Enviando solicitud…":"Enviar solicitud de asociación"}</button>
+          {accountMessage && <p role="status" className="rounded-xl bg-primary/5 p-3 text-sm text-primary">{accountMessage}</p>}
           <button type="button" onClick={()=>{setShowPenyaJoinDialog(false);setPenyaPromptDismissedFor(accountUser.id);}} className="w-full rounded-full border border-border px-5 py-3 text-sm font-bold">Ahora no</button>
         </div>
       </div>}
