@@ -687,7 +687,7 @@ function Home() {
         const params = new URLSearchParams(window.location.search);
         const linkedPenyaId = params.get("penya");
         const hasInvite = Boolean(params.get("invite"));
-        if (!membership && (hasInvite || penyaPromptDismissedFor !== accountUser.id)) {
+        if ((!membership || membership.estado === "rechazado") && (hasInvite || penyaPromptDismissedFor !== accountUser.id)) {
           if (linkedPenyaId && penyes.some((item) => String(item.id) === linkedPenyaId)) setAccountPenyaId(linkedPenyaId);
           setShowPenyaJoinDialog(true);
         }
