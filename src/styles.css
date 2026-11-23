@@ -1531,9 +1531,9 @@ html, body, #root { min-width:0; max-width:100%; }
 
 /* Imágenes libres de bienvenida: sin marcos, máscaras ni recortes; cada archivo conserva su proporción. */
 .welcome-gate-art{position:relative;display:block;flex:0 0 auto;width:100%;height:auto!important;max-width:1160px;margin:8px auto 0;padding:0;background:transparent;border:0;border-radius:0;box-shadow:none;overflow:visible}
-.welcome-artwork-stage{position:relative;isolation:isolate;flex:0 0 auto;width:100%;height:clamp(120px,28vw,var(--welcome-art-height,300px));overflow:visible}
+.welcome-artwork-stage{position:relative;isolation:isolate;flex:0 0 auto;width:100%;height:min(var(--welcome-art-height,300px),45vw);min-height:120px;overflow:visible}.welcome-artwork-stage.is-empty{height:0!important;min-height:0}
 .welcome-artwork-image{position:absolute;display:block;max-width:none!important;max-height:none!important;height:auto;border:0!important;border-radius:0!important;padding:0!important;background:transparent!important;box-shadow:none!important;filter:none;pointer-events:none;user-select:none}
 .welcome-gate.is-leaving .welcome-gate-art{animation:welcome-art-fade .38s ease-in both}
-@media(max-width:640px){.welcome-gate-art{width:100%;margin:4px auto 0;overflow:visible}.welcome-artwork-stage{height:clamp(120px,52vw,var(--welcome-art-height,300px))}.welcome-artwork-image{max-width:none!important}}
+@media(max-width:640px){.welcome-gate-art{width:100%;margin:4px auto 0;overflow:visible}.welcome-artwork-stage{height:min(var(--welcome-art-height,300px),70vw)}.welcome-artwork-image{max-width:none!important}}
 @media(min-width:641px) and (max-width:900px){.welcome-gate-art{width:100%;max-width:900px}}
 @media(max-height:760px){.welcome-gate-art{margin-top:4px}.welcome-gate-intro{margin-top:6px}.welcome-gate-actions{padding-top:12px}.welcome-gate-provider{min-height:54px}}
