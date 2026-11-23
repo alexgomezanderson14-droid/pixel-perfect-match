@@ -663,17 +663,47 @@ function Home() {
   }, []);
   useEffect(() => {
     let active = true;
-    if (!accountUser?.id) { setPenyaMembership(null); return; }
-    setPenyaMembershipLoading(true);
-    (supabase as any).from("penya_miembros").select("id,penya_id,user_id,display_name,avatar_url,joined_at").eq("user_id",accountUser.id).maybeSingle()
-      .then(({data,error}:any) => {
+    if (!accountUser?.id) {
+      setPenyaMembership(null);
+      setPenyaMembershipLoading(false);
+      return;
+    }
+    const syncMembership = async () => {
+      setPenyaMembershipLoading(true);
+      try {
+        const { data, error } = await (supabase as any)
+          .from("penya_miembros")
+          .select("id,penya_id,user_id,display_name,avatar_url,joined_at")
+          .eq("user_id", accountUser.id)
+          .maybeSingle();
+        if (error) throw error;
+        let membership = data || null;
+        // Si el usuario eligió peña al registrarse, se convierte en una
+        // inscripción real cuando confirma el correo e inicia sesión.
+        const requestedPenyaId = String(accountUser.user_metadata?.penya_id || "");
+        if (!membership && requestedPenyaId && penyes.some((item) => String(item.id) === requestedPenyaId)) {
+          const { data: created, error: insertError } = await (supabase as any)
+            .from("penya_miembros")
+            .insert({ penya_id: requestedPenyaId, user_id: accountUser.id })
+            .select("id,penya_id,user_id,display_name,avatar_url,joined_at")
+            .single();
+          if (!insertError) membership = created;
+        }
         if (!active) return;
-        if (error) { setPenyaMembership(null); }
-        else { setPenyaMembership(data||null); setMisPenyes(data?.penya_id?[String(data.penya_id)]:[]); }
-        setPenyaMembershipLoading(false);
-      });
+        setPenyaMembership(membership);
+        setMisPenyes(membership?.penya_id ? [String(membership.penya_id)] : []);
+      } catch {
+        if (active) {
+          setPenyaMembership(null);
+          setMisPenyes([]);
+        }
+      } finally {
+        if (active) setPenyaMembershipLoading(false);
+      }
+    };
+    void syncMembership();
     return () => { active = false; };
-  }, [accountUser?.id]);
+  }, [accountUser?.id, penyes]);
   useEffect(() => {
     let active = true;
     const managedIds = penyes.filter(p => puedeAdministrarPenya(String(p.id))).map(p => String(p.id));
@@ -983,10 +1013,31 @@ function Home() {
     setAccountBusy(true); setAccountMessage("");
     try {
       const selectedPenya = penyes.find(item => item.id === accountPenyaId);
+      if (accountPenyaId && !selectedPenya) throw new Error("Selecciona una peña válida del directorio.");
+      if (penyaMembership?.penya_id && penyaMembership.penya_id !== accountPenyaId) {
+        const { error: leaveError } = await (supabase as any).from("penya_miembros").delete().eq("user_id", accountUser.id);
+        if (leaveError) throw leaveError;
+      }
+      let membership = null;
+      if (accountPenyaId) {
+        if (penyaMembership?.penya_id === accountPenyaId) {
+          membership = penyaMembership;
+        } else {
+          const { data, error: joinError } = await (supabase as any)
+            .from("penya_miembros")
+            .insert({ penya_id: accountPenyaId, user_id: accountUser.id })
+            .select("id,penya_id,user_id,display_name,avatar_url,joined_at")
+            .single();
+          if (joinError) throw joinError;
+          membership = data;
+        }
+      }
       const { data, error } = await supabase.auth.updateUser({ data: { penya_id: accountPenyaId || null, penya_nombre: selectedPenya?.nombre || null, penya_ids: accountPenyaId ? [accountPenyaId] : [] } });
       if (error) throw error;
       if (data.user) setAccountUser(data.user);
-      setAccountMessage(selectedPenya ? "Tu peña se ha guardado en tu cuenta." : "Has quitado la peña asociada a tu cuenta.");
+      setPenyaMembership(membership);
+      setMisPenyes(accountPenyaId ? [accountPenyaId] : []);
+      setAccountMessage(selectedPenya ? "¡Ya formas parte de " + selectedPenya.nombre + "!" : "Has salido de tu peña.");
     } catch (error) { setAccountMessage(error instanceof Error ? error.message : "No se ha podido guardar tu peña."); }
     finally { setAccountBusy(false); }
   };
