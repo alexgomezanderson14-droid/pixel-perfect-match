@@ -2,12 +2,12 @@ import { useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import WelcomeArtwork from "@/components/WelcomeArtwork";
 
-type Props = { artworkSettings?: string; onContinueAsGuest: () => void; onClose?: () => void; preview?: boolean };
+type Props = { artworkSettings?: string; onContinueAsGuest: () => void; onClose?: () => void; preview?: boolean; invitationName?: string };
 
-export default function WelcomeGate({ artworkSettings = "", onContinueAsGuest, onClose, preview = false }: Props) {
+export default function WelcomeGate({ artworkSettings = "", onContinueAsGuest, onClose, preview = false, invitationName = "" }: Props) {
   const [isLeaving, setIsLeaving] = useState(false);
-  const [mode, setMode] = useState<"welcome" | "email">("welcome");
-  const [accountMode, setAccountMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"welcome" | "email">(invitationName ? "email" : "welcome");
+  const [accountMode, setAccountMode] = useState<"login" | "register">(invitationName ? "register" : "login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,7 +28,7 @@ export default function WelcomeGate({ artworkSettings = "", onContinueAsGuest, o
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}${window.location.pathname}${window.location.search}`,
           skipBrowserRedirect: false,
         },
       });
@@ -61,7 +61,7 @@ export default function WelcomeGate({ artworkSettings = "", onContinueAsGuest, o
         ? supabase.auth.signUp({
             email: email.trim(),
             password,
-            options: { data: { full_name: name.trim() } },
+            options: { data: { full_name: name.trim() }, emailRedirectTo: `${window.location.origin}${window.location.pathname}${window.location.search}` },
           })
         : supabase.auth.signInWithPassword({ email: email.trim(), password });
       void request.then(({ data, error }) => {
@@ -96,6 +96,7 @@ export default function WelcomeGate({ artworkSettings = "", onContinueAsGuest, o
       </div>
 
       <div className="welcome-gate-actions">
+        {invitationName && <p className="welcome-gate-invitation">Te han invitado a solicitar tu incorporación a <strong>{invitationName}</strong>. Identifícate o crea tu cuenta y completa la solicitud.</p>}
         {mode === "welcome" ? (
           <>
             <button type="button" disabled={busy} onClick={() => void signInWithGoogle()} className="welcome-gate-provider welcome-gate-google">
