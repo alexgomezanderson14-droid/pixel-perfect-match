@@ -402,9 +402,9 @@ function Home() {
   const [guestMode, setGuestMode] = useState(false);
   const [showWelcomePreview, setShowWelcomePreview] = useState(false);
   const [penyaAccessNotice, setPenyaAccessNotice] = useState(false);
-  const esAdminWeb = accountUser?.email?.toLowerCase() === "gomezandersonalex@gmail.com";
+  const esAdminWeb = ["gomezandersonalex@gmail.com", "alexgomezanderson14@gmail.com"].includes(String(accountUser?.email || "").toLowerCase());
   const puedeAdministrarPenya = (penyaId: string) => esAdminWeb || [accountUser?.app_metadata?.penya_admin_ids].some((ids:any) => Array.isArray(ids) && ids.includes(penyaId)) || accountUser?.app_metadata?.penya_admin_id === penyaId || accountUser?.app_metadata?.penya_roles?.[penyaId] === "admin";
-  const puedeGestionarPenya = (penyaId: string) => puedeAdministrarPenya(penyaId) || [accountUser?.app_metadata?.penya_ids, accountUser?.app_metadata?.penya_memberships].some((ids:any) => Array.isArray(ids) && ids.includes(penyaId));
+  const puedeGestionarPenya = (penyaId: string) => puedeAdministrarPenya(penyaId) || (penyaMembership?.estado === "aprobado" && String(penyaMembership?.penya_id) === String(penyaId));
   const avisarAccesoPenya = () => setPenyaAccessNotice(true);
   const [accountMode, setAccountMode] = useState<"register"|"login">("register");
   const [accountName, setAccountName] = useState("");
@@ -413,6 +413,9 @@ function Home() {
   const [accountPassword, setAccountPassword] = useState("");
   const [accountMessage, setAccountMessage] = useState("");
   const [accountBusy, setAccountBusy] = useState(false);
+  const [showPenyaJoinDialog, setShowPenyaJoinDialog] = useState(false);
+  const [penyaPromptDismissedFor, setPenyaPromptDismissedFor] = useState<string | null>(null);
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
   const [personalPrefs, setPersonalPrefs] = useState({ showImportantNotices: true, reduceMotion: false, largeText: false, highContrast: false });
   const [feedbackType,setFeedbackType]=useState<"sugerencia"|"error">("sugerencia");
   const [feedbackTitle,setFeedbackTitle]=useState("");
@@ -673,69 +676,108 @@ function Home() {
       try {
         const { data, error } = await (supabase as any)
           .from("penya_miembros")
-          .select("id,penya_id,user_id,display_name,avatar_url,joined_at")
+          .select("id,penya_id,user_id,display_name,avatar_url,joined_at,estado,solicitado_en,revisado_en")
           .eq("user_id", accountUser.id)
           .maybeSingle();
         if (error) throw error;
-        let membership = data || null;
-        // Si el usuario eligió peña al registrarse, se convierte en una
-        // inscripción real cuando confirma el correo e inicia sesión.
-        const requestedPenyaId = String(accountUser.user_metadata?.penya_id || "");
-        if (!membership && requestedPenyaId && penyes.some((item) => String(item.id) === requestedPenyaId)) {
-          const { data: created, error: insertError } = await (supabase as any)
-            .from("penya_miembros")
-            .insert({ penya_id: requestedPenyaId, user_id: accountUser.id })
-            .select("id,penya_id,user_id,display_name,avatar_url,joined_at")
-            .single();
-          if (!insertError) membership = created;
-        }
         if (!active) return;
+        const membership = data || null;
         setPenyaMembership(membership);
-        setMisPenyes(membership?.penya_id ? [String(membership.penya_id)] : []);
-      } catch {
-        if (active) {
-          setPenyaMembership(null);
-          setMisPenyes([]);
+        setMisPenyes(membership?.estado === "aprobado" && membership?.penya_id ? [String(membership.penya_id)] : []);
+        const params = new URLSearchParams(window.location.search);
+        const linkedPenyaId = params.get("penya");
+        const hasInvite = Boolean(params.get("invite"));
+        if ((!membership || membership.estado === "rechazado") && (hasInvite || penyaPromptDismissedFor !== accountUser.id)) {
+          if (linkedPenyaId && penyes.some((item) => String(item.id) === linkedPenyaId)) setAccountPenyaId(linkedPenyaId);
+          setShowPenyaJoinDialog(true);
         }
+      } catch {
+        if (active) { setPenyaMembership(null); setMisPenyes([]); }
       } finally {
         if (active) setPenyaMembershipLoading(false);
       }
     };
     void syncMembership();
     return () => { active = false; };
-  }, [accountUser?.id, penyes]);
+  }, [accountUser?.id, penyes, penyaPromptDismissedFor]);
   useEffect(() => {
     let active = true;
-    const managedIds = penyes.filter(p => puedeAdministrarPenya(String(p.id))).map(p => String(p.id));
+    const managedIds = esAdminWeb
+      ? penyes.map((p) => String(p.id))
+      : penyaMembership?.estado === "aprobado" && penyaMembership?.penya_id
+        ? [String(penyaMembership.penya_id)]
+        : [];
     if (!accountUser?.id || !managedIds.length) { setPenyaMemberRoster([]); return; }
-    (supabase as any).from("penya_miembros").select("id,penya_id,user_id,display_name,avatar_url,joined_at").in("penya_id",managedIds).order("joined_at",{ascending:true})
-      .then(({data,error}:any) => { if(active) setPenyaMemberRoster(error?[]:(data||[])); });
+    (supabase as any).from("penya_miembros")
+      .select("id,penya_id,user_id,display_name,avatar_url,joined_at,estado,solicitado_en")
+      .in("penya_id", managedIds)
+      .order("solicitado_en", { ascending: true })
+      .then(({data,error}:any) => { if (active) setPenyaMemberRoster(error ? [] : (data || [])); });
     return () => { active = false; };
-  }, [accountUser?.id,penyes]);
+  }, [accountUser?.id, penyes, penyaMembership?.penya_id, penyaMembership?.estado, esAdminWeb]);
+  const solicitarPenya = async (id: string, token: string | null = null) => {
+    if (!accountUser?.id || !id) return;
+    setAccountBusy(true); setAccountMessage("");
+    try {
+      const { data, error } = await (supabase as any).rpc("solicitar_pertenecer_penya", { p_penya_id: id, p_token: token });
+      if (error) throw error;
+      const { data: membership, error: membershipError } = await (supabase as any)
+        .from("penya_miembros")
+        .select("id,penya_id,user_id,display_name,avatar_url,joined_at,estado,solicitado_en,revisado_en")
+        .eq("user_id", accountUser.id).maybeSingle();
+      if (membershipError) throw membershipError;
+      setPenyaMembership(membership || null);
+      setMisPenyes(membership?.estado === "aprobado" ? [String(membership.penya_id)] : []);
+      setShowPenyaJoinDialog(false);
+      setInviteToken(null);
+      setPenyaPromptDismissedFor(accountUser.id);
+      setAccountMessage(data?.message || "Solicitud enviada para su aprobación.");
+    } catch (error:any) {
+      setAccountMessage(error?.message || "No se ha podido enviar la solicitud.");
+    } finally { setAccountBusy(false); }
+  };
+  const revisarSolicitudPenya = async (membershipId: string, aprobar: boolean) => {
+    setAccountBusy(true); setAccountMessage("");
+    try {
+      const { error } = await (supabase as any).rpc("revisar_solicitud_penya", { p_miembro_id: membershipId, p_aprobar: aprobar });
+      if (error) throw error;
+      const managedIds = esAdminWeb ? penyes.map((p) => String(p.id)) : [String(penyaMembership?.penya_id || "")].filter(Boolean);
+      const { data, error: listError } = await (supabase as any).from("penya_miembros")
+        .select("id,penya_id,user_id,display_name,avatar_url,joined_at,estado,solicitado_en")
+        .in("penya_id", managedIds).order("solicitado_en", { ascending: true });
+      if (listError) throw listError;
+      setPenyaMemberRoster(data || []);
+      setAccountMessage(aprobar ? "Miembro aprobado." : "Solicitud rechazada.");
+    } catch (error:any) {
+      setAccountMessage(error?.message || "No se ha podido revisar la solicitud.");
+    } finally { setAccountBusy(false); }
+  };
+  const crearEnlaceInvitacion = async (id: string) => {
+    setAccountBusy(true); setAccountMessage("");
+    try {
+      const { data, error } = await (supabase as any).rpc("crear_invitacion_penya", { p_penya_id: id });
+      if (error) throw error;
+      const link = window.location.origin + "/?penya=" + encodeURIComponent(id) + "&invite=" + encodeURIComponent(data.token);
+      try { await navigator.clipboard.writeText(link); setAccountMessage("Enlace de invitación copiado. Caduca en 30 días."); }
+      catch { window.prompt("Copia el enlace de invitación:", link); }
+    } catch (error:any) {
+      setAccountMessage(error?.message || "No se ha podido crear el enlace.");
+    } finally { setAccountBusy(false); }
+  };
   const toggleMiPenya = async (id: string) => {
-    if (accountUser?.id) {
-      setPenyaMembershipLoading(true);
-      try {
-        if (penyaMembership?.penya_id === id) {
-          const {error}=await (supabase as any).from("penya_miembros").delete().eq("user_id",accountUser.id);
-          if(error) throw error;
-          setPenyaMembership(null); setMisPenyes([]);
-        } else if (penyaMembership?.penya_id && penyaMembership.penya_id !== id) {
-          window.alert("Ya perteneces a otra peña. Primero debes salir de ella desde su ficha para poder unirte a otra.");
-        } else {
-          const {data,error}=await (supabase as any).from("penya_miembros").insert({penya_id:id,user_id:accountUser.id}).select("id,penya_id,user_id,display_name,avatar_url,joined_at").single();
-          if(error) throw error;
-          setPenyaMembership(data); setMisPenyes([id]);
-        }
-      } catch(error:any) { window.alert(error?.message||"No se ha podido actualizar tu peña."); }
-      finally { setPenyaMembershipLoading(false); }
+    if (!accountUser?.id) { setAccountPenyaId(id); setShowPenyaJoinDialog(true); return; }
+    if (penyaMembership?.penya_id === id) {
+      const { error } = await (supabase as any).from("penya_miembros").delete().eq("user_id", accountUser.id);
+      if (error) { window.alert(error.message); return; }
+      setPenyaMembership(null); setMisPenyes([]);
+      setAccountPenyaId(id); setShowPenyaJoinDialog(true);
       return;
     }
-    setMisPenyes(current => {
-      const next = current.includes(id) ? [] : [id];
-      try { localStorage.setItem("festalfas-mis-penyes", JSON.stringify(next)); } catch { /* La selección sigue activa durante esta visita. */ }
-      return next;
-    });
+    if (penyaMembership?.penya_id && penyaMembership.penya_id !== id) {
+      window.alert("Tu cuenta ya tiene una solicitud o pertenece a otra peña. Contacta con su administrador para cambiarla.");
+      return;
+    }
+    setAccountPenyaId(id); setInviteToken(null); setShowPenyaJoinDialog(true);
   };
   useEffect(() => { if (dias.length && (!dia || !dias.includes(dia))) { const siguiente = dias.find((d) => d >= todayKey); setDia(dias.includes(todayKey) ? todayKey : siguiente || dias[dias.length - 1]); } }, [dias, dia, todayKey]);
   useEffect(() => {
@@ -990,6 +1032,35 @@ function Home() {
   }, [noticias]);
 
   useEffect(() => { setAccountPenyaId(String(accountUser?.user_metadata?.penya_id || "")); }, [accountUser?.id, accountUser?.user_metadata?.penya_id]);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const linkedPenyaId = params.get("penya");
+    const token = params.get("invite");
+    if (linkedPenyaId && penyes.some((item) => String(item.id) === linkedPenyaId)) {
+      setAccountPenyaId(linkedPenyaId);
+      setInviteToken(token);
+      if (accountUser?.id) setShowPenyaJoinDialog(true);
+    }
+  }, [accountUser?.id, penyes]);
+  const handleGoogleSignIn = async () => {
+    setAccountBusy(true); setAccountMessage("");
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}${window.location.pathname}${window.location.search}` },
+      });
+      if (error) throw error;
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "";
+      const normalized = detail.toLowerCase();
+      setAccountMessage(normalized.includes("provider is not enabled") || normalized.includes("unsupported provider")
+        ? "Google todavía no está activado en Supabase o faltan sus credenciales."
+        : normalized.includes("redirect") || (normalized.includes("url") && normalized.includes("allow"))
+          ? "La URL de PENYERA no está autorizada en Supabase Authentication → URL Configuration."
+          : detail || "No se ha podido iniciar sesión con Google.");
+      setAccountBusy(false);
+    }
+  };
   const handleAccountSubmit = async (event: React.FormEvent) => {
     event.preventDefault(); setAccountBusy(true); setAccountMessage("");
     try {
@@ -1010,36 +1081,16 @@ function Home() {
   };
   const saveAccountPenya = async () => {
     if (!accountUser) return;
-    setAccountBusy(true); setAccountMessage("");
-    try {
-      const selectedPenya = penyes.find(item => item.id === accountPenyaId);
-      if (accountPenyaId && !selectedPenya) throw new Error("Selecciona una peña válida del directorio.");
-      if (penyaMembership?.penya_id && penyaMembership.penya_id !== accountPenyaId) {
-        const { error: leaveError } = await (supabase as any).from("penya_miembros").delete().eq("user_id", accountUser.id);
-        if (leaveError) throw leaveError;
+    if (!accountPenyaId) {
+      if (penyaMembership?.id) {
+        const { error } = await (supabase as any).from("penya_miembros").delete().eq("user_id", accountUser.id);
+        if (error) { setAccountMessage(error.message); return; }
       }
-      let membership = null;
-      if (accountPenyaId) {
-        if (penyaMembership?.penya_id === accountPenyaId) {
-          membership = penyaMembership;
-        } else {
-          const { data, error: joinError } = await (supabase as any)
-            .from("penya_miembros")
-            .insert({ penya_id: accountPenyaId, user_id: accountUser.id })
-            .select("id,penya_id,user_id,display_name,avatar_url,joined_at")
-            .single();
-          if (joinError) throw joinError;
-          membership = data;
-        }
-      }
-      const { data, error } = await supabase.auth.updateUser({ data: { penya_id: accountPenyaId || null, penya_nombre: selectedPenya?.nombre || null, penya_ids: accountPenyaId ? [accountPenyaId] : [] } });
-      if (error) throw error;
-      if (data.user) setAccountUser(data.user);
-      setPenyaMembership(membership);
-      setMisPenyes(accountPenyaId ? [accountPenyaId] : []);
-      setAccountMessage(selectedPenya ? "¡Ya formas parte de " + selectedPenya.nombre + "!" : "Has salido de tu peña.");
-    } catch (error) { setAccountMessage(error instanceof Error ? error.message : "No se ha podido guardar tu peña."); }
-    finally { setAccountBusy(false); }
+      setPenyaMembership(null); setMisPenyes([]);
+      setAccountMessage("Has indicado que no perteneces a ninguna peña.");
+      return;
+    }
+    await solicitarPenya(accountPenyaId, inviteToken);
   };
   const submitFeedback = async (event:React.FormEvent) => {
     event.preventDefault();setFeedbackBusy(true);setFeedbackMessage("");
@@ -1179,8 +1230,16 @@ function Home() {
   return (
     <div className="page-bg relative min-h-screen" style={{ "--pink": mayoralesPrimaryColor, "--primary": mayoralesPrimaryColor, "--secondary": mayoralesPrimaryColor, "--accent": mayoralesPrimaryColor, "--ring": mayoralesPrimaryColor, "--cat-penya": mayoralesPrimaryColor, "--mayorales-accent": mayoralesColor, "--background": siteContent["theme_background"] || "oklch(0.975 0.012 90)", "--gradient-page": `linear-gradient(180deg, ${siteContent["theme_background"] || "oklch(0.985 0.008 90)"}, ${siteContent["theme_background"] || "oklch(0.965 0.014 90)"})` } as React.CSSProperties}>
       {!authReady && <div className="fixed inset-0 z-[2147483600] bg-white" aria-label="Cargando PENYERA" />}
-      {authReady && !accountUser && !guestMode && <WelcomeGate artworkSettings={siteContent["welcome_gate_artworks_json"]||""} onContinueAsGuest={()=>{try{localStorage.setItem("penyera-access-mode","guest");}catch{/* La elección se mantiene durante esta visita. */}setGuestMode(true);}} />}
+      {authReady && !accountUser && (!guestMode || Boolean(inviteToken)) && <WelcomeGate artworkSettings={siteContent["welcome_gate_artworks_json"]||""} invitationName={inviteToken ? penyes.find(p=>String(p.id)===String(accountPenyaId))?.nombre || "" : ""} onContinueAsGuest={()=>{try{localStorage.setItem("penyera-access-mode","guest");}catch{/* La elección se mantiene durante esta visita. */}setGuestMode(true);}} />}
       {showWelcomePreview && esAdminWeb && <WelcomeGate preview artworkSettings={siteContent["welcome_gate_artworks_json"]||""} onContinueAsGuest={()=>setShowWelcomePreview(false)} onClose={()=>setShowWelcomePreview(false)} />}
+      {showPenyaJoinDialog && accountUser && <div className="fixed inset-0 z-[2147483601] flex items-center justify-center bg-black/55 p-4" role="dialog" aria-modal="true" aria-labelledby="penya-join-title">
+        <div className="w-full max-w-md space-y-4 rounded-3xl bg-background p-6 shadow-2xl">
+          <div><p className="text-xs font-extrabold uppercase tracking-wider text-primary">Comunidad PENYERA</p><h2 id="penya-join-title" className="mt-1 text-2xl font-extrabold text-primary">{inviteToken?"Te han invitado a una peña":"¿Perteneces a alguna peña?"}</h2><p className="mt-2 text-sm text-muted-foreground">{inviteToken?"Completa la solicitud para que los miembros de la peña puedan aprobar tu incorporación.":"Selecciona la peña a la que perteneces. Tu solicitud será revisada por el administrador o por un miembro aprobado."}</p></div>
+          <label className="block space-y-1 text-sm font-bold">Selecciona tu peña<select value={accountPenyaId} disabled={Boolean(inviteToken)} onChange={e=>setAccountPenyaId(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 font-normal"><option value="">Elige una peña</option>{penyes.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}</select></label>
+          <button type="button" disabled={accountBusy || penyaMembershipLoading || !accountPenyaId} onClick={()=>void solicitarPenya(accountPenyaId,inviteToken)} className="w-full rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground">{accountBusy?"Enviando solicitud…":"Enviar solicitud de asociación"}</button>
+          <button type="button" onClick={()=>{setShowPenyaJoinDialog(false);setPenyaPromptDismissedFor(accountUser.id);}} className="w-full rounded-full border border-border px-5 py-3 text-sm font-bold">Ahora no</button>
+        </div>
+      </div>}
       {featuredPhotoEditorModal}
       {penyaProfileEditorModal}
       <nav aria-label="Navegación principal" className="flex items-center justify-between gap-0 overflow-hidden rounded-full border px-1 shadow-[0_5px_18px_rgba(20,39,52,.16),0_1px_4px_rgba(255,255,255,.95)_inset] backdrop-blur-2xl [backdrop-filter:blur(24px)_saturate(155%)]" style={{position:"fixed",left:"50vw",right:"auto",top:"auto",bottom:"calc(env(safe-area-inset-bottom) + 10px)",width:"min(460px, calc(100vw - 24px))",maxWidth:"calc(100vw - 24px)",height:"62px",minHeight:"62px",boxSizing:"border-box",transform:"translate3d(-50%, 0, 0)",translate:"none",margin:0,zIndex:2147483000,backgroundColor:`color-mix(in srgb, ${mayoralesColor} 9%, rgba(245,248,250,.94))`,borderColor:`color-mix(in srgb, ${mayoralesColor} 22%, white)`}}>
@@ -1516,9 +1575,19 @@ function Home() {
           <div className="rounded-[1.75rem] border border-primary/15 bg-gradient-to-br from-card via-card to-primary/[.06] p-5 shadow-sm sm:p-7"><div className="flex items-center gap-3"><span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary" aria-hidden="true"><svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1a1.8 1.8 0 0 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3 .9v.2a1.8 1.8 0 0 1-3.6 0v-.2a1.8 1.8 0 0 0-3-.9l-.1.1a1.8 1.8 0 0 1-2.5-2.5l.1-.1a1.8 1.8 0 0 0-.9-3h-.2a1.8 1.8 0 0 1 0-3.6h.2a1.8 1.8 0 0 0 .9-3l-.1-.1a1.8 1.8 0 0 1 2.5-2.5l.1.1a1.8 1.8 0 0 0 3-.9v-.2a1.8 1.8 0 0 1 3.6 0v.2a1.8 1.8 0 0 0 3 .9l.1-.1a1.8 1.8 0 0 1 2.5 2.5l-.1.1a1.8 1.8 0 0 0 .9 3h.2a1.8 1.8 0 0 1 0 3.6h-.2a1.8 1.8 0 0 0-.9 3Z"/></svg></span><div><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-primary">Tu espacio personal</p><h1 id="settings-title" className="mt-0.5 text-3xl font-black text-primary sm:text-4xl">Ajustes</h1></div></div><p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Gestiona tu cuenta, la peña a la que perteneces y cómo quieres utilizar PENYERA.</p><nav aria-label="Secciones de ajustes" className="mt-5 flex flex-wrap gap-2"><a href="#account-settings" className="rounded-full border border-border bg-background/80 px-3.5 py-2 text-xs font-bold text-primary transition hover:border-primary/40"><span className="inline-flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/></svg>Mi cuenta</span></a><a href="#preferences-settings" className="rounded-full border border-border bg-background/80 px-3.5 py-2 text-xs font-bold text-primary transition hover:border-primary/40"><span className="inline-flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>Preferencias</span></a><a href="#notifications-settings-title" className="rounded-full border border-border bg-background/80 px-3.5 py-2 text-xs font-bold text-primary transition hover:border-primary/40"><span className="inline-flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>Notificaciones</span></a><a href="#feedback-settings-title" className="rounded-full border border-border bg-background/80 px-3.5 py-2 text-xs font-bold text-primary transition hover:border-primary/40"><span className="inline-flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-6.5A7.5 7.5 0 1 1 20 11.5Z"/><path d="M8 11.5h8M8 8.5h5"/></svg>Ayuda</span></a></nav></div>
           <div className="grid items-start gap-4 xl:grid-cols-2">
             <section id="account-settings" className="glass scroll-mt-24 rounded-3xl border border-primary/15 p-5 shadow-sm sm:p-6">
-              {accountUser ? <div className="space-y-4"><div className="flex items-center gap-3"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary"><svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/></svg></span><div><p className="text-[10px] font-extrabold uppercase tracking-wider text-primary">Sesión iniciada</p><h2 className="text-lg font-extrabold">{accountUser.user_metadata?.full_name || accountUser.email}</h2><p className="text-xs text-muted-foreground">{accountUser.email}</p></div></div><div className="space-y-2 rounded-2xl border border-primary/15 bg-primary/[.035] p-3"><label className="block space-y-1 text-sm font-bold">Mi peña<select value={accountPenyaId} onChange={e=>setAccountPenyaId(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 font-normal"><option value="">No pertenezco a ninguna</option>{penyes.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}</select></label><p className="text-xs text-muted-foreground">Esta peña quedará asociada a tu perfil. Los permisos para añadir contenido se activan cuando la cuenta esté autorizada como miembro de esa peña.</p><button type="button" disabled={accountBusy} onClick={()=>void saveAccountPenya()} className="rounded-full bg-primary px-4 py-2 text-sm font-extrabold text-primary-foreground">Guardar mi peña</button></div><button type="button" disabled={accountBusy} onClick={async()=>{setAccountBusy(true);await supabase.auth.signOut();setAccountMessage("Has cerrado sesión.");setAccountBusy(false);}} className="rounded-full border border-border px-4 py-2 text-sm font-bold">Cerrar sesión</button></div> : <>
+              {accountUser ? <div className="space-y-4"><div className="flex items-center gap-3"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary"><svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/></svg></span><div><p className="text-[10px] font-extrabold uppercase tracking-wider text-primary">Sesión iniciada</p><h2 className="text-lg font-extrabold">{accountUser.user_metadata?.full_name || accountUser.email}</h2><p className="text-xs text-muted-foreground">{accountUser.email}</p></div></div><div className="space-y-3 rounded-2xl border border-primary/15 bg-primary/[.035] p-3">
+                  <div className="space-y-1"><p className="text-sm font-bold">Mi peña</p>
+                    {penyaMembership?.estado === "aprobado" ? <p className="text-sm text-emerald-700">Perteneces a {penyes.find(p=>String(p.id)===String(penyaMembership.penya_id))?.nombre || "tu peña"}.</p> : penyaMembership?.estado === "pendiente" ? <p className="text-sm font-semibold text-amber-700">Tu solicitud está pendiente de aprobación.</p> : penyaMembership?.estado === "rechazado" ? <p className="text-sm text-muted-foreground">Tu solicitud anterior fue denegada. Puedes volver a solicitar la asociación.</p> : <p className="text-sm text-muted-foreground">Todavía no estás asociado a ninguna peña.</p>}
+                  </div>
+                  {penyaMembership?.estado !== "aprobado" && <><label className="block space-y-1 text-sm font-bold">¿A qué peña perteneces?<select value={accountPenyaId} onChange={e=>setAccountPenyaId(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 font-normal"><option value="">Selecciona una peña</option>{penyes.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}</select></label><button type="button" disabled={accountBusy || !accountPenyaId} onClick={()=>void saveAccountPenya()} className="rounded-full bg-primary px-4 py-2 text-sm font-extrabold text-primary-foreground">{accountBusy?"Enviando…":"Solicitar asociación"}</button></>}
+                  {esAdminWeb && <label className="block space-y-1 text-sm font-bold">Peña para gestionar<select value={accountPenyaId} onChange={e=>setAccountPenyaId(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 font-normal"><option value="">Selecciona una peña</option>{penyes.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}</select></label>}{(esAdminWeb || penyaMembership?.estado === "aprobado") && <button type="button" disabled={accountBusy || !(esAdminWeb ? accountPenyaId : penyaMembership?.penya_id)} onClick={()=>void crearEnlaceInvitacion(String(esAdminWeb ? accountPenyaId : penyaMembership?.penya_id || ""))} className="rounded-full border border-primary/25 px-4 py-2 text-sm font-bold text-primary">Copiar enlace para invitar</button>}
+                </div>
+                {(esAdminWeb || penyaMembership?.estado === "aprobado") && <div className="space-y-3 rounded-2xl border border-border p-3">
+                  <div><h3 className="text-sm font-extrabold">Solicitudes de asociación</h3><p className="text-xs text-muted-foreground">Revisa quién quiere unirse a {esAdminWeb?"las peñas":"tu peña"}.</p></div>
+                  {penyaMemberRoster.filter(m=>m.estado==="pendiente").length===0 ? <p className="text-xs text-muted-foreground">No hay solicitudes pendientes.</p> : penyaMemberRoster.filter(m=>m.estado==="pendiente").map(m=><div key={m.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-muted/50 p-3"><div><p className="text-sm font-bold">{m.display_name || "Usuario"}</p><p className="text-xs text-muted-foreground">{penyes.find(p=>String(p.id)===String(m.penya_id))?.nombre || "Peña"} · {new Date(m.solicitado_en || m.joined_at).toLocaleDateString("es-ES")}</p></div><div className="flex gap-2"><button type="button" disabled={accountBusy} onClick={()=>void revisarSolicitudPenya(m.id,true)} className="rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground">Aprobar</button><button type="button" disabled={accountBusy} onClick={()=>void revisarSolicitudPenya(m.id,false)} className="rounded-full border border-border px-3 py-2 text-xs font-bold">Denegar</button></div></div>)}
+                </div>}<button type="button" disabled={accountBusy} onClick={async()=>{setAccountBusy(true);await supabase.auth.signOut();setAccountMessage("Has cerrado sesión.");setAccountBusy(false);}} className="rounded-full border border-border px-4 py-2 text-sm font-bold">Cerrar sesión</button></div> : <>
                 <div className="mb-4 flex gap-2 rounded-full bg-muted/70 p-1"><button type="button" onClick={()=>{setAccountMode("register");setAccountMessage("");}} className={"flex-1 rounded-full px-3 py-2 text-sm font-bold "+(accountMode==="register"?"bg-primary text-primary-foreground shadow":"text-muted-foreground")}>Crear cuenta</button><button type="button" onClick={()=>{setAccountMode("login");setAccountMessage("");}} className={"flex-1 rounded-full px-3 py-2 text-sm font-bold "+(accountMode==="login"?"bg-primary text-primary-foreground shadow":"text-muted-foreground")}>Iniciar sesión</button></div>
-                <form onSubmit={handleAccountSubmit} className="space-y-3"><h2 className="text-xl font-extrabold text-primary">{accountMode==="register"?"Regístrate en PENYERA":"Bienvenido de nuevo"}</h2>{accountMode==="register"&&<><label className="block space-y-1 text-sm font-semibold">Nombre<input autoComplete="name" required maxLength={80} value={accountName} onChange={e=>setAccountName(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 outline-none focus:ring-2 focus:ring-ring" placeholder="Tu nombre"/></label><label className="block space-y-1 text-sm font-semibold">¿A qué peña perteneces? <span className="font-normal text-muted-foreground">(opcional)</span><select value={accountPenyaId} onChange={e=>setAccountPenyaId(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 font-normal"><option value="">No pertenezco a ninguna / Prefiero indicarlo después</option>{penyes.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}</select><span className="block text-xs font-normal text-muted-foreground">Podrás cambiar esta información más adelante en Ajustes.</span></label></>}<label className="block space-y-1 text-sm font-semibold">Correo electrónico<input type="email" autoComplete="email" required value={accountEmail} onChange={e=>setAccountEmail(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 outline-none focus:ring-2 focus:ring-ring" placeholder="nombre@correo.com"/></label><label className="block space-y-1 text-sm font-semibold">Contraseña<input type="password" autoComplete={accountMode==="register"?"new-password":"current-password"} minLength={8} required value={accountPassword} onChange={e=>setAccountPassword(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 outline-none focus:ring-2 focus:ring-ring" placeholder="Mínimo 8 caracteres"/></label><button disabled={accountBusy} className="w-full rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground shadow-sm">{accountBusy?"Procesando…":accountMode==="register"?"Crear mi cuenta":"Entrar"}</button></form>
+                <form onSubmit={handleAccountSubmit} className="space-y-3"><h2 className="text-xl font-extrabold text-primary">{accountMode==="register"?"Regístrate en PENYERA":"Bienvenido de nuevo"}</h2><button type="button" disabled={accountBusy} onClick={()=>void handleGoogleSignIn()} className="w-full rounded-full border border-border bg-background px-5 py-3 text-sm font-extrabold text-foreground shadow-sm">Continuar con Google</button>{accountMode==="register"&&<><label className="block space-y-1 text-sm font-semibold">Nombre<input autoComplete="name" required maxLength={80} value={accountName} onChange={e=>setAccountName(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 outline-none focus:ring-2 focus:ring-ring" placeholder="Tu nombre"/></label><label className="block space-y-1 text-sm font-semibold">¿A qué peña perteneces? <span className="font-normal text-muted-foreground">(opcional)</span><select value={accountPenyaId} onChange={e=>setAccountPenyaId(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 font-normal"><option value="">No pertenezco a ninguna / Prefiero indicarlo después</option>{penyes.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}</select><span className="block text-xs font-normal text-muted-foreground">Podrás cambiar esta información más adelante en Ajustes.</span></label></>}<label className="block space-y-1 text-sm font-semibold">Correo electrónico<input type="email" autoComplete="email" required value={accountEmail} onChange={e=>setAccountEmail(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 outline-none focus:ring-2 focus:ring-ring" placeholder="nombre@correo.com"/></label><label className="block space-y-1 text-sm font-semibold">Contraseña<input type="password" autoComplete={accountMode==="register"?"new-password":"current-password"} minLength={8} required value={accountPassword} onChange={e=>setAccountPassword(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 outline-none focus:ring-2 focus:ring-ring" placeholder="Mínimo 8 caracteres"/></label><button disabled={accountBusy} className="w-full rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground shadow-sm">{accountBusy?"Procesando…":accountMode==="register"?"Crear mi cuenta":"Entrar"}</button></form>
               </>}
               {accountMessage&&<p role="status" className="mt-3 rounded-xl bg-primary/5 p-3 text-sm text-primary">{accountMessage}</p>}
             </section>
