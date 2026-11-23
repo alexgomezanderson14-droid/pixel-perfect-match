@@ -1680,3 +1680,117 @@ html, body, #root { min-width:0; max-width:100%; }
   .welcome-gate-bubble-14{left:81%!important;top:73%!important;width:32vw!important}
   .welcome-gate-intro{margin-top:2px!important;padding:0 18px!important}
 }
+
+/* Composición final de bienvenida: collage horizontal independiente del bloque de texto. */
+.welcome-gate{
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+}
+.welcome-gate-brand{flex:0 0 38px!important}
+.welcome-gate-art{
+  flex:0 0 auto!important;
+  width:min(100vw,1120px)!important;
+  height:clamp(420px,48vw,610px)!important;
+  margin:clamp(55px,8vw,105px) auto 0!important;
+  overflow:visible!important;
+  transform:none!important;
+}
+.welcome-gate-orbit{inset:30% 2% 8%!important}
+.welcome-gate-bubble{
+  position:absolute!important;
+  border:0!important;
+  outline:0!important;
+  border-radius:50%!important;
+  overflow:hidden!important;
+  background:transparent!important;
+  box-shadow:0 12px 24px rgba(31,55,67,.18),inset 10px 12px 22px rgba(255,255,255,.45),inset -14px -18px 25px rgba(10,34,48,.3)!important;
+  isolation:isolate;
+}
+.welcome-gate-bubble img{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  max-width:none!important;padding:0!important;border:0!important;border-radius:50%!important;
+  object-fit:cover!important;object-position:center!important;
+  filter:saturate(1.06) contrast(1.04) brightness(1.02)!important;
+  transform:scale(1.025)!important;
+}
+.welcome-gate-bubble:before{
+  content:""!important;position:absolute!important;z-index:2!important;inset:0!important;
+  border:0!important;border-radius:50%!important;pointer-events:none!important;
+  background:
+    radial-gradient(ellipse at 25% 12%,rgba(255,255,255,.82) 0%,rgba(255,255,255,.48) 4%,rgba(255,255,255,.14) 13%,transparent 29%),
+    radial-gradient(ellipse at 78% 86%,rgba(5,25,40,.4) 0%,rgba(9,35,49,.18) 20%,transparent 48%),
+    radial-gradient(ellipse at 50% 50%,transparent 46%,rgba(255,255,255,.04) 66%,rgba(8,30,43,.18) 100%)!important;
+  box-shadow:inset 8px 9px 18px rgba(255,255,255,.3),inset -9px -12px 22px rgba(5,27,42,.18)!important;
+}
+.welcome-gate-bubble:after{
+  content:""!important;position:absolute!important;z-index:3!important;top:8%!important;left:17%!important;
+  width:37%!important;height:12%!important;border:0!important;border-radius:50%!important;
+  background:rgba(255,255,255,.78)!important;filter:blur(7px)!important;
+  transform:rotate(-29deg)!important;pointer-events:none!important;
+}
+/* Desktop: una única nube ancha de círculos solapados, sin invadir el titular. */
+.welcome-gate-bubble-0{left:-3%!important;top:48%!important;width:15%!important}
+.welcome-gate-bubble-1{left:3%!important;top:27%!important;width:19%!important}
+.welcome-gate-bubble-2{left:12%!important;top:49%!important;width:21%!important}
+.welcome-gate-bubble-3{left:23%!important;top:35%!important;width:17%!important}
+.welcome-gate-bubble-4{left:32%!important;top:47%!important;width:19%!important}
+.welcome-gate-bubble-5{left:42%!important;top:26%!important;width:18%!important}
+.welcome-gate-bubble-6{left:51%!important;top:44%!important;width:21%!important}
+.welcome-gate-bubble-7{left:62%!important;top:31%!important;width:18%!important}
+.welcome-gate-bubble-8{left:71%!important;top:47%!important;width:20%!important}
+.welcome-gate-bubble-9{left:82%!important;top:34%!important;width:18%!important}
+.welcome-gate-bubble-10{left:91%!important;top:49%!important;width:15%!important}
+.welcome-gate-bubble-11{left:0%!important;top:67%!important;width:13%!important}
+.welcome-gate-bubble-12{left:25%!important;top:68%!important;width:15%!important}
+.welcome-gate-bubble-13{left:65%!important;top:68%!important;width:15%!important}
+.welcome-gate-bubble-14{left:88%!important;top:67%!important;width:13%!important}
+.welcome-gate-add-bubble{
+  position:absolute;z-index:8;left:50%;bottom:0;translate:-50% 0;
+  display:grid;place-items:center;width:clamp(86px,10vw,148px);aspect-ratio:1;
+  border:1px solid rgba(235,239,240,.9);border-radius:50%;
+  background:radial-gradient(ellipse at 32% 20%,#fff 0%,#fff 44%,#f4f5f6 100%);
+  box-shadow:0 12px 28px rgba(24,40,48,.16),inset 0 3px 8px rgba(255,255,255,.95);
+}
+.welcome-gate-add-bubble span{font-family:Arial,sans-serif;font-size:clamp(42px,5vw,68px);font-weight:300;line-height:1;color:#111;transform:translateY(-3px)}
+.welcome-gate-intro{margin:0 auto!important;flex:0 0 auto!important}
+.welcome-gate-actions{flex:0 0 auto!important}
+@media(max-width:640px){
+  .welcome-gate{padding-top:max(20px,env(safe-area-inset-top))!important;padding-bottom:max(18px,env(safe-area-inset-bottom))!important}
+  .welcome-gate-brand{height:34px!important;flex-basis:34px!important}
+  .welcome-gate-brand img{width:30px!important;height:30px!important}
+  .welcome-gate-art{
+    width:100vw!important;
+    height:clamp(300px,72vw,360px)!important;
+    margin:clamp(58px,17vw,82px) auto 0!important;
+  }
+  /* Distribución compacta en tres alturas; las esferas se pisan entre sí como en la captura. */
+  .welcome-gate-bubble-0{left:-8%!important;top:43%!important;width:31vw!important}
+  .welcome-gate-bubble-1{left:3%!important;top:21%!important;width:39vw!important}
+  .welcome-gate-bubble-2{left:17%!important;top:43%!important;width:42vw!important}
+  .welcome-gate-bubble-3{left:31%!important;top:29%!important;width:34vw!important}
+  .welcome-gate-bubble-4{left:43%!important;top:43%!important;width:39vw!important}
+  .welcome-gate-bubble-5{left:55%!important;top:23%!important;width:38vw!important}
+  .welcome-gate-bubble-6{left:65%!important;top:43%!important;width:43vw!important}
+  .welcome-gate-bubble-7{left:78%!important;top:30%!important;width:36vw!important}
+  .welcome-gate-bubble-8{left:87%!important;top:45%!important;width:35vw!important}
+  .welcome-gate-bubble-9{left:93%!important;top:23%!important;width:30vw!important}
+  .welcome-gate-bubble-10{left:-7%!important;top:65%!important;width:28vw!important}
+  .welcome-gate-bubble-11{left:19%!important;top:66%!important;width:29vw!important}
+  .welcome-gate-bubble-12{left:42%!important;top:67%!important;width:30vw!important}
+  .welcome-gate-bubble-13{left:67%!important;top:66%!important;width:29vw!important}
+  .welcome-gate-bubble-14{left:86%!important;top:64%!important;width:27vw!important}
+  .welcome-gate-add-bubble{width:clamp(76px,30vw,106px);bottom:0}
+  .welcome-gate-intro{width:100%!important;margin:0 auto!important;padding:0 18px!important}
+  .welcome-gate-intro h1{font-size:clamp(34px,8.4vw,43px)!important;line-height:1.1!important}
+  .welcome-gate-intro>p:last-child{font-size:12px!important;margin-top:10px!important}
+  .welcome-gate-actions{width:min(calc(100% - 36px),430px)!important;padding-top:20px!important;gap:10px!important}
+  .welcome-gate-provider{min-height:60px!important}
+}
+@media(min-width:641px) and (max-width:900px){
+  .welcome-gate-art{height:clamp(390px,54vw,500px)!important;margin-top:60px!important}
+  .welcome-gate-intro{margin-top:0!important}
+}
+@media(max-height:760px){
+  .welcome-gate-art{height:clamp(280px,38vw,390px)!important;margin-top:42px!important}
+}
+@media(prefers-reduced-motion:reduce){.welcome-gate-bubble{animation:none!important}}
