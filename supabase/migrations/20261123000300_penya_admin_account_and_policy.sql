@@ -1,3 +1,6 @@
+alter table public.penya_miembros drop constraint if exists penya_miembros_invitacion_id_fkey;
+alter table public.penya_miembros add constraint penya_miembros_invitacion_id_fkey foreign key (invitacion_id) references public.penya_invitaciones(id) on delete set null;
+
 create or replace function private.es_admin_penyera()
 returns boolean
 language sql stable security definer
