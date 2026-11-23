@@ -1538,3 +1538,10 @@ html, body, #root { min-width:0; max-width:100%; }
 @media(max-width:640px){.welcome-gate-art{width:100%;margin:4px auto 0;overflow:visible}.welcome-artwork-stage{height:min(var(--welcome-art-height,300px),70vw)}.welcome-artwork-image{max-width:none!important}}
 @media(min-width:641px) and (max-width:900px){.welcome-gate-art{width:100%;max-width:900px}}
 @media(max-height:760px){.welcome-gate-art{margin-top:4px}.welcome-gate-intro{margin-top:6px}.welcome-gate-actions{padding-top:12px}.welcome-gate-provider{min-height:54px}}
+
+/* En escritorio, conserva el banner y el texto en su posición; baja únicamente las acciones sociales. */
+@media(min-width:641px){
+  .welcome-gate-art{margin-top:8px}
+  .welcome-gate-intro{margin-top:10px;margin-bottom:0}
+  .welcome-gate-actions{margin:clamp(40px,6vh,76px) auto 0;padding-top:0;flex-shrink:0}
+}
