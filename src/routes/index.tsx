@@ -413,6 +413,9 @@ function Home() {
   const [accountPassword, setAccountPassword] = useState("");
   const [accountMessage, setAccountMessage] = useState("");
   const [accountBusy, setAccountBusy] = useState(false);
+  const [showPenyaJoinDialog, setShowPenyaJoinDialog] = useState(false);
+  const [penyaPromptDismissedFor, setPenyaPromptDismissedFor] = useState<string | null>(null);
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
   const [personalPrefs, setPersonalPrefs] = useState({ showImportantNotices: true, reduceMotion: false, largeText: false, highContrast: false });
   const [feedbackType,setFeedbackType]=useState<"sugerencia"|"error">("sugerencia");
   const [feedbackTitle,setFeedbackTitle]=useState("");
@@ -673,69 +676,108 @@ function Home() {
       try {
         const { data, error } = await (supabase as any)
           .from("penya_miembros")
-          .select("id,penya_id,user_id,display_name,avatar_url,joined_at")
+          .select("id,penya_id,user_id,display_name,avatar_url,joined_at,estado,solicitado_en,revisado_en")
           .eq("user_id", accountUser.id)
           .maybeSingle();
         if (error) throw error;
-        let membership = data || null;
-        // Si el usuario eligió peña al registrarse, se convierte en una
-        // inscripción real cuando confirma el correo e inicia sesión.
-        const requestedPenyaId = String(accountUser.user_metadata?.penya_id || "");
-        if (!membership && requestedPenyaId && penyes.some((item) => String(item.id) === requestedPenyaId)) {
-          const { data: created, error: insertError } = await (supabase as any)
-            .from("penya_miembros")
-            .insert({ penya_id: requestedPenyaId, user_id: accountUser.id })
-            .select("id,penya_id,user_id,display_name,avatar_url,joined_at")
-            .single();
-          if (!insertError) membership = created;
-        }
         if (!active) return;
+        const membership = data || null;
         setPenyaMembership(membership);
-        setMisPenyes(membership?.penya_id ? [String(membership.penya_id)] : []);
-      } catch {
-        if (active) {
-          setPenyaMembership(null);
-          setMisPenyes([]);
+        setMisPenyes(membership?.estado === "aprobado" && membership?.penya_id ? [String(membership.penya_id)] : []);
+        const params = new URLSearchParams(window.location.search);
+        const linkedPenyaId = params.get("penya");
+        const hasInvite = Boolean(params.get("invite"));
+        if (!membership && (hasInvite || penyaPromptDismissedFor !== accountUser.id)) {
+          if (linkedPenyaId && penyes.some((item) => String(item.id) === linkedPenyaId)) setAccountPenyaId(linkedPenyaId);
+          setShowPenyaJoinDialog(true);
         }
+      } catch {
+        if (active) { setPenyaMembership(null); setMisPenyes([]); }
       } finally {
         if (active) setPenyaMembershipLoading(false);
       }
     };
     void syncMembership();
     return () => { active = false; };
-  }, [accountUser?.id, penyes]);
+  }, [accountUser?.id, penyes, penyaPromptDismissedFor]);
   useEffect(() => {
     let active = true;
-    const managedIds = penyes.filter(p => puedeAdministrarPenya(String(p.id))).map(p => String(p.id));
+    const managedIds = esAdminWeb
+      ? penyes.map((p) => String(p.id))
+      : penyaMembership?.estado === "aprobado" && penyaMembership?.penya_id
+        ? [String(penyaMembership.penya_id)]
+        : [];
     if (!accountUser?.id || !managedIds.length) { setPenyaMemberRoster([]); return; }
-    (supabase as any).from("penya_miembros").select("id,penya_id,user_id,display_name,avatar_url,joined_at").in("penya_id",managedIds).order("joined_at",{ascending:true})
-      .then(({data,error}:any) => { if(active) setPenyaMemberRoster(error?[]:(data||[])); });
+    (supabase as any).from("penya_miembros")
+      .select("id,penya_id,user_id,display_name,avatar_url,joined_at,estado,solicitado_en")
+      .in("penya_id", managedIds)
+      .order("solicitado_en", { ascending: true })
+      .then(({data,error}:any) => { if (active) setPenyaMemberRoster(error ? [] : (data || [])); });
     return () => { active = false; };
-  }, [accountUser?.id,penyes]);
+  }, [accountUser?.id, penyes, penyaMembership?.penya_id, penyaMembership?.estado, esAdminWeb]);
+  const solicitarPenya = async (id: string, token: string | null = null) => {
+    if (!accountUser?.id || !id) return;
+    setAccountBusy(true); setAccountMessage("");
+    try {
+      const { data, error } = await (supabase as any).rpc("solicitar_pertenecer_penya", { p_penya_id: id, p_token: token });
+      if (error) throw error;
+      const { data: membership, error: membershipError } = await (supabase as any)
+        .from("penya_miembros")
+        .select("id,penya_id,user_id,display_name,avatar_url,joined_at,estado,solicitado_en,revisado_en")
+        .eq("user_id", accountUser.id).maybeSingle();
+      if (membershipError) throw membershipError;
+      setPenyaMembership(membership || null);
+      setMisPenyes(membership?.estado === "aprobado" ? [String(membership.penya_id)] : []);
+      setShowPenyaJoinDialog(false);
+      setInviteToken(null);
+      setPenyaPromptDismissedFor(accountUser.id);
+      setAccountMessage(data?.message || "Solicitud enviada para su aprobación.");
+    } catch (error:any) {
+      setAccountMessage(error?.message || "No se ha podido enviar la solicitud.");
+    } finally { setAccountBusy(false); }
+  };
+  const revisarSolicitudPenya = async (membershipId: string, aprobar: boolean) => {
+    setAccountBusy(true); setAccountMessage("");
+    try {
+      const { error } = await (supabase as any).rpc("revisar_solicitud_penya", { p_miembro_id: membershipId, p_aprobar: aprobar });
+      if (error) throw error;
+      const managedIds = esAdminWeb ? penyes.map((p) => String(p.id)) : [String(penyaMembership?.penya_id || "")].filter(Boolean);
+      const { data, error: listError } = await (supabase as any).from("penya_miembros")
+        .select("id,penya_id,user_id,display_name,avatar_url,joined_at,estado,solicitado_en")
+        .in("penya_id", managedIds).order("solicitado_en", { ascending: true });
+      if (listError) throw listError;
+      setPenyaMemberRoster(data || []);
+      setAccountMessage(aprobar ? "Miembro aprobado." : "Solicitud rechazada.");
+    } catch (error:any) {
+      setAccountMessage(error?.message || "No se ha podido revisar la solicitud.");
+    } finally { setAccountBusy(false); }
+  };
+  const crearEnlaceInvitacion = async (id: string) => {
+    setAccountBusy(true); setAccountMessage("");
+    try {
+      const { data, error } = await (supabase as any).rpc("crear_invitacion_penya", { p_penya_id: id });
+      if (error) throw error;
+      const link = window.location.origin + "/?penya=" + encodeURIComponent(id) + "&invite=" + encodeURIComponent(data.token);
+      try { await navigator.clipboard.writeText(link); setAccountMessage("Enlace de invitación copiado. Caduca en 30 días."); }
+      catch { window.prompt("Copia el enlace de invitación:", link); }
+    } catch (error:any) {
+      setAccountMessage(error?.message || "No se ha podido crear el enlace.");
+    } finally { setAccountBusy(false); }
+  };
   const toggleMiPenya = async (id: string) => {
-    if (accountUser?.id) {
-      setPenyaMembershipLoading(true);
-      try {
-        if (penyaMembership?.penya_id === id) {
-          const {error}=await (supabase as any).from("penya_miembros").delete().eq("user_id",accountUser.id);
-          if(error) throw error;
-          setPenyaMembership(null); setMisPenyes([]);
-        } else if (penyaMembership?.penya_id && penyaMembership.penya_id !== id) {
-          window.alert("Ya perteneces a otra peña. Primero debes salir de ella desde su ficha para poder unirte a otra.");
-        } else {
-          const {data,error}=await (supabase as any).from("penya_miembros").insert({penya_id:id,user_id:accountUser.id}).select("id,penya_id,user_id,display_name,avatar_url,joined_at").single();
-          if(error) throw error;
-          setPenyaMembership(data); setMisPenyes([id]);
-        }
-      } catch(error:any) { window.alert(error?.message||"No se ha podido actualizar tu peña."); }
-      finally { setPenyaMembershipLoading(false); }
+    if (!accountUser?.id) { setAccountPenyaId(id); setShowPenyaJoinDialog(true); return; }
+    if (penyaMembership?.penya_id === id) {
+      const { error } = await (supabase as any).from("penya_miembros").delete().eq("user_id", accountUser.id);
+      if (error) { window.alert(error.message); return; }
+      setPenyaMembership(null); setMisPenyes([]);
+      setAccountPenyaId(id); setShowPenyaJoinDialog(true);
       return;
     }
-    setMisPenyes(current => {
-      const next = current.includes(id) ? [] : [id];
-      try { localStorage.setItem("festalfas-mis-penyes", JSON.stringify(next)); } catch { /* La selección sigue activa durante esta visita. */ }
-      return next;
-    });
+    if (penyaMembership?.penya_id && penyaMembership.penya_id !== id) {
+      window.alert("Tu cuenta ya tiene una solicitud o pertenece a otra peña. Contacta con su administrador para cambiarla.");
+      return;
+    }
+    setAccountPenyaId(id); setInviteToken(null); setShowPenyaJoinDialog(true);
   };
   useEffect(() => { if (dias.length && (!dia || !dias.includes(dia))) { const siguiente = dias.find((d) => d >= todayKey); setDia(dias.includes(todayKey) ? todayKey : siguiente || dias[dias.length - 1]); } }, [dias, dia, todayKey]);
   useEffect(() => {
@@ -990,6 +1032,16 @@ function Home() {
   }, [noticias]);
 
   useEffect(() => { setAccountPenyaId(String(accountUser?.user_metadata?.penya_id || "")); }, [accountUser?.id, accountUser?.user_metadata?.penya_id]);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const linkedPenyaId = params.get("penya");
+    const token = params.get("invite");
+    if (linkedPenyaId && penyes.some((item) => String(item.id) === linkedPenyaId)) {
+      setAccountPenyaId(linkedPenyaId);
+      setInviteToken(token);
+      if (accountUser?.id) setShowPenyaJoinDialog(true);
+    }
+  }, [accountUser?.id, penyes]);
   const handleAccountSubmit = async (event: React.FormEvent) => {
     event.preventDefault(); setAccountBusy(true); setAccountMessage("");
     try {
@@ -1010,36 +1062,16 @@ function Home() {
   };
   const saveAccountPenya = async () => {
     if (!accountUser) return;
-    setAccountBusy(true); setAccountMessage("");
-    try {
-      const selectedPenya = penyes.find(item => item.id === accountPenyaId);
-      if (accountPenyaId && !selectedPenya) throw new Error("Selecciona una peña válida del directorio.");
-      if (penyaMembership?.penya_id && penyaMembership.penya_id !== accountPenyaId) {
-        const { error: leaveError } = await (supabase as any).from("penya_miembros").delete().eq("user_id", accountUser.id);
-        if (leaveError) throw leaveError;
+    if (!accountPenyaId) {
+      if (penyaMembership?.id) {
+        const { error } = await (supabase as any).from("penya_miembros").delete().eq("user_id", accountUser.id);
+        if (error) { setAccountMessage(error.message); return; }
       }
-      let membership = null;
-      if (accountPenyaId) {
-        if (penyaMembership?.penya_id === accountPenyaId) {
-          membership = penyaMembership;
-        } else {
-          const { data, error: joinError } = await (supabase as any)
-            .from("penya_miembros")
-            .insert({ penya_id: accountPenyaId, user_id: accountUser.id })
-            .select("id,penya_id,user_id,display_name,avatar_url,joined_at")
-            .single();
-          if (joinError) throw joinError;
-          membership = data;
-        }
-      }
-      const { data, error } = await supabase.auth.updateUser({ data: { penya_id: accountPenyaId || null, penya_nombre: selectedPenya?.nombre || null, penya_ids: accountPenyaId ? [accountPenyaId] : [] } });
-      if (error) throw error;
-      if (data.user) setAccountUser(data.user);
-      setPenyaMembership(membership);
-      setMisPenyes(accountPenyaId ? [accountPenyaId] : []);
-      setAccountMessage(selectedPenya ? "¡Ya formas parte de " + selectedPenya.nombre + "!" : "Has salido de tu peña.");
-    } catch (error) { setAccountMessage(error instanceof Error ? error.message : "No se ha podido guardar tu peña."); }
-    finally { setAccountBusy(false); }
+      setPenyaMembership(null); setMisPenyes([]);
+      setAccountMessage("Has indicado que no perteneces a ninguna peña.");
+      return;
+    }
+    await solicitarPenya(accountPenyaId, inviteToken);
   };
   const submitFeedback = async (event:React.FormEvent) => {
     event.preventDefault();setFeedbackBusy(true);setFeedbackMessage("");
