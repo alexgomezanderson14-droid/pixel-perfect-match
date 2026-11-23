@@ -694,13 +694,23 @@ function Home() {
           return;
         }
         setPenyaMembership(membership);
-        setMisPenyes(membership?.estado === "aprobado" && membership?.penya_id ? [String(membership.penya_id)] : []);
-        const params = new URLSearchParams(window.location.search);
-        const linkedPenyaId = params.get("penya");
-        const hasInvite = Boolean(params.get("invite"));
-        if ((!membership || membership.estado === "rechazado") && (hasInvite || penyaPromptDismissedFor !== accountUser.id)) {
-          if (linkedPenyaId && penyes.some((item) => String(item.id) === linkedPenyaId)) setAccountPenyaId(linkedPenyaId);
-          setShowPenyaJoinDialog(true);
+        const yaPerteneceAPenya = membership?.estado === "aprobado" && Boolean(membership?.penya_id);
+        setMisPenyes(yaPerteneceAPenya ? [String(membership.penya_id)] : []);
+        if (yaPerteneceAPenya) {
+          // Una cuenta que ya pertenece a una peña no debe volver a recibir
+          // el aviso de incorporación, aunque llegue mediante un enlace.
+          setShowPenyaJoinDialog(false);
+          setPenyaPromptDismissedFor(accountUser.id);
+        } else {
+          const params = new URLSearchParams(window.location.search);
+          const linkedPenyaId = params.get("penya");
+          const hasInvite = Boolean(params.get("invite"));
+          if ((!membership || membership.estado === "rechazado") && (hasInvite || penyaPromptDismissedFor !== accountUser.id)) {
+            if (linkedPenyaId && penyes.some((item) => String(item.id) === linkedPenyaId)) setAccountPenyaId(linkedPenyaId);
+            setShowPenyaJoinDialog(true);
+          } else {
+            setShowPenyaJoinDialog(false);
+          }
         }
       } catch (error) {
         if (active) {
