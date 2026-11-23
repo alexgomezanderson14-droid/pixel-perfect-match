@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import WelcomeArtwork from "@/components/WelcomeArtwork";
 
@@ -13,6 +13,8 @@ export default function WelcomeGate({ artworkSettings = "", onContinueAsGuest, o
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => { if (invitationName) { setMode("email"); setAccountMode("register"); } }, [invitationName]);
 
   const leaveThen = (action: () => void) => {
     if (isLeaving) return;
@@ -96,7 +98,7 @@ export default function WelcomeGate({ artworkSettings = "", onContinueAsGuest, o
       </div>
 
       <div className="welcome-gate-actions">
-        {invitationName && <p className="welcome-gate-invitation">Te han invitado a solicitar tu incorporación a <strong>{invitationName}</strong>. Identifícate o crea tu cuenta y completa la solicitud.</p>}
+        {invitationName && <p className="welcome-gate-message">Te han invitado a solicitar tu incorporación a <strong>{invitationName}</strong>. Identifícate o crea tu cuenta y completa la solicitud.</p>}
         {mode === "welcome" ? (
           <>
             <button type="button" disabled={busy} onClick={() => void signInWithGoogle()} className="welcome-gate-provider welcome-gate-google">
