@@ -714,13 +714,13 @@ function Home() {
         }
       } catch (error) {
         if (active) {
+          // Si no se puede consultar la membresía, no se debe abrir el aviso:
+          // podría tratarse de una cuenta que ya pertenece a una peña o tiene
+          // una solicitud pendiente. El diálogo solo se muestra tras verificarla.
           setPenyaMembership(null);
           setMisPenyes([]);
-          if (String(accountUser.user_metadata?.penya_id || "")) {
-            setAccountPenyaId(String(accountUser.user_metadata.penya_id));
-            setShowPenyaJoinDialog(true);
-            setAccountMessage(error instanceof Error ? error.message : "No se ha podido enviar la solicitud de asociación.");
-          }
+          setShowPenyaJoinDialog(false);
+          setAccountMessage(error instanceof Error ? error.message : "No se ha podido comprobar tu pertenencia a una peña.");
         }
       } finally {
         if (active) setPenyaMembershipLoading(false);
@@ -1074,9 +1074,11 @@ function Home() {
     if (linkedPenyaId && penyes.some((item) => String(item.id) === linkedPenyaId)) {
       setAccountPenyaId(linkedPenyaId);
       setInviteToken(token);
-      if (accountUser?.id) setShowPenyaJoinDialog(true);
+      // La apertura del diálogo la controla exclusivamente syncMembership,
+      // después de comprobar que el usuario no pertenece ya a una peña ni
+      // tiene una solicitud pendiente. Evita que este efecto lo reabra.
     }
-  }, [accountUser?.id, penyes]);
+  }, [penyes]);
   const handleGoogleSignIn = async () => {
     setAccountBusy(true); setAccountMessage("");
     try {
