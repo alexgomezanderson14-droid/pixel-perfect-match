@@ -203,7 +203,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
         tiene_evento: form.tiene_evento,
         foto_url,
       };
-      let { error: updateError } = await supabase.from("penyes").update({ ...penyaUpdate, miembros_actuales: memberCount }).eq("id", penya.id);
+      let { error: updateError } = await supabase.from("penyes").update({ ...penyaUpdate, miembros_actuales: memberCount } as any).eq("id", penya.id);
       if (updateError && /miembros_actuales|generated column|schema cache/i.test(updateError.message)) {
         // Algunas instalaciones tienen esta cifra calculada o aún no la exponen
         // en el esquema REST. No bloqueamos por ello el resto de la ficha.

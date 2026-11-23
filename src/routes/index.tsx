@@ -665,8 +665,8 @@ function Home() {
     let active = true;
     if (!accountUser?.id) { setPenyaMembership(null); return; }
     setPenyaMembershipLoading(true);
-    supabase.from("penya_miembros").select("id,penya_id,user_id,display_name,avatar_url,joined_at").eq("user_id",accountUser.id).maybeSingle()
-      .then(({data,error}) => {
+    (supabase as any).from("penya_miembros").select("id,penya_id,user_id,display_name,avatar_url,joined_at").eq("user_id",accountUser.id).maybeSingle()
+      .then(({data,error}:any) => {
         if (!active) return;
         if (error) { setPenyaMembership(null); }
         else { setPenyaMembership(data||null); setMisPenyes(data?.penya_id?[String(data.penya_id)]:[]); }
@@ -678,8 +678,8 @@ function Home() {
     let active = true;
     const managedIds = penyes.filter(p => puedeAdministrarPenya(String(p.id))).map(p => String(p.id));
     if (!accountUser?.id || !managedIds.length) { setPenyaMemberRoster([]); return; }
-    supabase.from("penya_miembros").select("id,penya_id,user_id,display_name,avatar_url,joined_at").in("penya_id",managedIds).order("joined_at",{ascending:true})
-      .then(({data,error}) => { if(active) setPenyaMemberRoster(error?[]:(data||[])); });
+    (supabase as any).from("penya_miembros").select("id,penya_id,user_id,display_name,avatar_url,joined_at").in("penya_id",managedIds).order("joined_at",{ascending:true})
+      .then(({data,error}:any) => { if(active) setPenyaMemberRoster(error?[]:(data||[])); });
     return () => { active = false; };
   }, [accountUser?.id,penyes]);
   const toggleMiPenya = async (id: string) => {
@@ -687,13 +687,13 @@ function Home() {
       setPenyaMembershipLoading(true);
       try {
         if (penyaMembership?.penya_id === id) {
-          const {error}=await supabase.from("penya_miembros").delete().eq("user_id",accountUser.id);
+          const {error}=await (supabase as any).from("penya_miembros").delete().eq("user_id",accountUser.id);
           if(error) throw error;
           setPenyaMembership(null); setMisPenyes([]);
         } else if (penyaMembership?.penya_id && penyaMembership.penya_id !== id) {
           window.alert("Ya perteneces a otra peña. Primero debes salir de ella desde su ficha para poder unirte a otra.");
         } else {
-          const {data,error}=await supabase.from("penya_miembros").insert({penya_id:id,user_id:accountUser.id}).select("id,penya_id,user_id,display_name,avatar_url,joined_at").single();
+          const {data,error}=await (supabase as any).from("penya_miembros").insert({penya_id:id,user_id:accountUser.id}).select("id,penya_id,user_id,display_name,avatar_url,joined_at").single();
           if(error) throw error;
           setPenyaMembership(data); setMisPenyes([id]);
         }
@@ -1461,7 +1461,7 @@ function Home() {
 {currentPage==="info" && <main className={"mx-auto min-h-[75vh] w-full max-w-6xl space-y-8 px-3 pb-32 pt-5 sm:px-5 sm:pt-8 "+(settingsClosing?"animate-out fade-out slide-out-to-top-2 duration-200":"animate-in fade-in slide-in-from-top-2 duration-300")}>
         <section aria-labelledby="settings-title" className="space-y-6">
           {esAdminWeb && <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/15 bg-primary/[.035] p-4"><div><p className="text-sm font-extrabold text-primary">Pantalla inicial</p><p className="mt-1 text-xs text-muted-foreground">Previsualiza cómo verán la bienvenida los usuarios que todavía no se han identificado.</p></div><button type="button" onClick={()=>setShowWelcomePreview(true)} className="rounded-full bg-primary px-4 py-2.5 text-xs font-extrabold text-primary-foreground shadow-sm">Ver pantalla inicial</button></section>}
-          <WhatsNewAnnouncement userKey={accountUser?.email} config={siteContent} penyes={penyes.map((penya)=>({id:String(penya.id),nombre:penya.nombre,foto:penya.foto||penyaCardSettings[penya.id]?.logo_url||penya.logo_url||"",color:penyaCardSettings[penya.id]?.color||penya.color||"",title:penyaCardSettings[penya.id]?.title||penya.nombre}))} />
+          <WhatsNewAnnouncement userKey={accountUser?.email} config={siteContent} penyes={penyes.map((penya)=>({id:String(penya.id),nombre:penya.nombre,foto:penya.foto||penyaCardSettings[penya.id]?.logo_url||(penya as any).logo_url||"",color:penyaCardSettings[penya.id]?.color||penya.color||"",title:penyaCardSettings[penya.id]?.title||penya.nombre}))} />
           <div className="rounded-[1.75rem] border border-primary/15 bg-gradient-to-br from-card via-card to-primary/[.06] p-5 shadow-sm sm:p-7"><div className="flex items-center gap-3"><span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary" aria-hidden="true"><svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1a1.8 1.8 0 0 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3 .9v.2a1.8 1.8 0 0 1-3.6 0v-.2a1.8 1.8 0 0 0-3-.9l-.1.1a1.8 1.8 0 0 1-2.5-2.5l.1-.1a1.8 1.8 0 0 0-.9-3h-.2a1.8 1.8 0 0 1 0-3.6h.2a1.8 1.8 0 0 0 .9-3l-.1-.1a1.8 1.8 0 0 1 2.5-2.5l.1.1a1.8 1.8 0 0 0 3-.9v-.2a1.8 1.8 0 0 1 3.6 0v.2a1.8 1.8 0 0 0 3 .9l.1-.1a1.8 1.8 0 0 1 2.5 2.5l-.1.1a1.8 1.8 0 0 0 .9 3h.2a1.8 1.8 0 0 1 0 3.6h-.2a1.8 1.8 0 0 0-.9 3Z"/></svg></span><div><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-primary">Tu espacio personal</p><h1 id="settings-title" className="mt-0.5 text-3xl font-black text-primary sm:text-4xl">Ajustes</h1></div></div><p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Gestiona tu cuenta, la peña a la que perteneces y cómo quieres utilizar PENYERA.</p><nav aria-label="Secciones de ajustes" className="mt-5 flex flex-wrap gap-2"><a href="#account-settings" className="rounded-full border border-border bg-background/80 px-3.5 py-2 text-xs font-bold text-primary transition hover:border-primary/40"><span className="inline-flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/></svg>Mi cuenta</span></a><a href="#preferences-settings" className="rounded-full border border-border bg-background/80 px-3.5 py-2 text-xs font-bold text-primary transition hover:border-primary/40"><span className="inline-flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>Preferencias</span></a><a href="#notifications-settings-title" className="rounded-full border border-border bg-background/80 px-3.5 py-2 text-xs font-bold text-primary transition hover:border-primary/40"><span className="inline-flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>Notificaciones</span></a><a href="#feedback-settings-title" className="rounded-full border border-border bg-background/80 px-3.5 py-2 text-xs font-bold text-primary transition hover:border-primary/40"><span className="inline-flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-6.5A7.5 7.5 0 1 1 20 11.5Z"/><path d="M8 11.5h8M8 8.5h5"/></svg>Ayuda</span></a></nav></div>
           <div className="grid items-start gap-4 xl:grid-cols-2">
             <section id="account-settings" className="glass scroll-mt-24 rounded-3xl border border-primary/15 p-5 shadow-sm sm:p-6">

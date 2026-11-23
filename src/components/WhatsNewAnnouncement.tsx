@@ -120,7 +120,7 @@ export default function WhatsNewAnnouncement({ userKey, config = {}, penyes = []
         </header>
         <div className="whats-new-floating-cards">
           {settings.cards.map((card) => (
-            <Link key={card.slug} to="/novedades/$slug" params={{ slug: card.slug }} className={`whats-new-float-card whats-new-pos-${card.position} whats-new-size-${card.size} whats-new-card-${card.slug}`} onClick={(event) => { if (preview) { event.preventDefault(); setPreviewDetail(card); } }}>
+            <Link key={card.slug} to="/novedades/$slug" params={{ slug: card.slug }} className={`whats-new-float-card whats-new-pos-${card.position} whats-new-size-${card.size} whats-new-card-${card.slug}`} onClick={(event) => { if (preview) { event.preventDefault(); setPreviewDetail({ ...card, image: card.image || "" }); } }}>
               <span className="whats-new-float-tag">{card.tag}</span>
               {card.slug === "noticias" && !card.image ? <div className="whats-new-news-mark"><Newspaper aria-hidden="true"/><span>PEÑAS · FIESTAS · ACTUALIDAD</span></div> : <div className={`whats-new-card-media is-${card.slug}`}>{card.image ? <img className="whats-new-custom-image" style={{ objectFit: card.fit, width: `${card.imageScale}%`, height: `${card.imageHeight}px` }} src={card.image} alt="" loading="lazy" decoding="async"/> : card.slug === "penyes" ? <PenyaCollage penyes={penyes}/> : null}</div>}
               <div className="whats-new-float-copy"><h3>{card.title}</h3>{card.description && <p>{card.description}</p>}</div>
