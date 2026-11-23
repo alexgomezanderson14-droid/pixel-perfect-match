@@ -2,9 +2,9 @@ import { useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import WelcomeBubbleComposition, { type WelcomePenyaLogo } from "@/components/WelcomeBubbleComposition";
 
-type Props = { penyes?: WelcomePenyaLogo[]; imageScale?: number; onContinueAsGuest: () => void; onClose?: () => void; preview?: boolean };
+type Props = { penyes?: WelcomePenyaLogo[]; imageScale?: number; bubbleSettings?: string; onContinueAsGuest: () => void; onClose?: () => void; preview?: boolean };
 
-export default function WelcomeGate({ penyes = [], imageScale = 100, onContinueAsGuest, onClose, preview = false }: Props) {
+export default function WelcomeGate({ penyes = [], imageScale = 100, bubbleSettings = "", onContinueAsGuest, onClose, preview = false }: Props) {
   const [isLeaving, setIsLeaving] = useState(false);
   const [mode, setMode] = useState<"welcome" | "email">("welcome");
   const [accountMode, setAccountMode] = useState<"login" | "register">("register");
@@ -84,7 +84,7 @@ export default function WelcomeGate({ penyes = [], imageScale = 100, onContinueA
         <img src="/penyera-isotipo.svg" alt="PENYERA" />
       </div>
 
-      <div className="welcome-gate-art"><WelcomeBubbleComposition penyes={penyes} scale={imageScale} /></div>
+      <div className="welcome-gate-art"><WelcomeBubbleComposition penyes={penyes} scale={imageScale} settings={bubbleSettings} /></div>
 
             <div className="welcome-gate-intro">
         <p className="welcome-gate-eyebrow">PENYERA · L’ALFÀS DEL PI</p>
