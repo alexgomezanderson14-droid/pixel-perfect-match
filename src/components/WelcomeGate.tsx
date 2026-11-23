@@ -108,6 +108,7 @@ export default function WelcomeGate({ penyes, onContinueAsGuest, onClose, previe
         {bubbles.length === 0 && penyes.length === 0 && ["P", "F", "A", "M", "C", "E"].map((letter, index) => (
           <div key={letter} className={`welcome-gate-bubble welcome-gate-bubble-${index}`} aria-hidden="true"><span>{letter}</span></div>
         ))}
+        <div className="welcome-gate-add-bubble" aria-hidden="true"><span>+</span></div>
       </div>
 
       <div className="welcome-gate-intro">
