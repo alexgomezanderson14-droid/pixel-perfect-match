@@ -40,7 +40,7 @@ export default function WelcomeBubbleComposition({ penyes = [], scale = 100, set
   const config = parseWelcomeBubbleSettings(settings);
   const available = penyes.filter((penya) => penya.foto);
   const bubbles = welcomeBubbleLayout.map((bubble, index) => {
-    const chosenId = config.logos[bubble.id] || (bubble.defaultLogo ? available[index % Math.max(1, available.length)]?.id : "");
+    const chosenId = Object.prototype.hasOwnProperty.call(config.logos, bubble.id) ? config.logos[bubble.id] : bubble.defaultLogo ? available[index % Math.max(1, available.length)]?.id : "";
     return { ...bubble, logo: available.find((penya) => penya.id === chosenId) };
   });
   const style = {
@@ -61,7 +61,7 @@ export default function WelcomeBubbleComposition({ penyes = [], scale = 100, set
       </svg>
       {bubbles.map((bubble, index) => (
         <div key={bubble.id} className={"welcome-bubble welcome-bubble-" + index + (bubble.logo ? " has-penya-logo" : "")}
-          style={{ left: bubble.x + "%", top: bubble.y + "%", width: bubble.size + "%" }}
+          style={{ left: bubble.x + "%", top: bubble.y + "%", width: bubble.size * multiplier + "%" }}
           title={bubble.logo?.nombre || "Burbuja decorativa"}>
           {bubble.logo && <img src={bubble.logo.foto} alt={bubble.logo.nombre} loading="eager" />}
           <span className="welcome-bubble-glass" aria-hidden="true" />
