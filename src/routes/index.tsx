@@ -706,7 +706,11 @@ function Home() {
         if (active) {
           setPenyaMembership(null);
           setMisPenyes([]);
-          if (String(accountUser.user_metadata?.penya_id || "")) setAccountMessage(error instanceof Error ? error.message : "No se ha podido enviar la solicitud de asociación.");
+          if (String(accountUser.user_metadata?.penya_id || "")) {
+            setAccountPenyaId(String(accountUser.user_metadata.penya_id));
+            setShowPenyaJoinDialog(true);
+            setAccountMessage(error instanceof Error ? error.message : "No se ha podido enviar la solicitud de asociación.");
+          }
         }
       } finally {
         if (active) setPenyaMembershipLoading(false);
@@ -714,7 +718,7 @@ function Home() {
     };
     void syncMembership();
     return () => { active = false; };
-  }, [accountUser?.id, penyes, penyaPromptDismissedFor]);
+  }, [accountUser?.id, accountUser?.user_metadata?.penya_id, penyes, penyaPromptDismissedFor]);
   useEffect(() => {
     let active = true;
     const managedIds = esAdminWeb
