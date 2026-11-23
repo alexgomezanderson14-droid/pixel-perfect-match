@@ -109,6 +109,7 @@ export default function WelcomeGate({ artworkSettings = "", onContinueAsGuest, o
           </>
         ) : (
           <div className="welcome-gate-form-wrap">
+            {invitationName && <button type="button" disabled={busy} onClick={() => void signInWithGoogle()} className="welcome-gate-provider welcome-gate-google"><span>Continuar con Google</span></button>}
             <div className="welcome-gate-form-tabs">
               <button type="button" className={accountMode === "register" ? "is-active" : ""} onClick={() => { setAccountMode("register"); setMessage(""); }}>Crear cuenta</button>
               <button type="button" className={accountMode === "login" ? "is-active" : ""} onClick={() => { setAccountMode("login"); setMessage(""); }}>Iniciar sesión</button>
