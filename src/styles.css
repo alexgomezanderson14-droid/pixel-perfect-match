@@ -1594,3 +1594,89 @@ html, body, #root { min-width:0; max-width:100%; }
  .welcome-gate-bubble-13{left:43%!important;top:64%!important}
  .welcome-gate-bubble-14{left:69%!important;top:65%!important}
 }
+
+/* Composición de bienvenida móvil: collage compacto, sin anillos ni contornos. */
+@media(max-width:640px){
+  .welcome-gate{overflow-x:hidden!important}
+  .welcome-gate-art{
+    position:relative;
+    width:calc(100% + 30px)!important;
+    height:clamp(340px,43svh,410px)!important;
+    margin:0 0 0 -15px!important;
+    transform:none!important;
+    overflow:visible!important;
+  }
+  .welcome-gate-bubble{
+    position:absolute!important;
+    width:36vw!important;
+    max-width:158px!important;
+    min-width:0!important;
+    border:0!important;
+    outline:0!important;
+    border-radius:50%!important;
+    overflow:hidden!important;
+    background:transparent!important;
+    box-shadow:0 9px 22px rgba(31,55,67,.15),inset 9px 12px 20px rgba(255,255,255,.48),inset -14px -17px 24px rgba(10,34,48,.28)!important;
+    isolation:isolate;
+  }
+  .welcome-gate-bubble img{
+    position:absolute!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    max-width:none!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:50%!important;
+    object-fit:cover!important;
+    object-position:center!important;
+    filter:saturate(1.06) contrast(1.05) brightness(1.025);
+    transform:scale(1.025)!important;
+  }
+  .welcome-gate-bubble:before{
+    content:""!important;
+    position:absolute!important;
+    z-index:2!important;
+    inset:0!important;
+    border:0!important;
+    border-radius:50%!important;
+    pointer-events:none!important;
+    background:
+      radial-gradient(ellipse at 24% 13%,rgba(255,255,255,.88) 0%,rgba(255,255,255,.54) 4%,rgba(255,255,255,.18) 12%,transparent 28%),
+      radial-gradient(ellipse at 77% 86%,rgba(5,25,40,.42) 0%,rgba(9,35,49,.2) 21%,transparent 48%),
+      radial-gradient(ellipse at 50% 50%,transparent 44%,rgba(255,255,255,.05) 65%,rgba(8,30,43,.17) 100%)!important;
+    box-shadow:inset 8px 9px 18px rgba(255,255,255,.34),inset -9px -12px 22px rgba(5,27,42,.18)!important;
+  }
+  .welcome-gate-bubble:after{
+    content:""!important;
+    position:absolute!important;
+    z-index:3!important;
+    top:8%!important;
+    left:17%!important;
+    width:37%!important;
+    height:12%!important;
+    border:0!important;
+    border-radius:50%!important;
+    background:rgba(255,255,255,.78)!important;
+    filter:blur(7px)!important;
+    transform:rotate(-29deg)!important;
+    pointer-events:none!important;
+  }
+  /* Tres franjas de esferas grandes, intercaladas y superpuestas, como el collage de referencia. */
+  .welcome-gate-bubble-0{left:-7%!important;top:28%!important;width:34vw!important}
+  .welcome-gate-bubble-1{left:11%!important;top:5%!important;width:37vw!important}
+  .welcome-gate-bubble-2{left:30%!important;top:23%!important;width:36vw!important}
+  .welcome-gate-bubble-3{left:51%!important;top:3%!important;width:33vw!important}
+  .welcome-gate-bubble-4{left:72%!important;top:25%!important;width:36vw!important}
+  .welcome-gate-bubble-5{left:-2%!important;top:51%!important;width:34vw!important}
+  .welcome-gate-bubble-6{left:18%!important;top:37%!important;width:37vw!important}
+  .welcome-gate-bubble-7{left:39%!important;top:51%!important;width:36vw!important}
+  .welcome-gate-bubble-8{left:60%!important;top:36%!important;width:35vw!important}
+  .welcome-gate-bubble-9{left:81%!important;top:51%!important;width:34vw!important}
+  .welcome-gate-bubble-10{left:-7%!important;top:73%!important;width:32vw!important}
+  .welcome-gate-bubble-11{left:15%!important;top:69%!important;width:34vw!important}
+  .welcome-gate-bubble-12{left:37%!important;top:75%!important;width:33vw!important}
+  .welcome-gate-bubble-13{left:59%!important;top:68%!important;width:35vw!important}
+  .welcome-gate-bubble-14{left:81%!important;top:73%!important;width:32vw!important}
+  .welcome-gate-intro{margin-top:2px!important;padding:0 18px!important}
+}
