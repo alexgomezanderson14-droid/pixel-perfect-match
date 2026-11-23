@@ -1504,8 +1504,6 @@ html, body, #root { min-width:0; max-width:100%; }
 .welcome-gate-message{border-radius:12px;padding:10px 12px;background:#f2f6f7;color:#40575f;font-size:12px;line-height:1.45;text-align:center}
 .welcome-gate.is-leaving .welcome-gate-art{animation:welcome-art-fade .68s ease-in both}
 .welcome-gate.is-leaving .welcome-gate-intro,.welcome-gate.is-leaving .welcome-gate-actions,.welcome-gate.is-leaving .welcome-gate-brand{animation:welcome-content-fade .38s ease-in both}
-@keyframes welcome-bubble-float{0%,100%{translate:0 0;rotate:-1.5deg}50%{translate:0 -7px;rotate:1.5deg}}
-@keyframes welcome-bubble-exit{0%{scale:1;opacity:1;filter:blur(0)}55%{scale:1.12;opacity:.9}100%{scale:.18;opacity:0;filter:blur(7px)}}
 @keyframes welcome-art-fade{to{opacity:0;filter:blur(8px)}}
 @keyframes welcome-content-fade{to{opacity:0;transform:translateY(16px)}}
 @media(max-width:640px){
@@ -1532,7 +1530,7 @@ html, body, #root { min-width:0; max-width:100%; }
 .welcome-gate-preview-close:hover{background:#f1f5f6}
 
 /* Imágenes libres de bienvenida: sin marcos, máscaras ni recortes; cada archivo conserva su proporción. */
-.welcome-gate-art{position:relative;display:block;flex:0 0 auto;width:100%;max-width:1160px;margin:8px auto 0;padding:0;background:transparent;border:0;border-radius:0;box-shadow:none;overflow:visible}
+.welcome-gate-art{position:relative;display:block;flex:0 0 auto;width:100%;height:auto!important;max-width:1160px;margin:8px auto 0;padding:0;background:transparent;border:0;border-radius:0;box-shadow:none;overflow:visible}
 .welcome-artwork-stage{position:relative;isolation:isolate;flex:0 0 auto;width:100%;height:clamp(120px,28vw,var(--welcome-art-height,300px));overflow:visible}
 .welcome-artwork-image{position:absolute;display:block;max-width:none!important;max-height:none!important;height:auto;border:0!important;border-radius:0!important;padding:0!important;background:transparent!important;box-shadow:none!important;filter:none;pointer-events:none;user-select:none}
 .welcome-gate.is-leaving .welcome-gate-art{animation:welcome-art-fade .38s ease-in both}
