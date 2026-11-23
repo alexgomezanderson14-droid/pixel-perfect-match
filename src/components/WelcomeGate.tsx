@@ -1,11 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-type PenyaLogo = { id: string; nombre: string; foto?: string; color?: string };
-type Props = { penyes: PenyaLogo[]; onContinueAsGuest: () => void; onClose?: () => void; preview?: boolean };
+type Props = { imageUrl?: string; onContinueAsGuest: () => void; onClose?: () => void; preview?: boolean };
 
-export default function WelcomeGate({ penyes, onContinueAsGuest, onClose, preview = false }: Props) {
-  const [bubbles, setBubbles] = useState<PenyaLogo[]>([]);
+export default function WelcomeGate({ imageUrl = "", onContinueAsGuest, onClose, preview = false }: Props) {
   const [isLeaving, setIsLeaving] = useState(false);
   const [mode, setMode] = useState<"welcome" | "email">("welcome");
   const [accountMode, setAccountMode] = useState<"login" | "register">("register");
