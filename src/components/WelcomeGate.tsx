@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-type Props = { imageUrl?: string; onContinueAsGuest: () => void; onClose?: () => void; preview?: boolean };
+type Props = { imageUrl?: string; imageScale?: number; onContinueAsGuest: () => void; onClose?: () => void; preview?: boolean };
 
-export default function WelcomeGate({ imageUrl = "", onContinueAsGuest, onClose, preview = false }: Props) {
+export default function WelcomeGate({ imageUrl = "", imageScale = 100, onContinueAsGuest, onClose, preview = false }: Props) {
   const [isLeaving, setIsLeaving] = useState(false);
   const [mode, setMode] = useState<"welcome" | "email">("welcome");
   const [accountMode, setAccountMode] = useState<"login" | "register">("register");
@@ -83,7 +83,7 @@ export default function WelcomeGate({ imageUrl = "", onContinueAsGuest, onClose,
         <img src="/penyera-isotipo.svg" alt="PENYERA" />
       </div>
 
-      {imageUrl && <div className="welcome-gate-art" aria-label="Imagen decorativa de bienvenida"><img src={imageUrl} alt="" className="welcome-gate-art-image" fetchPriority="high" /></div>}
+      {imageUrl && <div className="welcome-gate-art" aria-label="Imagen decorativa de bienvenida"><img src={imageUrl} alt="" className="welcome-gate-art-image" style={{ transform: `scale(${Math.min(200, Math.max(50, imageScale)) / 100})` }} fetchPriority="high" /></div>}
 
             <div className="welcome-gate-intro">
         <p className="welcome-gate-eyebrow">PENYERA · L’ALFÀS DEL PI</p>
