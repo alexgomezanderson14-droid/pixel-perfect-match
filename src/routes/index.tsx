@@ -736,19 +736,16 @@ function Home() {
     try {
       const { data, error } = await (supabase as any).rpc("solicitar_pertenecer_penya", { p_penya_id: id, p_token: token });
       if (error) throw error;
-      const { data: membership, error: membershipError } = await (supabase as any)
-        .from("penya_miembros")
-        .select("id,penya_id,user_id,display_name,avatar_url,joined_at,estado,solicitado_en,revisado_en")
-        const membership = data?.id ? data : {
+      const membership = data?.id ? data : {
         id: data?.id,
         penya_id: data?.penya_id || id,
         user_id: accountUser.id,
         estado: data?.estado || "pendiente",
         display_name: accountUser.user_metadata?.full_name || accountUser.user_metadata?.name || accountUser.email || "Usuario",
         avatar_url: accountUser.user_metadata?.avatar_url || accountUser.user_metadata?.picture || null,
-        joined_at: new Date().toISOString(),
-        solicitado_en: new Date().toISOString(),
-        revisado_en: null,
+        joined_at: data?.joined_at || new Date().toISOString(),
+        solicitado_en: data?.solicitado_en || new Date().toISOString(),
+        revisado_en: data?.revisado_en || null,
       };
       setPenyaMembership(membership || null);
       setMisPenyes(membership?.estado === "aprobado" ? [String(membership.penya_id)] : []);
