@@ -1531,18 +1531,11 @@ html, body, #root { min-width:0; max-width:100%; }
 .welcome-gate-preview-close{position:absolute;z-index:5;top:max(14px,env(safe-area-inset-top));right:18px;display:grid;width:40px;height:40px;place-items:center;border:1px solid #e7ebed;border-radius:50%;background:rgba(255,255,255,.92);color:#34464d;font-size:27px;line-height:1;box-shadow:0 4px 14px rgba(20,34,42,.08)}
 .welcome-gate-preview-close:hover{background:#f1f5f6}
 
-/* Composición de bienvenida: esferas de cristal iridiscente con logotipos reales de peñas. */
-.welcome-bubble-composition{position:relative;width:100%;aspect-ratio:calc(2.05 / var(--welcome-art-scale,1));overflow:visible;isolation:isolate}
-.welcome-bubble{position:absolute;aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(ellipse at 29% 19%,rgba(255,255,255,.98) 0%,rgba(255,255,255,.68) 3%,rgba(255,255,255,.12) 12%,transparent 24%),radial-gradient(ellipse at 67% 79%,rgba(55,28,125,.36),transparent 42%),radial-gradient(circle at 42% 38%,rgba(94,235,255,.14),rgba(255,255,255,.02) 38%,rgba(255,255,255,.2) 60%,rgba(255,255,255,.78) 68%,rgba(109,73,173,.68) 72%,rgba(255,255,255,.18) 78%,rgba(255,255,255,.05) 100%);border:1px solid rgba(255,255,255,.66);box-shadow:inset 0 2px 5px rgba(255,255,255,.95),inset 0 -7px 14px rgba(111,73,170,.22),0 4px 13px rgba(53,75,115,.16);filter:saturate(1.25)}
-.welcome-bubble:before{content:"";position:absolute;inset:5% 9% 9% 7%;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,.52),transparent 30%,rgba(101,226,255,.12) 52%,transparent 70%);border-top:2px solid rgba(255,255,255,.9);transform:rotate(-24deg);pointer-events:none}
-.welcome-bubble:after{content:"";position:absolute;left:18%;top:13%;width:27%;height:9%;border-radius:50%;background:rgba(255,255,255,.8);filter:blur(4px);transform:rotate(-35deg);pointer-events:none}
-.welcome-bubble.has-penya-logo{display:flex;align-items:center;justify-content:center;padding:5%;background:radial-gradient(circle at 32% 22%,rgba(255,255,255,.98),rgba(224,244,255,.58) 17%,rgba(132,191,231,.22) 44%,rgba(255,255,255,.16) 62%,rgba(255,255,255,.72) 70%,rgba(128,92,183,.72) 75%,rgba(255,255,255,.12) 82%);backdrop-filter:blur(1px)}
-.welcome-bubble.has-penya-logo img{position:relative;z-index:1;width:82%;height:82%;border-radius:50%;object-fit:contain;background:rgba(255,255,255,.91);border:1px solid rgba(255,255,255,.92);box-shadow:0 2px 10px rgba(20,30,50,.18);padding:5%}
-.welcome-bubble-3{z-index:2}
-.welcome-bubble-3.has-penya-logo img{width:86%;height:86%;padding:7%}
-.welcome-bubble-composition .welcome-bubble{animation:welcome-bubble-float 7s ease-in-out infinite}
-.welcome-bubble-composition .welcome-bubble:nth-child(3n){animation-delay:-2.3s}
-.welcome-bubble-composition .welcome-bubble:nth-child(3n + 1){animation-delay:-4.1s}
-@keyframes welcome-bubble-float{0%,100%{translate:0 0}50%{translate:0 -5px}}
-@media(max-width:640px){.welcome-bubble-composition{aspect-ratio:calc(1.18 / var(--welcome-art-scale,1))}.welcome-bubble{border-width:1px;box-shadow:inset 0 1px 4px rgba(255,255,255,.95),inset 0 -4px 9px rgba(111,73,170,.2),0 2px 8px rgba(53,75,115,.15)}.welcome-bubble.has-penya-logo img{width:84%;height:84%;padding:4%}.welcome-gate-art{margin-top:4px}}
-@media(prefers-reduced-motion:reduce){.welcome-bubble-composition .welcome-bubble{animation:none}}
+/* Imágenes libres de bienvenida: sin marcos, máscaras ni recortes; cada archivo conserva su proporción. */
+.welcome-gate-art{position:relative;display:block;flex:0 0 auto;width:100%;max-width:1160px;margin:8px auto 0;padding:0;background:transparent;border:0;border-radius:0;box-shadow:none;overflow:visible}
+.welcome-artwork-stage{position:relative;isolation:isolate;flex:0 0 auto;width:100%;height:clamp(120px,28vw,var(--welcome-art-height,300px));overflow:visible}
+.welcome-artwork-image{position:absolute;display:block;max-width:none!important;max-height:none!important;height:auto;border:0!important;border-radius:0!important;padding:0!important;background:transparent!important;box-shadow:none!important;filter:none;pointer-events:none;user-select:none}
+.welcome-gate.is-leaving .welcome-gate-art{animation:welcome-art-fade .38s ease-in both}
+@media(max-width:640px){.welcome-gate-art{width:100%;margin:4px auto 0;overflow:visible}.welcome-artwork-stage{height:clamp(120px,52vw,var(--welcome-art-height,300px))}.welcome-artwork-image{max-width:none!important}}
+@media(min-width:641px) and (max-width:900px){.welcome-gate-art{width:100%;max-width:900px}}
+@media(max-height:760px){.welcome-gate-art{margin-top:4px}.welcome-gate-intro{margin-top:6px}.welcome-gate-actions{padding-top:12px}.welcome-gate-provider{min-height:54px}}
