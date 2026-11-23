@@ -124,7 +124,7 @@ export default function WelcomeGate({ artworkSettings = "", onContinueAsGuest, o
           </div>
         )}
         {message && <p role="status" className="welcome-gate-message">{message}</p>}
-        <button type="button" onClick={() => leaveThen(onContinueAsGuest)} className="welcome-gate-guest">{preview ? "Cerrar vista previa" : "Seguir sin identificarme"}</button>
+        {!invitationName && <button type="button" onClick={() => leaveThen(onContinueAsGuest)} className="welcome-gate-guest">{preview ? "Cerrar vista previa" : "Seguir sin identificarme"}</button>}
         <p className="welcome-gate-privacy">Podrás iniciar sesión más adelante desde Ajustes.</p>
       </div>
     </div>
