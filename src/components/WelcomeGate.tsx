@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 type PenyaLogo = { id: string; nombre: string; foto?: string; color?: string };
@@ -14,19 +14,6 @@ export default function WelcomeGate({ penyes, onContinueAsGuest, onClose, previe
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    // Elegir las peñas una sola vez cuando ya ha terminado la carga inicial.
-    // No se vuelve a sortear al cambiar el estado del formulario o de la pantalla.
-    if (bubbles.length > 0 || penyes.length === 0) return;
-    const available = penyes.filter((penya) => penya.foto);
-    const shuffled = [...available];
-    for (let index = shuffled.length - 1; index > 0; index -= 1) {
-      const target = Math.floor(Math.random() * (index + 1));
-      [shuffled[index], shuffled[target]] = [shuffled[target]!, shuffled[index]!];
-    }
-    setBubbles(shuffled.slice(0, 15));
-  }, [penyes, bubbles.length]);
 
   const leaveThen = (action: () => void) => {
     if (isLeaving) return;
@@ -98,20 +85,9 @@ export default function WelcomeGate({ penyes, onContinueAsGuest, onClose, previe
         <img src="/penyera-isotipo.svg" alt="PENYERA" />
       </div>
 
-      <div className="welcome-gate-art" aria-label="Logotipos de algunas peñas de PENYERA">
-        <div className="welcome-gate-orbit" aria-hidden="true" />
-        {bubbles.map((penya, index) => (
-          <div key={penya.id} className={`welcome-gate-bubble welcome-gate-bubble-${index}`} style={{ animationDelay: `${index * -0.42}s`, backgroundColor: penya.color || "#edf2f3" }}>
-            <img src={penya.foto} alt={penya.nombre} loading="eager" decoding="async" />
-          </div>
-        ))}
-        {bubbles.length === 0 && penyes.length === 0 && ["P", "F", "A", "M", "C", "E"].map((letter, index) => (
-          <div key={letter} className={`welcome-gate-bubble welcome-gate-bubble-${index}`} aria-hidden="true"><span>{letter}</span></div>
-        ))}
-        <div className="welcome-gate-add-bubble" aria-hidden="true"><span>+</span></div>
-      </div>
+      {imageUrl && <div className="welcome-gate-art" aria-label="Imagen decorativa de bienvenida"><img src={imageUrl} alt="" className="welcome-gate-art-image" fetchPriority="high" /></div>}
 
-      <div className="welcome-gate-intro">
+            <div className="welcome-gate-intro">
         <p className="welcome-gate-eyebrow">PENYERA · L’ALFÀS DEL PI</p>
         <h1>Las peñas y las fiestas, más cerca.</h1>
         <p>Descubre la comunidad festera, encuentra planes y vive cada momento.</p>
