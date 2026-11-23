@@ -21,28 +21,32 @@ export default function WelcomeGate({ artworkSettings = "", onContinueAsGuest, o
   };
 
   const signInWithProvider = async (provider: "google" | "apple") => {
+    if (busy) return;
     setBusy(true);
     setMessage("");
-    leaveThen(() => {
-      void supabase.auth.signInWithOAuth({
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: window.location.origin },
-      }).then(({ error }) => {
-        if (error) throw error;
-      }).catch((error: unknown) => {
-        const detail = error instanceof Error ? error.message : "";
-        const normalized = detail.toLowerCase();
-        const providerName = provider === "google" ? "Google" : "Apple";
-        const friendlyMessage = normalized.includes("provider is not enabled") || normalized.includes("unsupported provider")
-          ? `El acceso con ${providerName} todavía no está activado. Hay que habilitarlo en Supabase Authentication.`
-          : normalized.includes("redirect") || normalized.includes("url") && normalized.includes("allow")
-            ? "La dirección de retorno no está autorizada en Supabase. Añade el dominio de PENYERA en Authentication → URL Configuration."
-            : detail || "No se ha podido iniciar sesión. Inténtalo de nuevo.";
-        setMessage(friendlyMessage);
-        setBusy(false);
-        setIsLeaving(false);
+        options: {
+          redirectTo: `${window.location.origin}/`,
+          skipBrowserRedirect: false,
+        },
       });
-    });
+      if (error) throw error;
+    } catch (error: unknown) {
+      const detail = error instanceof Error ? error.message : "";
+      const normalized = detail.toLowerCase();
+      const providerName = provider === "google" ? "Google" : "Apple";
+      const friendlyMessage =
+        normalized.includes("provider is not enabled") || normalized.includes("unsupported provider")
+          ? `El acceso con ${providerName} aún no está activado en Supabase. Hay que habilitar el proveedor y añadir sus credenciales.`
+          : normalized.includes("redirect") || (normalized.includes("url") && normalized.includes("allow"))
+            ? "La dirección de retorno no está autorizada. Añade el dominio de PENYERA en Authentication → URL Configuration."
+            : detail || "No se ha podido iniciar sesión. Inténtalo de nuevo.";
+      setMessage(friendlyMessage);
+      setBusy(false);
+      setIsLeaving(false);
+    }
   };
 
   const submitEmail = (event: FormEvent<HTMLFormElement>) => {
