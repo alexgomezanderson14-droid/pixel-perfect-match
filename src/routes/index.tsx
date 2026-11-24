@@ -799,7 +799,17 @@ function Home() {
     } finally { setAccountBusy(false); }
   };
   const toggleMiPenya = async (id: string) => {
-    if (!accountUser?.id) { setAccountPenyaId(id); setShowPenyaJoinDialog(true); return; }
+    if (!accountUser?.id) {
+      // El diálogo de asociación solo se renderiza para usuarios autenticados.
+      // Llevar al formulario de cuenta evita que el botón parezca no funcionar
+      // cuando alguien intenta asociarse desde una ficha sin haber iniciado sesión.
+      setAccountPenyaId(id);
+      setAccountMode("register");
+      setAccountMessage("Para asociarte a esta peña, crea una cuenta o inicia sesión. Hemos seleccionado la peña que has elegido.");
+      setShowPenyaJoinDialog(false);
+      setCurrentPage("info");
+      return;
+    }
     if (penyaMembership?.penya_id === id) {
       const { error } = await (supabase as any).from("penya_miembros").delete().eq("user_id", accountUser.id);
       if (error) { window.alert(error.message); return; }
