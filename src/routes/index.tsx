@@ -818,6 +818,12 @@ function Home() {
       setShowPenyaJoinDialog(false);
       setInviteToken(null);
       setPenyaPromptDismissedFor(accountUser.id);
+      if (token) {
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete("invite");
+        cleanUrl.searchParams.delete("penya");
+        window.history.replaceState({}, "", cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+      }
       setAccountMessage(data?.message || "Solicitud enviada para su aprobación.");
     } catch (error:any) {
       setAccountMessage(error?.message || "No se ha podido enviar la solicitud.");
@@ -851,6 +857,18 @@ function Home() {
       link.searchParams.set("penya", id);
       link.searchParams.set("invite", token);
       const inviteUrl = link.toString();
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: "Invitación a " + (penyes.find(p=>String(p.id)===String(id))?.nombre || "una peña"), text: "Te invito a unirte a esta peña en PENYERA.", url: inviteUrl });
+          setInviteFeedback("Invitación compartida correctamente. El enlace caduca en 30 días.");
+          return;
+        } catch (shareError:any) {
+          if (shareError?.name === "AbortError") {
+            setInviteFeedback("No se ha compartido la invitación.");
+            return;
+          }
+        }
+      }
       try {
         if (!navigator.clipboard?.writeText) throw new Error("El portapapeles no está disponible en este navegador.");
         await navigator.clipboard.writeText(inviteUrl);
@@ -932,9 +950,32 @@ function Home() {
     try { const cachedHero = localStorage.getItem("festalfas-hero-image"); if (cachedHero) setHeroImage(cachedHero); } catch { /* Se recupera la portada desde el contenido del sitio. */ }
   }, []);
   useEffect(() => {
-    try { const key = "festalfas-notifications-read:" + String(accountUser?.email||"invitado").toLowerCase(); const saved = JSON.parse(localStorage.getItem(key)||"[]"); setReadNotificationIds(Array.isArray(saved)?saved.map(String):[]); } catch { setReadNotificationIds([]); }
-  }, [accountUser?.email]);
-  const markNotificationRead = (id:string) => setReadNotificationIds(current => { const next=[...new Set([...current,id])]; try { localStorage.setItem("festalfas-notifications-read:"+String(accountUser?.email||"invitado").toLowerCase(),JSON.stringify(next)); } catch { /* Estado en memoria. */ } return next; });
+    if (Array.isArray(accountUser?.user_metadata?.festalfas_notifications_read)) {
+      setReadNotificationIds(accountUser.user_metadata.festalfas_notifications_read.map(String));
+      return;
+    }
+    try {
+      const key = "festalfas-notifications-read:" + String(accountUser?.email||"invitado").toLowerCase();
+      const saved = JSON.parse(localStorage.getItem(key)||"[]");
+      setReadNotificationIds(Array.isArray(saved)?saved.map(String):[]);
+    } catch { setReadNotificationIds([]); }
+  }, [accountUser?.id, accountUser?.email]);
+  const persistNotificationReads = async (ids:string[]) => {
+    const normalized = [...new Set(ids.map(String))].slice(-500);
+    try {
+      localStorage.setItem("festalfas-notifications-read:"+String(accountUser?.email||"invitado").toLowerCase(),JSON.stringify(normalized));
+    } catch { /* La lectura sigue disponible en memoria. */ }
+    if (accountUser?.id) {
+      const { data, error } = await supabase.auth.updateUser({ data: { festalfas_notifications_read: normalized } });
+      if (error) throw error;
+      if (data.user) setAccountUser(data.user);
+    }
+  };
+  const markNotificationRead = (id:string) => {
+    const next = [...new Set([...readNotificationIds, String(id)])];
+    setReadNotificationIds(next);
+    void persistNotificationReads(next).catch(error => setAccountMessage(error?.message || "No se ha podido sincronizar la lectura de la notificación."));
+  };
   useEffect(() => {
     const key = "festalfas-notifications-read:" + String(accountUser?.email||"invitado").toLowerCase();
     const syncReadState = (event: StorageEvent) => {
@@ -947,7 +988,11 @@ function Home() {
     window.addEventListener("storage", syncReadState);
     return () => window.removeEventListener("storage", syncReadState);
   }, [accountUser?.email]);
-  const markAllNotificationsRead = () => setReadNotificationIds(current => { const next=[...new Set([...current,...avisosNotificaciones.map((item:any)=>String(item.id))])]; try { localStorage.setItem("festalfas-notifications-read:"+String(accountUser?.email||"invitado").toLowerCase(),JSON.stringify(next)); } catch { /* Estado en memoria. */ } return next; });
+  const markAllNotificationsRead = () => {
+    const next = [...new Set([...readNotificationIds, ...avisosNotificaciones.map((item:any)=>String(item.id))])];
+    setReadNotificationIds(next);
+    void persistNotificationReads(next).catch(error => setAccountMessage(error?.message || "No se han podido sincronizar las notificaciones."));
+  };
   useEffect(() => {
     const key = "fiestas-share-reminder-last";
     const shouldShow = () => {
@@ -1076,10 +1121,16 @@ function Home() {
       }
       setAuthReady(true);
       const saved = user?.user_metadata?.["festalfas_preferences"];
+      const savedRead = user?.user_metadata?.["festalfas_notifications_read"];
       try {
         const local = JSON.parse(localStorage.getItem("festalfas-personal-preferences") || "{}");
         setPersonalPrefs({ showImportantNotices: saved?.showImportantNotices ?? local.showImportantNotices ?? true, reduceMotion: saved?.reduceMotion ?? local.reduceMotion ?? false, largeText: saved?.largeText ?? local.largeText ?? false, highContrast: saved?.highContrast ?? local.highContrast ?? false });
-      } catch { setPersonalPrefs({ showImportantNotices: saved?.showImportantNotices ?? true, reduceMotion: saved?.reduceMotion ?? false, largeText: saved?.largeText ?? false, highContrast: saved?.highContrast ?? false }); }
+        const localRead = JSON.parse(localStorage.getItem("festalfas-notifications-read:" + String(user?.email || "invitado").toLowerCase()) || "[]");
+        setReadNotificationIds(Array.isArray(savedRead) ? savedRead.map(String) : Array.isArray(localRead) ? localRead.map(String) : []);
+      } catch {
+        setPersonalPrefs({ showImportantNotices: saved?.showImportantNotices ?? true, reduceMotion: saved?.reduceMotion ?? false, largeText: saved?.largeText ?? false, highContrast: saved?.highContrast ?? false });
+        setReadNotificationIds(Array.isArray(savedRead) ? savedRead.map(String) : []);
+      }
     }).catch(() => { if (active) setAuthReady(true); });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
@@ -1097,6 +1148,10 @@ function Home() {
       }
       const saved = user?.user_metadata?.["festalfas_preferences"];
       if (saved) setPersonalPrefs({ showImportantNotices: saved.showImportantNotices !== false, reduceMotion: saved.reduceMotion === true, largeText: saved.largeText === true, highContrast: saved.highContrast === true });
+      if (user) {
+        const savedRead = user.user_metadata?.["festalfas_notifications_read"];
+        if (Array.isArray(savedRead)) setReadNotificationIds(savedRead.map(String));
+      } else if (event === "SIGNED_OUT") setReadNotificationIds([]);
     });
     return () => { active = false; subscription.unsubscribe(); };
   }, []);
@@ -1750,7 +1805,7 @@ function Home() {
                 </form>
                 <div className="space-y-3 rounded-2xl border border-primary/15 bg-primary/[.035] p-3">
                   <div className="space-y-1"><p className="text-sm font-bold">Mi peña</p>
-                    {penyaMembershipLoading ? <p className="text-sm text-muted-foreground">Comprobando tu peña…</p> : penyaMembership?.estado === "aprobado" ? <p className="text-sm text-emerald-700">Perteneces a {penyes.find(p=>String(p.id)===String(penyaMembership.penya_id))?.nombre || "tu peña"} y tienes permisos para gestionarla.</p> : penyaMembership?.estado === "pendiente" ? <p className="text-sm font-semibold text-amber-700">Tu solicitud para {penyes.find(p=>String(p.id)===String(penyaMembership.penya_id))?.nombre || "esta peña"} está pendiente de aprobación.</p> : penyaMembership?.estado === "rechazado" ? <p className="text-sm text-muted-foreground">Tu solicitud para {penyes.find(p=>String(p.id)===String(penyaMembership.penya_id))?.nombre || "esta peña"} fue denegada. Puedes volver a solicitarla o retirar la asociación para elegir otra.</p> : <p className="text-sm text-muted-foreground">Todavía no estás asociado a ninguna peña.</p>}
+                    {penyaMembershipLoading ? <p className="text-sm text-muted-foreground">Estamos comprobando tu pertenencia. No necesitas hacer nada mientras tanto.</p> : penyaMembership?.estado === "aprobado" ? <div className="space-y-1"><p className="text-sm font-semibold text-emerald-700">Solicitud aprobada</p><p className="text-sm text-foreground">Ya perteneces a {penyes.find(p=>String(p.id)===String(penyaMembership.penya_id))?.nombre || "tu peña"}. Puedes gestionar su ficha, imágenes y solicitudes de nuevos miembros.</p>{penyaMembership.revisado_en&&<p className="text-[11px] text-muted-foreground">Aprobada el {new Date(penyaMembership.revisado_en).toLocaleDateString("es-ES")}</p>}</div> : penyaMembership?.estado === "pendiente" ? <div className="space-y-1"><p className="text-sm font-semibold text-amber-700">Solicitud pendiente de revisión</p><p className="text-sm text-foreground">Tu solicitud para {penyes.find(p=>String(p.id)===String(penyaMembership.penya_id))?.nombre || "esta peña"} ya está enviada. La peña debe comprobar tus datos y aprobarla; mientras tanto no tendrás permisos de gestión.</p><p className="text-[11px] text-muted-foreground">Enviada el {new Date(penyaMembership.solicitado_en || penyaMembership.joined_at || Date.now()).toLocaleDateString("es-ES")}</p></div> : penyaMembership?.estado === "rechazado" ? <div className="space-y-1"><p className="text-sm font-semibold text-foreground">Solicitud no aprobada</p><p className="text-sm text-muted-foreground">Tu solicitud para {penyes.find(p=>String(p.id)===String(penyaMembership.penya_id))?.nombre || "esta peña"} no se ha aprobado. Puedes revisar tus datos y volver a solicitarlo.</p></div> : <p className="text-sm text-muted-foreground">Todavía no estás asociado a ninguna peña. Puedes elegir una del directorio y enviar una solicitud; no necesitas invitación para solicitar pertenecer.</p>}
                   </div>
                   {!penyaMembership && <><label className="block space-y-1 text-sm font-bold">¿A qué peña quieres unirte?<select value={accountPenyaId} onChange={e=>setAccountPenyaId(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 font-normal"><option value="">Selecciona una peña</option>{penyesElegibles.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}</select></label><button type="button" disabled={accountBusy || penyaMembershipLoading || !accountPenyaId} onClick={()=>void saveAccountPenya()} className="rounded-full bg-primary px-4 py-2 text-sm font-extrabold text-primary-foreground">{accountBusy?"Enviando…":"Solicitar asociación"}</button></>}{penyaMembership?.estado === "rechazado" && <button type="button" disabled={accountBusy} onClick={()=>void solicitarPenya(String(penyaMembership.penya_id),inviteToken)} className="rounded-full bg-primary px-4 py-2 text-sm font-extrabold text-primary-foreground">Volver a solicitar asociación</button>}{penyaMembership && <button type="button" disabled={accountBusy} onClick={()=>void leaveAccountPenya()} className="rounded-full border border-border px-4 py-2 text-sm font-bold">{penyaMembership.estado === "aprobado" ? "Salir de mi peña" : penyaMembership.estado === "pendiente" ? "Cancelar solicitud" : "Retirar asociación"}</button>}
 
