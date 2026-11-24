@@ -1184,7 +1184,7 @@ function Home() {
     try {
       let avatarUrl = profileDraft.avatar_url;
       if (profileAvatarFile) {
-        if (!/^image\\/(jpeg|png|webp)$/.test(profileAvatarFile.type)) throw new Error("La foto debe ser JPG, PNG o WebP.");
+        if (!/^image\/(jpeg|png|webp)$/.test(profileAvatarFile.type)) throw new Error("La foto debe ser JPG, PNG o WebP.");
         if (profileAvatarFile.size > 5 * 1024 * 1024) throw new Error("La foto no puede superar los 5 MB.");
         const extension = profileAvatarFile.type === "image/png" ? "png" : profileAvatarFile.type === "image/webp" ? "webp" : "jpg";
         const path = accountUser.id + "/avatar." + extension;
