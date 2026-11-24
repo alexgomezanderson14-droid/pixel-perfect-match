@@ -691,11 +691,13 @@ function Home() {
         let membership = data || null;
         const metadataPenyaId = String(accountUser.user_metadata?.penya_id || "");
         if (!membership && esUuidPenya(metadataPenyaId) && penyes.some((item) => String(item.id) === metadataPenyaId)) {
-          const { data: request, error: requestError } = await (supabase as any).rpc("solicitar_pertenecer_penya", { p_penya_id: metadataPenyaId });
-          if (requestError) throw requestError;
-          membership = request?.id ? request : { ...request, user_id: accountUser.id };
-          setAccountMessage(request?.message || "Solicitud enviada para su aprobación.");
-          setPenyaMembership(membership);
+          // No crear solicitudes automáticamente al registrarse: primero pedimos
+          // nombre completo y una referencia que permita a la peña identificar a la persona.
+          setAccountPenyaId(metadataPenyaId);
+          setMembershipFullName(String(accountUser.user_metadata?.full_name || accountUser.user_metadata?.name || accountUser.user_metadata?.display_name || ""));
+          setMembershipVerification("");
+          setShowPenyaJoinDialog(true);
+          setPenyaMembership(null);
           setMisPenyes([]);
           setPenyaPromptDismissedFor(accountUser.id);
           return;
@@ -744,11 +746,16 @@ function Home() {
         ? [String(penyaMembership.penya_id)]
         : [];
     if (!accountUser?.id || !managedIds.length) { setPenyaMemberRoster([]); return; }
-    (supabase as any).from("penya_miembros")
-      .select("id,penya_id,user_id,display_name,avatar_url,joined_at,estado,solicitado_en")
-      .in("penya_id", managedIds)
-      .order("solicitado_en", { ascending: true })
-      .then(({data,error}:any) => { if (active) setPenyaMemberRoster(error ? [] : (data || [])); });
+    void (async () => {
+      const detailed = await (supabase as any).from("penya_miembros")
+        .select("id,penya_id,user_id,display_name,nombre_completo,referencia_verificacion,email,avatar_url,joined_at,estado,solicitado_en")
+        .in("penya_id", managedIds).order("solicitado_en", { ascending: true });
+      if (!detailed.error) { if (active) setPenyaMemberRoster(detailed.data || []); return; }
+      const basic = await (supabase as any).from("penya_miembros")
+        .select("id,penya_id,user_id,display_name,avatar_url,joined_at,estado,solicitado_en")
+        .in("penya_id", managedIds).order("solicitado_en", { ascending: true });
+      if (active) setPenyaMemberRoster(basic.error ? [] : (basic.data || []).map((m:any)=>({...m,email:null,nombre_completo:m.display_name,referencia_verificacion:null})));
+    })();
     return () => { active = false; };
   }, [accountUser?.id, penyes, penyaMembership?.penya_id, penyaMembership?.estado, esAdminWeb]);
   const solicitarPenya = async (id: string, token: string | null = null) => {
@@ -1665,7 +1672,7 @@ function Home() {
                 </div>
                 {(esAdminWeb || penyaMembership?.estado === "aprobado") && <div className="space-y-3 rounded-2xl border border-border p-3">
                   <div><h3 className="text-sm font-extrabold">Solicitudes de asociación</h3><p className="text-xs text-muted-foreground">Revisa quién quiere unirse a {esAdminWeb?"las peñas":"tu peña"}.</p></div>
-                  {penyaMemberRoster.filter(m=>m.estado==="pendiente").length===0 ? <p className="text-xs text-muted-foreground">No hay solicitudes pendientes.</p> : penyaMemberRoster.filter(m=>m.estado==="pendiente").map(m=><div key={m.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-muted/50 p-3"><div><p className="text-sm font-bold">{m.display_name || "Usuario"}</p><p className="text-xs text-muted-foreground">{penyes.find(p=>String(p.id)===String(m.penya_id))?.nombre || "Peña"} · {new Date(m.solicitado_en || m.joined_at).toLocaleDateString("es-ES")}</p></div><div className="flex gap-2"><button type="button" disabled={accountBusy} onClick={()=>void revisarSolicitudPenya(m.id,true)} className="rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground">Aprobar</button><button type="button" disabled={accountBusy} onClick={()=>void revisarSolicitudPenya(m.id,false)} className="rounded-full border border-border px-3 py-2 text-xs font-bold">Denegar</button></div></div>)}
+                  {penyaMemberRoster.filter(m=>m.estado==="pendiente").length===0 ? <p className="text-xs text-muted-foreground">No hay solicitudes pendientes.</p> : penyaMemberRoster.filter(m=>m.estado==="pendiente").map(m=><div key={m.id} className="flex flex-wrap items-start justify-between gap-3 rounded-xl bg-muted/50 p-3"><div className="min-w-0"><p className="text-sm font-bold">{m.nombre_completo||m.display_name||"Nombre no indicado"}</p><p className="break-all text-xs font-medium text-primary">{m.email||"Correo no disponible"}</p><p className="text-xs text-muted-foreground">{penyes.find(p=>String(p.id)===String(m.penya_id))?.nombre || "Peña"} · {new Date(m.solicitado_en || m.joined_at).toLocaleDateString("es-ES")}</p>{m.referencia_verificacion&&<p className="mt-2 rounded-lg bg-background p-2 text-xs leading-relaxed"><span className="font-bold">Cómo identificarle: </span>{m.referencia_verificacion}</p>}</div><div className="flex gap-2"><button type="button" disabled={accountBusy} onClick={()=>void revisarSolicitudPenya(m.id,true)} className="rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground">Aprobar</button><button type="button" disabled={accountBusy} onClick={()=>void revisarSolicitudPenya(m.id,false)} className="rounded-full border border-border px-3 py-2 text-xs font-bold">Denegar</button></div></div>)}
                 </div>}<button type="button" disabled={accountBusy} onClick={async()=>{setAccountBusy(true);await supabase.auth.signOut();setAccountMessage("Has cerrado sesión.");setAccountBusy(false);}} className="rounded-full border border-border px-4 py-2 text-sm font-bold">Cerrar sesión</button></div> : <>
                 <div className="mb-4 flex gap-2 rounded-full bg-muted/70 p-1"><button type="button" onClick={()=>{setAccountMode("register");setAccountMessage("");}} className={"flex-1 rounded-full px-3 py-2 text-sm font-bold "+(accountMode==="register"?"bg-primary text-primary-foreground shadow":"text-muted-foreground")}>Crear cuenta</button><button type="button" onClick={()=>{setAccountMode("login");setAccountMessage("");}} className={"flex-1 rounded-full px-3 py-2 text-sm font-bold "+(accountMode==="login"?"bg-primary text-primary-foreground shadow":"text-muted-foreground")}>Iniciar sesión</button></div>
                 <form onSubmit={handleAccountSubmit} className="space-y-3"><h2 className="text-xl font-extrabold text-primary">{accountMode==="register"?"Regístrate en PENYERA":"Bienvenido de nuevo"}</h2><button type="button" disabled={accountBusy} onClick={()=>void handleGoogleSignIn()} className="w-full rounded-full border border-border bg-background px-5 py-3 text-sm font-extrabold text-foreground shadow-sm">Continuar con Google</button>{accountMode==="register"&&<><label className="block space-y-1 text-sm font-semibold">Nombre<input autoComplete="name" required maxLength={80} value={accountName} onChange={e=>setAccountName(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 outline-none focus:ring-2 focus:ring-ring" placeholder="Tu nombre"/></label><label className="block space-y-1 text-sm font-semibold">¿A qué peña perteneces? <span className="font-normal text-muted-foreground">(opcional)</span><select value={accountPenyaId} onChange={e=>setAccountPenyaId(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 font-normal"><option value="">No pertenezco a ninguna / Prefiero indicarlo después</option>{penyesElegibles.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}</select><span className="block text-xs font-normal text-muted-foreground">Podrás cambiar esta información más adelante en Ajustes.</span></label></>}<label className="block space-y-1 text-sm font-semibold">Correo electrónico<input type="email" autoComplete="email" required value={accountEmail} onChange={e=>setAccountEmail(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 outline-none focus:ring-2 focus:ring-ring" placeholder="nombre@correo.com"/></label><label className="block space-y-1 text-sm font-semibold">Contraseña<input type="password" autoComplete={accountMode==="register"?"new-password":"current-password"} minLength={8} required value={accountPassword} onChange={e=>setAccountPassword(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 outline-none focus:ring-2 focus:ring-ring" placeholder="Mínimo 8 caracteres"/></label><button disabled={accountBusy} className="w-full rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground shadow-sm">{accountBusy?"Procesando…":accountMode==="register"?"Crear mi cuenta":"Entrar"}</button></form>
