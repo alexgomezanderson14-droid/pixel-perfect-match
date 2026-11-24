@@ -402,7 +402,7 @@ function Home() {
   const [guestMode, setGuestMode] = useState(false);
   const [showWelcomePreview, setShowWelcomePreview] = useState(false);
   const [penyaAccessNotice, setPenyaAccessNotice] = useState(false);
-  const esAdminWeb = String(accountUser?.email || "").trim().toLowerCase() === "alexgomezanderson14@gmail.com";
+  const esAdminWeb = String(accountUser?.email || "").trim().toLowerCase() === "alexgomezanderson14@gmail.com" && Array.isArray(accountUser?.app_metadata?.providers) && accountUser.app_metadata.providers.includes("email");
   const puedeGestionarPenya = (penyaId: string) => esAdminWeb || (penyaMembership?.estado === "aprobado" && String(penyaMembership?.penya_id) === String(penyaId));
   const avisarAccesoPenya = () => setPenyaAccessNotice(true);
   const [accountMode, setAccountMode] = useState<"register"|"login">("register");
