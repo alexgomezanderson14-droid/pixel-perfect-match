@@ -683,7 +683,7 @@ function Home() {
         let membership = data || null;
         const metadataPenyaId = String(accountUser.user_metadata?.penya_id || "");
         if (!membership && metadataPenyaId && penyes.some((item) => String(item.id) === metadataPenyaId)) {
-          const { data: request, error: requestError } = await (supabase as any).rpc("solicitar_pertenecer_penya", { p_penya_id: metadataPenyaId, p_token: null });
+          const { data: request, error: requestError } = await (supabase as any).rpc("solicitar_pertenecer_penya", { p_penya_id: metadataPenyaId });
           if (requestError) throw requestError;
           membership = request?.id ? request : { ...request, user_id: accountUser.id };
           setAccountMessage(request?.message || "Solicitud enviada para su aprobación.");
@@ -747,7 +747,7 @@ function Home() {
     if (!accountUser?.id || !id) return;
     setAccountBusy(true); setAccountMessage("");
     try {
-      const { data, error } = await (supabase as any).rpc("solicitar_pertenecer_penya", { p_penya_id: id, p_token: token });
+      const { data, error } = await (supabase as any).rpc("solicitar_pertenecer_penya", token ? { p_penya_id: id, p_token: token } : { p_penya_id: id });
       if (error) throw error;
       const membership = data?.id ? data : {
         id: data?.id,
