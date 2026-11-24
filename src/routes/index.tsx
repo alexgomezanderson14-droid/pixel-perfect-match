@@ -1065,7 +1065,7 @@ function Home() {
     return () => window.removeEventListener("hashchange", openFromHash);
   }, [noticias]);
 
-  useEffect(() => { setAccountPenyaId(String(accountUser?.user_metadata?.penya_id || "")); }, [accountUser?.id, accountUser?.user_metadata?.penya_id]);
+  useEffect(() => { const metadataPenyaId = String(accountUser?.user_metadata?.penya_id || ""); if (metadataPenyaId) setAccountPenyaId(metadataPenyaId); }, [accountUser?.id, accountUser?.user_metadata?.penya_id]);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const linkedPenyaId = params.get("penya");
