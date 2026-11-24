@@ -29,7 +29,7 @@ begin
   if not exists(select 1 from public.penyes p where p.id=p_penya_id and p.estado='aprobada') then
     raise exception 'La peña no existe o no está disponible.';
   end if;
-  if lower(coalesce(auth.jwt()->>'email','')) <> 'gomezandersonalex@gmail.com'
+  if not private.es_admin_penyera()
      and not exists(select 1 from public.penya_miembros m where m.penya_id=p_penya_id and m.user_id=v_user and m.estado='aprobado') then
     raise exception 'Solo el administrador de PENYERA o un miembro aprobado puede crear invitaciones.';
   end if;
