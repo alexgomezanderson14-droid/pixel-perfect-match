@@ -1115,6 +1115,21 @@ function Home() {
     } catch (error) { setAccountMessage(error instanceof Error ? error.message : "No se ha podido completar la operación."); }
     finally { setAccountBusy(false); }
   };
+  const leaveAccountPenya = async () => {
+    if (!accountUser?.id) return;
+    setAccountBusy(true); setAccountMessage("");
+    try {
+      const { error } = await (supabase as any).from("penya_miembros").delete().eq("user_id", accountUser.id);
+      if (error) throw error;
+      setPenyaMembership(null);
+      setMisPenyes([]);
+      setAccountPenyaId("");
+      setShowPenyaJoinDialog(false);
+      setAccountMessage("Has salido de la peña. Tu cuenta ya no conserva permisos de gestión sobre ella.");
+    } catch (error:any) {
+      setAccountMessage(error?.message || "No se ha podido actualizar tu asociación.");
+    } finally { setAccountBusy(false); }
+  };
   const saveAccountPenya = async () => {
     if (!accountUser) return;
     if (!accountPenyaId) {
@@ -1614,9 +1629,9 @@ function Home() {
             <section id="account-settings" className="glass scroll-mt-24 rounded-3xl border border-primary/15 p-5 shadow-sm sm:p-6">
               {accountUser ? <div className="space-y-4"><div className="flex items-center gap-3"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary"><svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/></svg></span><div><p className="text-[10px] font-extrabold uppercase tracking-wider text-primary">Sesión iniciada</p><h2 className="text-lg font-extrabold">{accountUser.user_metadata?.full_name || accountUser.email}</h2><p className="text-xs text-muted-foreground">{accountUser.email}</p></div></div><div className="space-y-3 rounded-2xl border border-primary/15 bg-primary/[.035] p-3">
                   <div className="space-y-1"><p className="text-sm font-bold">Mi peña</p>
-                    {penyaMembershipLoading ? <p className="text-sm text-muted-foreground">Comprobando tu peña…</p> : penyaMembership?.estado === "aprobado" ? <p className="text-sm text-emerald-700">Perteneces a {penyes.find(p=>String(p.id)===String(penyaMembership.penya_id))?.nombre || "tu peña"} y tienes permisos para gestionarla.</p> : penyaMembership?.estado === "pendiente" ? <p className="text-sm font-semibold text-amber-700">Tu solicitud está pendiente de aprobación.</p> : penyaMembership?.estado === "rechazado" ? <p className="text-sm text-muted-foreground">Tu solicitud anterior fue denegada. Puedes volver a solicitar la asociación.</p> : <p className="text-sm text-muted-foreground">Todavía no estás asociado a ninguna peña.</p>}
+                    {penyaMembershipLoading ? <p className="text-sm text-muted-foreground">Comprobando tu peña…</p> : penyaMembership?.estado === "aprobado" ? <p className="text-sm text-emerald-700">Perteneces a {penyes.find(p=>String(p.id)===String(penyaMembership.penya_id))?.nombre || "tu peña"} y tienes permisos para gestionarla.</p> : penyaMembership?.estado === "pendiente" ? <p className="text-sm font-semibold text-amber-700">Tu solicitud para {penyes.find(p=>String(p.id)===String(penyaMembership.penya_id))?.nombre || "esta peña"} está pendiente de aprobación.</p> : penyaMembership?.estado === "rechazado" ? <p className="text-sm text-muted-foreground">Tu solicitud para {penyes.find(p=>String(p.id)===String(penyaMembership.penya_id))?.nombre || "esta peña"} fue denegada. Puedes volver a solicitarla o retirar la asociación para elegir otra.</p> : <p className="text-sm text-muted-foreground">Todavía no estás asociado a ninguna peña.</p>}
                   </div>
-                  {penyaMembership?.estado !== "aprobado" && <><label className="block space-y-1 text-sm font-bold">¿A qué peña perteneces?<select value={accountPenyaId} onChange={e=>setAccountPenyaId(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 font-normal"><option value="">Selecciona una peña</option>{penyes.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}</select></label><button type="button" disabled={accountBusy || !accountPenyaId} onClick={()=>void saveAccountPenya()} className="rounded-full bg-primary px-4 py-2 text-sm font-extrabold text-primary-foreground">{accountBusy?"Enviando…":"Solicitar asociación"}</button></>}
+                  {!penyaMembership && <><label className="block space-y-1 text-sm font-bold">¿A qué peña quieres unirte?<select value={accountPenyaId} onChange={e=>setAccountPenyaId(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 font-normal"><option value="">Selecciona una peña</option>{penyes.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}</select></label><button type="button" disabled={accountBusy || penyaMembershipLoading || !accountPenyaId} onClick={()=>void saveAccountPenya()} className="rounded-full bg-primary px-4 py-2 text-sm font-extrabold text-primary-foreground">{accountBusy?"Enviando…":"Solicitar asociación"}</button></>}{penyaMembership?.estado === "rechazado" && <button type="button" disabled={accountBusy} onClick={()=>void solicitarPenya(String(penyaMembership.penya_id),inviteToken)} className="rounded-full bg-primary px-4 py-2 text-sm font-extrabold text-primary-foreground">Volver a solicitar asociación</button>}{penyaMembership && <button type="button" disabled={accountBusy} onClick={()=>void leaveAccountPenya()} className="rounded-full border border-border px-4 py-2 text-sm font-bold">{penyaMembership.estado === "aprobado" ? "Salir de mi peña" : penyaMembership.estado === "pendiente" ? "Cancelar solicitud" : "Retirar asociación"}</button>}
 
                 </div>
                 {(esAdminWeb || penyaMembership?.estado === "aprobado") && <div className="space-y-3 rounded-2xl border border-border p-3">
