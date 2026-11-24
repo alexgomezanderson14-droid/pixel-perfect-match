@@ -1119,7 +1119,7 @@ function Home() {
       if (accountMode === "register") {
         if (accountPassword.length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres.");
         const selectedPenya = penyes.find(item => item.id === accountPenyaId);
-        const { data, error } = await supabase.auth.signUp({ email: accountEmail.trim(), password: accountPassword, options: { data: { full_name: accountName.trim(), penya_id: esUuidPenya(accountPenyaId) ? accountPenyaId : null, penya_nombre: esUuidPenya(accountPenyaId) ? selectedPenya?.nombre || null : null, penya_ids: esUuidPenya(accountPenyaId) ? [accountPenyaId] : [] } } });
+        const { data, error } = await supabase.auth.signUp({ email: accountEmail.trim(), password: accountPassword, options: { data: { full_name: accountName.trim(), name: accountName.trim(), display_name: accountName.trim(), penya_id: esUuidPenya(accountPenyaId) ? accountPenyaId : null, penya_nombre: esUuidPenya(accountPenyaId) ? selectedPenya?.nombre || null : null, penya_ids: esUuidPenya(accountPenyaId) ? [accountPenyaId] : [] } } });
         if (error) throw error;
         setAccountMessage(data.session ? "¡Cuenta creada! Ya has iniciado sesión." : "Registro iniciado. Revisa tu correo para confirmar la cuenta antes de entrar.");
       } else {
