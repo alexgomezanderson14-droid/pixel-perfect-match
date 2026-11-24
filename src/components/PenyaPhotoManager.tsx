@@ -179,7 +179,7 @@ export default function PenyaPhotoManager({ penya, onSaved, onCancel }: { penya:
         });
       }
       allProfiles[penya.id] = keptBlocks;
-      const { error: profileWriteError } = await supabase.from("site_content").upsert({ clave: "penyes_perfiles_json", valor: JSON.stringify(allProfiles) });
+      const { error: profileWriteError } = await (supabase as any).rpc("actualizar_configuracion_penya", { p_penya_id: penya.id, p_clave: "penyes_perfiles_json", p_valor: allProfiles[penya.id] });
       if (profileWriteError) throw profileWriteError;
       if (profileLogoUrl) {
         const { error: logoUpdateError } = await supabase.from("penyes").update({ foto_url: profileLogoUrl }).eq("id", penya.id);
