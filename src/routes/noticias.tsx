@@ -138,7 +138,7 @@ function NoticiasPage() {
         <p className="mt-4 text-lg leading-relaxed text-muted-foreground">Novedades de las peñas, anuncios de la mayoralía e información relacionada con las fiestas de l’Alfàs del Pi.</p>
         <div className="mt-9 space-y-7">
           {noticias.map((noticia) => {
-            const paragraphs = String(noticia.contenido || "").split("\\n\\n").filter(Boolean);
+            const paragraphs = String(noticia.contenido || "").split("\n\n").filter(Boolean);
             const imagenes = obtenerImagenes(noticia);
             return (
               <article key={noticia.id} className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
