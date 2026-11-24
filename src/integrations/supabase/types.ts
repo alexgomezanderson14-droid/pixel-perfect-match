@@ -182,6 +182,8 @@ export type Database = {
           avatar_url: string | null
           display_name: string
           email: string | null
+          nombre_completo: string | null
+          referencia_verificacion: string | null
           estado: string
           id: string
           invitacion_id: string | null
@@ -196,6 +198,8 @@ export type Database = {
           avatar_url?: string | null
           display_name?: string
           email?: string | null
+          nombre_completo?: string | null
+          referencia_verificacion?: string | null
           estado?: string
           id?: string
           invitacion_id?: string | null
@@ -210,6 +214,8 @@ export type Database = {
           avatar_url?: string | null
           display_name?: string
           email?: string | null
+          nombre_completo?: string | null
+          referencia_verificacion?: string | null
           estado?: string
           id?: string
           invitacion_id?: string | null
@@ -318,6 +324,8 @@ export type Database = {
           created_at?: string
           descripcion?: string
           email?: string | null
+          nombre_completo?: string | null
+          referencia_verificacion?: string | null
           estado?: string
           id?: string
           pagina?: string | null
@@ -328,6 +336,8 @@ export type Database = {
           created_at?: string
           descripcion?: string
           email?: string | null
+          nombre_completo?: string | null
+          referencia_verificacion?: string | null
           estado?: string
           id?: string
           pagina?: string | null
