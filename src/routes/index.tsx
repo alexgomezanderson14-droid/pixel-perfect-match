@@ -409,6 +409,8 @@ function Home() {
   const avisarAccesoPenya = () => setPenyaAccessNotice(true);
   const [accountMode, setAccountMode] = useState<"register"|"login">("register");
   const [accountName, setAccountName] = useState("");
+  const [membershipFullName, setMembershipFullName] = useState("");
+  const [membershipVerification, setMembershipVerification] = useState("");
   const [accountPenyaId, setAccountPenyaId] = useState("");
   const [accountEmail, setAccountEmail] = useState("");
   const [accountPassword, setAccountPassword] = useState("");
@@ -417,6 +419,7 @@ function Home() {
   const [showPenyaJoinDialog, setShowPenyaJoinDialog] = useState(false);
   const [penyaPromptDismissedFor, setPenyaPromptDismissedFor] = useState<string | null>(null);
   const [inviteToken, setInviteToken] = useState<string | null>(null);
+  useEffect(() => { if (accountUser?.id) { setMembershipFullName(String(accountUser.user_metadata?.full_name || accountUser.user_metadata?.name || accountUser.user_metadata?.display_name || "")); setMembershipVerification(""); } }, [accountUser?.id]);
   const [personalPrefs, setPersonalPrefs] = useState({ showImportantNotices: true, reduceMotion: false, largeText: false, highContrast: false });
   const [feedbackType,setFeedbackType]=useState<"sugerencia"|"error">("sugerencia");
   const [feedbackTitle,setFeedbackTitle]=useState("");
@@ -751,16 +754,22 @@ function Home() {
   const solicitarPenya = async (id: string, token: string | null = null) => {
     if (!accountUser?.id || !id) return;
     if (!esUuidPenya(id)) { setAccountMessage("Esta peña todavía no tiene ficha activa en PENYERA y no admite solicitudes. Elige otra o avisa al administrador."); return; }
+    const nombre = membershipFullName.trim();
+    const referencia = membershipVerification.trim();
+    if (nombre.length < 3) { setAccountMessage("Escribe tu nombre y apellidos para que la peña pueda identificarte."); return; }
+    if (referencia.length < 8) { setAccountMessage("Añade algún dato que permita a la peña comprobar quién eres (por ejemplo, tu apodo, grupo o una persona de referencia)."); return; }
     setAccountBusy(true); setAccountMessage("");
     try {
-      const { data, error } = await (supabase as any).rpc("solicitar_pertenecer_penya", token ? { p_penya_id: id, p_token: token } : { p_penya_id: id });
+      const { data, error } = await (supabase as any).rpc("solicitar_pertenecer_penya_con_datos", { p_penya_id: id, p_token: token, p_nombre_completo: nombre, p_referencia_verificacion: referencia });
       if (error) throw error;
       const membership = data?.id ? data : {
         id: data?.id,
         penya_id: data?.penya_id || id,
         user_id: accountUser.id,
         estado: data?.estado || "pendiente",
-        display_name: accountUser.user_metadata?.full_name || accountUser.user_metadata?.name || accountUser.email || "Usuario",
+        display_name: nombre,
+        nombre_completo: nombre,
+        referencia_verificacion: referencia,
         avatar_url: accountUser.user_metadata?.avatar_url || accountUser.user_metadata?.picture || null,
         joined_at: data?.joined_at || new Date().toISOString(),
         solicitado_en: data?.solicitado_en || new Date().toISOString(),
@@ -1303,7 +1312,11 @@ function Home() {
         <div className="w-full max-w-md space-y-4 rounded-3xl bg-background p-6 shadow-2xl">
           <div><p className="text-xs font-extrabold uppercase tracking-wider text-primary">Comunidad PENYERA</p><h2 id="penya-join-title" className="mt-1 text-2xl font-extrabold text-primary">{inviteToken?"Te han invitado a una peña":"¿Perteneces a alguna peña?"}</h2><p className="mt-2 text-sm text-muted-foreground">{inviteToken?"Completa la solicitud para que los miembros de la peña puedan aprobar tu incorporación.":"Selecciona la peña a la que perteneces. Tu solicitud será revisada por el administrador o por un miembro aprobado."}</p></div>
           <label className="block space-y-1 text-sm font-bold">Selecciona tu peña<select value={accountPenyaId} disabled={Boolean(inviteToken)} onChange={e=>setAccountPenyaId(e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-3 font-normal"><option value="">Elige una peña</option>{penyesElegibles.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}</select></label>
-          <button type="button" disabled={accountBusy || penyaMembershipLoading || !accountPenyaId} onClick={()=>void solicitarPenya(accountPenyaId,inviteToken)} className="w-full rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground">{accountBusy?"Enviando solicitud…":"Enviar solicitud de asociación"}</button>
+          <div className="rounded-2xl border border-primary/15 bg-primary/[.035] p-3"><p className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">Cuenta con la que solicitas entrar</p><p className="mt-1 break-all text-sm font-bold text-primary">{accountUser.email}</p></div>
+          <label className="block space-y-1 text-sm font-bold">Nombre y apellidos<input required minLength={3} maxLength={120} value={membershipFullName} onChange={e=>setMembershipFullName(e.target.value)} autoComplete="name" placeholder="Tu nombre completo" className="w-full rounded-xl border border-input bg-background px-3 py-3 font-normal"/></label>
+          <label className="block space-y-1 text-sm font-bold">¿Cómo puede la peña reconocerte?<textarea required minLength={8} maxLength={500} rows={3} value={membershipVerification} onChange={e=>setMembershipVerification(e.target.value)} placeholder="Por ejemplo: apodo, grupo de amigos, años que has salido en la peña o una persona de referencia…" className="w-full resize-y rounded-xl border border-input bg-background px-3 py-3 font-normal"/></label>
+          <p className="text-xs leading-relaxed text-muted-foreground">Estos datos solo se mostrarán a quienes puedan revisar las solicitudes de esta peña y al administrador de PENYERA. La solicitud no se aprobará automáticamente.</p>
+          <button type="button" disabled={accountBusy || penyaMembershipLoading || !accountPenyaId || membershipFullName.trim().length<3 || membershipVerification.trim().length<8} onClick={()=>void solicitarPenya(accountPenyaId,inviteToken)} className="w-full rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground">{accountBusy?"Enviando solicitud…":"Enviar solicitud para revisión"}</button>
           {accountMessage && <p role="status" className="rounded-xl bg-primary/5 p-3 text-sm text-primary">{accountMessage}</p>}
           <button type="button" onClick={()=>{setShowPenyaJoinDialog(false);setPenyaPromptDismissedFor(accountUser.id);}} className="w-full rounded-full border border-border px-5 py-3 text-sm font-bold">Ahora no</button>
         </div>
