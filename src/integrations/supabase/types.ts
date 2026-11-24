@@ -139,6 +139,101 @@ export type Database = {
         }
         Relationships: []
       }
+      penya_invitaciones: {
+        Row: {
+          activa: boolean
+          caduca_en: string
+          creado_en: string
+          creado_por: string
+          id: string
+          penya_id: string
+          token: string
+        }
+        Insert: {
+          activa?: boolean
+          caduca_en?: string
+          creado_en?: string
+          creado_por: string
+          id?: string
+          penya_id: string
+          token?: string
+        }
+        Update: {
+          activa?: boolean
+          caduca_en?: string
+          creado_en?: string
+          creado_por?: string
+          id?: string
+          penya_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "penya_invitaciones_penya_id_fkey"
+            columns: ["penya_id"]
+            isOneToOne: false
+            referencedRelation: "penyes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      penya_miembros: {
+        Row: {
+          avatar_url: string | null
+          display_name: string
+          estado: string
+          id: string
+          invitacion_id: string | null
+          joined_at: string
+          penya_id: string
+          revisado_en: string | null
+          revisado_por: string | null
+          solicitado_en: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          display_name?: string
+          estado?: string
+          id?: string
+          invitacion_id?: string | null
+          joined_at?: string
+          penya_id: string
+          revisado_en?: string | null
+          revisado_por?: string | null
+          solicitado_en?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          display_name?: string
+          estado?: string
+          id?: string
+          invitacion_id?: string | null
+          joined_at?: string
+          penya_id?: string
+          revisado_en?: string | null
+          revisado_por?: string | null
+          solicitado_en?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "penya_miembros_invitacion_id_fkey"
+            columns: ["invitacion_id"]
+            isOneToOne: false
+            referencedRelation: "penya_invitaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "penya_miembros_penya_id_fkey"
+            columns: ["penya_id"]
+            isOneToOne: false
+            referencedRelation: "penyes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       penyes: {
         Row: {
           created_at: string
@@ -150,6 +245,7 @@ export type Database = {
           instagram: string | null
           lat: number | null
           lng: number | null
+          miembros_actuales: number | null
           nombre: string
           tiene_evento: boolean
           tipo_musica: string
@@ -164,6 +260,7 @@ export type Database = {
           instagram?: string | null
           lat?: number | null
           lng?: number | null
+          miembros_actuales?: number | null
           nombre: string
           tiene_evento?: boolean
           tipo_musica?: string
@@ -178,6 +275,7 @@ export type Database = {
           instagram?: string | null
           lat?: number | null
           lng?: number | null
+          miembros_actuales?: number | null
           nombre?: string
           tiene_evento?: boolean
           tipo_musica?: string
@@ -240,7 +338,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      crear_invitacion_penya: { Args: { p_penya_id: string }; Returns: Json }
+      revisar_solicitud_penya: {
+        Args: { p_aprobar: boolean; p_miembro_id: string }
+        Returns: Json
+      }
+      solicitar_pertenecer_penya: {
+        Args: { p_penya_id: string; p_token?: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
