@@ -27,6 +27,13 @@ begin
     nullif(btrim(profile->>'name'), ''),
     nullif(btrim(profile->>'display_name'), ''),
     nullif(btrim(profile->>'username'), ''),
+    nullif(
+      case
+        when lower(btrim(coalesce(new.display_name, ''))) in ('usuario', 'usuario anonimo', 'usuario anónimo', '') then ''
+        else btrim(new.display_name)
+      end,
+      ''
+    ),
     nullif(split_part(coalesce(account_email, ''), '@', 1), ''),
     'Nombre no indicado'
   );
