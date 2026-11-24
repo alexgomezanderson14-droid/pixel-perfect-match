@@ -147,7 +147,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
         if (featured) featuredSaved += 1;
         return { ...block, featured, title: block.title.trim().slice(0, 100), content: block.content.trim().slice(0, 5000), url: block.url.trim().slice(0, 1000) };
       });
-      const { error: writeError } = await supabase.from("site_content").upsert({ clave: "penyes_perfiles_json", valor: JSON.stringify(all) });
+      const { error: writeError } = await (supabase as any).rpc("actualizar_configuracion_penya", { p_penya_id: penya.id, p_clave: "penyes_perfiles_json", p_valor: all[penya.id] });
       if (writeError) throw writeError;
       setBlocksMessage("Apartados personalizados guardados.");
       return true;
@@ -179,13 +179,13 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
       let visitSettings: Record<string, boolean> = {};
       try { const parsed = JSON.parse(visitsData?.valor || "{}"); if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) visitSettings = parsed; } catch { visitSettings = {}; }
       visitSettings[penya.id] = aceptaVisitas;
-      const { error: visitsWriteError } = await supabase.from("site_content").upsert({ clave: "penyes_visitas_json", valor: JSON.stringify(visitSettings) });
+      const { error: visitsWriteError } = await (supabase as any).rpc("actualizar_configuracion_penya", { p_penya_id: penya.id, p_clave: "penyes_visitas_json", p_valor: visitSettings[penya.id] });
       if (visitsWriteError) throw visitsWriteError;
       const {data:logoData,error:logoReadError}=await supabase.from("site_content").select("valor").eq("clave","penyes_logos_ficha_json").maybeSingle();
       if(logoReadError)throw logoReadError;
       let logoSettings:Record<string,{zoom:number;x:number;y:number}>={};try{const parsed=JSON.parse(logoData?.valor||"{}");if(parsed&&typeof parsed==="object"&&!Array.isArray(parsed))logoSettings=parsed;}catch{logoSettings={};}
       logoSettings[penya.id]={zoom:logoZoom,x:logoX,y:logoY};
-      const {error:logoWriteError}=await supabase.from("site_content").upsert({clave:"penyes_logos_ficha_json",valor:JSON.stringify(logoSettings)});
+      const {error:logoWriteError}=await (supabase as any).rpc("actualizar_configuracion_penya",{p_penya_id:penya.id,p_clave:"penyes_logos_ficha_json",p_valor:logoSettings[penya.id]});
       if(logoWriteError)throw logoWriteError;
       let foto_url = quitarFoto ? null : penya.foto_url;
       if (foto) {
@@ -216,7 +216,7 @@ export default function AdminPenyaEditor({ penya, onSaved, onCancel }: { penya: 
       let memberSettings: Record<string, number | null> = {};
       try { const parsed = JSON.parse(memberData?.valor || "{}"); if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) memberSettings = parsed; } catch { memberSettings = {}; }
       memberSettings[penya.id] = memberCount;
-      const { error: memberWriteError } = await supabase.from("site_content").upsert({ clave: "penyes_miembros_actuales_json", valor: JSON.stringify(memberSettings) });
+      const { error: memberWriteError } = await (supabase as any).rpc("actualizar_configuracion_penya", { p_penya_id: penya.id, p_clave: "penyes_miembros_actuales_json", p_valor: memberSettings[penya.id] });
       if (memberWriteError) throw memberWriteError;
       const savedBlocks = await saveBlocks();
       if (!savedBlocks) throw new Error("La ficha se ha actualizado, pero no se han podido guardar los apartados adicionales. Vuelve a intentarlo.");
