@@ -20,7 +20,9 @@ jobs:
         run: bunx prettier --write .
       - name: Lint source
         run: bun run lint
-      - name: Build production app
+      - name: Build production app (Vercel preset)
+        env:
+          VERCEL: "1"
         run: bun run build
       - name: Run tests
         run: bun run test
