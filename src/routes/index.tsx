@@ -400,6 +400,9 @@ function Home() {
   const [currentPage, setCurrentPage] = useState<"home"|"noticias"|"buscar"|"eventos"|"mapa"|"penyes"|"info">("home");
   const [settingsClosing, setSettingsClosing] = useState(false);
   const [accountUser, setAccountUser] = useState<any>(null);
+  const [profileDraft, setProfileDraft] = useState({ nombre_completo: "", nombre_visible: "", telefono: "", localidad: "", referencia_festera: "", avatar_url: "" });
+  const [profileAvatarFile, setProfileAvatarFile] = useState<File | null>(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [guestMode, setGuestMode] = useState(false);
   const [showWelcomePreview, setShowWelcomePreview] = useState(false);
@@ -419,7 +422,34 @@ function Home() {
   const [showPenyaJoinDialog, setShowPenyaJoinDialog] = useState(false);
   const [penyaPromptDismissedFor, setPenyaPromptDismissedFor] = useState<string | null>(null);
   const [inviteToken, setInviteToken] = useState<string | null>(null);
-  useEffect(() => { if (accountUser?.id) { setMembershipFullName(String(accountUser.user_metadata?.full_name || accountUser.user_metadata?.name || accountUser.user_metadata?.display_name || "")); setMembershipVerification(""); } }, [accountUser?.id]);
+  useEffect(() => {
+    if (!accountUser?.id) { setProfileDraft({ nombre_completo: "", nombre_visible: "", telefono: "", localidad: "", referencia_festera: "", avatar_url: "" }); setProfileLoaded(false); setProfileAvatarFile(null); return; }
+    let active = true;
+    const metadata = accountUser.user_metadata || {};
+    setProfileDraft({
+      nombre_completo: String(metadata.full_name || metadata.nombre_completo || ""),
+      nombre_visible: String(metadata.display_name || metadata.name || ""),
+      telefono: String(metadata.telefono || ""),
+      localidad: String(metadata.localidad || ""),
+      referencia_festera: String(metadata.referencia_festera || ""),
+      avatar_url: String(metadata.avatar_url || metadata.picture || ""),
+    });
+    setProfileLoaded(false);
+    void (async () => {
+      const { data, error } = await (supabase as any).from("perfiles_usuario").select("nombre_completo,nombre_visible,telefono,localidad,referencia_festera,avatar_url").eq("user_id", accountUser.id).maybeSingle();
+      if (!active) return;
+      if (!error && data) setProfileDraft({
+        nombre_completo: String(data.nombre_completo || ""),
+        nombre_visible: String(data.nombre_visible || ""),
+        telefono: String(data.telefono || ""),
+        localidad: String(data.localidad || ""),
+        referencia_festera: String(data.referencia_festera || ""),
+        avatar_url: String(data.avatar_url || ""),
+      });
+      setProfileLoaded(true);
+    })();
+    return () => { active = false; };
+  }, [accountUser?.id]);
   const [personalPrefs, setPersonalPrefs] = useState({ showImportantNotices: true, reduceMotion: false, largeText: false, highContrast: false });
   const [feedbackType,setFeedbackType]=useState<"sugerencia"|"error">("sugerencia");
   const [feedbackTitle,setFeedbackTitle]=useState("");
@@ -1147,6 +1177,48 @@ function Home() {
     } catch (error) { setAccountMessage(error instanceof Error ? error.message : "No se ha podido completar la operación."); }
     finally { setAccountBusy(false); }
   };
+  const saveAccountProfile = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!accountUser?.id) return;
+    setAccountBusy(true); setAccountMessage("");
+    try {
+      let avatarUrl = profileDraft.avatar_url;
+      if (profileAvatarFile) {
+        if (!/^image\\/(jpeg|png|webp)$/.test(profileAvatarFile.type)) throw new Error("La foto debe ser JPG, PNG o WebP.");
+        if (profileAvatarFile.size > 5 * 1024 * 1024) throw new Error("La foto no puede superar los 5 MB.");
+        const extension = profileAvatarFile.type === "image/png" ? "png" : profileAvatarFile.type === "image/webp" ? "webp" : "jpg";
+        const path = accountUser.id + "/avatar." + extension;
+        const { error: uploadError } = await supabase.storage.from("profile-avatars").upload(path, profileAvatarFile, { upsert: true, contentType: profileAvatarFile.type, cacheControl: "3600" });
+        if (uploadError) throw uploadError;
+        avatarUrl = supabase.storage.from("profile-avatars").getPublicUrl(path).data.publicUrl;
+      }
+      const fullName = profileDraft.nombre_completo.trim();
+      const visibleName = profileDraft.nombre_visible.trim();
+      if (fullName.length < 3) throw new Error("Introduce tu nombre y apellidos.");
+      const values = {
+        user_id: accountUser.id,
+        nombre_completo: fullName,
+        nombre_visible: visibleName,
+        telefono: profileDraft.telefono.trim(),
+        localidad: profileDraft.localidad.trim(),
+        referencia_festera: profileDraft.referencia_festera.trim(),
+        avatar_url: avatarUrl || null,
+        updated_at: new Date().toISOString(),
+      };
+      const { error } = await (supabase as any).from("perfiles_usuario").upsert(values, { onConflict: "user_id" });
+      if (error) throw error;
+      const { data: updated, error: authError } = await supabase.auth.updateUser({ data: { full_name: fullName, nombre_completo: fullName, display_name: visibleName || fullName, name: visibleName || fullName, telefono: values.telefono, localidad: values.localidad, referencia_festera: values.referencia_festera, avatar_url: avatarUrl } });
+      if (authError) throw authError;
+      if (updated.user) setAccountUser(updated.user);
+      setProfileDraft(current => ({ ...current, avatar_url: avatarUrl }));
+      setProfileAvatarFile(null);
+      setMembershipFullName(fullName);
+      setAccountMessage("Tu perfil se ha guardado correctamente.");
+      await cargar();
+    } catch (error) {
+      setAccountMessage(error instanceof Error ? error.message : "No se ha podido guardar tu perfil.");
+    } finally { setAccountBusy(false); }
+  };
   const leaveAccountPenya = async () => {
     if (!accountUser?.id) return;
     setAccountBusy(true); setAccountMessage("");
@@ -1663,7 +1735,23 @@ function Home() {
           <div className="rounded-[1.75rem] border border-primary/15 bg-gradient-to-br from-card via-card to-primary/[.06] p-5 shadow-sm sm:p-7"><div className="flex items-center gap-3"><span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary" aria-hidden="true"><svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1a1.8 1.8 0 0 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3 .9v.2a1.8 1.8 0 0 1-3.6 0v-.2a1.8 1.8 0 0 0-3-.9l-.1.1a1.8 1.8 0 0 1-2.5-2.5l.1-.1a1.8 1.8 0 0 0-.9-3h-.2a1.8 1.8 0 0 1 0-3.6h.2a1.8 1.8 0 0 0 .9-3l-.1-.1a1.8 1.8 0 0 1 2.5-2.5l.1.1a1.8 1.8 0 0 0 3-.9v-.2a1.8 1.8 0 0 1 3.6 0v.2a1.8 1.8 0 0 0 3 .9l.1-.1a1.8 1.8 0 0 1 2.5 2.5l-.1.1a1.8 1.8 0 0 0 .9 3h.2a1.8 1.8 0 0 1 0 3.6h-.2a1.8 1.8 0 0 0-.9 3Z"/></svg></span><div><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-primary">Tu espacio personal</p><h1 id="settings-title" className="mt-0.5 text-3xl font-black text-primary sm:text-4xl">Ajustes</h1></div></div><p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Gestiona tu cuenta, tu peña y cómo quieres utilizar PENYERA. Pertenecer a una peña es lo que te da permiso para gestionarla.</p><nav aria-label="Secciones de ajustes" className="mt-5 flex flex-wrap gap-2"><a href="#account-settings" className="rounded-full border border-border bg-background/80 px-3.5 py-2 text-xs font-bold text-primary transition hover:border-primary/40"><span className="inline-flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/></svg>Mi cuenta</span></a><a href="#preferences-settings" className="rounded-full border border-border bg-background/80 px-3.5 py-2 text-xs font-bold text-primary transition hover:border-primary/40"><span className="inline-flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>Preferencias</span></a><a href="#notifications-settings-title" className="rounded-full border border-border bg-background/80 px-3.5 py-2 text-xs font-bold text-primary transition hover:border-primary/40"><span className="inline-flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>Notificaciones</span></a><a href="#feedback-settings-title" className="rounded-full border border-border bg-background/80 px-3.5 py-2 text-xs font-bold text-primary transition hover:border-primary/40"><span className="inline-flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-6.5A7.5 7.5 0 1 1 20 11.5Z"/><path d="M8 11.5h8M8 8.5h5"/></svg>Ayuda</span></a></nav></div>
           <div className="grid items-start gap-4 xl:grid-cols-2">
             <section id="account-settings" className="glass scroll-mt-24 rounded-3xl border border-primary/15 p-5 shadow-sm sm:p-6">
-              {accountUser ? <div className="space-y-4"><div className="flex items-center gap-3"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary"><svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/></svg></span><div><p className="text-[10px] font-extrabold uppercase tracking-wider text-primary">Sesión iniciada</p><h2 className="text-lg font-extrabold">{accountUser.user_metadata?.full_name || accountUser.email}</h2><p className="text-xs text-muted-foreground">{accountUser.email}</p></div></div><div className="space-y-3 rounded-2xl border border-primary/15 bg-primary/[.035] p-3">
+              {accountUser ? <div className="space-y-4"><div className="flex items-center gap-3"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary"><svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/></svg></span><div><p className="text-[10px] font-extrabold uppercase tracking-wider text-primary">Sesión iniciada</p><h2 className="text-lg font-extrabold">{accountUser.user_metadata?.full_name || accountUser.email}</h2><p className="text-xs text-muted-foreground">{accountUser.email}</p></div></div><form onSubmit={saveAccountProfile} className="space-y-4 rounded-2xl border border-primary/15 bg-background p-4">
+                  <div><p className="text-[10px] font-extrabold uppercase tracking-wider text-primary">Tu identidad</p><h3 className="mt-1 text-base font-extrabold text-primary">Perfil personal</h3><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Estos datos acompañan a tu cuenta. El administrador de PENYERA podrá consultarlos cuando necesite comprobar una solicitud o una pertenencia.</p></div>
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full border border-primary/20 bg-primary/5 text-2xl font-black text-primary">{profileDraft.avatar_url ? <img src={profileDraft.avatar_url} alt="Tu foto de perfil" className="h-full w-full object-cover"/> : <span>{(profileDraft.nombre_visible || profileDraft.nombre_completo || accountUser.email || "U").slice(0,1).toUpperCase()}</span>}</div>
+                    <div className="min-w-0 flex-1"><label className="block text-sm font-bold">Foto de perfil<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setProfileAvatarFile(e.target.files?.[0] || null)} className="mt-2 block w-full text-xs file:mr-2 file:rounded-full file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-xs file:font-bold file:text-primary"/></label><p className="mt-1 text-[11px] text-muted-foreground">JPG, PNG o WebP · máximo 5 MB</p></div>
+                  </div>
+                  <label className="block space-y-1 text-sm font-bold">Nombre y apellidos<input required minLength={3} maxLength={120} autoComplete="name" value={profileDraft.nombre_completo} onChange={e=>setProfileDraft(p=>({...p,nombre_completo:e.target.value}))} className="w-full rounded-xl border border-input bg-background px-3 py-3 font-normal" placeholder="Tu nombre completo"/></label>
+                  <label className="block space-y-1 text-sm font-bold">Nombre visible o apodo<input maxLength={60} value={profileDraft.nombre_visible} onChange={e=>setProfileDraft(p=>({...p,nombre_visible:e.target.value}))} className="w-full rounded-xl border border-input bg-background px-3 py-3 font-normal" placeholder="Cómo quieres aparecer en PENYERA"/></label>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="block space-y-1 text-sm font-bold">Teléfono de contacto <span className="font-normal text-muted-foreground">(opcional)</span><input type="tel" maxLength={30} autoComplete="tel" value={profileDraft.telefono} onChange={e=>setProfileDraft(p=>({...p,telefono:e.target.value}))} className="w-full rounded-xl border border-input bg-background px-3 py-3 font-normal" placeholder="Tu teléfono"/></label>
+                    <label className="block space-y-1 text-sm font-bold">Localidad <span className="font-normal text-muted-foreground">(opcional)</span><input maxLength={100} autoComplete="address-level2" value={profileDraft.localidad} onChange={e=>setProfileDraft(p=>({...p,localidad:e.target.value}))} className="w-full rounded-xl border border-input bg-background px-3 py-3 font-normal" placeholder="Dónde vives"/></label>
+                  </div>
+                  <label className="block space-y-1 text-sm font-bold">Referencia festera <span className="font-normal text-muted-foreground">(opcional)</span><textarea rows={2} maxLength={300} value={profileDraft.referencia_festera} onChange={e=>setProfileDraft(p=>({...p,referencia_festera:e.target.value}))} className="w-full resize-y rounded-xl border border-input bg-background px-3 py-3 font-normal" placeholder="Apodo, grupo, años en la peña o persona que pueda reconocerte"/></label>
+                  <p className="text-[11px] leading-relaxed text-muted-foreground">Tu correo de acceso no se modifica aquí. El teléfono, la localidad y la referencia se reservan para comprobaciones de administración y no se publican en tu perfil público.</p>
+                  <button type="submit" disabled={accountBusy || !profileLoaded || profileDraft.nombre_completo.trim().length<3} className="rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground">{accountBusy?"Guardando…":"Guardar perfil"}</button>
+                </form>
+                <div className="space-y-3 rounded-2xl border border-primary/15 bg-primary/[.035] p-3">
                   <div className="space-y-1"><p className="text-sm font-bold">Mi peña</p>
                     {penyaMembershipLoading ? <p className="text-sm text-muted-foreground">Comprobando tu peña…</p> : penyaMembership?.estado === "aprobado" ? <p className="text-sm text-emerald-700">Perteneces a {penyes.find(p=>String(p.id)===String(penyaMembership.penya_id))?.nombre || "tu peña"} y tienes permisos para gestionarla.</p> : penyaMembership?.estado === "pendiente" ? <p className="text-sm font-semibold text-amber-700">Tu solicitud para {penyes.find(p=>String(p.id)===String(penyaMembership.penya_id))?.nombre || "esta peña"} está pendiente de aprobación.</p> : penyaMembership?.estado === "rechazado" ? <p className="text-sm text-muted-foreground">Tu solicitud para {penyes.find(p=>String(p.id)===String(penyaMembership.penya_id))?.nombre || "esta peña"} fue denegada. Puedes volver a solicitarla o retirar la asociación para elegir otra.</p> : <p className="text-sm text-muted-foreground">Todavía no estás asociado a ninguna peña.</p>}
                   </div>
