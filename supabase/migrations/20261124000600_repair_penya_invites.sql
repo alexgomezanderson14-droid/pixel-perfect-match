@@ -20,6 +20,20 @@ begin
       foreign key (invitacion_id) references public.penya_invitaciones(id) on delete set null;
   end if;
 end $$;
+-- La función de autorización se define aquí para que la migración sea autónoma
+-- y no dependa de una función privada creada manualmente en otra instalación.
+create schema if not exists private;
+create or replace function private.es_admin_penyera()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $function$
+  select lower(btrim(coalesce(auth.jwt() ->> 'email', ''))) = 'alexgomezanderson14@gmail.com';
+$function$;
+revoke all on function private.es_admin_penyera() from public, anon, authenticated;
+
 create or replace function public.crear_invitacion_penya(p_penya_id uuid)
 returns jsonb language plpgsql security definer set search_path = ''
 as $function$
