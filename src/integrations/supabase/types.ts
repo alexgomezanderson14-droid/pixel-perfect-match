@@ -181,6 +181,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           display_name: string
+          email: string | null
           estado: string
           id: string
           invitacion_id: string | null
@@ -194,6 +195,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           display_name?: string
+          email?: string | null
           estado?: string
           id?: string
           invitacion_id?: string | null
@@ -207,6 +209,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           display_name?: string
+          email?: string | null
           estado?: string
           id?: string
           invitacion_id?: string | null
