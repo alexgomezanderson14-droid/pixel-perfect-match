@@ -69,7 +69,9 @@ create or replace function public.admin_actualizar_miembro_penya(
   p_miembro_id uuid,
   p_nombre_completo text,
   p_nombre_visible text,
-  p_referencia_verificacion text
+  p_referencia_verificacion text,
+  p_telefono text,
+  p_localidad text
 )
 returns jsonb
 language plpgsql
@@ -81,6 +83,8 @@ declare
   v_full_name text := btrim(coalesce(p_nombre_completo,''));
   v_display_name text := btrim(coalesce(p_nombre_visible,''));
   v_reference text := btrim(coalesce(p_referencia_verificacion,''));
+  v_phone text := btrim(coalesce(p_telefono,''));
+  v_city text := btrim(coalesce(p_localidad,''));
 begin
   if auth.uid() is null or not private.es_admin_penyera() then
     raise exception 'Solo el administrador de PENYERA puede editar miembros.';
@@ -88,7 +92,7 @@ begin
   if char_length(v_full_name) < 3 or char_length(v_full_name) > 120 then
     raise exception 'El nombre completo debe tener entre 3 y 120 caracteres.';
   end if;
-  if char_length(v_display_name) > 60 or char_length(v_reference) > 500 then
+  if char_length(v_display_name) > 60 or char_length(v_reference) > 500 or char_length(v_phone) > 30 or char_length(v_city) > 100 then
     raise exception 'Alguno de los datos supera la longitud permitida.';
   end if;
 
@@ -98,12 +102,14 @@ begin
   for update;
   if not found then raise exception 'No se ha encontrado el miembro.'; end if;
 
-  insert into public.perfiles_usuario(user_id,nombre_completo,nombre_visible,referencia_festera,updated_at)
-  values(v_member.user_id,v_full_name,v_display_name,v_reference,now())
+  insert into public.perfiles_usuario(user_id,nombre_completo,nombre_visible,referencia_festera,telefono,localidad,updated_at)
+  values(v_member.user_id,v_full_name,v_display_name,v_reference,v_phone,v_city,now())
   on conflict(user_id) do update
     set nombre_completo = excluded.nombre_completo,
         nombre_visible = excluded.nombre_visible,
         referencia_festera = excluded.referencia_festera,
+        telefono = excluded.telefono,
+        localidad = excluded.localidad,
         updated_at = now();
 
   update public.penya_miembros
@@ -139,9 +145,9 @@ begin
 end;
 $function$;
 
-revoke all on function public.admin_actualizar_miembro_penya(uuid,text,text,text) from public, anon;
+revoke all on function public.admin_actualizar_miembro_penya(uuid,text,text,text,text,text) from public, anon;
 revoke all on function public.admin_eliminar_miembro_penya(uuid) from public, anon;
-grant execute on function public.admin_actualizar_miembro_penya(uuid,text,text,text) to authenticated;
+grant execute on function public.admin_actualizar_miembro_penya(uuid,text,text,text,text,text) to authenticated;
 grant execute on function public.admin_eliminar_miembro_penya(uuid) to authenticated;
 
 notify pgrst, 'reload schema';
