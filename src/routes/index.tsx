@@ -688,7 +688,7 @@ function Home() {
           .maybeSingle();
         if (error) throw error;
         if (!active) return;
-        let membership = data || null;
+        const membership = data || null;
         const metadataPenyaId = String(accountUser.user_metadata?.penya_id || "");
         if (!membership && esUuidPenya(metadataPenyaId) && penyes.some((item) => String(item.id) === metadataPenyaId)) {
           // No crear solicitudes automáticamente al registrarse: primero pedimos
