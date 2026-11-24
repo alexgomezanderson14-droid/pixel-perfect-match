@@ -9,6 +9,7 @@ import WhatsNewAnnouncement from "@/components/WhatsNewAnnouncement";
 import WelcomeGate from "@/components/WelcomeGate";
 import { noticiaCuBaTa2027 } from "@/content/noticia-cubata-2027";
 import { noticiaCestaNavidad2027 } from "@/content/noticia-cesta-navidad-2027";
+import { noticiaDamasCuBaTa2027 } from "@/content/noticia-damas-cubata-2027";
 import { noticiaDesfileHumor2026 } from "@/content/noticia-desfile-humor-2026";
 import { catalogoPenyesHistorico } from "@/content/penyes-catalogo-historico";
 import { getPenyaPhotoImageStyle } from "@/lib/penya-photo";
@@ -928,7 +929,7 @@ function Home() {
     try { const ids = JSON.parse(content["noticias_destacadas_json"] || "[]"); if (Array.isArray(ids)) idsDestacadas = ids.map((id:any) => String(id)); } catch { idsDestacadas = []; }
     let guardadas: any[] = [];
     try { const parsed=JSON.parse(content["noticias_json"]||"[]"); guardadas=Array.isArray(parsed)?parsed:[]; } catch { guardadas=[]; }
-    const respaldo=[noticiaCestaNavidad2027,noticiaCuBaTa2027,noticiaDesfileHumor2026];
+    const respaldo=[noticiaDamasCuBaTa2027,noticiaCestaNavidad2027,noticiaCuBaTa2027,noticiaDesfileHumor2026];
     const guardadasSinVersionAntigua=guardadas.filter((noticia:any)=>noticia?.id!=="desfile-humor-lalfas-2026-video");
     let noticiasOcultas:string[]=[];
     try { const ocultas=JSON.parse(content["noticias_ocultas_json"]||"[]"); noticiasOcultas=Array.isArray(ocultas)?ocultas.map((id:any)=>String(id)):[]; } catch { noticiasOcultas=[]; }
