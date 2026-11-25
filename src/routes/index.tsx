@@ -1944,7 +1944,7 @@ function Home() {
                 <div className="relative z-30 grid h-44 w-44 shrink-0 place-items-center overflow-hidden rounded-full border-4 border-white bg-white text-5xl font-black text-[#173f52] shadow-[0_10px_34px_rgba(4,25,34,.22)] sm:h-56 sm:w-56  lg:h-72 lg:w-72 xl:h-80 xl:w-80" >{selectedPenyaLogo?<img src={selectedPenyaLogo} alt={"Foto de perfil de "+selectedPenya.nombre} style={getPenyaPhotoImageStyle(penyaProfileLogoSettings[selectedPenya.id])} className="h-full w-full bg-white object-cover"/>:selectedPenya.nombre.slice(0,1).toUpperCase()}</div>
                 {(mayoralesPenyaId&&String(selectedPenya.id)===String(mayoralesPenyaId))&&<div className="mt-2"><span className="inline-flex items-center gap-1 rounded-full border border-[#e6ce91] bg-[#fff7df] px-3 py-1 text-[10px] font-extrabold tracking-wide text-[#765c25] sm:text-xs">♛ MAYORALES {mayoralesAnio}</span></div>}
                 <h2 className="mt-2 max-w-4xl break-words text-[26px] font-black leading-tight tracking-tight text-[#173f52] sm:mt-3 sm:text-4xl lg:text-[2.65rem]">{selectedPenya.nombre}</h2>
-                {selectedPenya.informacion?.trim()&&<p className="mx-auto mt-1.5 max-w-2xl px-2 text-center text-xs leading-relaxed text-[#718487] sm:text-[13px]">{selectedPenya.informacion}</p>
+                {selectedPenya.informacion?.trim()&&<p className="mx-auto mt-1.5 max-w-2xl px-2 text-center text-xs leading-relaxed text-[#718487] sm:text-[13px]">{selectedPenya.informacion}</p>}
 
                 
                 
