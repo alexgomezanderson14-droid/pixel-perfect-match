@@ -382,9 +382,6 @@ function Home() {
   const [q, setQ] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [newsSearch, setNewsSearch] = useState("");
-  const [penyaSearch, setPenyaSearch] = useState("");
-  const [penyaMusicFilter, setPenyaMusicFilter] = useState("Todas");
-  const [penyaOnlyMine, setPenyaOnlyMine] = useState(false);
   const [activePenyaCard, setActivePenyaCard] = useState(0);
   const [penyaCarouselInitialized, setPenyaCarouselInitialized] = useState(false);
   const [managingPenyaPhotos, setManagingPenyaPhotos] = useState<PenyaDb | null>(null);
@@ -547,8 +544,9 @@ function Home() {
   const mayoralesColor = String((mayoralesPenyaId && penyaCardSettings[mayoralesPenyaId]?.color) || siteContent["theme_accent"] || "#173f52");
   // El color de la peña define la identidad visual, pero los tonos semánticos se oscurecen para mantener contraste en textos y controles.
   const mayoralesPrimaryColor = `color-mix(in srgb, ${mayoralesColor} 28%, #173f52)`;
-  const visiblePenyes = useMemo(()=>[...penyes].filter(p=>(!penyaSearch.trim()||normalizarBusqueda([p.nombre,p.direccion,p.tipo_musica,p.informacion].join(" ")).includes(normalizarBusqueda(penyaSearch)))&&(penyaMusicFilter==="Todas"||String(p.tipo_musica||"").trim()===penyaMusicFilter)&&(!penyaOnlyMine||misPenyes.includes(p.id))).sort((a,b)=>nombrePenyaParaOrden(a.nombre).localeCompare(nombrePenyaParaOrden(b.nombre),"es",{sensitivity:"base",numeric:true})||String(a.nombre??"").localeCompare(String(b.nombre??""),"es",{sensitivity:"base"})),[penyes,penyaSearch,penyaMusicFilter,penyaOnlyMine,misPenyes]);
-  const searchingPenyes = Boolean(penyaSearch.trim()) || penyaMusicFilter !== "Todas" || penyaOnlyMine;
+  // El directorio se recorre completo: no hay filtros ni búsqueda que oculten peñas.
+  const visiblePenyes = useMemo(()=>[...penyes].sort((a,b)=>nombrePenyaParaOrden(a.nombre).localeCompare(nombrePenyaParaOrden(b.nombre),"es",{sensitivity:"base",numeric:true})||String(a.nombre??"").localeCompare(String(b.nombre??""),"es",{sensitivity:"base"})),[penyes]);
+  const searchingPenyes = false;
   // Mayorales debe abrir el carrusel como primera peña cuando se muestra el directorio sin filtros.
   // Los filtros y búsquedas conservan su orden de resultados para no ocultar la coincidencia solicitada.
   const carouselPenyes = useMemo(()=>{
@@ -1697,33 +1695,19 @@ function Home() {
             </div>
           </div>
 
-          <div className="mb-3 flex min-w-0 justify-end gap-2 sm:mb-5">
-            <button onClick={()=>{setPenyaMusicFilter("Todas");setPenyaOnlyMine(false);setPenyaSearch("");}} className="rounded-full border border-border px-4 py-2 text-xs font-bold text-primary transition hover:bg-primary/5">Limpiar filtros</button>
+          <div className="mb-3 flex min-w-0 justify-end sm:mb-5">
             <button onClick={() => setForm(true)} className="rounded-full bg-pink px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5">+ {ui.addPenya}</button>
-          </div>
-
-          <div className="mb-3 flex min-w-0 flex-col gap-2 rounded-2xl border border-border/70 bg-card/70 p-2.5 sm:mb-5 sm:flex-row sm:items-center sm:justify-between sm:p-4">
-            <div className="min-w-0">
-              <p className="hidden text-xs font-extrabold uppercase tracking-wider text-primary sm:block">Encuentra tu ambiente</p>
-              <div className="flex flex-nowrap gap-1.5 overflow-x-auto pb-0.5 sm:mt-2 sm:flex-wrap sm:gap-2">
-                {penyaMusicOptions.map(tipo=><button key={tipo} onClick={()=>setPenyaMusicFilter(tipo)} aria-pressed={penyaMusicFilter===tipo} className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-bold transition sm:px-3 sm:py-1.5 sm:text-xs ${penyaMusicFilter===tipo?"border-primary bg-primary text-primary-foreground":"border-border bg-background text-muted-foreground hover:border-primary/40"}`}>{tipo}</button>)}
-              </div>
-            </div>
-            <button onClick={()=>setPenyaOnlyMine(v=>!v)} aria-pressed={penyaOnlyMine} className={`self-start shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-bold transition sm:self-auto sm:px-4 sm:py-2 sm:text-xs ${penyaOnlyMine?"border-[#173f52] bg-[#173f52] text-white":"border-border bg-background text-primary"}`}>{penyaOnlyMine?"★ Mostrando mis peñas":"☆ Ver solo mis peñas"}</button>
           </div>
 
           <aside role="note" className="mb-4 flex items-center gap-2.5 rounded-xl border border-[#b9d9ce] bg-gradient-to-r from-[#edf8f2] to-[#e8f3f1] px-3 py-2 text-[#245b4b] shadow-sm sm:mb-6 sm:gap-3 sm:rounded-2xl sm:p-4"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-[#b9d9ce] bg-white/85 text-[#28765d] sm:h-11 sm:w-11"><svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 sm:h-6 sm:w-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.8 20c.4-3.5 2.5-5.4 6.2-5.4s5.8 1.9 6.2 5.4M16 5.2a3 3 0 0 1 0 5.7M17 14.8c2.4.5 3.7 2.2 4.1 5.2"/><path d="m16 3 2 2 4-4" transform="translate(0 2)"/></svg></span><div className="min-w-0 flex-1"><p className="text-xs font-extrabold sm:text-sm">¡Ya puedes asociarte a una peña!</p><p className="mt-0.5 hidden text-sm leading-relaxed sm:block">Elige una peña del directorio y solicita unirte desde su ficha. Cuando la solicitud sea aprobada, podrás formar parte de ella y, si tienes permisos de gestión, ayudar a mantener su información, fotos y actividades al día.</p><p className="mt-0.5 text-[10px] leading-snug sm:hidden">Abre una ficha y solicita unirte. La peña revisará tu solicitud.</p></div><button type="button" onClick={()=>{setCurrentPage("penyes");setSelectedPenya(null);setPenyaDetailFullscreen(false);window.scrollTo({top:0,behavior:"smooth"});}} className="inline-flex min-h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-[#28765d] px-3 py-1.5 text-[10px] font-extrabold text-white shadow-sm transition hover:bg-[#205f4b] sm:min-h-11 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-xs">Elegir peña <span aria-hidden="true">→</span></button></aside>
 
-          <div className="mb-4 grid min-w-0 grid-cols-1 items-center gap-2 sm:mb-7 sm:gap-3 md:grid-cols-[minmax(0,1fr)_minmax(260px,380px)_auto]">
-            <div className="min-w-0"><h3 className="text-lg font-extrabold text-primary sm:text-2xl">Directorio de peñas</h3><p className="mt-0.5 text-[11px] text-muted-foreground sm:mt-1 sm:text-sm">Abre una ficha para ver fotos, planes y cómo llegar.</p></div>
-            <label className="relative block min-w-0"><span className="sr-only">Buscar peñas en el directorio</span><span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">⌕</span><input type="search" value={penyaSearch} onChange={e=>setPenyaSearch(e.target.value)} placeholder="Buscar una peña…" className="w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-3 text-sm shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 sm:rounded-2xl sm:py-3 sm:pl-11 sm:pr-4"/></label>
-            <button onClick={()=>{setCurrentPage("home");setCat("penya");window.scrollTo({top:0,behavior:"smooth"});}} className="inline-flex items-center justify-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2.5 text-xs font-bold text-primary transition hover:bg-primary/10">📍 Ver todas en el mapa</button>
+          <div className="mb-3 flex min-w-0 items-end justify-between gap-3 sm:mb-5">
+            <div className="min-w-0"><h3 className="text-lg font-extrabold text-primary sm:text-2xl">Descubre las peñas</h3><p className="mt-0.5 text-[11px] text-muted-foreground sm:mt-1 sm:text-sm">Explora todas las fichas y descubre su historia, ambiente y actividades.</p></div>
+            <button onClick={()=>{setCurrentPage("home");setCat("penya");window.scrollTo({top:0,behavior:"smooth"});}} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-2 text-[10px] font-bold text-primary transition hover:bg-primary/10 sm:px-4 sm:py-2.5 sm:text-xs">📍 Ver mapa</button>
           </div>
 
           {!penyes.length ? (
             <div className="glass rounded-3xl p-6 text-muted-foreground">{ui.sinPenyes}</div>
-          ) : visiblePenyes.length===0 ? (
-            <div className="glass rounded-3xl p-8 text-center"><p className="font-bold text-primary">No encontramos peñas con esos filtros</p><p className="mt-1 text-sm text-muted-foreground">Prueba con otra búsqueda o limpia los filtros.</p><button onClick={()=>{setPenyaSearch("");setPenyaMusicFilter("Todas");setPenyaOnlyMine(false);}} className="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">Mostrar todas las peñas</button></div>
           ) : (
             <div className="relative mx-auto w-full max-w-[1180px] lg:max-w-none">
               {visiblePenyes.length>1&&!searchingPenyes&&<button type="button" aria-label="Peña anterior" onClick={()=>{const el=penyaCarouselRef.current;if(!el)return;const current=nearestPenyaCardIndex(el);const target=Math.max(0,current-1);setActivePenyaCard(target);centerPenyaCard(target,"smooth");}} className="absolute left-1 top-[43%] z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-xl text-[#173f52] shadow-lg backdrop-blur-xl transition hover:scale-105 lg:grid">‹</button>}
